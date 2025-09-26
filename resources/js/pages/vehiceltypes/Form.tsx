@@ -1,0 +1,99 @@
+import React from 'react';
+import { Head, Link, router, useForm } from '@inertiajs/react';
+import AppLayout from '@/layouts/app-layout';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
+import { Save, ArrowLeft } from 'lucide-react';
+import { BreadcrumbItem } from '@/types';
+
+interface VehicelTypeFormProps {
+  vehicelType?: {
+    id: number;
+    name: string;
+  };
+}
+
+export default function VehicelTypeForm({ vehicelType }: VehicelTypeFormProps) {
+  const isEdit = !!vehicelType;
+
+  const { data, setData, processing, errors, reset } = useForm<{
+    name: string;
+  }>({
+    name: vehicelType?.name || '',
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (isEdit) {
+      router.put(`/vehicel-types/${vehicelType.id}`, data, {
+        preserveScroll: true,
+        preserveState: true,
+      });
+    } else {
+      router.post('/vehicel-types', data);
+    }
+  };
+
+  const breadcrumbs: BreadcrumbItem[] = [
+    { title: 'Vehicel Types', href: '/Vehicel-types' },
+    { title: isEdit ? 'Edit Vehicel Type' : 'Add Vehicel Type', href: '#' },
+  ];
+
+  return (
+    <AppLayout breadcrumbs={breadcrumbs}>
+      <Head title={isEdit ? 'Edit Vehicel Type' : 'Add Vehicel Type'} />
+
+      <div className="flex-1 p-4 md:p-6 w-[70vw] mx-auto">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-2xl font-bold">
+              {isEdit ? 'Edit Vehicel Type' : 'Add Vehicel Type'}
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">
+              {isEdit ? 'Edit Vehicel type details' : 'Create a new Vehicel type'}
+            </p>
+          </CardHeader>
+
+          <Separator />
+
+          <CardContent className="pt-6">
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="name">Vehicel Type Name</Label>
+                <Input
+                  id="name"
+                  value={data.name}
+                  onChange={(e) => setData('name', e.target.value)}
+                  placeholder="Enter Vehicel type name"
+                />
+              </div>
+
+              <div className="flex items-center justify-between pt-6">
+                <Link href="/vehicel-types">
+                  <Button type="button" variant="secondary">
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Back
+                  </Button>
+                </Link>
+                <Button type="submit" disabled={processing}>
+                  <Save className="mr-2 h-4 w-4" />
+                  {processing
+                    ? isEdit
+                      ? 'Saving...'
+                      : 'Adding...'
+                    : isEdit
+                    ? 'Save Changes'
+                    : 'Add Vehicel Type'}
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+    </AppLayout>
+  );
+}

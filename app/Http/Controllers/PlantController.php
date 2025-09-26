@@ -1,0 +1,61 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Plant;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
+
+class PlantController extends Controller
+{
+    public function index(Request $request)
+    {
+        $query = Plant::with('institute');
+
+        if ($request->search) {
+            $query->where('name', 'like', '%' . $request->search . '%');
+        }
+
+        $plants = $query->paginate(10)->withQueryString();
+
+        return Inertia::render('plants/Index', [
+            'plants' => $plants,
+            'filters' => ['search' => $request->search ?? ''],
+        ]);
+    }
+
+    public function create()
+    {
+        return Inertia::render('plants/Form', ['plant' => null]);
+    }
+
+    public function store(Request $request)
+    {
+        $data = $request->validate([
+            'institute_id' => 'required|exists:institutes,id',
+            'name' => 'required|string|max:255',
+            'qty' => 'required|integer',
+        ]);
+
+        Plant::updateOrCreate(['id' => $request->id ?? null], $data);
+
+        return redirect()->back()->with('success', 'Plant saved successfully.');
+    }
+    public function edit(Plant $plant)
+    {
+        return Inertia::render('plants/Form', ['plant' => $plant]);
+    } 
+    public function update(Request $request, Plant $plant)
+    {
+        $data = $request->validate([
+            'institute_id' => 'required|exists:institutes,id',
+            'name' => 'required|string|max:255',
+            'qty' => 'required|integer',        
+        ]);
+        $plant->update($data);
+        return redirect()->back()->with('success', 'Plant updated successfully.');  }
+    public function destroy(Plant $plant)
+    {
+        $plant->delete();
+        return redirect()->back()->with('success', 'Plant deleted successfully.');}
+}

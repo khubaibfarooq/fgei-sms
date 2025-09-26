@@ -1,0 +1,15 @@
+php artisan make:controller BuildingType
+php artisan make:controller RoomType
+php artisan make:controller AssetCategory
+php artisan make:controller Asset
+php artisan make:controller Vehicle
+php artisan make:controller VehicleType
+
+php artisan make:controller Shift
+php artisan make:controller Upgradation
+php artisan make:controller Block
+php artisan make:controller Room
+php artisan make:controller InstituteAsset
+php artisan make:controller AssetTransaction
+php artisan make:controller Transport
+php artisan make:controller Plant
