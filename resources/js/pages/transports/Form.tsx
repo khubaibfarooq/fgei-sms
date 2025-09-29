@@ -24,10 +24,9 @@ interface TransportFormProps {
     institute_id: number;
   };
   vehicleTypes: Array<{ id: number; name: string }>;
-  institutes: Array<{ id: number; name: string }>;
 }
 
-export default function TransportForm({ transport, vehicleTypes, institutes }: TransportFormProps) {
+export default function TransportForm({ transport, vehicleTypes }: TransportFormProps) {
   const isEdit = !!transport;
 
   const { data, setData, processing, errors, reset } = useForm<{
@@ -107,24 +106,7 @@ export default function TransportForm({ transport, vehicleTypes, institutes }: T
                   </Select>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="institute_id">Institute</Label>
-                  <Select
-                    value={data.institute_id.toString()}
-                    onValueChange={(value) => setData('institute_id', parseInt(value))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select institute" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {institutes.map((institute) => (
-                        <SelectItem key={institute.id} value={institute.id.toString()}>
-                          {institute.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+               
               </div>
 
               <div className="flex items-center justify-between pt-6">

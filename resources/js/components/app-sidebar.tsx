@@ -6,6 +6,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
 } from '@/components/ui/sidebar';
 
 import { usePage, Link } from '@inertiajs/react';
@@ -17,6 +18,7 @@ import type { LucideIcon } from 'lucide-react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { useEffect } from 'react';
 import { cn } from '@/lib/utils';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 interface MenuItem {
   id: number;
@@ -24,6 +26,15 @@ interface MenuItem {
   route: string | null;
   icon: string;
   children?: MenuItem[];
+}
+
+function isMenuActive(menu: MenuItem, currentUrl: string): boolean {
+  const selfActive = !!(menu.route && currentUrl.startsWith(menu.route));
+  const children = Array.isArray(menu.children) ? menu.children.filter(Boolean) : [];
+  return (
+    selfActive ||
+    children.some((child) => isMenuActive(child, currentUrl))
+  );
 }
 
 function RenderMenu({ items, level = 0 }: { items: MenuItem[]; level?: number }) {
@@ -38,9 +49,9 @@ function RenderMenu({ items, level = 0 }: { items: MenuItem[]; level?: number })
         const Icon = iconMapper(menu.icon || 'Folder') as LucideIcon;
         const children = Array.isArray(menu.children) ? menu.children.filter(Boolean) : [];
         const hasChildren = children.length > 0;
-        const isActive = menu.route && currentUrl.startsWith(menu.route);
+        const isActive = !!(menu.route && currentUrl.startsWith(menu.route));
         const indentClass = level > 0 ? `pl-${4 + level * 3}` : '';
-        
+
         const activeClass = isActive
           ? 'bg-primary/10 text-primary font-medium'
           : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground';
@@ -50,27 +61,31 @@ function RenderMenu({ items, level = 0 }: { items: MenuItem[]; level?: number })
         return (
           <SidebarMenuItem key={menu.id}>
             {hasChildren ? (
-              <>
-                <SidebarMenuButton 
-                  className={cn(
-                    `group flex items-center justify-between rounded-md transition-colors ${indentClass}`,
-                    activeClass,
-                    level === 0 ? 'py-3 px-4 my-1' : 'py-2 px-3'
-                  )}
-                >
-                  <div className="flex items-center">
-                    <Icon className="size-4 mr-3 opacity-80 group-hover:opacity-100" />
-                    <span>{menu.title}</span>
-                  </div>
-                  <ChevronDown className="size-4 opacity-50 group-hover:opacity-70 transition-transform group-data-[state=open]:rotate-180" />
-                </SidebarMenuButton>
-                <SidebarMenu className="ml-2 border-l border-muted pl-2">
-                  <RenderMenu items={children} level={level + 1} />
-                </SidebarMenu>
-              </>
+              <Collapsible defaultOpen={isMenuActive(menu, currentUrl)} className="group">
+                <CollapsibleTrigger asChild>
+                  <SidebarMenuButton
+                    className={cn(
+                      `group flex items-center justify-between rounded-md transition-colors ${indentClass}`,
+                      activeClass,
+                      level === 0 ? 'py-3 px-4 my-1' : 'py-2 px-3'
+                    )}
+                  >
+                    <div className="flex items-center">
+                      <Icon className="size-4 mr-3 opacity-80 group-hover:opacity-100" />
+                      <span>{menu.title}</span>
+                    </div>
+                    <ChevronDown className="size-4 opacity-50 group-hover:opacity-70 transition-transform group-data-[state=open]:rotate-180" />
+                  </SidebarMenuButton>
+                </CollapsibleTrigger>
+                <CollapsibleContent asChild>
+                  <SidebarMenuSub>
+                    <RenderMenu items={children} level={level + 1} />
+                  </SidebarMenuSub>
+                </CollapsibleContent>
+              </Collapsible>
             ) : (
-              <SidebarMenuButton 
-                asChild 
+              <SidebarMenuButton
+                asChild
                 className={cn(
                   `group flex items-center rounded-md transition-colors ${indentClass}`,
                   activeClass,

@@ -36,6 +36,10 @@ class AuthenticatedSessionController extends Controller
         // Get user role and store it in session if needed
         $userRole = Auth::user()->role;
         session(['user_role' => $userRole]);
+session(['type' => Auth::user()->type]);
+session(['inst_id' => Auth::user()->inst_id]);
+session(['region_id' => Auth::user()->region_id]);
+session(['role_id' => Auth::user()->role_id]);
 
         return redirect()->intended(route('dashboard', absolute: false));
     }

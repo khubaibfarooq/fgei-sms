@@ -25,16 +25,20 @@ use App\Http\Controllers\AssetTransactionController;
 use App\Http\Controllers\VehicelTypeController;
 use App\Http\Controllers\TransportController;
 use App\Http\Controllers\PlantController;
+use App\Http\Controllers\DashboardCardController;
+use App\Http\Controllers\DashboardController;
 
 Route::get('/', function () {
     return Inertia::render('welcome');
 })->name('home');
 
 Route::middleware(['auth', 'menu.permission'])->group(function () {
-    Route::get('dashboard', function () {
-        return Inertia::render('dashboard');
-    })->name('dashboard');
+    // Route::get('/dashboard', function () {
+    //     return Inertia::render('dashboard');
+    // })->name('dashboard');
   
+      Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
     Route::get('/institute', [InstituteController::class, 'index'])->name('institute.index');
     Route::post('/institute', [InstituteController::class, 'store'])->name('institute.store');
     Route::get('/institute/create', [InstituteController::class, 'create'])->name('institute.create');
@@ -66,6 +70,10 @@ Route::resource('building-types', BuildingTypeController::class);
 Route::resource('shifts', ShiftController::class);
 Route::resource('upgradations', UpgradationController::class);
 Route::resource('blocks', BlockController::class);
+//DashboardCardController
+
+
+Route::resource('dashboardcards', DashboardCardController::class);
 
 // Rooms
 Route::resource('room-types', RoomTypeController::class);
@@ -83,6 +91,7 @@ Route::resource('transports', TransportController::class);
 
 // Plants
 Route::resource('plants', PlantController::class);
+
 });
 
 require __DIR__ . '/settings.php';

@@ -20,10 +20,10 @@ interface InstituteFormProps {
   institute?: {
     id: number;
     name: string;
-    establishment_date: string ;
-    area:number;
+    established_date: string ;
+    total_area:number;
     convered_area:number;
-    layout_img:string | null;
+    img_layout:string | null;
     img_3d:string | null;
     video:string | null;
     gender:string ;
@@ -40,10 +40,10 @@ export default function InstituteForm({ institute }: InstituteFormProps) {
 
   const { data, setData, processing, errors, reset } = useForm<{
     name: string;
-    establishment_date: string;
-    area: number;
+    established_date: string;
+    total_area: number;
     convered_area: number;
-    layout_img: string | File | null;
+    img_layout: string | File | null;
     img_3d: string | File | null;
     video: string | File | null;
     gender: string;
@@ -52,10 +52,10 @@ export default function InstituteForm({ institute }: InstituteFormProps) {
     email: string;
   }>({
     name: institute?.name || '',
-    establishment_date: institute?.establishment_date || new Date().toISOString().split('T')[0],
-    area: institute?.area || 0,
+    established_date: institute?.established_date || new Date().toISOString().split('T')[0],
+    total_area: institute?.total_area || 0,
     convered_area: institute?.convered_area || 0,
-    layout_img: institute?.layout_img || '',
+    img_layout: institute?.img_layout || '',
     img_3d: institute?.img_3d || '',
     video: institute?.video || '',
     gender: institute?.gender || '',
@@ -75,7 +75,7 @@ export default function InstituteForm({ institute }: InstituteFormProps) {
       }
 
       // Handle file uploads separately
-      if (key === 'layout_img' || key === 'img_3d' || key === 'video') {
+      if (key === 'img_layout' || key === 'img_3d' || key === 'video') {
         if (data[key] instanceof File) {
           formData.append(key, data[key] as File);
         }
@@ -83,7 +83,7 @@ export default function InstituteForm({ institute }: InstituteFormProps) {
       }
 
       // Handle numeric values
-      if (key === 'area' || key === 'convered_area') {
+      if (key === 'total_area' || key === 'convered_area') {
         formData.append(key, data[key].toString());
         return;
       }
@@ -101,7 +101,7 @@ export default function InstituteForm({ institute }: InstituteFormProps) {
         preserveState: true,
       });
     } else {
-      router.post('institutes.store', formData, {
+      router.post('institutes', formData, {
         forceFormData: true,
       });
     }
@@ -130,34 +130,33 @@ export default function InstituteForm({ institute }: InstituteFormProps) {
           <Separator />
 
           <CardContent className="pt-6">
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-6" encType='multipart/form-data'>
            
                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
              
 
               {/* Establishment Date */}
               <div className="space-y-2">
-                <Label htmlFor="establishment_date">Establishment Date</Label>
+                <Label htmlFor="established_date">Established Date</Label>
                 <Input
-                  id="establishment_date"
+                  id="established_date"
                   type="date"
-                  value={data.establishment_date}
-                  onChange={(e) => setData('establishment_date', e.target.value)}
+                  value={data.established_date}
+                  onChange={(e) => setData('established_date', e.target.value)}
                 />
               </div>
 
               {/* Area */}
               <div className="space-y-2">
-                <Label htmlFor="area">Total Area (sq ft)</Label>
+                <Label htmlFor="total_area">Total Area (sq ft)</Label>
                 <Input
-                  id="area"
+                  id="total_area"
                   type="number"
-                  value={data.area}
-                  onChange={(e) => setData('area', Number(e.target.value))}
+                  value={data.total_area}
+                  onChange={(e) => setData('total_area', Number(e.target.value))}
                 />
               </div>
-</div>
-  <div className="space-y-2">
+                <div className="space-y-2">
                 <Label htmlFor="convered_area">Covered Area (sq ft)</Label>
                 <Input
                   id="convered_area"
@@ -166,17 +165,16 @@ export default function InstituteForm({ institute }: InstituteFormProps) {
                   onChange={(e) => setData('convered_area', Number(e.target.value))}
                 />
               </div>
-             
-   
+</div>
   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
      {/* File Uploads */}
               <div className="space-y-2">
-                <Label htmlFor="layout_img">Layout Image</Label>
+                <Label htmlFor="img_layout">Layout Image</Label>
                 <Input
-                  id="layout_img"
+                  id="img_layout"
                   type="file"
                   accept="image/*"
-                  onChange={(e) => setData('layout_img', e.target.files?.[0] || null)}
+                  onChange={(e) => setData('img_layout', e.target.files?.[0] || null)}
                 />
               </div>
               <div className="space-y-2">
@@ -202,7 +200,53 @@ export default function InstituteForm({ institute }: InstituteFormProps) {
           
 
               {/* Action Buttons */}
-              <div className="flex items-center justify-between pt-2">
+             
+              </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {/* Layout image view */}
+              <div className="space-y-2">
+                <Label>Current Layout Image</Label>
+                {institute?.img_layout ? (
+                  <img
+                    src={`/storage/${institute.img_layout}`}
+                    alt="Layout"
+                    className="w-full h-48 object-cover rounded"
+                  />
+                ) : (
+                  <p className="text-sm text-muted-foreground">No layout image uploaded.</p>
+                )}
+              </div>
+
+              {/* 3D image view */}
+              <div className="space-y-2">
+                <Label>Current 3D Image</Label>
+                {institute?.img_3d ? (
+                  <img
+                    src={`/storage/${institute.img_3d}`}
+                    alt="3D View"
+                    className="w-full h-48 object-cover rounded"
+                  />
+                ) : (
+                  <p className="text-sm text-muted-foreground">No 3D image uploaded.</p>
+                )}
+              </div>
+
+              {/* Video view */}
+              <div className="space-y-2">
+                <Label>Current Video</Label>
+                {institute?.video ? (
+                  <video controls className="w-full h-48 rounded">
+                    <source src={`/storage/${institute.video}`} type="video/mp4" />
+                    Your browser does not support the video tag.
+                  </video>
+                ) : (
+                  <p className="text-sm text-muted-foreground">No video uploaded.</p>
+                )}
+              </div>
+                </div>   
+   
+
+                <div className="flex items-center justify-between pt-2">
                 <Link href="/institutes">
                   <Button type="button" variant="secondary">
                     <ArrowLeft className="mr-2 h-4 w-4" />
@@ -217,9 +261,8 @@ export default function InstituteForm({ institute }: InstituteFormProps) {
                       : 'Adding...'
                     : isEdit
                     ? 'Save Changes'
-                    : 'Add Institute'}
+                    : 'Save Institute'}
                 </Button>
-              </div>
               </div>
             </form>
           </CardContent>

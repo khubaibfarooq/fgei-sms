@@ -20,15 +20,15 @@ import {
 } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 
-interface AssetCategory {
+interface shifts {
   id: number;
   name: string;
-  assets_count?: number;
+ shifts_count?: number;
 }
 
 interface Props {
-  categories: {
-    data: AssetCategory[];
+  shifts: {
+    data: shifts[];
     current_page: number;
     last_page: number;
     links: { url: string | null; label: string; active: boolean }[];
@@ -39,39 +39,39 @@ interface Props {
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
-  { title: 'Asset Categories', href: '/asset-categories' },
+  { title: 'Shifts', href: '/shifts' },
 ];
 
-export default function AssetCategoryIndex({ categories, filters }: Props) {
+export default function ShiftsIndex({ shifts, filters }: Props) {
   const [search, setSearch] = useState(filters.search || '');
 
   const handleDelete = (id: number) => {
-    router.delete(`/asset-categories/${id}`, {
-      onSuccess: () => toast.success('Category deleted successfully'),
-      onError: () => toast.error('Failed to delete category'),
+    router.delete(`/shifts/${id}`, {
+      onSuccess: () => toast.success('Shift deleted successfully'),
+      onError: () => toast.error('Failed to delete Shift'),
     });
   };
 
   const handleSearchKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
-      router.get('/asset-categories', { ...filters, search }, { preserveScroll: true });
+      router.get('/shifts', { ...filters, search }, { preserveScroll: true });
     }
   };
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
-      <Head title="Asset Category Management" />
+      <Head title="Shift Management" />
       <div className="flex-1 p-4 md:p-6">
         <Card>
           <CardHeader className="pb-3 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-              <CardTitle className="text-2xl font-bold">Asset Categories</CardTitle>
-              <p className="text-muted-foreground text-sm">Manage asset categories</p>
+              <CardTitle className="text-2xl font-bold">Shifts</CardTitle>
+              <p className="text-muted-foreground text-sm">Manage  Shifts</p>
             </div>
-            <Link href="/asset-categories/create">
+            <Link href="/shifts/create">
               <Button>
                 <Plus className="h-4 w-4 mr-2" />
-                Add Category
+                Add Shift
               </Button>
             </Link>
           </CardHeader>
@@ -82,7 +82,7 @@ export default function AssetCategoryIndex({ categories, filters }: Props) {
             <div className="flex flex-col md:flex-row md:items-center gap-4">
               <Input
                 type="text"
-                placeholder="Search categories... (press Enter)"
+                placeholder="Search Shift... (press Enter)"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 onKeyDown={handleSearchKey}
@@ -90,24 +90,24 @@ export default function AssetCategoryIndex({ categories, filters }: Props) {
             </div>
 
             <div className="space-y-3">
-              {categories.data.length === 0 ? (
-                <p className="text-muted-foreground text-center">No categories found.</p>
+              {shifts.data.length === 0 ? (
+                <p className="text-muted-foreground text-center">No shift found.</p>
               ) : (
-                categories.data.map((category) => (
+                shifts.data.map((shift) => (
                   <div
-                    key={category.id}
+                    key={shift.id}
                     className="flex items-center justify-between border px-4 py-3 rounded-md bg-muted/50 hover:bg-muted/70 transition"
                   >
                     <div className="space-y-1">
                       <div className="font-medium text-sm text-foreground">
-                        {category.name}
+                        {shift.name}
                       </div>
                       <div className="text-xs text-muted-foreground">
-                        {category.assets_count || 0} assets
+                        {shift.shifts_count || 0} shifts
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Link href={`/asset-categories/${category.id}/edit`}>
+                      <Link href={`/shifts/${shift.id}/edit`}>
                         <Button variant="ghost" size="icon">
                           <Edit className="h-4 w-4" />
                         </Button>
@@ -120,16 +120,16 @@ export default function AssetCategoryIndex({ categories, filters }: Props) {
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                           <AlertDialogHeader>
-                            <AlertDialogTitle>Delete this category?</AlertDialogTitle>
+                            <AlertDialogTitle>Delete this shift?</AlertDialogTitle>
                             <AlertDialogDescription>
-                              Category <strong>{category.name}</strong> will be permanently deleted.
+                              shift <strong>{shift.name}</strong> will be permanently deleted.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel>Cancel</AlertDialogCancel>
                             <AlertDialogAction
                               className="bg-destructive hover:bg-destructive/90"
-                              onClick={() => handleDelete(category.id)}
+                              onClick={() => handleDelete(shift.id)}
                             >
                               Delete
                             </AlertDialogAction>
@@ -142,9 +142,9 @@ export default function AssetCategoryIndex({ categories, filters }: Props) {
               )}
             </div>
 
-            {categories.links.length > 1 && (
+            {shifts.links.length > 1 && (
               <div className="flex justify-center pt-6 flex-wrap gap-2">
-                {categories.links.map((link, i) => (
+                {shifts.links.map((link, i) => (
                   <Button
                     key={i}
                     disabled={!link.url}

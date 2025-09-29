@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Shift;
+use App\Models\BuildingType;
+use App\Models\Institute;
+
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -26,34 +29,45 @@ class ShiftController extends Controller
 
     public function create()
     {
-        return Inertia::render('shifts/Form', ['shift' => null]);
+        $buildingTypes = BuildingType::all();
+        return Inertia::render('shifts/Form', [
+            'shift' => null, 
+            'buildingTypes' => $buildingTypes,
+           
+        ]);
     }
 
     public function store(Request $request)
     {
         $data = $request->validate([
-            'institute_id' => 'required|exists:institutes,id',
+      
             'building_type_id' => 'required|exists:building_types,id',
             'building_name' => 'nullable|string|max:255',
             'name' => 'required|string|max:255',
         ]);
-
+$data['institute_id'] = session('sms_inst_id');
         Shift::updateOrCreate(['id' => $request->id ?? null], $data);
 
         return redirect()->back()->with('success', 'Shift saved successfully.');
     }   
     public function edit(Shift $shift)
     {
-        return Inertia::render('shifts/Form', ['shift' => $shift]);
-    } 
+        $buildingTypes = BuildingType::all();
+        return Inertia::render('shifts/Form', [
+            'shift' => $shift->load('buildingType', 'institute'),
+            'buildingTypes' => $buildingTypes,
+            
+        ]);
+    }
     public function update(Request $request, Shift $shift)
     {
         $data = $request->validate([
-            'institute_id' => 'required|exists:institutes,id',
             'building_type_id' => 'required|exists:building_types,id',
             'building_name' => 'nullable|string|max:255',
             'name' => 'required|string|max:255',        
         ]);
+        $data['institute_id'] = session('sms_inst_id');
+
         $shift->update($data);
         return redirect()->back()->with('success', 'Shift updated successfully.');  }
     public function destroy(Shift $shift)
