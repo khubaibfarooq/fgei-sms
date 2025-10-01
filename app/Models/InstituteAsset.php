@@ -10,7 +10,7 @@ class InstituteAsset extends Model
 {
     use HasFactory,HasRoles;
 
-    protected $fillable = ['institute_id', 'asset_id', 'current_qty', 'added_by', 'added_date'];
+    protected $fillable = ['institute_id', 'asset_id', 'current_qty','details', 'added_by', 'added_date','room_id'];
 
     public function institute()
     {
@@ -21,9 +21,18 @@ class InstituteAsset extends Model
     {
         return $this->belongsTo(Asset::class);
     }
+     public function room()
+    {
+        return $this->belongsTo(Room::class);
+    }
 
     public function transactions()
     {
         return $this->hasMany(AssetTransaction::class);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'added_by');
     }
 }

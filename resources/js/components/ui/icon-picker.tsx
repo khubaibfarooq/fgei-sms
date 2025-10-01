@@ -43,16 +43,16 @@ export default function IconPicker({ value, onChange }: IconPickerProps) {
               value={value}
               onClick={() => setOpen(true)}
               readOnly
-              placeholder="Pilih icon (Lucide)"
+              placeholder="Select icon (Lucide)"
               className="cursor-pointer"
             />
           </div>
         </PopoverTrigger>
         <PopoverContent className="p-0 w-[300px]">
           <Command filter={customFilter}>
-            <CommandInput placeholder="Cari icon..." />
+            <CommandInput placeholder="Search icon..." />
             <CommandList>
-              <CommandEmpty>Icon tidak ditemukan</CommandEmpty>
+              <CommandEmpty>Icon not found</CommandEmpty>
               <CommandGroup>
                 {icons.map(({ name, icon: Icon }) => (
                   <CommandItem

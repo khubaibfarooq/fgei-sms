@@ -14,9 +14,14 @@ class ShiftController extends Controller
     public function index(Request $request)
     {
         $query = Shift::with('buildingType', 'institute');
-
+$inst_id = session('sms_inst_id');
+$type=session('type');
+if($type=='school'||$type=='college'){
+        $query->where('institute_id', $inst_id);}
         if ($request->search) {
-            $query->where('name', 'like', '%' . $request->search . '%');
+            $query->where('name', 'like', '%' . $request->search . '%')
+            ->Where('institute_id', $inst_id);
+                  
         }
 
         $shifts = $query->paginate(10)->withQueryString();

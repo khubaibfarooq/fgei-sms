@@ -22,7 +22,7 @@ use App\Http\Controllers\AssetCategoryController;
 use App\Http\Controllers\AssetController;
 use App\Http\Controllers\InstituteAssetController;
 use App\Http\Controllers\AssetTransactionController;
-use App\Http\Controllers\VehicelTypeController;
+use App\Http\Controllers\VehicleTypeController;
 use App\Http\Controllers\TransportController;
 use App\Http\Controllers\PlantController;
 use App\Http\Controllers\DashboardCardController;
@@ -86,7 +86,7 @@ Route::resource('institute-assets', InstituteAssetController::class);
 Route::resource('asset-transactions', AssetTransactionController::class);
 
 // Transport
-Route::resource('vehicel-types', VehicelTypeController::class);
+Route::resource('vehicle-types', VehicleTypeController::class);
 Route::resource('transports', TransportController::class);
 
 // Plants

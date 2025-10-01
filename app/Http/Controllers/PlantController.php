@@ -11,9 +11,13 @@ class PlantController extends Controller
     public function index(Request $request)
     {
         $query = Plant::with('institute');
-
+$instute_id = session('sms_inst_id');
+        if ($instute_id) {  
+            $query->where('institute_id', $instute_id);
+        }
         if ($request->search) {
-            $query->where('name', 'like', '%' . $request->search . '%');
+            $query->where('name', 'like', '%' . $request->search . '%')
+                  ->Where('institute_id',$request->search);
         }
 
         $plants = $query->paginate(10)->withQueryString();
@@ -32,11 +36,10 @@ class PlantController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'institute_id' => 'required|exists:institutes,id',
             'name' => 'required|string|max:255',
             'qty' => 'required|integer',
         ]);
-
+$data['institute_id'] = session('sms_inst_id');
         Plant::updateOrCreate(['id' => $request->id ?? null], $data);
 
         return redirect()->back()->with('success', 'Plant saved successfully.');
@@ -48,10 +51,11 @@ class PlantController extends Controller
     public function update(Request $request, Plant $plant)
     {
         $data = $request->validate([
-            'institute_id' => 'required|exists:institutes,id',
             'name' => 'required|string|max:255',
             'qty' => 'required|integer',        
         ]);
+        $data['institute_id'] = session('sms_inst_id');
+
         $plant->update($data);
         return redirect()->back()->with('success', 'Plant updated successfully.');  }
     public function destroy(Plant $plant)

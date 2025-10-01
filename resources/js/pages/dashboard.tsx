@@ -53,7 +53,7 @@ const COLORS = ['#0ea5e9', '#14b8a6', '#f97316', '#9333ea'];
 export default function Dashboard() {
   const { props }: any = usePage();
   const user = props.auth.user;
-console.log(props.cards);
+//console.log(props.cards);
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>

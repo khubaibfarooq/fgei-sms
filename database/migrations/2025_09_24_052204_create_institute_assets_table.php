@@ -14,6 +14,8 @@ return new class extends Migration
     $table->id();
     $table->foreignId('institute_id')->constrained('institutes');
     $table->foreignId('asset_id')->constrained('assets');
+    $table->foreignId('room_id')->constrained('rooms');
+
     $table->integer('current_qty');
     $table->foreignId('added_by')->constrained('users');
     $table->date('added_date');

@@ -116,7 +116,7 @@ export default function RoomIndex({ rooms, filters }: Props) {
                           {room.name}
                         </div>
                         <div className="text-xs text-muted-foreground">
-                          {room.block.institute.name} • {room.block.name} • {room.type.name} • {room.area} sq ft
+                           {room.block.name} • {room.type.name} • {room.area} sq ft
                         </div>
                       </div>
                     </div>

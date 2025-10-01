@@ -5,8 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import { type BreadcrumbItem } from '@/types';
-import { Plus, Edit, Trash2 } from 'lucide-react';
+import { Plus, Edit, Trash2, Package, Calendar } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogTrigger,
@@ -20,15 +21,40 @@ import {
 } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 
-interface AssetCategory {
+interface InstituteAsset {
   id: number;
-  name: string;
-  assets_count?: number;
+  current_qty: number;
+  details: string;
+  added_date: string;
+  institute?: {
+    id: number;
+    name?: string;
+  };
+  asset: {
+    id: number;
+    name: string;
+    category?: {
+      id: number;
+      name: string;
+    };
+  };
+  room?: {
+    id: number;
+    name: string;
+    block?: {
+      id: number;
+      name: string;
+    };
+  };
+  user?: {
+    id: number;
+    name: string;
+  };
 }
 
 interface Props {
-  categories: {
-    data: AssetCategory[];
+  instituteAssets: {
+    data: InstituteAsset[];
     current_page: number;
     last_page: number;
     links: { url: string | null; label: string; active: boolean }[];
@@ -39,39 +65,39 @@ interface Props {
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
-  { title: 'Asset Categories', href: '/asset-categories' },
+  { title: 'Institute Assets', href: '/institute-assets' },
 ];
 
-export default function AssetCategoryIndex({ categories, filters }: Props) {
+export default function InstituteAssetIndex({ instituteAssets, filters }: Props) {
   const [search, setSearch] = useState(filters.search || '');
 
   const handleDelete = (id: number) => {
-    router.delete(`/asset-categories/${id}`, {
-      onSuccess: () => toast.success('Category deleted successfully'),
-      onError: () => toast.error('Failed to delete category'),
+    router.delete(`/institute-assets/${id}`, {
+      onSuccess: () => toast.success('Institute asset deleted successfully'),
+      onError: () => toast.error('Failed to delete institute asset'),
     });
   };
 
   const handleSearchKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
-      router.get('/asset-categories', { ...filters, search }, { preserveScroll: true });
+      router.get('/institute-assets', { ...filters, search }, { preserveScroll: true });
     }
   };
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
-      <Head title="Asset Category Management" />
+      <Head title="Institute Asset Management" />
       <div className="flex-1 p-4 md:p-6">
         <Card>
           <CardHeader className="pb-3 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-              <CardTitle className="text-2xl font-bold">Asset Categories</CardTitle>
-              <p className="text-muted-foreground text-sm">Manage asset categories</p>
+              <CardTitle className="text-2xl font-bold">Institute Assets</CardTitle>
+              <p className="text-muted-foreground text-sm">Manage institute asset inventory</p>
             </div>
-            <Link href="/asset-categories/create">
+            <Link href="/institute-assets/create">
               <Button>
                 <Plus className="h-4 w-4 mr-2" />
-                Add Category
+                Add Asset
               </Button>
             </Link>
           </CardHeader>
@@ -82,7 +108,7 @@ export default function AssetCategoryIndex({ categories, filters }: Props) {
             <div className="flex flex-col md:flex-row md:items-center gap-4">
               <Input
                 type="text"
-                placeholder="Search categories... (press Enter)"
+                placeholder="Search assets... (press Enter)"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 onKeyDown={handleSearchKey}
@@ -90,24 +116,49 @@ export default function AssetCategoryIndex({ categories, filters }: Props) {
             </div>
 
             <div className="space-y-3">
-              {categories.data.length === 0 ? (
-                <p className="text-muted-foreground text-center">No categories found.</p>
+              {instituteAssets.data.length === 0 ? (
+                <p className="text-muted-foreground text-center">No institute assets found.</p>
               ) : (
-                categories.data.map((category) => (
+                instituteAssets.data.map((instituteAsset) => (
                   <div
-                    key={category.id}
+                    key={instituteAsset.id}
                     className="flex items-center justify-between border px-4 py-3 rounded-md bg-muted/50 hover:bg-muted/70 transition"
                   >
-                    <div className="space-y-1">
-                      <div className="font-medium text-sm text-foreground">
-                        {category.name}
+                    <div className="space-y-2 flex-1">
+                      <div className="flex items-center gap-2">
+                        <div className="font-medium text-sm text-foreground">
+                          {instituteAsset.asset.name}
+                        </div>
+                        {instituteAsset.asset.category && (
+                          <Badge variant="outline" className="text-xs">
+                            {instituteAsset.asset.category.name}
+                          </Badge>
+                        )}
                       </div>
-                      <div className="text-xs text-muted-foreground">
-                        {category.assets_count || 0} assets
+                      
+                      <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                        <div className="flex items-center gap-1">
+                          <Package className="h-3 w-3" />
+                          <span>Qty: {instituteAsset.current_qty}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Calendar className="h-3 w-3" />
+                          <span>Added: {new Date(instituteAsset.added_date).toLocaleDateString()}</span>
+                        </div>
+                        {instituteAsset.room && (
+                          <span>Room: {instituteAsset.room.name} {instituteAsset.room.block && `(${instituteAsset.room.block.name})`}</span>
+                        )}
                       </div>
+                      
+                      {instituteAsset.details && (
+                        <div className="text-xs text-muted-foreground">
+                          {instituteAsset.details}
+                        </div>
+                      )}
                     </div>
+                    
                     <div className="flex items-center gap-2">
-                      <Link href={`/asset-categories/${category.id}/edit`}>
+                      <Link href={`/institute-assets/${instituteAsset.id}/edit`}>
                         <Button variant="ghost" size="icon">
                           <Edit className="h-4 w-4" />
                         </Button>
@@ -120,16 +171,16 @@ export default function AssetCategoryIndex({ categories, filters }: Props) {
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                           <AlertDialogHeader>
-                            <AlertDialogTitle>Delete this category?</AlertDialogTitle>
+                            <AlertDialogTitle>Delete this institute asset?</AlertDialogTitle>
                             <AlertDialogDescription>
-                              Category <strong>{category.name}</strong> will be permanently deleted.
+                              Asset <strong>{instituteAsset.asset.name}</strong> (Qty: {instituteAsset.current_qty}) will be permanently deleted from institute inventory.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel>Cancel</AlertDialogCancel>
                             <AlertDialogAction
                               className="bg-destructive hover:bg-destructive/90"
-                              onClick={() => handleDelete(category.id)}
+                              onClick={() => handleDelete(instituteAsset.id)}
                             >
                               Delete
                             </AlertDialogAction>
@@ -142,9 +193,9 @@ export default function AssetCategoryIndex({ categories, filters }: Props) {
               )}
             </div>
 
-            {categories.links.length > 1 && (
+            {instituteAssets.links.length > 1 && (
               <div className="flex justify-center pt-6 flex-wrap gap-2">
-                {categories.links.map((link, i) => (
+                {instituteAssets.links.map((link, i) => (
                   <Button
                     key={i}
                     disabled={!link.url}

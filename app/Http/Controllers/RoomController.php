@@ -2,6 +2,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Room;
+use App\Models\RoomType;
+
+use App\Models\Block;
+
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -26,9 +30,13 @@ class RoomController extends Controller
     }
 
     public function create()
-    {
+    {$roomTypes = RoomType::all();
+        $institute_id = session('sms_inst_id');
+        $blocks = Block::where('institute_id', $institute_id)->get();
         return Inertia::render('rooms/Form', [
             'room' => null,
+            'roomTypes' => $roomTypes,
+            'blocks' => $blocks,
         ]);
     }
 
@@ -37,10 +45,10 @@ class RoomController extends Controller
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'area' => 'required|numeric',
-            'type_id' => 'required|exists:room_types,id',
+            'room_type_id' => 'required|exists:room_types,id',
             'block_id' => 'required|exists:blocks,id',
         ]);
-
+$data['institute_id'] = session('sms_inst_id');
         Room::updateOrCreate(
             ['id' => $request->id ?? null],
             $data
@@ -49,9 +57,13 @@ class RoomController extends Controller
         return redirect()->back()->with('success', 'Room saved successfully.');
     }
     public function edit(Room $room)
-    {
+    {$roomTypes = RoomType::all();
+        $institute_id = session('sms_inst_id');
+        $blocks = Block::where('institute_id', $institute_id)->get();
         return Inertia::render('rooms/Form', [
             'room' => $room,
+            'roomTypes' => $roomTypes,
+            'blocks' => $blocks,
         ]);
     } 
     public function update(Request $request, Room $room)
@@ -59,9 +71,10 @@ class RoomController extends Controller
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'area' => 'required|numeric',
-            'type_id' => 'required|exists:room_types,id',
+            'room_type_id' => 'required|exists:room_types,id',
             'block_id' => 'required|exists:blocks,id',
         ]);
+            $data['institute_id'] = session('sms_inst_id');
         $room->update($data);
         return redirect()->back()->with('success', 'Room updated successfully.');}
     public function destroy(Room $room)

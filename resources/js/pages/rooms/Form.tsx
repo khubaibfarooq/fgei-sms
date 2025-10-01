@@ -135,7 +135,7 @@ export default function RoomForm({ room, roomTypes, blocks }: RoomFormProps) {
                     <SelectContent>
                       {blocks.map((block) => (
                         <SelectItem key={block.id} value={block.id.toString()}>
-                          {block.name} ({block.institute.name})
+                          {block.name} 
                         </SelectItem>
                       ))}
                     </SelectContent>

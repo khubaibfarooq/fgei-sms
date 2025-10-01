@@ -51,7 +51,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 export default function TransportIndex({ transports, filters }: Props) {
   const [search, setSearch] = useState(filters.search || '');
-
+//console.log(transports.data);
   const handleDelete = (id: number) => {
     router.delete(`/transports/${id}`, {
       onSuccess: () => toast.success('Transport deleted successfully'),
@@ -111,9 +111,7 @@ export default function TransportIndex({ transports, filters }: Props) {
                         <div className="font-medium text-sm text-foreground">
                           {transport.vehicle_no}
                         </div>
-                        <div className="text-xs text-muted-foreground">
-                          {transport.vehicleType.name} • {transport.institute.name}
-                        </div>
+                       
                       </div>
                     </div>
                     <div className="flex items-center gap-2">

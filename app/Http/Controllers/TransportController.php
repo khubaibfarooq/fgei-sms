@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Transport;
-use App\Models\VehicelType;
+use App\Models\VehicleType;
 
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -13,9 +13,12 @@ class TransportController extends Controller
     public function index(Request $request)
     {
         $query = Transport::with('vehicleType', 'institute');
-
+$inst_id = session('sms_inst_id');
+$type=session('type');
+if($type=='school'||$type=='college'){
+        $query->where('institute_id', $inst_id);}
         if ($request->search) {
-            $query->where('vehicle_no', 'like', '%' . $request->search . '%');
+            $query->where('vehicle_no', 'like', '%' . $request->search . '%')->Where('institute_id', $inst_id);
         }
 
         $transports = $query->paginate(10)->withQueryString();
@@ -28,16 +31,17 @@ class TransportController extends Controller
 
     public function create()
     {
-        $vehicale_type=VehicelType::all();
+        $vehicale_type=VehicleType::all();
         return Inertia::render('transports/Form', ['transport' => null, 'vehicleTypes' => $vehicale_type]);
     }
 
     public function store(Request $request)
-    {$vehicale_type=VehicelType::all();
+    {$vehicale_type=VehicleType::all();
         $data = $request->validate([
             'vehicle_type_id' => 'required|exists:vehicle_types,id',
             'vehicle_no' => 'required|string|max:255',
         ]);
+$data['institute_id'] = session('sms_inst_id');
 
         Transport::updateOrCreate(['id' => $request->id ?? null], $data);
 
@@ -45,7 +49,7 @@ class TransportController extends Controller
     }
     public function edit(Transport $transport)
     {
-        return Inertia::render('transports/Form', ['transport' => $transport, 'vehicleTypes' => VehicelType::all()]);
+        return Inertia::render('transports/Form', ['transport' => $transport, 'vehicleTypes' => VehicleType::all()]);
     } 
     public function update(Request $request, Transport $transport)
     {
@@ -54,6 +58,8 @@ class TransportController extends Controller
             'vehicle_type_id' => 'required|exists:vehicle_types,id',
             'vehicle_no' => 'required|string|max:255',        
         ]);
+        $data['institute_id'] = session('sms_inst_id');
+
         $transport->update($data);
         return redirect()->back()->with('success', 'Transport updated successfully.');  }
     public function destroy(Transport $transport)

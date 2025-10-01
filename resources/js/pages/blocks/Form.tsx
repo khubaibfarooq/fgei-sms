@@ -23,10 +23,9 @@ interface BlockFormProps {
     area: number;
     institute_id: number;
   };
-  institutes: Array<{ id: number; name: string }>;
 }
 
-export default function BlockForm({ block, institutes }: BlockFormProps) {
+export default function BlockForm({ block }: BlockFormProps) {
   const isEdit = !!block;
 
   const { data, setData, processing, errors, reset } = useForm<{
@@ -99,24 +98,7 @@ export default function BlockForm({ block, institutes }: BlockFormProps) {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="institute_id">Institute</Label>
-                <Select
-                  value={data.institute_id.toString()}
-                  onValueChange={(value) => setData('institute_id', parseInt(value))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select institute" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {institutes.map((institute) => (
-                      <SelectItem key={institute.id} value={institute.id.toString()}>
-                        {institute.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+             
 
               <div className="flex items-center justify-between pt-6">
                 <Link href="/blocks">
