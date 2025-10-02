@@ -21,15 +21,23 @@ $instute_id = session('sms_inst_id');
         }
 
         $plants = $query->paginate(10)->withQueryString();
-
+$permissions = [
+            'can_add' => auth()->user()->can('plant-add'),
+            'can_edit' => auth()->user()->can('plant-edit'),
+            'can_delete' => auth()->user()->can('plant-delete'),
+        ];
         return Inertia::render('plants/Index', [
             'plants' => $plants,
             'filters' => ['search' => $request->search ?? ''],
+            'permissions' => $permissions,
         ]);
     }
 
     public function create()
     {
+        if (!auth()->user()->can('plant-add')) {
+        abort(403, 'You do not have permission to add a plant.');
+    }
         return Inertia::render('plants/Form', ['plant' => null]);
     }
 
@@ -46,6 +54,9 @@ $data['institute_id'] = session('sms_inst_id');
     }
     public function edit(Plant $plant)
     {
+        if (!auth()->user()->can('plant-edit')) {
+        abort(403, 'You do not have permission to edit a plant.');
+    }
         return Inertia::render('plants/Form', ['plant' => $plant]);
     } 
     public function update(Request $request, Plant $plant)
@@ -59,7 +70,9 @@ $data['institute_id'] = session('sms_inst_id');
         $plant->update($data);
         return redirect()->back()->with('success', 'Plant updated successfully.');  }
     public function destroy(Plant $plant)
-    {
+    {if (!auth()->user()->can('plant-delete')) {
+        abort(403, 'You do not have permission to delete a plant.');
+    }
         $plant->delete();
         return redirect()->back()->with('success', 'Plant deleted successfully.');}
 }

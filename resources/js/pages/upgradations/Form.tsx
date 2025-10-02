@@ -8,53 +8,72 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Save, ArrowLeft } from 'lucide-react';
 import { BreadcrumbItem } from '@/types';
+import { DateInput } from '@/components/ui/date-input';
 
-interface AssetCategoryFormProps {
-  category?: {
+interface Props {
+  upgradation?: {
     id: number;
-    name: string;
+    institution_id: number;
+    details: string;
+    from: string;
+     to: string;
+        levelfrom: string;
+     levelto: string;
+    status: string;
   };
 }
 
-export default function AssetCategoryForm({ category }: AssetCategoryFormProps) {
-  const isEdit = !!category;
+export default function AssetupgradationForm({ upgradation }: Props) {
+  const isEdit = !!upgradation;
 
   const { data, setData, processing, errors, reset } = useForm<{
-    name: string;
+    details: string;
+       institution_id: number;
+    from: string;
+    to: string;
+        levelfrom: string;
+      levelto: string;
+    status: string;
   }>({
-    name: category?.name || '',
+   details: upgradation?.details || '',
+    institution_id: upgradation?.institution_id || 0,
+    from: upgradation?.from || '',
+    to: upgradation?.to || '',
+        levelfrom: upgradation?.levelfrom || '',
+      levelto: upgradation?.levelto || '',
+    status: upgradation?.status || '',
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     if (isEdit) {
-      router.put(`/asset-categories/${category.id}`, data, {
+      router.put(`/upgradations/${upgradation.id}`, data, {
         preserveScroll: true,
         preserveState: true,
       });
     } else {
-      router.post('/asset-categories', data);
+      router.post('/upgradations', data);
     }
   };
 
   const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Asset Categories', href: '/asset-categories' },
-    { title: isEdit ? 'Edit Category' : 'Add Category', href: '#' },
+    { title: 'Upgradations', href: '/upgradations' },
+    { title: isEdit ? 'Edit Upgradation' : 'Add Upgradation', href: '#' },
   ];
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
-      <Head title={isEdit ? 'Edit Category' : 'Add Category'} />
+      <Head title={isEdit ? 'Edit Upgradation' : 'Add Upgradation'} />
 
       <div className="flex-1 p-4 md:p-6 w-[70vw] mx-auto">
         <Card>
           <CardHeader>
             <CardTitle className="text-2xl font-bold">
-              {isEdit ? 'Edit Category' : 'Add Category'}
+              {isEdit ? 'Edit Upgradation' : 'Add Upgradation'}
             </CardTitle>
             <p className="text-sm text-muted-foreground">
-              {isEdit ? 'Edit category details' : 'Create a new asset category'}
+              {isEdit ? 'Edit Upgradation details' : 'Create a new Upgradation'}
             </p>
           </CardHeader>
 
@@ -63,17 +82,70 @@ export default function AssetCategoryForm({ category }: AssetCategoryFormProps) 
           <CardContent className="pt-6">
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="name">Category Name</Label>
+                <Label htmlFor="name">Upgradation Details</Label>
                 <Input
                   id="name"
-                  value={data.name}
-                  onChange={(e) => setData('name', e.target.value)}
-                  placeholder="Enter category name"
+                  value={data.details}
+                  onChange={(e) => setData('details', e.target.value)}
+                  placeholder="Enter upgradation Details"
                 />
+              </div>
+              <div className="space-y-2 space-x-1 gap-2 md:flex md:items-center ">
+                <Label htmlFor="from">From</Label>
+               
+             <DateInput
+             id="from"
+        value={data.from}
+        onChange={(value: string) => setData('from', value)}
+        placeholder="DD/MM/YYYY"
+      />
+
+                <Label htmlFor="to">To</Label>
+                  <DateInput
+                  id="to"
+        value={data.to}
+        onChange={(value: string) => setData('to', value)}
+        placeholder="DD/MM/YYYY"
+      />
+                
+              </div>
+                <div className="space-y-2">
+                <Label htmlFor="levelfrom">Level From</Label>
+                <Input
+                
+                  id="levelfrom"
+                  value={data.levelfrom}
+                  onChange={(e) => setData('levelfrom', e.target.value)}
+                  placeholder="Enter Level from"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="levelto">Level To</Label>
+                <Input
+             
+                  id="levelto"
+                  value={data.levelto}
+                  onChange={(e) => setData('levelto', e.target.value)}
+                  placeholder="Enter Level to"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="status">Status</Label>
+                <select
+                  id="status"
+                  value={data.status}
+                  onChange={(e) => setData('status', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">Select status</option>
+                  <option value="pending">Pending</option>
+                  <option value="approved">Approved</option>
+                  <option value="rejected">Rejected</option>
+                </select>
               </div>
 
               <div className="flex items-center justify-between pt-6">
-                <Link href="/asset-categories">
+                <Link href="/upgradations">
                   <Button type="button" variant="secondary">
                     <ArrowLeft className="mr-2 h-4 w-4" />
                     Back
@@ -87,7 +159,7 @@ export default function AssetCategoryForm({ category }: AssetCategoryFormProps) 
                       : 'Adding...'
                     : isEdit
                     ? 'Save Changes'
-                    : 'Add Category'}
+                    : 'Add upgradation'}
                 </Button>
               </div>
             </form>

@@ -36,21 +36,32 @@ interface Props {
   filters: {
     search: string;
   };
+  permissions: {
+    can_add: boolean;
+    can_edit: boolean;
+    can_delete: boolean;
+  };
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Shifts', href: '/shifts' },
 ];
 
-export default function ShiftsIndex({ shifts, filters }: Props) {
+export default function ShiftsIndex({ shifts, filters,permissions }: Props) {
   const [search, setSearch] = useState(filters.search || '');
 
+
   const handleDelete = (id: number) => {
-    router.delete(`/shifts/${id}`, {
-      onSuccess: () => toast.success('Shift deleted successfully'),
-      onError: () => toast.error('Failed to delete Shift'),
-    });
-  };
+  if (!permissions.can_delete) {
+    toast.error("You don’t have permission to delete shifts");
+    return;
+  }
+
+  router.delete(`/shifts/${id}`, {
+    onSuccess: () => toast.success("Shift deleted successfully"),
+    onError: () => toast.error("Failed to delete Shift"),
+  });
+};
 
   const handleSearchKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
@@ -68,12 +79,14 @@ export default function ShiftsIndex({ shifts, filters }: Props) {
               <CardTitle className="text-2xl font-bold">Shifts</CardTitle>
               <p className="text-muted-foreground text-sm">Manage  Shifts</p>
             </div>
+            {permissions.can_add &&  (
             <Link href="/shifts/create">
               <Button>
                 <Plus className="h-4 w-4 mr-2" />
                 Add Shift
               </Button>
             </Link>
+            )}
           </CardHeader>
 
           <Separator />
@@ -107,11 +120,14 @@ export default function ShiftsIndex({ shifts, filters }: Props) {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
+                      {permissions.can_edit &&  (
                       <Link href={`/shifts/${shift.id}/edit`}>
                         <Button variant="ghost" size="icon">
                           <Edit className="h-4 w-4" />
                         </Button>
                       </Link>
+                      )}
+                      {permissions.can_delete &&  (
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
                           <Button variant="ghost" size="icon" className="text-destructive hover:text-red-600">
@@ -135,7 +151,7 @@ export default function ShiftsIndex({ shifts, filters }: Props) {
                             </AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>
-                      </AlertDialog>
+                      </AlertDialog>)}
                     </div>
                   </div>
                 ))

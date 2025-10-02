@@ -143,7 +143,7 @@ export default function InstituteAssetIndex({ instituteAssets, filters }: Props)
                         </div>
                         <div className="flex items-center gap-1">
                           <Calendar className="h-3 w-3" />
-                          <span>Added: {new Date(instituteAsset.added_date).toLocaleDateString()}</span>
+                          <span>Added: {new Date(instituteAsset.added_date).toDateString()}</span>
                         </div>
                         {instituteAsset.room && (
                           <span>Room: {instituteAsset.room.name} {instituteAsset.room.block && `(${instituteAsset.room.block.name})`}</span>

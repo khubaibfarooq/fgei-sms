@@ -15,6 +15,8 @@ class Upgradation extends Model
         'details',
         'from',
         'to',
+        'levelfrom',
+        'levelto',
         'status',
         'added_date',
         'added_by',

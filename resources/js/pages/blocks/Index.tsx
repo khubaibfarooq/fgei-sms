@@ -41,13 +41,18 @@ interface Props {
   filters: {
     search: string;
   };
+  permissions: {
+    can_add: boolean;
+    can_edit: boolean;
+    can_delete: boolean;
+  };
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Blocks', href: '/blocks' },
 ];
 
-export default function BlockIndex({ blocks, filters }: Props) {
+export default function BlockIndex({ blocks, filters,permissions }: Props) {
   const [search, setSearch] = useState(filters.search || '');
 
   const handleDelete = (id: number) => {
@@ -73,12 +78,14 @@ export default function BlockIndex({ blocks, filters }: Props) {
               <CardTitle className="text-2xl font-bold">Blocks</CardTitle>
               <p className="text-muted-foreground text-sm">Manage institutional blocks</p>
             </div>
+            {permissions.can_add &&
             <Link href="/blocks/create">
               <Button>
                 <Plus className="h-4 w-4 mr-2" />
                 Add Block
               </Button>
             </Link>
+            }
           </CardHeader>
 
           <Separator />
@@ -115,11 +122,14 @@ export default function BlockIndex({ blocks, filters }: Props) {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
+                      {permissions.can_edit &&
                       <Link href={`/blocks/${block.id}/edit`}>
                         <Button variant="ghost" size="icon">
                           <Edit className="h-4 w-4" />
                         </Button>
                       </Link>
+                      }
+                      {permissions.can_delete &&
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
                           <Button variant="ghost" size="icon" className="text-destructive hover:text-red-600">
@@ -144,6 +154,7 @@ export default function BlockIndex({ blocks, filters }: Props) {
                           </AlertDialogFooter>
                         </AlertDialogContent>
                       </AlertDialog>
+                      }
                     </div>
                   </div>
                 ))

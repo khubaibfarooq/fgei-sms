@@ -25,15 +25,22 @@ if($type=='school'||$type=='college'){
         }
 
         $shifts = $query->paginate(10)->withQueryString();
-
+$permissions = [
+        'can_add'    => auth()->user()->can('shift-add'),
+        'can_edit'   => auth()->user()->can('shift-edit'),
+        'can_delete' => auth()->user()->can('shift-delete'),
+    ];
         return Inertia::render('shifts/Index', [
             'shifts' => $shifts,
             'filters' => ['search' => $request->search ?? ''],
+             'permissions' => $permissions,
         ]);
     }
 
     public function create()
-    {
+    { if (!auth()->user()->can('shift-add')) {
+        abort(403, 'You do not have permission to add a shift.');
+    }
         $buildingTypes = BuildingType::all();
         return Inertia::render('shifts/Form', [
             'shift' => null, 
@@ -43,7 +50,9 @@ if($type=='school'||$type=='college'){
     }
 
     public function store(Request $request)
-    {
+    {if (!auth()->user()->can('shift-add')) {
+        abort(403, 'You do not have permission to add a shift.');
+    }
         $data = $request->validate([
       
             'building_type_id' => 'required|exists:building_types,id',
@@ -56,7 +65,9 @@ $data['institute_id'] = session('sms_inst_id');
         return redirect()->back()->with('success', 'Shift saved successfully.');
     }   
     public function edit(Shift $shift)
-    {
+    {if (!auth()->user()->can('shift-edit')) {
+        abort(403, 'You do not have permission to edit a shift.');
+    }
         $buildingTypes = BuildingType::all();
         return Inertia::render('shifts/Form', [
             'shift' => $shift->load('buildingType', 'institute'),
@@ -65,7 +76,9 @@ $data['institute_id'] = session('sms_inst_id');
         ]);
     }
     public function update(Request $request, Shift $shift)
-    {
+    {if (!auth()->user()->can('shift-edit')) {
+        abort(403, 'You do not have permission to edit a shift.');
+    }
         $data = $request->validate([
             'building_type_id' => 'required|exists:building_types,id',
             'building_name' => 'nullable|string|max:255',
@@ -76,7 +89,9 @@ $data['institute_id'] = session('sms_inst_id');
         $shift->update($data);
         return redirect()->back()->with('success', 'Shift updated successfully.');  }
     public function destroy(Shift $shift)
-    {   
+    {   if (!auth()->user()->can('shift-delete')) {
+        abort(403, 'You do not have permission to delete a shift.');
+    }
         $shift->delete();
         return redirect()->back()->with('success', 'Shift deleted successfully.');} 
 }

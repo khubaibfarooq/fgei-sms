@@ -16,7 +16,9 @@ return new class extends Migration
     $table->foreignId('institute_id')->constrained('institutes');
     $table->text('details');
     $table->date('from');
-    $table->date('to');
+    $table->string('to');
+    $table->string('levelfrom');
+    $table->date('levelto');
     $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
     $table->date('approved_date')->nullable();
     $table->foreignId('added_by')->constrained('users');

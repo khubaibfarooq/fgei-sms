@@ -35,6 +35,12 @@ interface Room {
       name: string;
     };
   };
+  permissions?: {
+     can_add: boolean;
+    can_edit: boolean;
+    can_delete: boolean;
+  };
+
 }
 
 interface Props {
@@ -46,6 +52,15 @@ interface Props {
   };
   filters: {
     search: string;
+    block: string;
+  };
+  blocks: {
+    [key: string]: string; // Object with id as key and name as value
+  };
+  permissions: {
+  can_add: boolean;
+    can_edit: boolean;
+    can_delete: boolean;
   };
 }
 
@@ -53,8 +68,9 @@ const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Rooms', href: '/rooms' },
 ];
 
-export default function RoomIndex({ rooms, filters }: Props) {
+export default function RoomIndex({ rooms, filters, blocks,permissions }: Props) {
   const [search, setSearch] = useState(filters.search || '');
+  const [selectedBlock, setSelectedBlock] = useState(filters.block || '');
 
   const handleDelete = (id: number) => {
     router.delete(`/rooms/${id}`, {
@@ -63,11 +79,33 @@ export default function RoomIndex({ rooms, filters }: Props) {
     });
   };
 
+  const handleSearch = () => {
+    router.get('/rooms', { search, block: selectedBlock }, { preserveScroll: true });
+  };
+
   const handleSearchKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
-      router.get('/rooms', { ...filters, search }, { preserveScroll: true });
+      handleSearch();
     }
   };
+
+  const handleBlockChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const blockValue = e.target.value;
+    setSelectedBlock(blockValue);
+    router.get('/rooms', { search, block: blockValue }, { preserveScroll: true });
+  };
+
+  const clearFilters = () => {
+    setSearch('');
+    setSelectedBlock('');
+    router.get('/rooms', {}, { preserveScroll: true });
+  };
+
+  // Convert blocks object to array for mapping
+  const blockOptions = Object.entries(blocks).map(([id, name]) => ({
+    id: id,
+    name: name,
+  }));
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
@@ -79,12 +117,14 @@ export default function RoomIndex({ rooms, filters }: Props) {
               <CardTitle className="text-2xl font-bold">Rooms</CardTitle>
               <p className="text-muted-foreground text-sm">Manage institutional rooms</p>
             </div>
+            {permissions.can_add &&(
             <Link href="/rooms/create">
               <Button>
                 <Plus className="h-4 w-4 mr-2" />
                 Add Room
               </Button>
             </Link>
+            )}
           </CardHeader>
 
           <Separator />
@@ -97,7 +137,31 @@ export default function RoomIndex({ rooms, filters }: Props) {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 onKeyDown={handleSearchKey}
+                className="flex-1"
               />
+              
+              <select
+                value={selectedBlock}
+                onChange={handleBlockChange}
+                className="flex-1 md:flex-none w-full md:w-48 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">All Blocks</option>
+                {blockOptions.map((block) => (
+                  <option key={block.id} value={block.id}>
+                    {block.name}
+                  </option>
+                ))}
+              </select>
+
+              <Button onClick={handleSearch} variant="outline">
+                Search
+              </Button>
+              
+              {(search || selectedBlock) && (
+                <Button onClick={clearFilters} variant="ghost">
+                  Clear
+                </Button>
+              )}
             </div>
 
             <div className="space-y-3">
@@ -121,11 +185,14 @@ export default function RoomIndex({ rooms, filters }: Props) {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
+                    {permissions.can_edit &&(
                       <Link href={`/rooms/${room.id}/edit`}>
                         <Button variant="ghost" size="icon">
                           <Edit className="h-4 w-4" />
                         </Button>
                       </Link>
+                    )}
+                    {permissions.can_delete &&(
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
                           <Button variant="ghost" size="icon" className="text-destructive hover:text-red-600">
@@ -150,6 +217,7 @@ export default function RoomIndex({ rooms, filters }: Props) {
                           </AlertDialogFooter>
                         </AlertDialogContent>
                       </AlertDialog>
+                    )}
                     </div>
                   </div>
                 ))

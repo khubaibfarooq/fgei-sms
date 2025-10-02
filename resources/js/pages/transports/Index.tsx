@@ -43,13 +43,18 @@ interface Props {
   filters: {
     search: string;
   };
+  permissions: {
+    can_add: boolean;
+    can_edit: boolean;
+    can_delete: boolean;
+  };
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Transports', href: '/transports' },
 ];
 
-export default function TransportIndex({ transports, filters }: Props) {
+export default function TransportIndex({ transports, filters,permissions }: Props) {
   const [search, setSearch] = useState(filters.search || '');
 //console.log(transports.data);
   const handleDelete = (id: number) => {
@@ -75,12 +80,14 @@ export default function TransportIndex({ transports, filters }: Props) {
               <CardTitle className="text-2xl font-bold">Transports</CardTitle>
               <p className="text-muted-foreground text-sm">Manage institutional transport vehicles</p>
             </div>
+            {permissions.can_add &&
             <Link href="/transports/create">
               <Button>
                 <Plus className="h-4 w-4 mr-2" />
                 Add Transport
               </Button>
             </Link>
+            }
           </CardHeader>
 
           <Separator />
@@ -115,11 +122,14 @@ export default function TransportIndex({ transports, filters }: Props) {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
+                      {permissions.can_edit &&
                       <Link href={`/transports/${transport.id}/edit`}>
                         <Button variant="ghost" size="icon">
                           <Edit className="h-4 w-4" />
                         </Button>
                       </Link>
+                      }
+                      {permissions.can_delete &&
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
                           <Button variant="ghost" size="icon" className="text-destructive hover:text-red-600">
@@ -144,6 +154,7 @@ export default function TransportIndex({ transports, filters }: Props) {
                           </AlertDialogFooter>
                         </AlertDialogContent>
                       </AlertDialog>
+                      }
                     </div>
                   </div>
                 ))

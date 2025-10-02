@@ -27,7 +27,7 @@ class CheckMenuPermission
         // Jika menu ditemukan dan punya permission
         if ($menu && $menu->permission_name) {
             if (!$user->can($menu->permission_name)) {
-                abort(403, 'Anda tidak memiliki izin untuk mengakses halaman ini.');
+                abort(403, 'you do not have permission to access this page.');
             }
         }
 
