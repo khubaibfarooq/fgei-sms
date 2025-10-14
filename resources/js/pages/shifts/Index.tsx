@@ -23,6 +23,8 @@ import { toast } from 'sonner';
 interface shifts {
   id: number;
   name: string;
+  building_name:string;
+  building_type?: { id: number; name?: string };
  shifts_count?: number;
 }
 
@@ -49,7 +51,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 export default function ShiftsIndex({ shifts, filters,permissions }: Props) {
   const [search, setSearch] = useState(filters.search || '');
-
+console.log(shifts);
 
   const handleDelete = (id: number) => {
   if (!permissions.can_delete) {
@@ -116,7 +118,7 @@ export default function ShiftsIndex({ shifts, filters,permissions }: Props) {
                         {shift.name}
                       </div>
                       <div className="text-xs text-muted-foreground">
-                        {shift.shifts_count || 0} shifts
+                        Building: {shift.building_name} | Building Type: {shift.building_type?.name || 'N/A'}
                       </div>
                     </div>
                     <div className="flex items-center gap-2">

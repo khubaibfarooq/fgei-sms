@@ -4,16 +4,19 @@ namespace App\Http\Controllers;
 use App\Models\Block;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use App\Models\BlockType;
+
 
 class BlockController extends Controller
 {
     public function index(Request $request)
     {
+
         $query = Block::with('institute');
 $inst_id = session('sms_inst_id');
 $type=session('type');
-if($type=='school'||$type=='college'){
-        $query->where('institute_id', $inst_id);}
+
+        $query->where('institute_id', $inst_id);
         if ($request->search) {
             $query->where('name', 'like', '%' . $request->search . '%')
             ->Where('institute_id', $inst_id);
@@ -40,7 +43,9 @@ $permissions = [
         if(!auth()->user()->can('block-add')){
             abort(403);
         }
-        return Inertia::render('blocks/Form', ['block' => null]);
+                $blockTypes = BlockType::pluck('name', 'id')->toArray();
+
+        return Inertia::render('blocks/Form', ['block' => null,'blockTypes'=>$blockTypes]);
     }
 
     public function store(Request $request)
@@ -48,6 +53,7 @@ $permissions = [
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'area' => 'required|numeric',
+           'block_type_id' => 'required|exists:block_types,id',
         ]);
 $data['institute_id'] = session('sms_inst_id');
 
@@ -59,13 +65,17 @@ $data['institute_id'] = session('sms_inst_id');
     {if (!auth()->user()->can('block-edit')) {
         abort(403, 'You do not have permission to edit a block.');
     }
-        return Inertia::render('blocks/Form', ['block' => $block]);
+     $blockTypes = BlockType::pluck('name', 'id')->toArray();
+        return Inertia::render('blocks/Form', ['block' => $block,
+    'blockTypes'=>$blockTypes]);
     }
     public function update(Request $request, Block $block)
     {
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'area' => 'required|numeric',
+                       'block_type_id' => 'required|exists:block_types,id',
+
         ]); 
         $data['institute_id'] = session('sms_inst_id');
 

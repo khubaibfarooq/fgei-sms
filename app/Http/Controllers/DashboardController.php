@@ -15,7 +15,7 @@ class DashboardController extends Controller
            $hrInstituteId = session('inst_id');
   $regionId = session('region_id');
 
-$institute = Institute::where('hr_id', $hrInstituteId)->first();
+$institute = Institute::where('hr_id',$hrInstituteId)->first();
 
      if ($institute) {
          session(['sms_inst_id' => $institute->id]);

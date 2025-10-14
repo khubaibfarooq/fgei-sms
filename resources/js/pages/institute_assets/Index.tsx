@@ -50,6 +50,7 @@ interface InstituteAsset {
     id: number;
     name: string;
   };
+ 
 }
 
 interface Props {
@@ -61,15 +62,28 @@ interface Props {
   };
   filters: {
     search: string;
+    block: string;
+    room: string;
   };
+   permissions?: {
+    can_add: boolean;
+    can_edit: boolean;
+    can_delete: boolean;
+  };
+  blocks: {
+    [key: string]: string; // Object with id as key and name as value
+  };
+ 
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Institute Assets', href: '/institute-assets' },
 ];
 
-export default function InstituteAssetIndex({ instituteAssets, filters }: Props) {
+export default function InstituteAssetIndex({ instituteAssets, filters,blocks,permissions }: Props) {
   const [search, setSearch] = useState(filters.search || '');
+  const [selectedBlock, setSelectedBlock] = useState(filters.block || '');
+  const [selectedRoom, setSelectedRoom] = useState(filters.room || '');
 
   const handleDelete = (id: number) => {
     router.delete(`/institute-assets/${id}`, {
@@ -77,13 +91,63 @@ export default function InstituteAssetIndex({ instituteAssets, filters }: Props)
       onError: () => toast.error('Failed to delete institute asset'),
     });
   };
-
+ const handleSearch = () => {
+    router.get('/rooms', { search, block: selectedBlock },  {
+    preserveScroll: true,
+    preserveState: true,
+    replace: true,
+    only: ['instituteAssets', 'filters'], // only reload these props
+  });
+  };
   const handleSearchKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
-      router.get('/institute-assets', { ...filters, search }, { preserveScroll: true });
+      router.get('/institute-assets', { ...filters, search },  {
+    preserveScroll: true,
+    preserveState: true,
+    replace: true,
+    only: ['instituteAssets', 'filters'], // only reload these props
+  });
     }
   };
+    const handleBlockChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const blockValue = e.target.value;
+        setSelectedBlock(blockValue);
+        router.get('/institute-assets', { search, block: blockValue },  {
+    preserveScroll: true,
+    preserveState: true,
+    replace: true,
+    only: ['instituteAssets', 'filters'], // only reload these props
+  });
+      };
+      const handleRoomChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const roomValue = e.target.value;
+        setSelectedRoom(roomValue);
+        router.get('/institute-assets', { ...filters, room: roomValue },  {
+    preserveScroll: true,
+    preserveState: true,
+    replace: true,
+    only: ['instituteAssets', 'filters'], // only reload these props
+  });
+      }
+    
+    const clearFilters = () => {
+      setSearch('');
+      setSelectedBlock('');
+            setSelectedRoom('');
 
+      router.get('/institute-assets', {},  {
+    preserveScroll: true,
+    preserveState: true,
+    replace: true,
+    only: ['instituteAssets', 'filters'], // only reload these props
+  });
+    };
+  // Convert blocks object to array for mapping
+  const blockOptions = Object.entries(blocks).map(([id, name]) => ({
+    id: id,
+    name: name,
+  }));
+    
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Institute Asset Management" />
@@ -94,12 +158,14 @@ export default function InstituteAssetIndex({ instituteAssets, filters }: Props)
               <CardTitle className="text-2xl font-bold">Institute Assets</CardTitle>
               <p className="text-muted-foreground text-sm">Manage institute asset inventory</p>
             </div>
+            {permissions?.can_add &&
             <Link href="/institute-assets/create">
               <Button>
                 <Plus className="h-4 w-4 mr-2" />
                 Add Asset
               </Button>
             </Link>
+            }
           </CardHeader>
 
           <Separator />
@@ -113,6 +179,37 @@ export default function InstituteAssetIndex({ instituteAssets, filters }: Props)
                 onChange={(e) => setSearch(e.target.value)}
                 onKeyDown={handleSearchKey}
               />
+              <select
+                             value={selectedBlock}
+                             onChange={handleBlockChange}
+                             className="flex-1 md:flex-none w-full md:w-48 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                           >
+                             <option value="">All Blocks</option>
+                             {blockOptions.map((block) => (
+                               <option key={block.id} value={block.id}>
+                                 {block.name}
+                               </option>
+                             ))}
+                           </select>
+                  <select
+                             value={selectedRoom}
+                             onChange={handleRoomChange}
+                             className="flex-1 md:flex-none w-full md:w-48 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                           >
+                             <option value="">All Rooms</option>
+                              {instituteAssets.data.map((asset) => asset.room).filter((room, index, self) => room && index === self.findIndex((r) => r?.id === room.id)).map((room) => ( 
+                                <option key={room?.id} value={room?.id}>
+                                  {room?.name} {room?.block && `(${room.block.name})`}
+                                </option>
+                              ))} 
+                           </select>
+                           
+                           
+                           {(search || selectedBlock || selectedRoom) && (
+                             <Button onClick={clearFilters} variant="ghost">
+                               Clear
+                             </Button>
+                           )}  
             </div>
 
             <div className="space-y-3">
@@ -158,11 +255,14 @@ export default function InstituteAssetIndex({ instituteAssets, filters }: Props)
                     </div>
                     
                     <div className="flex items-center gap-2">
+                      {permissions?.can_edit &&
                       <Link href={`/institute-assets/${instituteAsset.id}/edit`}>
                         <Button variant="ghost" size="icon">
                           <Edit className="h-4 w-4" />
                         </Button>
                       </Link>
+                      }
+                      {permissions?.can_delete &&
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
                           <Button variant="ghost" size="icon" className="text-destructive hover:text-red-600">
@@ -187,6 +287,7 @@ export default function InstituteAssetIndex({ instituteAssets, filters }: Props)
                           </AlertDialogFooter>
                         </AlertDialogContent>
                       </AlertDialog>
+                      }
                     </div>
                   </div>
                 ))

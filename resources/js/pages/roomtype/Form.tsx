@@ -1,4 +1,4 @@
-import React from 'react';
+import React,{useEffect,useState} from 'react';
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import { Button } from '@/components/ui/button';
@@ -8,23 +8,60 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Save, ArrowLeft } from 'lucide-react';
 import { BreadcrumbItem } from '@/types';
+import MultiSelect from '@/components/ui/MultiSelect';
 
 interface RoomTypeFormProps {
   roomType?: {
     id: number;
     name: string;
+    assets_id:string;
   };
+   assets: Record<string, string>; 
 }
 
-export default function RoomTypeForm({ roomType }: RoomTypeFormProps) {
+export default function RoomTypeForm({ roomType,assets }: RoomTypeFormProps) {
   const isEdit = !!roomType;
 
+  console.log(roomType);
+ const options = React.useMemo(() => {
+    if (!assets) return [];
+    
+    if (Array.isArray(assets)) {
+      return assets.map(asset => ({
+        value: asset.id.toString(),
+        label: asset.name
+      }));
+    } return Object.entries(assets).map(([id, name]) => ({
+      value: id,
+      label: name as string
+    }));
+  }, [assets]);
+    const [selectedValues, setSelectedValues] = useState<string[]>([]);
+  // Parse the room_type_Ids string and set as selected values
+    useEffect(() => {
+      if (roomType?.assets_id) {
+        // Convert comma-separated string to array: "1,2,3" -> ["1", "2", "3"]
+        const assetsArray = roomType.assets_id
+          .split(',')
+          .map(id => id.trim())
+          .filter(id => id !== '' && id !== null && id !== undefined);
+        
+        setSelectedValues(assetsArray);
+      } else {
+        setSelectedValues([]);
+      }
+    }, [roomType]);
   const { data, setData, processing, errors, reset } = useForm<{
     name: string;
+    assets_id:string;
   }>({
     name: roomType?.name || '',
+    assets_id:roomType?.assets_id|| '',
   });
-
+  useEffect(() => {
+    const assetsidString = selectedValues.join(',');
+    setData('assets_id', assetsidString);
+  }, [selectedValues, setData]);
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -70,6 +107,28 @@ export default function RoomTypeForm({ roomType }: RoomTypeFormProps) {
                   onChange={(e) => setData('name', e.target.value)}
                   placeholder="Enter room type name"
                 />
+                
+               
+                <MultiSelect
+                  options={options}
+                  value={selectedValues}
+                  onChange={setSelectedValues}
+                  placeholder="Choose room types..."
+                  label="Select Room Types"
+                />
+                <div className="text-sm text-muted-foreground">
+                  {selectedValues.length > 0 
+                    ? `${selectedValues.length} room type(s) selected: ${selectedValues.map(id => {
+                        const roomType = options.find(opt => opt.value === id);
+                        return roomType ? roomType.label : id;
+                      }).join(', ')}` 
+                    : 'No room types selected'
+                  }
+                </div>
+                {errors.assets_id && (
+                  <p className="text-sm text-red-500">{errors.assets_id}</p>
+                )}
+             
               </div>
 
               <div className="flex items-center justify-between pt-6">

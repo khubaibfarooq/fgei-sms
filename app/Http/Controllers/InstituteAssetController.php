@@ -25,17 +25,42 @@ class InstituteAssetController extends Controller
                 $q->where('name', 'like', '%' . $request->search . '%');
             });
         }
+        if ($request->block) {
+            $query->whereHas('room.block', function ($q) use ($request) {
+                $q->where('id', $request->block);
+            });
+        }
+        if ($request->room) {
+            $query->where('room_id', $request->room);
+        }
 
         $instituteAssets = $query->paginate(10)->withQueryString();
-
+$permissions = [
+            'can_add' => auth()->user()->can('inst-assets-add'),
+            'can_edit' => auth()->user()->can('inst-assets-edit'),
+            'can_delete' => auth()->user()->can('inst-assets-delete'),
+        ];
+    $blocks = Block::where('institute_id', $inst_id)->pluck('name', 'id');
+        $rooms = Room::whereHas('block', function ($query) use ($inst_id) {
+            $query->where('institute_id', $inst_id);
+        })->with(['block', 'type'])->get();
+     
         return Inertia::render('institute_assets/Index', [
             'instituteAssets' => $instituteAssets,
-            'filters' => ['search' => $request->search ?? ''],
+            'filters' => ['search' => $request->search ?? '',
+                          'block' => $request->block ?? '',
+                        'room' => $request->room ?? '',
+                        ],
+            'permissions' => $permissions,
+            'blocks' => $blocks,
+            'rooms' => $rooms
         ]);
     }
 
     public function create()
-    {
+    { if (!auth()->user()->can('inst-assets-add')) {
+        abort(403, 'You do not have permission to add a Asset.');
+    }
         $inst_id = session('sms_inst_id');
         $rooms = Room::whereHas('block', function ($query) use ($inst_id) {
             $query->where('institute_id', $inst_id);
@@ -68,7 +93,9 @@ class InstituteAssetController extends Controller
         return redirect()->route('institute-assets.index')->with('success', 'Institute asset saved successfully.');
     }
     public function edit(InstituteAsset $instituteAsset)
-    {
+    {if (!auth()->user()->can('inst-assets-edit')) {
+        abort(403, 'You do not have permission to edit a Asset.');
+    }
         $inst_id = session('sms_inst_id');
         $blocks = Block::where('institute_id', $inst_id)->get();
         $rooms = Room::whereHas('block', function ($query) use ($inst_id) {
@@ -101,7 +128,9 @@ class InstituteAssetController extends Controller
         return redirect()->route('institute-assets.index')->with('success', 'Institute asset updated successfully.');
     }
     public function destroy(InstituteAsset $instituteAsset)
-    {
+    {if (!auth()->user()->can('inst-assets-delete')) {
+        abort(403, 'You do not have permission to delete a Asset.');
+    }
         $instituteAsset->delete();
         return redirect()->route('institute-assets.index')->with('success', 'Institute asset deleted successfully.');
     }

@@ -131,7 +131,15 @@ export default function InstituteForm({ institute }: InstituteFormProps) {
 
           <CardContent className="pt-6">
             <form onSubmit={handleSubmit} className="space-y-6" encType='multipart/form-data'>
-           
+           <div className="space-y-2">
+                <Label htmlFor="established_date">Name</Label>
+                <Input
+                  id="name"
+                  type="text"
+                  value={data.name}
+                  onChange={(e) => setData('name', e.target.value)}
+                />
+              </div>
                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
              
 
@@ -247,12 +255,7 @@ export default function InstituteForm({ institute }: InstituteFormProps) {
    
 
                 <div className="flex items-center justify-between pt-2">
-                <Link href="/institutes">
-                  <Button type="button" variant="secondary">
-                    <ArrowLeft className="mr-2 h-4 w-4" />
-                    Back
-                  </Button>
-                </Link>
+                
                 <Button type="submit" disabled={processing}>
                   <Save className="mr-2 h-4 w-4" />
                   {processing

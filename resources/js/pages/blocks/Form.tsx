@@ -22,20 +22,42 @@ interface BlockFormProps {
     name: string;
     area: number;
     institute_id: number;
+    block_type_id?: number;
   };
+  blockTypes: Record<string, string>; // Changed from Array to Record (object)
 }
 
-export default function BlockForm({ block }: BlockFormProps) {
+export default function BlockForm({ block, blockTypes }: BlockFormProps) {
   const isEdit = !!block;
+  
+  console.log('blockTypes:', blockTypes);
+
+  // Convert blockTypes object to array format for the Select component
+  const blockTypesArray = React.useMemo(() => {
+    if (!blockTypes) return [];
+    
+    // If blockTypes is already an array, use it directly
+    if (Array.isArray(blockTypes)) {
+      return blockTypes;
+    }
+    
+    // Convert object { "1": "Administration", "2": "Academic" } to array format
+    return Object.entries(blockTypes).map(([id, name]) => ({
+      id: parseInt(id),
+      name: name as string
+    }));
+  }, [blockTypes]);
 
   const { data, setData, processing, errors, reset } = useForm<{
     name: string;
     area: number;
     institute_id: number;
+    block_type_id: number;
   }>({
     name: block?.name || '',
     area: block?.area || 0,
     institute_id: block?.institute_id || 0,
+    block_type_id: block?.block_type_id || 0,
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -95,6 +117,25 @@ export default function BlockForm({ block }: BlockFormProps) {
                     onChange={(e) => setData('area', Number(e.target.value))}
                     placeholder="Enter area"
                   />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="block_type_id">Block Type</Label>
+                  <Select
+                    value={data.block_type_id.toString()}
+                    onValueChange={(value) => setData('block_type_id', parseInt(value))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select block type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {blockTypesArray.map((type) => (
+                        <SelectItem key={type.id} value={type.id.toString()}>
+                          {type.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 

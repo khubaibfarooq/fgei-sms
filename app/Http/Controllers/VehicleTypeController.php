@@ -18,7 +18,7 @@ class VehicleTypeController extends Controller
         $vehicleTypes = $query->paginate(10)->withQueryString();
 
         return Inertia::render('vehicletypes/Index', [
-            'VehicleTypes' => $vehicleTypes,
+            'vehicleTypes' => $vehicleTypes,
             'filters' => ['search' => $request->search ?? ''],
         ]);
     }
@@ -38,7 +38,8 @@ class VehicleTypeController extends Controller
     }   
     public function edit(VehicleType $VehicleType)
     {
-        return Inertia::render('vehicletypes/Form', ['VehicleType' => $VehicleType]);
+        //dd($VehicleType);
+        return Inertia::render('vehicletypes/Form', ['vehicleType' => $VehicleType]);
     } 
     public function update(Request $request, VehicleType $VehicleType)
     {

@@ -20,15 +20,15 @@ import {
 } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 
-interface VehicelType {
+interface VehicleType {
   id: number;
   name: string;
 
 }
 
 interface Props {
-  vehicelTypes: {
-    data: VehicelType[];
+  vehicleTypes: {
+    data: VehicleType[];
     current_page: number;
     last_page: number;
     links: { url: string | null; label: string; active: boolean }[];
@@ -39,39 +39,39 @@ interface Props {
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
-  { title: 'Vehicel Types', href: '/vehicel-types' },
+  { title: 'Vehicle Types', href: '/vehicle-types' },
 ];
 
-export default function VehicelTypeIndex({ vehicelTypes, filters }: Props) {
+export default function VehicleTypeIndex({ vehicleTypes, filters }: Props) {
   const [search, setSearch] = useState(filters.search || '');
-  console.log(vehicelTypes);
+  console.log(vehicleTypes);
   const handleDelete = (id: number) => {
-    router.delete(`/vehicel-types/${id}`, {
-      onSuccess: () => toast.success('Vehicel type deleted successfully'),
-      onError: () => toast.error('Failed to delete Vehicel type'),
+    router.delete(`/vehicle-types/${id}`, {
+      onSuccess: () => toast.success('Vehicle type deleted successfully'),
+      onError: () => toast.error('Failed to delete Vehicle type'),
     });
   };
 
   const handleSearchKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
-      router.get('/vehicel-types', { ...filters, search }, { preserveScroll: true });
+      router.get('/vehicle-types', { ...filters, search }, { preserveScroll: true });
     }
   };
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
-      <Head title="Vehicel Type Management" />
+      <Head title="Vehicle Type Management" />
       <div className="flex-1 p-4 md:p-6">
         <Card>
           <CardHeader className="pb-3 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-              <CardTitle className="text-2xl font-bold">Vehicel Types</CardTitle>
-              <p className="text-muted-foreground text-sm">Manage Vehicel types</p>
+              <CardTitle className="text-2xl font-bold">Vehicle Types</CardTitle>
+              <p className="text-muted-foreground text-sm">Manage Vehicle types</p>
             </div>
-            <Link href="/vehicel-types/create">
+            <Link href="/vehicle-types/create">
               <Button>
                 <Plus className="h-4 w-4 mr-2" />
-                Add Vehicel Type
+                Add Vehicle Type
               </Button>
             </Link>
           </CardHeader>
@@ -82,7 +82,7 @@ export default function VehicelTypeIndex({ vehicelTypes, filters }: Props) {
             <div className="flex flex-col md:flex-row md:items-center gap-4">
               <Input
                 type="text"
-                placeholder="Search Vehicel types... (press Enter)"
+                placeholder="Search Vehicle types... (press Enter)"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 onKeyDown={handleSearchKey}
@@ -90,17 +90,17 @@ export default function VehicelTypeIndex({ vehicelTypes, filters }: Props) {
             </div>
 
             <div className="space-y-3">
-              {!vehicelTypes || vehicelTypes.data.length === 0 ? (
-                <p className="text-muted-foreground text-center">No Vehicel types found.</p>
+              {!vehicleTypes || vehicleTypes.data.length === 0 ? (
+                <p className="text-muted-foreground text-center">No Vehicle types found.</p>
               ) : (
-                vehicelTypes.data.map((VehicelType) => (
+                vehicleTypes.data.map((vehicleType) => (
                   <div
-                    key={VehicelType.id}
+                    key={vehicleType.id}
                     className="flex items-center justify-between border px-4 py-3 rounded-md bg-muted/50 hover:bg-muted/70 transition"
                   >
-                 {VehicelType.name}
+                 {vehicleType.name}
                     <div className="flex items-center gap-2">
-                      <Link href={`/vehicel-types/${VehicelType.id}/edit`}>
+                      <Link href={`/vehicle-types/${vehicleType.id}/edit`}>
                         <Button variant="ghost" size="icon">
                           <Edit className="h-4 w-4" />
                         </Button>
@@ -113,16 +113,16 @@ export default function VehicelTypeIndex({ vehicelTypes, filters }: Props) {
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                           <AlertDialogHeader>
-                            <AlertDialogTitle>Delete this Vehicel type?</AlertDialogTitle>
+                            <AlertDialogTitle>Delete this Vehicle type?</AlertDialogTitle>
                             <AlertDialogDescription>
-                              Vehicel type <strong>{VehicelType.name}</strong> will be permanently deleted.
+                              Vehicle type <strong>{vehicleType.name}</strong> will be permanently deleted.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel>Cancel</AlertDialogCancel>
                             <AlertDialogAction
                               className="bg-destructive hover:bg-destructive/90"
-                              onClick={() => handleDelete(VehicelType.id)}
+                              onClick={() => handleDelete(vehicleType.id)}
                             >
                               Delete
                             </AlertDialogAction>
@@ -135,9 +135,9 @@ export default function VehicelTypeIndex({ vehicelTypes, filters }: Props) {
               )}
             </div>
 
-            {!vehicelTypes || vehicelTypes.links.length > 1 && (
+            {!vehicleTypes || vehicleTypes.links.length > 1 && (
               <div className="flex justify-center pt-6 flex-wrap gap-2">
-                {vehicelTypes.links.map((link, i) => (
+                {vehicleTypes.links.map((link, i) => (
                   <Button
                     key={i}
                     disabled={!link.url}

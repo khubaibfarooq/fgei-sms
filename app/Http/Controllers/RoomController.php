@@ -22,12 +22,12 @@ class RoomController extends Controller
     // Start the query
     $query = Room::with(['type', 'block']);
     
-    if ($type == 'school' || $type == 'college') {
+   
         // Filter rooms by institute through the block relationship
         $query->whereHas('block', function ($q) use ($inst_id) {
             $q->where('institute_id', $inst_id);
         });
-    }
+    
     
     if ($request->search) {
         $query->where('name', 'like', '%' . $request->search . '%');

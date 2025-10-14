@@ -14,10 +14,10 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 const summaryData = [
-  { label: 'Users', value: 420, color: '#316ff6' },
-  { label: 'Backups', value: 80, color: '#f472b6' },
-  { label: 'Activity Logs', value: 1570, color: '#38bdf8' },
-    { label: 'Activity Logs', value: 1570, color: '#38bdf8' },
+  { label: 'Users', value: 420, color: '#aaff11' },
+  { label: 'Backups', value: 80, color: 'green-600' },
+  { label: 'Activity Logs', value: 1570, color: 'green-100' },
+    { label: 'Activity Logs', value: 1570, color: 'blue-600' },
 
 ];
 
@@ -63,9 +63,9 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {summaryData.map((item, index) => (
 
-            <Card key={index} className={`bg-[${item.color}] dark:bg-gray-800 shadow-md rounded-lg overflow-hidden`}>
+            <Card key={index} className={` bg-[${item.color}] dark:bg-gray-800 shadow-md rounded-lg overflow-hidden`}>
               <CardHeader className="px-4 py-3">
-                <CardTitle className="text-lg font-semibold text-gray-800 dark:text-white ">{item.label}</CardTitle>
+                <CardTitle className="text-lg  bg-gree font-semibold text-gray-800 dark:text-white ">{item.label}</CardTitle>
               </CardHeader>
               <CardContent className="px-4 py-2 text-3xl font-bold text-gray-900 dark:text-gray-100">{item.value}</CardContent>
             </Card>

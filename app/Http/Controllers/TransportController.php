@@ -15,8 +15,7 @@ class TransportController extends Controller
         $query = Transport::with('vehicleType', 'institute');
 $inst_id = session('sms_inst_id');
 $type=session('type');
-if($type=='school'||$type=='college'){
-        $query->where('institute_id', $inst_id);}
+        $query->where('institute_id', $inst_id);
         if ($request->search) {
             $query->where('vehicle_no', 'like', '%' . $request->search . '%')->Where('institute_id', $inst_id);
         }

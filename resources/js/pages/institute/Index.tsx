@@ -119,6 +119,11 @@ export default function InstituteIndex({ institutes, filters }: Props) {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
+                      <Link href={`/reports/${institute.id}/blocks`}>
+                        <Button variant="ghost" >
+                          Blocks
+                        </Button>
+                      </Link>
                       <Link href={`/institutes/${institute.id}/edit`}>
                         <Button variant="ghost" size="icon">
                           <Edit className="h-4 w-4" />

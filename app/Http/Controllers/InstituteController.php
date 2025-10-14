@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Support\Facades\Auth;
 
 use App\Models\Institute;
 use Illuminate\Http\Request;
@@ -14,7 +15,7 @@ class InstituteController extends Controller
     public function index(Request $request)
     {
         $type=session('type');
-        if($type=='school' ||  $type=='college'){
+       
             $hrInstituteId=session('inst_id');
             $institute = Institute::where('hr_id', $hrInstituteId)->first();
             if($institute){
@@ -26,15 +27,33 @@ class InstituteController extends Controller
                 return Inertia::render('institute/Form', [
                     'institute' => null,
                 ]);
-            }}
-            else{
-        
-        $query = Institute::query();
-
-    if ($request->search) {
-        $query->where('name', 'like', '%' . $request->search . '%');
+            }
+            
+          
     }
 
+      public function institutes(Request $request)
+    {
+          if (!auth()->user()->can('all-institutes-view')) {
+        abort(403, 'You do not have permission to View this Page.');
+    }
+        $type=session('type');
+       $regionId=session('region_id');
+        $query = Institute::query();
+       if($type=='Regional Office'){
+          
+           $query->where('region_id', $regionId);
+    if ($request->search) {
+        $query->where('name', 'like', '%' . $request->search . '%')
+        ->where('region_id', $regionId);
+    }}
+    else{
+         if ($request->search) {
+        $query->where('name', 'like', '%' . $request->search . '%');
+    }}
+      
+
+    
     $institutes = $query->paginate(10)->withQueryString();
 
     return Inertia::render('institute/Index', [
@@ -42,23 +61,22 @@ class InstituteController extends Controller
         'filters' => [
             'search' => $request->search ?? '',
         ],
-    ]);}
-//         $institute = Institute::first(); // assuming one record
-//        return Inertia::render('institute/Index', [
-//     'institute' => $institute,
-// ]);
-    }
+    ]);
+}
+
+    
  public function create()
     {
        
-       return Inertia::render('institute/Form', [
-           'institute' => null,
-       ]);
+    //    return Inertia::render('institute/Form', [
+    //        'institute' => null,
+    //    ]);
     }
     public function store(Request $request)
     {
 
         $data = $request->validate([
+            'name' => 'required|string',
             'established_date' => 'required|string|max:255',
             'total_area' => 'required|numeric',
             'convered_area' => 'required|numeric',
@@ -91,7 +109,7 @@ $institute = Institute::where('hr_id', $hrInstituteId)->first();
         } else {
           $data['hr_id'] = $hrInstituteId;
 $data['type'] = $type;
-            if($type=='school' || $type=='college'){
+            if($type=='School' || $type=='College' || $type=='Regional Office'){
                 $data['region_id'] = $regionId;
             }
             else{
@@ -113,6 +131,7 @@ $data['type'] = $type;
     public function update(Request $request, Institute $institute)
     {
           $data = $request->validate([
+               'name' => 'required|string',
             'established_date' => 'required|string|max:255',
             'total_area' => 'required|numeric',
             'convered_area' => 'required|numeric',
