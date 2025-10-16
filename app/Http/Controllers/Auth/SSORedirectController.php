@@ -115,6 +115,7 @@ class SSORedirectController extends Controller
             return redirect('/login')->with('error', 'Invalid or tampered token from HR.');
         }
     }
+    //not yet applied
  public function GetHrmsToken($Hrmstoken)
     {
 

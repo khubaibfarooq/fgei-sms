@@ -216,7 +216,7 @@ export default function InstituteForm({ institute }: InstituteFormProps) {
                 <Label>Current Layout Image</Label>
                 {institute?.img_layout ? (
                   <img
-                    src={`/storage/img_layout/${institute.img_layout}`}
+                    src={`/storage/${institute.img_layout}`}
                     alt="Layout"
                     className="w-full h-48 object-cover rounded"
                   />
@@ -230,7 +230,7 @@ export default function InstituteForm({ institute }: InstituteFormProps) {
                 <Label>Current 3D Image</Label>
                 {institute?.img_3d ? (
                   <img
-                    src={`/storage/img_3d/${institute.img_3d}`}
+                    src={`/storage/${institute.img_3d}`}
                     alt="3D View"
                     className="w-full h-48 object-cover rounded"
                   />
