@@ -23,7 +23,7 @@ interface FormProps {
 export default function DashboardCardForm({ dashboardCard, roles }: FormProps) {
   const isEdit = !!dashboardCard;
 console.log(dashboardCard);
-  const { data, setData, processing, errors } = useForm<{
+  const { data, setData, processing, errors, reset } = useForm<{
     title: string;
     link: string;
     role_id: number | '';
@@ -60,7 +60,11 @@ console.log(dashboardCard);
         preserveState: true,
       });
     } else {
-      router.post('/dashboardcards', data);
+      router.post('/dashboardcards', data , {
+        onSuccess: () => {
+          reset(); // Clear form data on successful POST
+        },
+      });
     }
   };
 

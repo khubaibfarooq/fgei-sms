@@ -78,7 +78,11 @@ export default function InstituteAssetForm({ instituteAsset, assets, rooms }: In
         preserveState: true,
       });
     } else {
-      router.post('/institute-assets', data);
+      router.post('/institute-assets', data, {
+        onSuccess: () => {
+          reset(); // Clear form data on successful POST
+        },
+      });
     }
   };
 

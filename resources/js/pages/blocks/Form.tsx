@@ -69,7 +69,11 @@ export default function BlockForm({ block, blockTypes }: BlockFormProps) {
         preserveState: true,
       });
     } else {
-      router.post('/blocks', data);
+      router.post('/blocks', data, {
+        onSuccess: () => {
+          reset(); // Clear form data on successful POST
+        },
+      });
     }
   };
 

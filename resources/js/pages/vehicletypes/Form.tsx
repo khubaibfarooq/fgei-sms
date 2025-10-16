@@ -34,7 +34,11 @@ export default function VehicleTypeForm({ vehicleType }: VehicleTypeFormProps) {
         preserveState: true,
       });
     } else {
-      router.post('/vehicle-types', data);
+      router.post('/vehicle-types', data, {
+        onSuccess: () => {
+          reset(); // Clear form data on successful POST
+        },
+      });
     }
   };
 

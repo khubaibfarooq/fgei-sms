@@ -34,7 +34,11 @@ export default function AssetCategoryForm({ category }: AssetCategoryFormProps) 
         preserveState: true,
       });
     } else {
-      router.post('/asset-categories', data);
+      router.post('/asset-categories', data, {
+        onSuccess: () => {
+          reset(); // Clear form data on successful POST
+        },
+      });
     }
   };
 

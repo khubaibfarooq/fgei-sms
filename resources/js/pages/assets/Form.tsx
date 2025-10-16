@@ -49,7 +49,11 @@ export default function AssetForm({ asset, assetCategories }: AssetFormProps) {
         preserveState: true,
       });
     } else {
-      router.post('/assets', data);
+      router.post('/assets', data, {
+        onSuccess: () => {
+          reset(); // Clear form data on successful POST
+        },
+      });
     }
   };
 

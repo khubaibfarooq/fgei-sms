@@ -32,7 +32,7 @@ class DonationTypeController extends Controller
     {
         $data = $request->validate(['name' => 'required|string|max:255']);
 
-        DonationType::updateOrCreate(['id' => $request->id ?? null], $data);
+        DonationType::Create($data);
 
         return redirect()->back()->with('success', 'Donation type saved successfully.');
     }   

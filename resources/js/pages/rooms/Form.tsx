@@ -52,7 +52,11 @@ export default function RoomForm({ room, roomTypes, blocks }: RoomFormProps) {
         preserveState: true,
       });
     } else {
-      router.post('/rooms', data);
+      router.post('/rooms', data, {
+        onSuccess: () => {
+          reset(); // Clear form data on successful POST
+        },
+      });
     }
   };
 

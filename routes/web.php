@@ -36,10 +36,12 @@ use App\Http\Controllers\ProjectTypeController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\DonationTypeController;
 use App\Http\Controllers\DonationController;
+use App\Http\Controllers\HelpDeskController;
 Route::get('/', function () {
     return Inertia::render('welcome');
 })->name('home');
-
+Route::get('/sso-redirect', [App\Http\Controllers\Auth\SSORedirectController::class, 'handle'])->name('sso.redirect');
+// Route::get('/sms-redirect', [App\Http\Controllers\Auth\SSORedirectController::class, 'redirectToSMS'])->name('sso.redirectToSMS');
 Route::middleware(['auth', 'menu.permission'])->group(function () {
     // Route::get('/dashboard', function () {
     //     return Inertia::render('dashboard');
@@ -129,6 +131,12 @@ Route::get('/reports/plants', [ReportsController::class, 'plants'])->name('repor
 Route::get('/reports/plants/getPlants', [ReportsController::class, 'getPlants'])->name('reports.getPlants');
 Route::get('/reports/upgradations', [ReportsController::class, 'upgradations'])->name('reports.upgradations');
 Route::get('/reports/upgradations/getUpgradations', [ReportsController::class, 'getUpgradations'])->name('reports.getUpgradations');
+
+//helpdesk
+Route::put('/helpdesk/{helpDesk}', [HelpDeskController::class, 'update'])->name('helpdesk.update');
+Route::get('/helpdesk', [HelpDeskController::class, 'index'])->name('helpdesk.index');
+Route::post('/helpdesk', [HelpDeskController::class, 'store'])->name('helpdesk.store');
+
 });
 
 require __DIR__ . '/settings.php';

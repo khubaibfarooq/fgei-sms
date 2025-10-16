@@ -75,7 +75,11 @@ const handleSubmit = (e: React.FormEvent) => {
       preserveState: true,
     });
   } else {
-    router.post('/funds', formattedData);
+    router.post('/funds', formattedData, {
+        onSuccess: () => {
+          reset(); // Clear form data on successful POST
+        },
+      });
   }
 };
   const breadcrumbs: BreadcrumbItem[] = [

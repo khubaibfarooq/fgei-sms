@@ -77,7 +77,11 @@ export default function DonationForm({ donation, donationTypes }: DonationFormPr
         preserveState: true,
       });
     } else {
-      router.post('/donations', formattedData);
+  router.post('/donations', formattedData, {
+        onSuccess: () => {
+          reset(); // Clear form data on successful POST
+        },
+      });
     }
   };
 

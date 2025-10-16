@@ -48,7 +48,11 @@ export default function ShiftForm({ shift, buildingTypes }: FormProps) {
         preserveState: true,
       });
     } else {
-      router.post('/shifts', data);
+      router.post('/shifts', data, {
+        onSuccess: () => {
+          reset(); // Clear form data on successful POST
+        },
+      });
     }
   };
 

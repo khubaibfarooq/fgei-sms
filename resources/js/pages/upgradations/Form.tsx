@@ -53,7 +53,11 @@ export default function AssetupgradationForm({ upgradation }: Props) {
         preserveState: true,
       });
     } else {
-      router.post('/upgradations', data);
+      router.post('/upgradations', data, {
+        onSuccess: () => {
+          reset(); // Clear form data on successful POST
+        },
+      });
     }
   };
 

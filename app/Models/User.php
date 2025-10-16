@@ -26,8 +26,10 @@ class User extends Authenticatable implements HasMedia
         'password',
         'role', 
         'type',
-        'inst_id',//from hrms
-        'region_id', // from hrms
+        'inst_id',
+        'region_id',
+        'hr_user_id',
+        
     ];
 
     /**

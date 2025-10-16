@@ -48,7 +48,11 @@ export default function TransportForm({ transport, vehicleTypes }: TransportForm
         preserveState: true,
       });
     } else {
-      router.post('/transports', data);
+      router.post('/transports', data, {
+        onSuccess: () => {
+          reset(); // Clear form data on successful POST
+        },
+      });
     }
   };
 

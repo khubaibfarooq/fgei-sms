@@ -71,7 +71,11 @@ export default function RoomTypeForm({ roomType,assets }: RoomTypeFormProps) {
         preserveState: true,
       });
     } else {
-      router.post('/room-types', data);
+      router.post('/room-types', data, {
+        onSuccess: () => {
+          reset(); // Clear form data on successful POST
+        },
+      });
     }
   };
 

@@ -34,7 +34,11 @@ export default function DonationTypeForm({ donationType }: DonationTypeFormProps
         preserveState: true,
       });
     } else {
-      router.post('/donation-types', data);
+      router.post('/donation-types', data, {
+        onSuccess: () => {
+          reset(); // Clear form data on successful POST
+        },
+      });
     }
   };
 

@@ -6,7 +6,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Permission\Traits\HasRoles;
-
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Str;
 class HelpDesk extends Model
 {
      use HasFactory,HasRoles;
@@ -26,12 +27,23 @@ class HelpDesk extends Model
             }
         });
     }
-          public function institute()
+          public function institute(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(Institute::class);
     }
-     public function user()
+    /**
+     * Get the user who created the help desk ticket.
+     */
+    public function user(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    /**
+     * Get the user who provided feedback for the help desk ticket.
+     */
+    public function feedbackBy(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(User::class, 'feedback_by');
     }
 }

@@ -34,7 +34,11 @@ export default function AssetbuildingTypesForm({ buildingType }: buildingTypesPr
         preserveState: true,
       });
     } else {
-      router.post('/building-types', data);
+      router.post('/building-types', data, {
+        onSuccess: () => {
+          reset(); // Clear form data on successful POST
+        },
+      });
     }
   };
 

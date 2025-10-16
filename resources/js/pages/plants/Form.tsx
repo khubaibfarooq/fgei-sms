@@ -38,7 +38,11 @@ export default function plantsForm({ plant }: plantsFormProps) {
         preserveState: true,
       });
     } else {
-      router.post('/plants', data);
+      router.post('/plants', data, {
+        onSuccess: () => {
+          reset(); // Clear form data on successful POST
+        },
+      });
     }
   };
 

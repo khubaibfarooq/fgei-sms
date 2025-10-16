@@ -57,7 +57,11 @@ export default function FundHeadForm({ fundHead,fundHeads }: FundHeadFormProps) 
         preserveState: true,
       });
     } else {
-      router.post('/fund-heads', data);
+      router.post('/fund-heads', data, {
+        onSuccess: () => {
+          reset(); // Clear form data on successful POST
+        },
+      });
     }
   };
 

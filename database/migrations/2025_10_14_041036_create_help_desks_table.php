@@ -16,12 +16,12 @@ return new class extends Migration
          $table->string('token', 8)->unique(); // Specify length and uniqueness
               $table->string('title');
                $table->text('description');
-             $table->string('attachment');
+             $table->string('attachment')->nullable();
    $table->foreignId('user_id')->constrained('users');
                 $table->foreignId('institute_id')->constrained('institutes');
                   $table->string('status');
-                  $table->string('feedback');
-                  $table->foreignId('feedback_by')->constrained('users');
+                  $table->string('feedback')->nullable();
+                  $table->foreignId('feedback_by')->constrained('users')->nullable();
            
                     $table->date('feedback_date')->nullable();
             $table->timestamps();

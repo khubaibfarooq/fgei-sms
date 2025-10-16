@@ -97,7 +97,7 @@ export default function BlockTypeForm({ blockType, roomTypes }: BlockTypeFormPro
     } else {
       router.post('/block-types', submitData, {
         onSuccess: () => {
-          console.log('Block type created successfully');
+          reset();
         },
         onError: (errors) => {
           console.log('Errors:', errors);

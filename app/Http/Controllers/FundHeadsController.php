@@ -39,7 +39,7 @@ class FundHeadsController extends Controller
             'parent_id'=>'nullable|numeric',
         ]);
 
-        FundHead::updateOrCreate(['id' => $request->id ?? null], $data);
+        FundHead::Create($data);
 
         return redirect()->back()->with('success', 'Fund Head saved successfully.');
     }   

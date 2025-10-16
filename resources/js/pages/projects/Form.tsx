@@ -72,7 +72,11 @@ export default function ProjectForm({ project, projectTypes }: ProjectFormProps)
         preserveState: true,
       });
     } else {
-      router.post('/projects', data);
+      router.post('/projects', data, {
+        onSuccess: () => {
+          reset(); // Clear form data on successful POST
+        },
+      });
     }
   };
 

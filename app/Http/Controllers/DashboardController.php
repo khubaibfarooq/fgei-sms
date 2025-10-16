@@ -11,10 +11,11 @@ class DashboardController extends Controller
 {
     public function index(Request $request)
     {
+   
         $role_type=session('type');
            $hrInstituteId = session('inst_id');
   $regionId = session('region_id');
-
+// dd(session());
 $institute = Institute::where('hr_id',$hrInstituteId)->first();
 
      if ($institute) {
@@ -37,7 +38,7 @@ $institute = Institute::where('hr_id',$hrInstituteId)->first();
 
 
         
-
+    
         return Inertia::render('dashboard', [
            
             'cards' => $cards,
