@@ -27,7 +27,7 @@ export default function AppLogo() {
         </div>
       )}
       <div className="grid flex-1 text-left text-sm">
-        <span className="mb-0.5 truncate leading-none font-semibold">
+        <span className=" text-primary-foreground  dark:bg-transparent mb-0.5 truncate leading-none font-semibold">
           {appName}
         </span>
       </div>
