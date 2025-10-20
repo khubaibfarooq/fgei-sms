@@ -498,50 +498,80 @@ const exportToPDF = () => {
 </Button>
                 </CardHeader>
                 <Separator />
-                <CardContent className="pt-6 space-y-6">
-                  <div className="space-y-3">
-                    {  instituteAssets.data.length === 0 ? (
-                      <p className="text-muted-foreground text-center">No assets found.</p>
-                    ) : (
-                      instituteAssets.data.map((instAsset) => (
-                        <div
-                          key={instAsset.id}
-                          className="flex items-center justify-between border px-4 py-3 rounded-md bg-muted/50 hover:bg-muted/70 transition shadow-sm"
-                        >
-                          <div className="flex items-center gap-3">
-                            <Building className="h-5 w-5 text-blue-600" />
-                            <div className="space-y-1">
-                              <div className="font-medium text-sm text-foreground">
-                                {instAsset.details}
-                              </div>
-                              <div className="text-xs text-muted-foreground">
-                                Qty: {instAsset.current_qty} | Institute: {instAsset.institute?.name || 'N/A'} | 
-                              Room: {instAsset.room?.name || 'N/A'} | 
-                                 Asset: {instAsset.asset?.name || 'N/A'}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                  {instituteAssets.links.length > 1 && (
-                    <div className="flex justify-center pt-6 flex-wrap gap-2">
-                      {instituteAssets.links.map((link, i) => (
-                        <Button
-                          key={i}
-                          disabled={!link.url}
-                          variant={link.active ? 'default' : 'outline'}
-                          size="sm"
-                          onClick={() => router.visit(link.url || '', { preserveScroll: true })}
-                          className={link.active ? 'bg-blue-600 hover:bg-blue-700' : ''}
-                        >
-                          <span dangerouslySetInnerHTML={{ __html: link.label }} />
-                        </Button>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
+               <CardContent className="pt-6 space-y-6">
+  <table className="w-full border-collapse">
+    <thead>
+      <tr className="bg-[#0b431b]  dark:bg-gray-800">
+        <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Asset</th>
+        <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Quantity</th>
+        <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Room</th>
+        <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      {instituteAssets.data?.length === 0 ? (
+        <tr>
+          <td colSpan={4} className="border p-2 text-center text-sm text-gray-900 dark:text-gray-100">
+            No assets found.
+          </td>
+        </tr>
+      ) : (
+        instituteAssets.data?.map((instAsset) => (
+          <tr key={instAsset.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+            <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">
+              <div className="flex items-center gap-3">
+                <Building className="h-5 w-5 text-blue-600" />
+                <div className="space-y-1">
+                  <div className="font-medium">{instAsset.asset?.name}</div>
+                </div>
+              </div>
+            </td>
+            <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">
+              {instAsset.current_qty}
+            </td>
+            <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">
+              {instAsset.room?.name || 'N/A'}
+            </td>
+            <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">
+              {instAsset.details || 'N/A'}
+            </td>
+          </tr>
+        ))
+      )}
+    </tbody>
+  </table>
+
+  {/* ✅ Fixed Pagination */}
+  {instituteAssets.links?.length > 1 && (
+    <div className="flex justify-center pt-6 flex-wrap gap-2">
+      {instituteAssets.links.map((link, i) => (
+        <Button
+          key={i}
+          disabled={!link.url}
+          variant={link.active ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => {
+            if (link.url) {
+              fetch(link.url)
+                .then((response) => response.json())
+                .then((data) => {
+                  setInstituteAssets(data);
+                  //toast.success('Page updated');
+                })
+                .catch((error) => {
+                  console.error('Error:', error);
+                  //toast.error('Failed to load page');
+                });
+            }
+          }}
+          className={link.active ? 'bg-blue-600 hover:bg-blue-700' : ''}
+        >
+          <span dangerouslySetInnerHTML={{ __html: link.label }} />
+        </Button>
+      ))}
+    </div>
+  )}
+</CardContent>
               </Card>
             </div>
           </div>

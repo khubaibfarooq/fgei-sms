@@ -65,7 +65,7 @@ $permissions = [
         $rooms = Room::whereHas('block', function ($query) use ($inst_id) {
             $query->where('institute_id', $inst_id);
         })->with(['block', 'type'])->get();
-        $assets = Asset::with('category')->get();
+       $assets = Asset::with('category')->orderBy('id', 'asc')->get();
         $users = User::all();
         
         return Inertia::render('institute_assets/Form', [
@@ -90,7 +90,7 @@ $permissions = [
 
         InstituteAsset::create($data);
 
-        return redirect()->route('institute-assets.index')->with('success', 'Institute asset saved successfully.');
+        return redirect()->route('institute-assets.create')->with('success', 'Institute asset saved successfully.');
     }
     public function edit(InstituteAsset $instituteAsset)
     {if (!auth()->user()->can('inst-assets-edit')) {

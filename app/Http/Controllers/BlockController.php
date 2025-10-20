@@ -12,10 +12,10 @@ class BlockController extends Controller
     public function index(Request $request)
     {
 
-        $query = Block::with('institute');
+      
 $inst_id = session('sms_inst_id');
 $type=session('type');
-
+  $query = Block::Where('institute_id', $inst_id)->with('institute');
         $query->where('institute_id', $inst_id);
         if ($request->search) {
             $query->where('name', 'like', '%' . $request->search . '%')

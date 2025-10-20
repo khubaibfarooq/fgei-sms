@@ -19,6 +19,7 @@ import {
   AlertDialogCancel,
   AlertDialogAction,
 } from '@/components/ui/alert-dialog';
+
 import { toast } from 'sonner';
 
 interface InstituteAsset {
@@ -118,6 +119,7 @@ export default function InstituteAssetIndex({ instituteAssets, filters,blocks,pe
     replace: true,
     only: ['instituteAssets', 'filters'], // only reload these props
   });
+  console.log(instituteAssets.data);
       };
       const handleRoomChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const roomValue = e.target.value;
@@ -215,83 +217,90 @@ export default function InstituteAssetIndex({ instituteAssets, filters,blocks,pe
             <div className="space-y-3">
               {instituteAssets.data.length === 0 ? (
                 <p className="text-muted-foreground text-center">No institute assets found.</p>
-              ) : (
-                instituteAssets.data.map((instituteAsset) => (
-                  <div
-                    key={instituteAsset.id}
-                    className="flex items-center justify-between border px-4 py-3 rounded-md bg-muted/50 hover:bg-muted/70 transition"
-                  >
-                    <div className="space-y-2 flex-1">
-                      <div className="flex items-center gap-2">
-                        <div className="font-medium text-sm text-foreground">
-                          {instituteAsset.asset.name}
-                        </div>
-                        {instituteAsset.asset.category && (
-                          <Badge variant="outline" className="text-xs">
-                            {instituteAsset.asset.category.name}
-                          </Badge>
-                        )}
-                      </div>
-                      
-                      <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                          <Package className="h-3 w-3" />
-                          <span>Qty: {instituteAsset.current_qty}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Calendar className="h-3 w-3" />
-                          <span>Added: {new Date(instituteAsset.added_date).toDateString()}</span>
-                        </div>
-                        {instituteAsset.room && (
-                          <span>Room: {instituteAsset.room.name} {instituteAsset.room.block && `(${instituteAsset.room.block.name})`}</span>
-                        )}
-                      </div>
-                      
-                      {instituteAsset.details && (
-                        <div className="text-xs text-muted-foreground">
-                          {instituteAsset.details}
-                        </div>
-                      )}
-                    </div>
-                    
-                    <div className="flex items-center gap-2">
-                      {permissions?.can_edit &&
-                      <Link href={`/institute-assets/${instituteAsset.id}/edit`}>
-                        <Button variant="ghost" size="icon">
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                      </Link>
-                      }
-                      {permissions?.can_delete &&
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="ghost" size="icon" className="text-destructive hover:text-red-600">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Delete this institute asset?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Asset <strong>{instituteAsset.asset.name}</strong> (Qty: {instituteAsset.current_qty}) will be permanently deleted from institute inventory.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction
-                              className="bg-destructive hover:bg-destructive/90"
-                              onClick={() => handleDelete(instituteAsset.id)}
-                            >
-                              Delete
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                      }
-                    </div>
-                  </div>
-                ))
-              )}
+              ) :
+              <table className="w-full border-collapse">
+  <thead>
+    <tr className="bg-gray-100 dark:bg-gray-800">
+      <th className="border p-2 text-left text-sm font-medium text-gray-700 dark:text-gray-200">Asset</th>
+      <th className="border p-2 text-left text-sm font-medium text-gray-700 dark:text-gray-200">Category</th>
+      <th className="border p-2 text-left text-sm font-medium text-gray-700 dark:text-gray-200">Quantity</th>
+      <th className="border p-2 text-left text-sm font-medium text-gray-700 dark:text-gray-200">Added Date</th>
+      <th className="border p-2 text-left text-sm font-medium text-gray-700 dark:text-gray-200">Room</th>
+      <th className="border p-2 text-left text-sm font-medium text-gray-700 dark:text-gray-200">Details</th>
+      <th className="border p-2 text-left text-sm font-medium text-gray-700 dark:text-gray-200">Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {instituteAssets.data.map((instituteAsset) => (
+      <tr key={instituteAsset.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+        <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">
+          {instituteAsset.asset.name}
+        </td>
+        <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">
+          {instituteAsset.asset.category?.name || '—'}
+        </td>
+        <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">
+          <div className="flex items-center gap-1">
+            <Package className="h-3 w-3" />
+            <span>{instituteAsset.current_qty}</span>
+          </div>
+        </td>
+        <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">
+          <div className="flex items-center gap-1">
+            <Calendar className="h-3 w-3" />
+            <span>{new Date(instituteAsset.added_date).toDateString()}</span>
+          </div>
+        </td>
+        <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">
+          {instituteAsset.room 
+            ? `${instituteAsset.room.name}${instituteAsset.room.block ? ` (${instituteAsset.room.block.name})` : ''}` 
+            : '—'
+          }
+        </td>
+        <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">
+          {instituteAsset.details || '—'}
+        </td>
+        <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">
+          <div className="flex items-center gap-2">
+            {permissions?.can_edit && (
+              <Link href={`/institute-assets/${instituteAsset.id}/edit`}>
+                <Button variant="ghost" size="icon">
+                  <Edit className="h-4 w-4" />
+                </Button>
+              </Link>
+            )}
+            {permissions?.can_delete && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="ghost" size="icon" className="text-destructive hover:text-red-600">
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete this institute asset?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Asset <strong>{instituteAsset.asset.name}</strong> (Qty: {instituteAsset.current_qty}) will be permanently deleted from institute inventory.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      className="bg-destructive hover:bg-destructive/90"
+                      onClick={() => handleDelete(instituteAsset.id)}
+                    >
+                      Delete
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
+          </div>
+        </td>
+      </tr>
+    ))}
+  </tbody>
+</table>}
             </div>
 
             {instituteAssets.links.length > 1 && (

@@ -354,10 +354,10 @@ export default function InstitutionalReportIndex({ institutes: initialInstitutes
                 <div className="overflow-x-auto">
                   <table className="w-full border-collapse">
                     <thead>
-                      <tr className="bg-gray-100 dark:bg-gray-800">
-                        <th className="border p-2 text-left text-sm font-medium text-gray-700 dark:text-gray-200">Name</th>
-                        <th className="border p-2 text-left text-sm font-medium text-gray-700 dark:text-gray-200">Building Name</th>
-                        <th className="border p-2 text-left text-sm font-medium text-gray-700 dark:text-gray-200">Building Type</th>
+                      <tr className="bg-[#0b431b]  dark:bg-gray-800">
+                        <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Name</th>
+                        <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Building Name</th>
+                        <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Building Type</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -382,9 +382,9 @@ export default function InstitutionalReportIndex({ institutes: initialInstitutes
                 <div className="overflow-x-auto">
                   <table className="w-full border-collapse">
                     <thead>
-                      <tr className="bg-gray-100 dark:bg-gray-800">
-                        <th className="border p-2 text-left text-sm font-medium text-gray-700 dark:text-gray-200">Name</th>
-                        <th className="border p-2 text-left text-sm font-medium text-gray-700 dark:text-gray-200">Area (sq ft)</th>
+                      <tr className="bg-[#0b431b]  dark:bg-gray-800">
+                        <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Name</th>
+                        <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Area (sq ft)</th>
                       
                       </tr>
                     </thead>
@@ -411,10 +411,10 @@ export default function InstitutionalReportIndex({ institutes: initialInstitutes
                 <div className="overflow-x-auto">
                   <table className="w-full border-collapse">
                     <thead>
-                      <tr className="bg-gray-100 dark:bg-gray-800">
-                        <th className="border p-2 text-left text-sm font-medium text-gray-700 dark:text-gray-200">Name</th>
-                        <th className="border p-2 text-left text-sm font-medium text-gray-700 dark:text-gray-200">Area (sq ft)</th>
-                        <th className="border p-2 text-left text-sm font-medium text-gray-700 dark:text-gray-200">Block</th>
+                      <tr className="bg-[#0b431b]  dark:bg-gray-800">
+                        <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Name</th>
+                        <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Area (sq ft)</th>
+                        <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Block</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -440,13 +440,13 @@ export default function InstitutionalReportIndex({ institutes: initialInstitutes
                 <div className="overflow-x-auto">
                   <table className="w-full border-collapse">
                     <thead>
-                      <tr className="bg-gray-100 dark:bg-gray-800">
-                        <th className="border p-2 text-left text-sm font-medium text-gray-700 dark:text-gray-200">Asset Name</th>
-                        <th className="border p-2 text-left text-sm font-medium text-gray-700 dark:text-gray-200">Details</th>
-                        <th className="border p-2 text-left text-sm font-medium text-gray-700 dark:text-gray-200">Quantity</th>
-                        <th className="border p-2 text-left text-sm font-medium text-gray-700 dark:text-gray-200">Room</th>
+                      <tr className="bg-[#0b431b]  dark:bg-gray-800">
+                        <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Asset Name</th>
+                        <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Details</th>
+                        <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Quantity</th>
+                        <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Room</th>
                       
-                        <th className="border p-2 text-left text-sm font-medium text-gray-700 dark:text-gray-200">Added Date</th>
+                        <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Added Date</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -475,13 +475,13 @@ export default function InstitutionalReportIndex({ institutes: initialInstitutes
                 <div className="overflow-x-auto">
                   <table className="w-full border-collapse">
                     <thead>
-                      <tr className="bg-gray-100 dark:bg-gray-800">
-                        <th className="border p-2 text-left text-sm font-medium text-gray-700 dark:text-gray-200">Details</th>
-                        <th className="border p-2 text-left text-sm font-medium text-gray-700 dark:text-gray-200">Date from</th>
-                        <th className="border p-2 text-left text-sm font-medium text-gray-700 dark:text-gray-200">Date to</th>
-                        <th className="border p-2 text-left text-sm font-medium text-gray-700 dark:text-gray-200">Level From</th>
-                        <th className="border p-2 text-left text-sm font-medium text-gray-700 dark:text-gray-200">Level To</th>
-                        <th className="border p-2 text-left text-sm font-medium text-gray-700 dark:text-gray-200">Status</th>
+                      <tr className="bg-[#0b431b]  dark:bg-gray-800">
+                        <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Details</th>
+                        <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Date from</th>
+                        <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Date to</th>
+                        <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Level From</th>
+                        <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Level To</th>
+                        <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Status</th>
                       </tr>
                     </thead>
                     <tbody>
