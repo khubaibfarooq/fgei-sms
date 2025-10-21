@@ -14,7 +14,7 @@
 /node_modules
 
 /public/hot
-
+/public/assets
 /storage/*.key
 /storage/pail
 /vendor
