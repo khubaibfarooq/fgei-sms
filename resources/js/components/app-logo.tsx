@@ -17,7 +17,7 @@ export default function AppLogo() {
     <div className="flex items-center gap-2">
       {logo ? (
         <img
-          src={`/storage/${logo}`}
+          src={`/assets/${logo}`}
           alt="Logo"
           className="h-8 w-8 rounded-md object-contain"
         />

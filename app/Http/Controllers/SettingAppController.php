@@ -26,15 +26,23 @@ class SettingAppController extends Controller
         ]);
 
         $setting = SettingApp::firstOrNew();
-
+$resultImageName = null;
         if ($request->hasFile('logo')) {
-            $data['logo'] = $request->file('logo')->store('logo', 'public');
+            $resultImage = $request->file('logo');
+                $resultImageName = time() . '-' . uniqid() . '.' . $resultImage->getClientOriginalExtension();
+                // $resultImage->move(public_path('Assets/Uploads/ACR/acr17to18/results'), $resultImageName);
+                $resultImage->move('assets/logo', $resultImageName);
+                 $data['logo']='logo/'.$resultImageName;   
         } else {
             unset($data['logo']);
         }
-
+$resultImageName = null;
         if ($request->hasFile('favicon')) {
-            $data['favicon'] = $request->file('favicon')->store('favicon', 'public');
+              $resultImage = $request->file('favicon');
+                $resultImageName = time() . '-' . uniqid() . '.' . $resultImage->getClientOriginalExtension();
+                // $resultImage->move(public_path('Assets/Uploads/ACR/acr17to18/results'), $resultImageName);
+                $resultImage->move('assets/favicon', $resultImageName);
+                 $data['favicon']='favicon/'.$resultImageName; 
         } else {
             unset($data['favicon']);
         }
