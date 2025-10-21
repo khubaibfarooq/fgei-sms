@@ -47,8 +47,8 @@ export default function SettingForm({ setting }: Props) {
     favicon: null as File | null,
   });
 
-  const logoPreview = useRef<string | null>(setting?.logo ? `/storage/${setting.logo}` : null);
-  const faviconPreview = useRef<string | null>(setting?.favicon ? `/storage/${setting.favicon}` : null);
+  const logoPreview = useRef<string | null>(setting?.logo ? `/assets/${setting.logo}` : null);
+  const faviconPreview = useRef<string | null>(setting?.favicon ? `/assets/${setting.favicon}` : null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
