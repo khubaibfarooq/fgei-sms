@@ -114,16 +114,16 @@ export default function InstituteForm({ institute }: InstituteFormProps) {
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
-      <Head title={isEdit ? 'Edit Institute' : 'Add Institute'} />
+      <Head title={isEdit ? 'Update Institute' : 'Add Institute'} />
 
       <div className="flex-1 p-4 md:p-6 w-[70vw] mx-auto">
         <Card>
           <CardHeader>
             <CardTitle className="text-2xl font-bold">
-              {isEdit ? 'Edit Institute' : 'Add Institute'}
+              {isEdit ? 'Update Institute' : 'Add Institute'}
             </CardTitle>
             <p className="text-sm text-muted-foreground">
-              {isEdit ? 'Edit institute details' : 'Create a new institute'}
+              {isEdit ? 'Update institute details' : 'Create a new institute'}
             </p>
           </CardHeader>
 
@@ -216,7 +216,7 @@ export default function InstituteForm({ institute }: InstituteFormProps) {
                 <Label>Current Layout Image</Label>
                 {institute?.img_layout ? (
                   <img
-                    src={`/storage/${institute.img_layout}`}
+                    src={`/assets/${institute.img_layout}`}
                     alt="Layout"
                     className="w-full h-48 object-cover rounded"
                   />
@@ -230,7 +230,7 @@ export default function InstituteForm({ institute }: InstituteFormProps) {
                 <Label>Current 3D Image</Label>
                 {institute?.img_3d ? (
                   <img
-                    src={`/storage/${institute.img_3d}`}
+                    src={`/assets/${institute.img_3d}`}
                     alt="3D View"
                     className="w-full h-48 object-cover rounded"
                   />
@@ -244,7 +244,7 @@ export default function InstituteForm({ institute }: InstituteFormProps) {
                 <Label>Current Video</Label>
                 {institute?.video ? (
                   <video controls className="w-full h-48 rounded">
-                    <source src={`/storage/${institute.video}`} type="video/mp4" />
+                    <source src={`/assets/${institute.video}`} type="video/mp4" />
                     Your browser does not support the video tag.
                   </video>
                 ) : (

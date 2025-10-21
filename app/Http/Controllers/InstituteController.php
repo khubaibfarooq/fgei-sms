@@ -84,18 +84,38 @@ class InstituteController extends Controller
             'img_layout' => 'nullable|file|mimes:jpg,jpeg,png|max:2048',
             'img_3d' => 'nullable|file|mimes:jpg,jpeg,png|max:2048',
         ]);
-  if ($request->hasFile('img_layout')) {
-            $data['img_layout'] = $request->file('img_layout')->store('img_layout', 'public');
-        } else {
-            unset($data['img_layout']);
-        }  
+ $resultImageName = null;
+            if ($request->hasFile('img_layout')) {
+                $resultImage = $request->file('img_layout');
+                $resultImageName = time() . '-' . uniqid() . '.' . $resultImage->getClientOriginalExtension();
+                // $resultImage->move(public_path('Assets/Uploads/ACR/acr17to18/results'), $resultImageName);
+                $resultImage->move('assets/img_layout', $resultImageName);
+                 $data['img_layout']='img_layout/'.$resultImageName;
+            }  else{
+                 unset($data['img_layout']);
+            }
+//   if ($request->hasFile('img_layout')) {
+//             $data['img_layout'] = $request->file('img_layout')->store('img_layout', 'public');
+//         } else {
+//             unset($data['img_layout']);
+//         }  
+$resultImageName = null;
         if ($request->hasFile('img_3d')) {
-            $data['img_3d'] = $request->file('img_3d')->store('img_3d', 'public');
-        } else {
+$resultImage = $request->file('img_3d');
+                $resultImageName = time() . '-' . uniqid() . '.' . $resultImage->getClientOriginalExtension();
+                // $resultImage->move(public_path('Assets/Uploads/ACR/acr17to18/results'), $resultImageName);
+                $resultImage->move('assets/img_3d', $resultImageName);
+                 $data['img_3d']='img_3d/'.$resultImageName;        } 
+                 else {
             unset($data['img_3d']);
         }
+        $resultImageName = null;
           if ($request->hasFile('video')) {
-            $data['video'] = $request->file('video')->store('video', 'public');
+           $resultImage = $request->file('video');
+                $resultImageName = time() . '-' . uniqid() . '.' . $resultImage->getClientOriginalExtension();
+                // $resultImage->move(public_path('Assets/Uploads/ACR/acr17to18/results'), $resultImageName);
+                $resultImage->move('assets/video', $resultImageName);
+                 $data['video']='video/'.$resultImageName; 
         } else {
             unset($data['video']);
         }
@@ -139,18 +159,39 @@ $data['type'] = $type;
             'img_layout' => 'nullable|file|mimes:jpg,jpeg,png|max:2048',
             'img_3d' => 'nullable|file|mimes:jpg,jpeg,png|max:2048',
         ]);
-  if ($request->hasFile('img_layout')) {
-            $data['img_layout'] = $request->file('img_layout')->store('img_layout', 'public');
-        } else {
-            unset($data['img_layout']);
-        }  
+
+        $resultImageName = null;
+            if ($request->hasFile('img_layout')) {
+                $resultImage = $request->file('img_layout');
+                $resultImageName = time() . '-' . uniqid() . '.' . $resultImage->getClientOriginalExtension();
+                // $resultImage->move(public_path('Assets/Uploads/ACR/acr17to18/results'), $resultImageName);
+                $resultImage->move('assets/img_layout', $resultImageName);
+                 $data['img_layout']='img_layout/'.$resultImageName;
+            }  else{
+                 unset($data['img_layout']);
+            }
+//   if ($request->hasFile('img_layout')) {
+//             $data['img_layout'] = $request->file('img_layout')->store('img_layout', 'public');
+//         } else {
+//             unset($data['img_layout']);
+//         }  
+$resultImageName = null;
         if ($request->hasFile('img_3d')) {
-            $data['img_3d'] = $request->file('img_3d')->store('img_3d', 'public');
-        } else {
+$resultImage = $request->file('img_3d');
+                $resultImageName = time() . '-' . uniqid() . '.' . $resultImage->getClientOriginalExtension();
+                // $resultImage->move(public_path('Assets/Uploads/ACR/acr17to18/results'), $resultImageName);
+                $resultImage->move('assets/img_3d', $resultImageName);
+                 $data['img_3d']='img_3d/'.$resultImageName;        } 
+                 else {
             unset($data['img_3d']);
         }
+        $resultImageName = null;
           if ($request->hasFile('video')) {
-            $data['video'] = $request->file('video')->store('video', 'public');
+           $resultImage = $request->file('video');
+                $resultImageName = time() . '-' . uniqid() . '.' . $resultImage->getClientOriginalExtension();
+                // $resultImage->move(public_path('Assets/Uploads/ACR/acr17to18/results'), $resultImageName);
+                $resultImage->move('assets/video', $resultImageName);
+                 $data['video']='video/'.$resultImageName; 
         } else {
             unset($data['video']);
         }
