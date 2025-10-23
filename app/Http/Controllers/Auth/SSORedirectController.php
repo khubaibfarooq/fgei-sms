@@ -38,6 +38,7 @@ class SSORedirectController extends Controller
 
             $hr_user_id = $data['user_id'] ?? null;
             $name = $data['name'] ?? null;
+            
             $cnic = $data['cnic'] ?? null;
             $roleFromHr = $data['Role'] ?? null; // Not used for assignment, but available
             $category = $data['Category'] ?? null;
@@ -69,7 +70,7 @@ class SSORedirectController extends Controller
             }
 
             // User not found; create new
-            $email = $cnic . '@hr-imported.com'; // Placeholder; adjust if real email available
+            $email = $cnic . '@hr.com'; // Placeholder; adjust if real email available
 
             $user = User::create([
                 'name' => $name,
@@ -81,7 +82,15 @@ class SSORedirectController extends Controller
                 'hr_user_id' => $hr_user_id,
                 // Add other fields if needed, e.g., institution_id, region_id (add columns if required)
             ]);
-
+ $inst = Institute::create([
+                'name' => $name,
+                'type' => $category,
+                'inst_id'=>$institution_id,
+                'region_id'=>$region_id,
+              
+             
+               
+            ]);
             // Assign role based on Category
             $smsRole = $this->getSmsRoleFromCategory($category);
             if ($smsRole) {
@@ -91,11 +100,7 @@ class SSORedirectController extends Controller
                 $user->assignRole('institute'); // Default to 'institute'
             }
 
-        //  // Clear session
-        //     Session::flush();
-        //     $request->session()->regenerate();
-        //     $request->session()->regenerateToken();
-            // Log them in
+     
            
             Auth::login($user);
 // Store session values
@@ -106,9 +111,9 @@ class SSORedirectController extends Controller
             
 
             // Find institute
-            $hrInstituteId = Session::get('inst_id');
-            $institute = Institute::where('hr_id', $hrInstituteId)->first();
-            session(['sms_inst_id', $institute ? $institute->id : null]);
+            // $hrInstituteId = Session::get('inst_id');
+            // $institute = Institute::where('hr_id', $hrInstituteId)->first();
+            session(['sms_inst_id', $ $inst ? $ $inst->id : null]);
             return redirect('/dashboard');
         } catch (\Exception $e) {
             // Handle decryption errors, invalid JSON, etc.
