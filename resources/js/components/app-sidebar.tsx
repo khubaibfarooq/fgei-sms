@@ -72,7 +72,7 @@ function RenderMenu({ items, level = 0 }: { items: MenuItem[]; level?: number })
                   >
                     <div className="flex items-center">
                       <Icon className="size-4 mr-3 opacity-80 group-hover:opacity-100" />
-                      <span>{menu.title}</span>
+                      <span className='text-lg font-semibold'>{menu.title}</span>
                     </div>
                     <ChevronDown className="size-4 opacity-50 group-hover:opacity-70 transition-transform group-data-[state=open]:rotate-180" />
                   </SidebarMenuButton>
@@ -94,7 +94,7 @@ function RenderMenu({ items, level = 0 }: { items: MenuItem[]; level?: number })
               >
                 <Link href={menu.route || '#'}>
                   <Icon className="size-4 mr-3 opacity-80 group-hover:opacity-100" />
-                  <span>{menu.title}</span>
+                  <span className='text-lg font-semibold'>{menu.title}</span>
                   {level > 0 && (
                     <ChevronRight className="ml-auto size-4 opacity-0 group-hover:opacity-50" />
                   )}
