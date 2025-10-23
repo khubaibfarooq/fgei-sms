@@ -110,7 +110,7 @@ Route::resource('rooms', RoomController::class);
 
 // Assets
 Route::resource('asset-categories', AssetCategoryController::class);
-Route::resource('assets', AssetController::class);
+Route::resource('asset', AssetController::class);
 Route::resource('institute-assets', InstituteAssetController::class);
 Route::resource('asset-transactions', AssetTransactionController::class);
 

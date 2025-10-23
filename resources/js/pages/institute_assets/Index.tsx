@@ -220,7 +220,7 @@ export default function InstituteAssetIndex({ instituteAssets, filters,blocks,pe
               ) :
               <table className="w-full border-collapse">
   <thead>
-    <tr className="bg-gray-100 dark:bg-gray-800">
+    <tr className="bg-primary dark:bg-gray-800">
       <th className="border p-2 text-left text-sm font-medium text-gray-700 dark:text-gray-200">Asset</th>
       <th className="border p-2 text-left text-sm font-medium text-gray-700 dark:text-gray-200">Category</th>
       <th className="border p-2 text-left text-sm font-medium text-gray-700 dark:text-gray-200">Quantity</th>

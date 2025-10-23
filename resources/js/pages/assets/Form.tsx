@@ -44,12 +44,12 @@ export default function AssetForm({ asset, assetCategories }: AssetFormProps) {
     e.preventDefault();
     
     if (isEdit) {
-      router.put(`/assets/${asset.id}`, data, {
+      router.put(`/asset/${asset.id}`, data, {
         preserveScroll: true,
         preserveState: true,
       });
     } else {
-      router.post('/assets', data, {
+      router.post('/asset', data, {
         onSuccess: () => {
           reset(); // Clear form data on successful POST
         },
@@ -58,7 +58,7 @@ export default function AssetForm({ asset, assetCategories }: AssetFormProps) {
   };
 
   const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Assets', href: '/assets' },
+    { title: 'Assets', href: '/asset' },
     { title: isEdit ? 'Edit Asset' : 'Add Asset', href: '#' },
   ];
 
@@ -124,7 +124,7 @@ export default function AssetForm({ asset, assetCategories }: AssetFormProps) {
               </div>
 
               <div className="flex items-center justify-between pt-6">
-                <Link href="/assets">
+                <Link href="/asset">
                   <Button type="button" variant="secondary">
                     <ArrowLeft className="mr-2 h-4 w-4" />
                     Back
