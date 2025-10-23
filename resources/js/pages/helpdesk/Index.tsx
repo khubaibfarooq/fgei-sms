@@ -223,32 +223,42 @@ export default function HelpDeskIndex({ helpDesk, filters, institutes, auth }: P
             </div>
 
             <div className="space-y-3">
+              <table className="w-full border-collapse">
+  <thead>
+    <tr className="bg-primary dark:bg-gray-800 text-center" >
+      <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Token</th>
+      <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Title</th>
+       <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Descriptions</th>
+      <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Status</th>
+     
+      <th className="border p-2 text-sm font-medium text-white dark:text-gray-200">Actions</th>
+    </tr>
+  </thead>
+  <tbody>
               {!helpDesk?.data || helpDesk.data.length === 0 ? (
                 <p className="text-muted-foreground text-center">No helpdesk found.</p>
               ) : (
                 helpDesk.data.map((req) => (
-                  <div
-                    key={req.id}
-                    className="flex items-center justify-between border px-4 py-2 rounded-md bg-muted/50 hover:bg-muted/70 transition cursor-pointer"
-                    onClick={() => openViewModal(req)}
-                  >
-                    <div className="flex items-center gap-3">
-                      <Building className="h-5 w-5 text-muted-foreground" />
-                      <div className="space-y-1">
-                        <div className="font-medium text-sm text-foreground">
-                          #{req.token} | {req.title}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          Description: {req.description} • Status:{' '}
-                          <span className={`inline-block px-2 py-1 rounded-full text-xs font-semibold ${getStatusStyles(req.status)}`}>
+ <tr  onClick={() => openViewModal(req)}  key={req.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 text-center
+                    ">
+                      <td className="border  text-sm text-gray-900 dark:text-gray-100">
+                         #{req.token}
+                         </td>
+                           <td className="border  text-sm text-gray-900 dark:text-gray-100">
+                         {req.title}
+                         </td>
+                         <td className="border  text-sm text-gray-900 dark:text-gray-100">{req.description} </td>
+                          <td className="border  text-sm text-gray-900 dark:text-gray-100">  <span className={`inline-block px-2 py-1 rounded-full text-xs font-semibold ${getStatusStyles(req.status)}`}>
                             {req.status}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                          </span> </td>
+                     
+                       
+                         </tr>
+
+               
                 ))
               )}
+              </tbody></table>
             </div>
 
             {helpDesk?.links && helpDesk.links.length > 1 && (

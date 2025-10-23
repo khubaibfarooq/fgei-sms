@@ -90,24 +90,31 @@ export default function RoomTypeIndex({ roomTypes, filters }: Props) {
             </div>
 
             <div className="space-y-3">
+              <table className="w-full border-collapse">
+  <thead>
+    <tr className="bg-primary dark:bg-gray-800 text-center">
+      <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">ID</th>
+      <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Name</th>
+     
+     
+      <th className="border p-2 text-sm font-medium text-white dark:text-gray-200">Actions</th>
+    </tr>
+  </thead>
+  <tbody>
               {roomTypes.data.length === 0 ? (
                 <p className="text-muted-foreground text-center">No room types found.</p>
               ) : (
                 roomTypes.data.map((roomType) => (
-                  <div
-                    key={roomType.id}
-                    className="flex items-center justify-between border px-4 py-3 rounded-md bg-muted/50 hover:bg-muted/70 transition"
-                  >
-                    <div className="space-y-1">
-                      <div className="font-medium text-sm text-foreground">
-                        {roomType.name}
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        {roomType.rooms_count || 0} rooms
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Link href={`/room-types/${roomType.id}/edit`}>
+                    <tr key={roomType.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 text-center
+                    ">
+                      <td className="border  text-sm text-gray-900 dark:text-gray-100">
+                          {roomType.id}
+                         </td>
+                           <td className="border  text-sm text-gray-900 dark:text-gray-100">
+                          {roomType.name}
+                         </td>
+                         <td className="border  text-sm text-gray-900 dark:text-gray-100">
+     <Link href={`/room-types/${roomType.id}/edit`}>
                         <Button variant="ghost" size="icon">
                           <Edit className="h-4 w-4" />
                         </Button>
@@ -136,10 +143,13 @@ export default function RoomTypeIndex({ roomTypes, filters }: Props) {
                           </AlertDialogFooter>
                         </AlertDialogContent>
                       </AlertDialog>
-                    </div>
-                  </div>
+                          </td>
+                          </tr>
+                      
+              
                 ))
               )}
+              </tbody></table>
             </div>
 
             {roomTypes.links.length > 1 && (

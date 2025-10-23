@@ -103,27 +103,36 @@ export default function DonationIndex({ donations, filters,permissions }: Props)
             </div>
 
             <div className="space-y-3">
+                <table className="w-full border-collapse">
+  <thead>
+    <tr className="bg-primary dark:bg-gray-800 text-center">
+        <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Details</th>
+      <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Date</th>
+      <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Amount</th>
+     
+     
+      <th className="border p-2 text-sm font-medium text-white dark:text-gray-200">Actions</th>
+    </tr>
+  </thead>
+  <tbody>
               {donations.data.length === 0 ? (
                 <p className="text-muted-foreground text-center">No donations found.</p>
               ) : (
                 donations.data.map((donation) => (
-                  <div
-                    key={donation.id}
-                    className="flex items-center justify-between border px-4 py-3 rounded-md bg-muted/50 hover:bg-muted/70 transition"
-                  >
-                    <div className="flex items-center gap-3">
-                      <Building className="h-5 w-5 text-muted-foreground" />
-                      <div className="space-y-1">
-                        <div className="font-medium text-sm text-foreground">
-                          {donation.details}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          Date:{new Date(donation.added_date).toDateString()}  • Amount: {donation.amount} 
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {permissions.can_edit &&
+
+                   <tr key={donation.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 text-center
+                    ">
+                      <td className="border  text-sm text-gray-900 dark:text-gray-100">
+                         {donation.details}
+                         </td>
+                         <td className="border  text-sm text-gray-900 dark:text-gray-100">
+                        {new Date(donation.added_date).toDateString()}
+                         </td>
+<td className="border  text-sm text-gray-900 dark:text-gray-100">
+                        {donation.amount}
+                         </td>
+                         <td className="border  text-sm text-gray-900 dark:text-gray-100">
+                         {permissions.can_edit &&
                       <Link href={`/donations/${donation.id}/edit`}>
                         <Button variant="ghost" size="icon">
                           <Edit className="h-4 w-4" />
@@ -156,10 +165,12 @@ export default function DonationIndex({ donations, filters,permissions }: Props)
                         </AlertDialogContent>
                       </AlertDialog>
                       }
-                    </div>
-                  </div>
+                         </td>
+                         </tr>
+                
                 ))
               )}
+              </tbody></table>
             </div>
 
             {donations.links.length > 1 && (

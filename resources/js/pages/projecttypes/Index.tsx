@@ -90,17 +90,31 @@ export default function ProjectTypeIndex({ projectTypes, filters }: Props) {
             </div>
 
             <div className="space-y-3">
+               <table className="w-full border-collapse">
+  <thead>
+    <tr className="bg-primary dark:bg-gray-800 text-center">
+      <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">ID</th>
+      <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Name</th>
+     
+     
+      <th className="border p-2 text-sm font-medium text-white dark:text-gray-200">Actions</th>
+    </tr>
+  </thead>
+  <tbody>
               {!projectTypes || projectTypes.data.length === 0 ? (
                 <p className="text-muted-foreground text-center">No Project types found.</p>
               ) : (
                 projectTypes.data.map((projectType) => (
-                  <div
-                    key={projectType.id}
-                    className="flex items-center justify-between border px-4 py-3 rounded-md bg-muted/50 hover:bg-muted/70 transition"
-                  >
-                 {projectType.name}
-                    <div className="flex items-center gap-2">
-                      <Link href={`/project-types/${projectType.id}/edit`}>
+                   <tr key={projectType.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 text-center
+                    ">
+                      <td className="border  text-sm text-gray-900 dark:text-gray-100">
+                          {projectType.id}
+                         </td>
+                           <td className="border  text-sm text-gray-900 dark:text-gray-100">
+                          {projectType.name}
+                         </td>
+                         <td className="border  text-sm text-gray-900 dark:text-gray-100">
+  <Link href={`/project-types/${projectType.id}/edit`}>
                         <Button variant="ghost" size="icon">
                           <Edit className="h-4 w-4" />
                         </Button>
@@ -129,10 +143,13 @@ export default function ProjectTypeIndex({ projectTypes, filters }: Props) {
                           </AlertDialogFooter>
                         </AlertDialogContent>
                       </AlertDialog>
-                    </div>
-                  </div>
+
+                         </td>
+                         </tr>
+                  
                 ))
               )}
+              </tbody></table>
             </div>
 
             {!projectTypes || projectTypes.links.length > 1 && (

@@ -90,17 +90,32 @@ export default function VehicleTypeIndex({ vehicleTypes, filters }: Props) {
             </div>
 
             <div className="space-y-3">
+               <table className="w-full border-collapse">
+  <thead>
+    <tr className="bg-primary dark:bg-gray-800 text-center">
+      <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">ID</th>
+      <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Name</th>
+     
+     
+      <th className="border p-2 text-sm font-medium text-white dark:text-gray-200">Actions</th>
+    </tr>
+  </thead>
+  <tbody>
               {!vehicleTypes || vehicleTypes.data.length === 0 ? (
                 <p className="text-muted-foreground text-center">No Vehicle types found.</p>
               ) : (
                 vehicleTypes.data.map((vehicleType) => (
-                  <div
-                    key={vehicleType.id}
-                    className="flex items-center justify-between border px-4 py-3 rounded-md bg-muted/50 hover:bg-muted/70 transition"
-                  >
-                 {vehicleType.name}
-                    <div className="flex items-center gap-2">
-                      <Link href={`/vehicle-types/${vehicleType.id}/edit`}>
+
+                   <tr key={vehicleType.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 text-center
+                    ">
+                      <td className="border  text-sm text-gray-900 dark:text-gray-100">
+                          {vehicleType.id}
+                         </td>
+                           <td className="border  text-sm text-gray-900 dark:text-gray-100">
+                          {vehicleType.name}
+                         </td>
+                         <td className="border  text-sm text-gray-900 dark:text-gray-100">
+   <Link href={`/vehicle-types/${vehicleType.id}/edit`}>
                         <Button variant="ghost" size="icon">
                           <Edit className="h-4 w-4" />
                         </Button>
@@ -129,10 +144,13 @@ export default function VehicleTypeIndex({ vehicleTypes, filters }: Props) {
                           </AlertDialogFooter>
                         </AlertDialogContent>
                       </AlertDialog>
-                    </div>
-                  </div>
+
+                         </td>
+                         </tr>
+              
                 ))
               )}
+              </tbody></table>
             </div>
 
             {!vehicleTypes || vehicleTypes.links.length > 1 && (

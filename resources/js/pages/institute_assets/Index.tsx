@@ -221,13 +221,13 @@ export default function InstituteAssetIndex({ instituteAssets, filters,blocks,pe
               <table className="w-full border-collapse">
   <thead>
     <tr className="bg-primary dark:bg-gray-800">
-      <th className="border p-2 text-left text-sm font-medium text-gray-700 dark:text-gray-200">Asset</th>
-      <th className="border p-2 text-left text-sm font-medium text-gray-700 dark:text-gray-200">Category</th>
-      <th className="border p-2 text-left text-sm font-medium text-gray-700 dark:text-gray-200">Quantity</th>
-      <th className="border p-2 text-left text-sm font-medium text-gray-700 dark:text-gray-200">Added Date</th>
-      <th className="border p-2 text-left text-sm font-medium text-gray-700 dark:text-gray-200">Room</th>
-      <th className="border p-2 text-left text-sm font-medium text-gray-700 dark:text-gray-200">Details</th>
-      <th className="border p-2 text-left text-sm font-medium text-gray-700 dark:text-gray-200">Actions</th>
+      <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Asset</th>
+      <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Category</th>
+      <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Quantity</th>
+      <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Added Date</th>
+      <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Room</th>
+      <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Details</th>
+      <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Actions</th>
     </tr>
   </thead>
   <tbody>

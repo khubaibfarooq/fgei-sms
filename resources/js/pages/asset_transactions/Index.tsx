@@ -90,56 +90,68 @@ export default function AssetCategoryIndex({ categories, filters }: Props) {
             </div>
 
             <div className="space-y-3">
+               <table className="w-full border-collapse">
+  <thead>
+    <tr className="bg-primary dark:bg-gray-800">
+      <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">ID</th>
+      <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Category</th>
+     
+     
+      <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Actions</th>
+    </tr>
+  </thead>
+  <tbody>
               {categories.data.length === 0 ? (
                 <p className="text-muted-foreground text-center">No categories found.</p>
               ) : (
                 categories.data.map((category) => (
-                  <div
-                    key={category.id}
-                    className="flex items-center justify-between border px-4 py-3 rounded-md bg-muted/50 hover:bg-muted/70 transition"
-                  >
-                    <div className="space-y-1">
-                      <div className="font-medium text-sm text-foreground">
-                        {category.name}
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        {category.assets_count || 0} assets
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Link href={`/asset-categories/${category.id}/edit`}>
-                        <Button variant="ghost" size="icon">
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                      </Link>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="ghost" size="icon" className="text-destructive hover:text-red-600">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Delete this category?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Category <strong>{category.name}</strong> will be permanently deleted.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction
-                              className="bg-destructive hover:bg-destructive/90"
-                              onClick={() => handleDelete(category.id)}
-                            >
-                              Delete
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </div>
-                  </div>
+                 <tr key={category.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                         <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">
+                           {category.id}
+                         </td>
+                         <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">
+                          {category.name}
+                         </td>
+                        
+                        
+                        
+                         <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">
+                            <Link href={`/asset-categories/${category.id}/edit`}>
+                                         <Button variant="ghost" size="icon">
+                                           <Edit className="h-4 w-4" />
+                                         </Button>
+                                       </Link>
+                                       <AlertDialog>
+                                         <AlertDialogTrigger asChild>
+                                           <Button variant="ghost" size="icon" className="text-destructive hover:text-red-600">
+                                             <Trash2 className="h-4 w-4" />
+                                           </Button>
+                                         </AlertDialogTrigger>
+                                         <AlertDialogContent>
+                                           <AlertDialogHeader>
+                                             <AlertDialogTitle>Delete this category?</AlertDialogTitle>
+                                             <AlertDialogDescription>
+                                               Category <strong>{category.name}</strong> will be permanently deleted.
+                                             </AlertDialogDescription>
+                                           </AlertDialogHeader>
+                                           <AlertDialogFooter>
+                                             <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                             <AlertDialogAction
+                                               className="bg-destructive hover:bg-destructive/90"
+                                               onClick={() => handleDelete(category.id)}
+                                             >
+                                               Delete
+                                             </AlertDialogAction>
+                                           </AlertDialogFooter>
+                                         </AlertDialogContent>
+                                       </AlertDialog>
+                                       
+                           
+                         </td>
+                       </tr>
                 ))
               )}
+              </tbody></table>
             </div>
 
             {categories.links.length > 1 && (

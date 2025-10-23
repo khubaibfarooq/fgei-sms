@@ -90,17 +90,32 @@ export default function DonationTypeIndex({ donationTypes, filters }: Props) {
             </div>
 
             <div className="space-y-3">
+               <table className="w-full border-collapse">
+  <thead>
+    <tr className="bg-primary dark:bg-gray-800 text-center">
+      <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">ID</th>
+      <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Name</th>
+     
+     
+      <th className="border p-2 text-sm font-medium text-white dark:text-gray-200">Actions</th>
+    </tr>
+  </thead>
+  <tbody>
               {!donationTypes || donationTypes.data.length === 0 ? (
                 <p className="text-muted-foreground text-center">No Donation types found.</p>
               ) : (
                 donationTypes.data.map((donationType) => (
-                  <div
-                    key={donationType.id}
-                    className="flex items-center justify-between border px-4 py-3 rounded-md bg-muted/50 hover:bg-muted/70 transition"
-                  >
-                 {donationType.name}
-                    <div className="flex items-center gap-2">
-                      <Link href={`/donation-types/${donationType.id}/edit`}>
+
+   <tr key={donationType.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 text-center
+                    ">
+                      <td className="border  text-sm text-gray-900 dark:text-gray-100">
+                          {donationType.id}
+                         </td>
+                           <td className="border  text-sm text-gray-900 dark:text-gray-100">
+                          {donationType.name}
+                         </td>
+                           <td className="border  text-sm text-gray-900 dark:text-gray-100">
+                         <Link href={`/donation-types/${donationType.id}/edit`}>
                         <Button variant="ghost" size="icon">
                           <Edit className="h-4 w-4" />
                         </Button>
@@ -129,10 +144,13 @@ export default function DonationTypeIndex({ donationTypes, filters }: Props) {
                           </AlertDialogFooter>
                         </AlertDialogContent>
                       </AlertDialog>
-                    </div>
-                  </div>
+                         </td>
+                         </tr>
+
+                
                 ))
               )}
+              </tbody></table>
             </div>
 
             {!donationTypes || donationTypes.links.length > 1 && (
