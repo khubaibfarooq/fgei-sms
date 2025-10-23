@@ -48,6 +48,7 @@ class DashboardCardController extends Controller
         $data = $request->validate([
             'title'   => 'required|string|max:255',
             'link'    => 'required|string|max:255',
+            'color'   => 'nullable|string|max:255',
             'role_id' => 'required|exists:roles,id',
         ]);
 
@@ -60,31 +61,36 @@ class DashboardCardController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(DashboardCard $dashboardCard)
-    {$roles=\Spatie\Permission\Models\Role::all();
-       
-        return Inertia::render('dashboard_cards/Form', [
-            'dashboardCard' => $dashboardCard,
-            'roles'=>$roles,
-        ]);
-    }
+    public function edit($id)
+{
+    $dashboardCard = DashboardCard::findOrFail($id); // Explicitly fetch the record
+    $roles = \Spatie\Permission\Models\Role::all();
+    return Inertia::render('dashboard_cards/Form', [
+        'dashboardCard' => $dashboardCard,
+        'roles' => $roles,
+    ]);
+}
 
     /**
      * Update the specified resource in storage.
      */
     public function update(Request $request, DashboardCard $dashboardCard)
-    {
-        $data = $request->validate([
-            'title'   => 'required|string|max:255',
-            'link'    => 'required|string|max:255',
-            'role_id' => 'required|exists:roles,id',
-        ]);
+{
+    $data = $request->validate([
+        'title'   => 'required|string|max:255',
+                'color'   => 'nullable|string|max:255',
 
-        $dashboardCard->update($data);
-
+        'link'    => 'required|string|max:255',
+        'role_id' => 'required|exists:roles,id',
+    ]);
+$dashboardCard=DashboardCard::find($request->id);
+    if ($dashboardCard->update($data)) {
         return redirect()->route('dashboardcards.index')
             ->with('success', 'Dashboard card updated successfully.');
+    } else {
+        return redirect()->back()->withErrors(['error' => 'Failed to update dashboard card.']);
     }
+}
 
     /**
      * Remove the specified resource from storage.

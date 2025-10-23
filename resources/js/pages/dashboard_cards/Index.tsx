@@ -61,7 +61,7 @@ export default function DashboardCards({ dashboardCards, filters }: PageProps){
   return (
    <AppLayout breadcrumbs={breadcrumbs}>
        <Head title="Dashboard Card " />
-       <div className="flex-1 p-4 md:p-6">
+       <div className="flex-1 p-2 md:p-3">
          <Card>
            <CardHeader className="pb-3 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
              <div>
@@ -78,7 +78,7 @@ export default function DashboardCards({ dashboardCards, filters }: PageProps){
  
            <Separator />
  
-           <CardContent className="pt-6 space-y-6">
+           <CardContent className="pt-2 space-y-2">
              {/* Search */}
              <div className="flex flex-col md:flex-row md:items-center gap-4">
                <Input
@@ -91,57 +91,60 @@ export default function DashboardCards({ dashboardCards, filters }: PageProps){
              </div>
  
              {/* List */}
-             <div className="space-y-3">
+             <div className="space-y-1">
+               <table className="w-full border-collapse">
+                    <thead>
+                      <tr className="bg-primary dark:bg-gray-800">
+                        <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Name</th>
+                        <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Role</th>
+                        <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">link</th>
+                          <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
                {dashboardCards.data.length === 0 ? (
                  <p className="text-muted-foreground text-center">No buildingTypes found.</p>
                ) : (
                  dashboardCards.data.map((card) => (
-                   <div
-                     key={card.id}
-                     className="flex items-center justify-between border px-4 py-3 rounded-md bg-muted/50 hover:bg-muted/70 transition"
-                   >
-                     <div className="space-y-1">
-                       <div className="font-medium text-sm text-foreground">
-                         {card.title}
-                       </div>
-                       <div className="text-xs text-muted-foreground">
-                          {card.link} • {card.role ? card.role.name : 'N/A'}  
-                       </div>
-                     </div>
-                     <div className="flex items-center gap-2">
-                       <Link href={`/dashboardcards/${card.id}/edit`}>
-                         <Button variant="ghost" size="icon">
-                           <Edit className="h-4 w-4" />
-                         </Button>
-                       </Link>
-                       <AlertDialog>
-                         <AlertDialogTrigger asChild>
-                           <Button variant="ghost" size="icon" className="text-destructive hover:text-red-600">
-                             <Trash2 className="h-4 w-4" />
-                           </Button>
-                         </AlertDialogTrigger>
-                         <AlertDialogContent>
-                           <AlertDialogHeader>
-                             <AlertDialogTitle>Delete this Card?</AlertDialogTitle>
-                             <AlertDialogDescription>
-                               Card <strong>{card.title}</strong> will be permanently deleted.
-                             </AlertDialogDescription>
-                           </AlertDialogHeader>
-                           <AlertDialogFooter>
-                             <AlertDialogCancel>Cancel</AlertDialogCancel>
-                             <AlertDialogAction
-                               className="bg-destructive hover:bg-destructive/90"
-                               onClick={() => handleDelete(card.id)}
-                             >
-                               Delete
-                             </AlertDialogAction>
-                           </AlertDialogFooter>
-                         </AlertDialogContent>
-                       </AlertDialog>
-                     </div>
-                   </div>
+                 <tr key={card.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                          <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{card.title}</td>
+                          <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{card.role?.name}</td>
+                          <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{card.link}</td>
+                           <td className="border p-2 text-sm text-gray-900 dark:text-gray-100"><Link href={`/dashboardcards/${card.id}/edit`}>
+                                                   <Button variant="ghost" size="icon">
+                                                     <Edit className="h-4 w-4" />
+                                                   </Button>
+                                                 </Link>
+                                                 <AlertDialog>
+                                                                         <AlertDialogTrigger asChild>
+                                                                           <Button variant="ghost" size="icon" className="text-destructive hover:text-red-600">
+                                                                             <Trash2 className="h-4 w-4" />
+                                                                           </Button>
+                                                                         </AlertDialogTrigger>
+                                                                         <AlertDialogContent>
+                                                                           <AlertDialogHeader>
+                                                                             <AlertDialogTitle>Delete this Card?</AlertDialogTitle>
+                                                                             <AlertDialogDescription>
+                                                                               Card <strong>{card.title}</strong> will be permanently deleted.
+                                                                             </AlertDialogDescription>
+                                                                           </AlertDialogHeader>
+                                                                           <AlertDialogFooter>
+                                                                             <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                                             <AlertDialogAction
+                                                                               className="bg-destructive hover:bg-destructive/90"
+                                                                               onClick={() => handleDelete(card.id)}
+                                                                             >
+                                                                               Delete
+                                                                             </AlertDialogAction>
+                                                                           </AlertDialogFooter>
+                                                                         </AlertDialogContent>
+                                                                       </AlertDialog></td>
+                        </tr>
                  ))
+                  
                )}
+                </tbody>
+                  </table>
              </div>
  
              {/* Pagination */}

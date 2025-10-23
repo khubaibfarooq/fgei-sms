@@ -10,10 +10,11 @@ use Spatie\Permission\Traits\HasRoles;
 class DashboardCard extends Model
 {
     use HasFactory,HasRoles;
-
+ protected $table = 'dashboard_cards';
     protected $fillable = [
         'title',
         'link',
+          'color',
         'role_id',
     ];
 

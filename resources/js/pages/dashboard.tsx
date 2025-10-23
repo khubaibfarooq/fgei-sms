@@ -1,5 +1,5 @@
-import React from 'react';
-import { Head,usePage } from '@inertiajs/react';
+import React, { useState, useEffect } from 'react';
+import { Head, usePage } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,17 +8,44 @@ import {
   XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area,
   RadialBarChart, RadialBar, Legend
 } from 'recharts';
+import axios from 'axios';
+import { iconMapper } from '@/lib/iconMapper';
+import type { LucideIcon } from 'lucide-react';
+
+// Define interface for card data from props.cards
+interface CardData {
+  id: number;
+  title: string;
+  link: string;
+    color: string;
+
+  role_id: number;
+  created_at: string;
+  updated_at: string;
+}
+
+// Define interface for summaryData items
+interface SummaryItem {
+  label: string;
+  value: number;
+  color: string;
+}
+
+// Define interface for Inertia props
+interface Props extends Record<string, any> {
+  auth: { user: any }; // Adjust user type as needed
+  cards: CardData[];
+}
 
 const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Dashboard', href: '/dashboard' },
 ];
 
-const summaryData = [
+// Static fallback data
+const fallbackSummaryData: SummaryItem[] = [
   { label: 'Users', value: 420, color: '#aaff11' },
-  { label: 'Backups', value: 80, color: 'green-600' },
-  { label: 'Activity Logs', value: 1570, color: 'green-100' },
-    { label: 'Activity Logs', value: 1570, color: 'blue-600' },
-
+  { label: 'Backups', value: 80, color: '#10b981' },
+  { label: 'Activity Logs', value: 1570, color: '#34d399' },
 ];
 
 const monthlyData = [
@@ -51,9 +78,42 @@ const radialData = [
 const COLORS = ['#0ea5e9', '#14b8a6', '#f97316', '#9333ea'];
 
 export default function Dashboard() {
-  const { props }: any = usePage();
+  const { props } = usePage<Props>(); // Type the usePage hook
   const user = props.auth.user;
-//console.log(props.cards);
+  const cards = props.cards || [];
+  const [summaryData, setSummaryData] = useState<SummaryItem[]>(fallbackSummaryData);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (cards.length === 0) return;
+
+    const fetchCounts = async () => {
+      setLoading(true);
+      try {
+        const countPromises = cards.map(async (card: CardData) => {
+          try {
+            // Replace 'link' with actual endpoint (e.g., '/api/institutes')
+            const response = await axios.get<{ count: number }>(card.link);
+            return { label: card.title, value: response.data.count || 0, color: card.color };
+          } catch (error) {
+            console.error(`Failed to fetch count for ${card.title}:`, error);
+            return { label: card.title, value: 0, color: card.color };
+          }
+        });
+
+        const fetchedData = await Promise.all(countPromises);
+        setSummaryData(fetchedData);
+      } catch (error) {
+        console.error('Failed to fetch summary data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCounts();
+  }, [cards]);
+
+  console.log(props.cards);
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
@@ -61,13 +121,14 @@ export default function Dashboard() {
       <div className="flex flex-col gap-6 p-4">
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {summaryData.map((item, index) => (
-
-            <Card key={index} className={` bg-[${item.color}] dark:bg-gray-800 shadow-md rounded-lg overflow-hidden`}>
+          {(loading ? fallbackSummaryData : summaryData).map((item, index) => (
+            <Card key={index} className={`bg-[${item.color} !important dark:bg-gray-800 shadow-md rounded-lg overflow-hidden`}>
               <CardHeader className="px-4 py-3">
-                <CardTitle className="text-lg  bg-gree font-semibold text-gray-800 dark:text-white ">{item.label}</CardTitle>
+                <CardTitle className="text-lg font-semibold text-gray-800 dark:text-white">{item.label}</CardTitle>
               </CardHeader>
-              <CardContent className="px-4 py-2 text-3xl font-bold text-gray-900 dark:text-gray-100">{item.value}</CardContent>
+              <CardContent className="px-4 py-2 text-3xl font-bold text-gray-900 dark:text-gray-100">
+                {loading ? '...' : item.value}
+              </CardContent>
             </Card>
           ))}
         </div>

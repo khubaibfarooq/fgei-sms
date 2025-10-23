@@ -15,6 +15,8 @@ interface FormProps {
     id: number;
     title: string;
     link: string;
+        color: string;
+
     role_id: number;
   };
   roles: Array<{ id: number; name: string }>;
@@ -24,12 +26,17 @@ export default function DashboardCardForm({ dashboardCard, roles }: FormProps) {
   const isEdit = !!dashboardCard;
 console.log(dashboardCard);
   const { data, setData, processing, errors, reset } = useForm<{
+    id: number | '';
     title: string;
     link: string;
+     color: string;
     role_id: number | '';
   }>({
+    id:dashboardCard?.id ||'',
     title: dashboardCard?.title || '',
     link: dashboardCard?.link || '',
+        color: dashboardCard?.color || '',
+
     role_id: dashboardCard?.role_id || '',
   });
 
@@ -39,6 +46,7 @@ console.log(dashboardCard);
         ...prev,
         title: dashboardCard.title ?? '',
         link: dashboardCard.link ?? '',
+         color: dashboardCard.color ?? '',
         role_id: dashboardCard.role_id ?? '',
       }));
     } else {
@@ -46,27 +54,27 @@ console.log(dashboardCard);
         ...prev,
         title: '',
         link: '',
+         color: '',
         role_id: '',
       }));
     }
   }, [dashboardCard, setData]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (isEdit) {
-      router.put(`/dashboardcards/${dashboardCard?.id}`, data, {
-        preserveScroll: true,
-        preserveState: true,
-      });
-    } else {
-      router.post('/dashboardcards', data , {
-        onSuccess: () => {
-          reset(); // Clear form data on successful POST
-        },
-      });
-    }
-  };
+const handleSubmit = (e: React.FormEvent) => {
+  e.preventDefault();
+  if (isEdit) {
+    router.put(`/dashboardcards/${dashboardCard?.id}`, data, {
+      preserveScroll: true,
+      preserveState: true,
+      onError: (errors) => console.log(errors), // Log errors for debugging
+    });
+  } else {
+    router.post('/dashboardcards', data, {
+      onSuccess: () => reset(),
+      onError: (errors) => console.log(errors),
+    });
+  }
+};
 
   const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard Cards', href: '/dashboardcards' },
@@ -117,7 +125,7 @@ console.log(dashboardCard);
                   {errors.link && <p className="text-red-500 text-sm">{errors.link}</p>}
                 </div>
               </div>
-
+<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Role */}
               <div className="space-y-2">
                 <Label htmlFor="role_id">Role</Label>
@@ -138,7 +146,17 @@ console.log(dashboardCard);
                 </Select>
                 {errors.role_id && <p className="text-red-500 text-sm">{errors.role_id}</p>}
               </div>
-
+ <div className="space-y-2">
+                <Label htmlFor="color">Color</Label>
+                <Input
+                type='color'
+                    id="color"
+                    value={data.color}
+                    onChange={(e) => setData('color', e.target.value)}
+                  />
+                {errors.color && <p className="text-red-500 text-sm">{errors.color}</p>}
+              </div>
+              </div>
               {/* Actions */}
               <div className="flex items-center justify-between pt-6">
                 <Link href="/dashboardcards">
