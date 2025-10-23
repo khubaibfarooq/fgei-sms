@@ -231,12 +231,12 @@ export default function HelpDeskIndex({ helpDesk, filters, institutes, auth }: P
        <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Descriptions</th>
       <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Status</th>
      
-      <th className="border p-2 text-sm font-medium text-white dark:text-gray-200">Actions</th>
+      
     </tr>
   </thead>
   <tbody>
               {!helpDesk?.data || helpDesk.data.length === 0 ? (
-                <p className="text-muted-foreground text-center">No helpdesk found.</p>
+                <p className="text-muted-foreground text-center">No Request found.</p>
               ) : (
                 helpDesk.data.map((req) => (
  <tr  onClick={() => openViewModal(req)}  key={req.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 text-center
