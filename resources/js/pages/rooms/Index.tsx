@@ -165,27 +165,39 @@ export default function RoomIndex({ rooms, filters, blocks,permissions }: Props)
             </div>
 
             <div className="space-y-3">
+                <table className="w-full border-collapse">
+  <thead>
+    <tr className="bg-primary dark:bg-gray-800 text-center" >
+      <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Name</th>
+      <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Area</th>
+       <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Block</th>
+              <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Room Type</th>
+
+      <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Action</th>
+     
+      
+    </tr>
+  </thead>
+  <tbody>
               {rooms.data.length === 0 ? (
                 <p className="text-muted-foreground text-center">No rooms found.</p>
               ) : (
                 rooms.data.map((room) => (
-                  <div
-                    key={room.id}
-                    className="flex items-center justify-between border px-4 py-3 rounded-md bg-muted/50 hover:bg-muted/70 transition"
-                  >
-                    <div className="flex items-center gap-3">
-                      <DoorOpen className="h-5 w-5 text-muted-foreground" />
-                      <div className="space-y-1">
-                        <div className="font-medium text-sm text-foreground">
+
+                    <tr  key={room.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 text-center
+                    ">
+                      <td className="border  text-sm text-gray-900 dark:text-gray-100">
                           {room.name}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                           {room.block.name} • {room.type.name} • {room.area} sq ft
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                    {permissions.can_edit &&(
+                         </td>
+                         <td className="border  text-sm text-gray-900 dark:text-gray-100">
+                         {room.area}
+                         </td>
+                           <td className="border  text-sm text-gray-900 dark:text-gray-100">
+                        {room.block.name} 
+                         </td>
+                         <td className="border  text-sm text-gray-900 dark:text-gray-100">{room.type.name}</td>
+                          <td className="border  text-sm text-gray-900 dark:text-gray-100">
+  {permissions.can_edit &&(
                       <Link href={`/rooms/${room.id}/edit`}>
                         <Button variant="ghost" size="icon">
                           <Edit className="h-4 w-4" />
@@ -218,10 +230,12 @@ export default function RoomIndex({ rooms, filters, blocks,permissions }: Props)
                         </AlertDialogContent>
                       </AlertDialog>
                     )}
-                    </div>
-                  </div>
+                          </td>
+                          </tr>
+                
                 ))
               )}
+              </tbody></table>
             </div>
 
             {rooms.links.length > 1 && (

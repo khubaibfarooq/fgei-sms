@@ -136,7 +136,7 @@ Route::get('/reports/plants', [ReportsController::class, 'plants'])->name('repor
 Route::get('/reports/plants/getPlants', [ReportsController::class, 'getPlants'])->name('reports.getPlants');
 Route::get('/reports/upgradations', [ReportsController::class, 'upgradations'])->name('reports.upgradations');
 Route::get('/reports/upgradations/getUpgradations', [ReportsController::class, 'getUpgradations'])->name('reports.getUpgradations');
-
+Route::get('/reports/getInstitutes', [ReportsController::class, 'getInstitutes'])->name('reports.getInstitutes');
 //helpdesk
 Route::put('/helpdesk/{helpDesk}', [HelpDeskController::class, 'update'])->name('helpdesk.update');
 Route::get('/helpdesk', [HelpDeskController::class, 'index'])->name('helpdesk.index');

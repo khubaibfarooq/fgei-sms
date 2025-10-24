@@ -104,25 +104,34 @@ console.log(shifts);
               />
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-3">  
+               <table className="w-full border-collapse">
+  <thead>
+    <tr className="bg-primary dark:bg-gray-800 text-center" >
+      <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Shift</th>
+      <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Building</th>
+       <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Building Type</th>
+      <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Action</th>
+     
+      
+    </tr>
+  </thead>
+  <tbody>
               {shifts.data.length === 0 ? (
                 <p className="text-muted-foreground text-center">No shift found.</p>
               ) : (
                 shifts.data.map((shift) => (
-                  <div
-                    key={shift.id}
-                    className="flex items-center justify-between border px-4 py-3 rounded-md bg-muted/50 hover:bg-muted/70 transition"
-                  >
-                    <div className="space-y-1">
-                      <div className="font-medium text-sm text-foreground">
-                        {shift.name}
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        Building: {shift.building_name} | Building Type: {shift.building_type?.name || 'N/A'}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {permissions.can_edit &&  (
+
+                   <tr  key={shift.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 text-center
+                    ">
+                      <td className="border  text-sm text-gray-900 dark:text-gray-100">
+                          {shift.name}
+                         </td>
+                           <td className="border  text-sm text-gray-900 dark:text-gray-100">
+                        {shift.building_name}
+                         </td>
+                         <td className="border  text-sm text-gray-900 dark:text-gray-100">{shift.building_type?.name || 'N/A'}</td>
+                          <td className="border  text-sm text-gray-900 dark:text-gray-100">   {permissions.can_edit &&  (
                       <Link href={`/shifts/${shift.id}/edit`}>
                         <Button variant="ghost" size="icon">
                           <Edit className="h-4 w-4" />
@@ -153,11 +162,16 @@ console.log(shifts);
                             </AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>
-                      </AlertDialog>)}
-                    </div>
-                  </div>
+                      </AlertDialog>)} </td>
+                     
+                       
+                         </tr>
+
+
+                  
                 ))
               )}
+              </tbody></table>
             </div>
 
             {shifts.links.length > 1 && (

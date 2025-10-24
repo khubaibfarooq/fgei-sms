@@ -17,31 +17,30 @@ use Exception;
 
 class SSORedirectController extends Controller
 {
-    private $secretKey;
 
-    public function __construct()
-    {
-        // Must be the SAME secret key as HR system
-        $this->secretKey = env('JWT_SECRET_KEY');
-    }
 
     public function handle(Request $request)
     {
+        $secretKey = env('JWT_SECRET_KEY');
+       
         $token = $request->query('token');
 
         // Validate token presence
-        if (!$token) {
-            return redirect('/login')->with('error', 'Invalid redirect from HR.');
-        }
-
+        
+  
         try {
             // Decode and verify JWT token
-            $decoded = JWT::decode($token, new Key($this->secretKey, 'HS256'));
-            
-            // Verify audience (optional but recommended)
-            if ($decoded->aud !== config('app.url')) {
-                return redirect('/login')->with('error', 'Token not intended for this system.');
-            }
+             $decoded=null;
+             if (!empty($token)) {
+              $decoded = JWT::decode($token, new Key($secretKey, 'HS256'));
+        }
+
+
+        
+            // // Verify audience (optional but recommended)
+            // if ($decoded->aud !== config('app.url')) {
+            //     return redirect('/login')->with('error', 'Token not intended for this system.');
+            // }
 
             // Extract data from JWT payload
             $data = (array) $decoded->data;
@@ -55,10 +54,11 @@ class SSORedirectController extends Controller
             $institution_id = $data['institution_id'] ?? null;
             $region_id = $data['region_id'] ?? null;
 
-            // Required fields check
-            if (!$hr_user_id || !$name || !$cnic || !$category || !$hashedPassword) {
-                return redirect('/login')->with('error', 'Missing required data from HR.');
-            }
+            // // Required fields check
+            // if (!$hr_user_id || !$name || !$cnic || !$category || !$hashedPassword) {
+            //     \Log::error('SSO JWT Error: Invalid signature for token: ' . $token);
+            //     return redirect('/login')->with('error', 'Missing required data from HR.');
+            // }
 
             // Check if user exists in SMS by hr_user_id
             $user = User::where('hr_user_id', $hr_user_id)->first();

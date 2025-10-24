@@ -150,7 +150,7 @@ export default function InstitutionalReportIndex({ institutes: initialInstitutes
 
   const memoizedInstitutes = useMemo(() => institutes.filter(isValidItem), [institutes]);
   const memoizedRegions = useMemo(() => regions.filter(isValidItem), [regions]);
-
+console.log(memoizedRegions);
   const fetchData = async (params: { search?: string; institute_id?: string; region_id?: string }) => {
     try {
       const query = new URLSearchParams(params).toString();
@@ -159,6 +159,7 @@ export default function InstitutionalReportIndex({ institutes: initialInstitutes
         throw new Error('Failed to fetch data');
       }
       const data = await response.json();
+      setInstitutes(data.institutes || []);
       setBlocks(data.blocks || []);
       setInstituteAssets(data.instituteAssets || []);
       setRooms(data.rooms || []);

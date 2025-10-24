@@ -104,24 +104,49 @@ export default function UpgradationsIndex({ upgradations, filters,permissions }:
             </div>
 
             <div className="space-y-3">
+               <table className="w-full border-collapse">
+  <thead>
+    <tr className="bg-primary dark:bg-gray-800 text-center" >
+      <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Details</th>
+      <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">From</th>
+            <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">To</th>
+            <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Level From</th>
+            <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Level To</th>
+            <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Status</th>
+
+
+      <th className="border p-2  text-sm font-medium text-white dark:text-gray-200"></th>
+     
+      
+    </tr>
+  </thead>
+  <tbody>
               {upgradations.data.length === 0 ? (
                 <p className="text-muted-foreground text-center">No upgradations found.</p>
               ) : (
                 upgradations.data.map((upgradation) => (
-                  <div
-                    key={upgradation.id}
-                    className="flex items-center justify-between border px-4 py-3 rounded-md bg-muted/50 hover:bg-muted/70 transition"
-                  >
-                    <div className="space-y-1">
-                      <div className="font-medium text-sm text-foreground">
+
+                   <tr  key={upgradation.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 text-center
+                    ">
+                      <td className="border  text-sm text-gray-900 dark:text-gray-100">
                         {upgradation.details}
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                     From: {formatDate(upgradation.from)} • To: {formatDate(upgradation.to)} • Status: {upgradation.status} • Level From: {upgradation.levelfrom} • Level To: {upgradation.levelto} 
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                       {permissions.can_edit &&(
+                         </td>
+                         <td className="border  text-sm text-gray-900 dark:text-gray-100">
+                        {formatDate(upgradation.from)}
+                         </td>
+                         <td className="border  text-sm text-gray-900 dark:text-gray-100">
+                       {formatDate(upgradation.to)}
+                         </td>
+                         <td className="border  text-sm text-gray-900 dark:text-gray-100">
+                       {upgradation.levelfrom}
+                         </td>
+                         <td className="border  text-sm text-gray-900 dark:text-gray-100">
+                        {upgradation.levelto} 
+                         </td>
+                         <td className="border  text-sm text-gray-900 dark:text-gray-100">
+                       Status: {upgradation.status} 
+                         </td>
+                          <td className="border  text-sm text-gray-900 dark:text-gray-100">{permissions.can_edit &&(
                       <Link href={`/upgradations/${upgradation.id}/edit`}>
                         <Button variant="ghost" size="icon">
                           <Edit className="h-4 w-4" />
@@ -152,11 +177,12 @@ export default function UpgradationsIndex({ upgradations, filters,permissions }:
                           </AlertDialogFooter>
                         </AlertDialogContent>
                       </AlertDialog>
-                      )}
-                    </div>
-                  </div>
+                      )}</td>
+                          </tr>
+                
                 ))
               )}
+              </tbody></table>
             </div>
 
             {upgradations.links.length > 1 && (

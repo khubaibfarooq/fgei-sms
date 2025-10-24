@@ -14,11 +14,13 @@ import ExcelJS from 'exceljs';
 import FileSaver from 'file-saver';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+
 declare module 'jspdf' {
   interface jsPDF {
     autoTable: (options: any) => jsPDF;
   }
 }
+
 const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Reports', href: '/reports' },
   { title: 'Transports', href: '/reports/transports' },
@@ -30,6 +32,7 @@ interface transportProp {
   added_date: string;
   institute?: { id: number; name?: string };
   vehicle_type?: { id: number; name?: string };
+  region?: { id: number; name?: string };
 }
 
 interface Item {
@@ -38,7 +41,6 @@ interface Item {
 }
 
 interface Props {
-  
   transports: {
     data: transportProp[];
     current_page: number;
@@ -49,10 +51,11 @@ interface Props {
     search: string;
     institute_id?: string;
     vehicle_type_id?: string;
+    region_id?: string;
   };
-  institutes: Item[];
-  
-  vehicleTypes: Item[];
+  institutes: Item[] | null;
+  vehicleTypes: Item[] | null;
+  regions: Item[] | null;
 }
 
 // Error Boundary Component
@@ -98,117 +101,153 @@ const isValidItem = (item: any): item is Item => {
   return isValid;
 };
 
-export default function Transports({  transports: transportProp, institutes,vehicleTypes,  filters }: Props) {
+export default function Transports({ transports: transportProp, institutes, vehicleTypes, regions, filters }: Props) {
   const [search, setSearch] = useState(filters.search || '');
   const [institute, setInstitute] = useState(filters.institute_id || '');
+  const [vehicleType, setVehicleType] = useState(filters.vehicle_type_id || '');
+  const [region, setRegion] = useState(filters.region_id || '');
+  const [transports, setTransport] = useState(transportProp);
+  const [filteredInstitutes, setFilteredInstitutes] = useState<Item[]>(institutes || []);
 
-  const [vehicleType, setvehicleType] = useState(filters.vehicle_type_id || '');
+  // Memoize dropdown items to prevent unnecessary re-renders
+  const memoizedInstitutes = useMemo(() => {
+    if (!Array.isArray(filteredInstitutes)) {
+      console.warn('filteredInstitutes is not an array or is null:', filteredInstitutes);
+      return [];
+    }
+    return filteredInstitutes.filter(isValidItem);
+  }, [filteredInstitutes]);
 
-  const [transports, setTransport] = useState(transportProp  || []);
+  const memoizedVehicleType = useMemo(() => {
+    if (!Array.isArray(vehicleTypes)) {
+      console.warn('vehicleTypes is not an array or is null:', vehicleTypes);
+      return [];
+    }
+    return vehicleTypes.filter(isValidItem);
+  }, [vehicleTypes]);
 
-  // Log initial props for debugging
+  const memoizedRegions = useMemo(() => {
+    if (!Array.isArray(regions)) {
+      console.warn('regions is not an array or is null:', regions);
+      return [];
+    }
+    return regions.filter(isValidItem);
+  }, [regions]);
+
+  // Log invalid items for debugging
   useEffect(() => {
-   
     const invalidItems = {
-      institutes: institutes.filter(item => !isValidItem(item)),
-      
-      vehicleTypes: vehicleTypes.filter(item => !isValidItem(item)),
-
+      institutes: Array.isArray(filteredInstitutes) ? filteredInstitutes.filter(item => !isValidItem(item)) : [],
+      vehicleTypes: Array.isArray(vehicleTypes) ? vehicleTypes.filter(item => !isValidItem(item)) : [],
+      regions: Array.isArray(regions) ? regions.filter(item => !isValidItem(item)) : [],
     };
     Object.entries(invalidItems).forEach(([key, items]) => {
       if (items.length > 0) console.warn(`Invalid ${key}:`, items);
     });
-  }, [institutes, vehicleTypes]);
+  }, [filteredInstitutes, vehicleTypes, regions]);
 
+  const fetchInstitutes = async (regionId: string) => {
+    try {
+      const params = new URLSearchParams({ region_id: regionId || '' }).toString();
+      const response = await fetch(`/reports/getInstitutes?${params}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch institutes');
+      }
+      const data = await response.json();
+      console.log('Fetched institutes:', data);
+      setFilteredInstitutes(data);
+      // Reset institute if the selected institute is not in the new list
+      if (institute && regionId !== '0' && !data.some((inst: Item) => inst.id.toString() === institute)) {
+        setInstitute('');
+      }
+    } catch (error) {
+      console.error('Error fetching institutes:', error);
+      toast.error('Failed to load institutes');
+      setFilteredInstitutes([]);
+    }
+  };
 
-
- 
-  const exportToExcel = async () => {
-  const workbook = new ExcelJS.Workbook();
-  const worksheet = workbook.addWorksheet('Transports');
-
-  worksheet.columns = [
-    { header: 'VehicleNo', key: 'vehicle_no', width: 30 },
-    { header: 'Type', key: 'vehicleType', width: 10 },
-    { header: 'Institute', key: 'institute', width: 20 },
-
-  ];
-
-  transports.data.forEach((item) => {
-    worksheet.addRow({
-      vehicle_no: item.vehicle_no,
-      vehicleType: item.vehicle_type?.name || 'N/A',
-      institute: item.institute?.name || 'N/A',
-      
-    });
-  });
-
-  const buffer = await workbook.xlsx.writeBuffer();
-  const blob = new Blob([buffer], {
-    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-  });
-  FileSaver.saveAs(blob, 'Transports_Report.xlsx');
-};
-const exportToPDF = () => {
-  const doc = new jsPDF();
-
-  doc.setFontSize(16);
-  doc.text('Transports Report', 14, 15);
-
-  const tableColumn = [
-    'VehicleNo',
-    'VehicleType',
-    'Institute',
-    
-  ];
-
-  const tableRows = transports.data.map((item) => [
-    item.vehicle_no,
-    item.vehicle_type?.name || 'N/A',
-    item.institute?.name || 'N/A',
-   
-  ]);
-
-  doc.autoTable({
-    head: [tableColumn],
-    body: tableRows,
-    startY: 25,
-    styles: { fontSize: 10 },
-  });
-
-  doc.save('Transport_Report.pdf');
-};
- 
-
+  const handleRegionChange = (value: string) => {
+    setRegion(value);
+    fetchInstitutes(value);
+    debouncedApplyFilters(); // Trigger transport filter update
+  };
 
   const debouncedApplyFilters = useMemo(
-  () =>
-    debounce(() => {
-      const params = new URLSearchParams({
-        search: search || '',
-        institute_id: institute || '',
-        vehicle_type_id: vehicleType || '',
-      });
-
-      fetch(`/reports/transports/getTransports?${params.toString()}`)
-        .then((response) => response.json())
-        .then((data) => {
-          console.log('Fetched filtered Transports:', data);
-          setTransport(data); 
-        })
-        .catch((error) => {
-          console.error('Error fetching filtered Transports:', error);
-          toast.error('Failed to fetch filtered Transports');
+    () =>
+      debounce(() => {
+        const params = new URLSearchParams({
+          search: search || '',
+          institute_id: institute || '',
+          vehicle_type_id: vehicleType || '',
+          region_id: region || '',
         });
-    }, 300),
-  [search, institute, vehicleType]
-);
 
+        fetch(`/reports/transports/getTransports?${params.toString()}`)
+          .then((response) => response.json())
+          .then((data) => {
+            console.log('Fetched filtered Transports:', data);
+            setTransport(data);
+          })
+          .catch((error) => {
+            console.error('Error fetching filtered Transports:', error);
+            toast.error('Failed to fetch filtered Transports');
+          });
+      }, 300),
+    [search, institute, vehicleType, region]
+  );
 
-  // Memoize dropdown items to prevent unnecessary re-renders
-  const memoizedInstitutes = useMemo(() => institutes.filter(isValidItem), [institutes]);
+  const exportToExcel = async () => {
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Transports');
 
-  const memoizedVehicleType = useMemo(() => vehicleTypes.filter(isValidItem), [vehicleTypes]);
+    worksheet.columns = [
+      { header: 'VehicleNo', key: 'vehicle_no', width: 30 },
+      { header: 'Type', key: 'vehicleType', width: 10 },
+      { header: 'Institute', key: 'institute', width: 20 },
+      { header: 'Region', key: 'region', width: 20 },
+    ];
+
+    transports.data.forEach((item) => {
+      worksheet.addRow({
+        vehicle_no: item.vehicle_no,
+        vehicleType: item.vehicle_type?.name || 'N/A',
+        institute: item.institute?.name || 'N/A',
+        region: item.region?.name || 'N/A',
+      });
+    });
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    });
+    FileSaver.saveAs(blob, 'Transports_Report.xlsx');
+  };
+
+  const exportToPDF = () => {
+    const doc = new jsPDF();
+
+    doc.setFontSize(16);
+    doc.text('Transports Report', 14, 15);
+
+    const tableColumn = ['VehicleNo', 'VehicleType', 'Institute', 'Region'];
+
+    const tableRows = transports.data.map((item) => [
+      item.vehicle_no,
+      item.vehicle_type?.name || 'N/A',
+      item.institute?.name || 'N/A',
+      item.region?.name || 'N/A',
+    ]);
+
+    doc.autoTable({
+      head: [tableColumn],
+      body: tableRows,
+      startY: 25,
+      styles: { fontSize: 10 },
+    });
+
+    doc.save('Transport_Report.pdf');
+  };
 
   return (
     <ErrorBoundary>
@@ -224,53 +263,61 @@ const exportToPDF = () => {
                   <p className="text-muted-foreground text-sm">Refine your Transport search</p>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                
-                  <Select value={institute} onValueChange={(value) => { setInstitute(value); }}>
+                   {memoizedRegions.length > 0 && (<Select value={region} onValueChange={handleRegionChange}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Region" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="0">All Regions</SelectItem>
+                      {memoizedRegions.length > 0 ? (
+                        memoizedRegions.map((reg) => (
+                          <SelectItem key={reg.id} value={reg.id.toString()}>
+                            {reg.name}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <div className="text-muted-foreground text-sm p-2">No regions available</div>
+                      )}
+                    </SelectContent>
+                  </Select>
+                   )}
+                  <Select value={institute} onValueChange={(value) => setInstitute(value)}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select Institute" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="0">All Institutes</SelectItem>
                       {memoizedInstitutes.length > 0 ? (
-                        memoizedInstitutes.map((inst) => {
-                          //console.log('Rendering institute SelectItem:', { id: inst.id, value: inst.id.toString(), name: inst.name });
-                          return (
-                            <SelectItem key={inst.id} value={inst.id.toString()}>
-                              {inst.name}
-                            </SelectItem>
-                          );
-                        })
+                        memoizedInstitutes.map((inst) => (
+                          <SelectItem key={inst.id} value={inst.id.toString()}>
+                            {inst.name}
+                          </SelectItem>
+                        ))
                       ) : (
                         <div className="text-muted-foreground text-sm p-2">No institutes available</div>
                       )}
                     </SelectContent>
                   </Select>
-                  
-                  <Select value={vehicleType} onValueChange={(value) => { setvehicleType(value);  }}>
+                  <Select value={vehicleType} onValueChange={(value) => setVehicleType(value)}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select Vehicle Type" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="0">All Vehicle Types</SelectItem>
                       {memoizedVehicleType.length > 0 ? (
-                        memoizedVehicleType.map((type) => {
-                          console.log('Rendering vehicleType SelectItem:', { id: type.id, value: type.id.toString(), name: type.name });
-                          return (
-                            <SelectItem key={type.id} value={type.id.toString()}>
-                              {type.name}
-                            </SelectItem>
-                          );
-                        })
+                        memoizedVehicleType.map((type) => (
+                          <SelectItem key={type.id} value={type.id.toString()}>
+                            {type.name}
+                          </SelectItem>
+                        ))
                       ) : (
-                        <div className="text-muted-foreground text-sm p-2">No  Vehicle Type available</div>
+                        <div className="text-muted-foreground text-sm p-2">No vehicle types available</div>
                       )}
                     </SelectContent>
                   </Select>
-                 
                   <Button onClick={debouncedApplyFilters} className="w-full">
                     Apply Filters
                   </Button>
-
                 </CardContent>
               </Card>
             </div>
@@ -282,39 +329,50 @@ const exportToPDF = () => {
                   <div>
                     <CardTitle className="text-2xl font-bold">Transport Report</CardTitle>
                   </div>
-                  <Button onClick={exportToPDF} className="w-full">
-  Export PDF
-</Button>
-                  <Button onClick={exportToExcel} className="w-full">
-  Export Excel
-</Button>
+                  <div className="flex gap-2">
+                    <Button onClick={exportToPDF} className="w-full md:w-auto">
+                      Export PDF
+                    </Button>
+                    <Button onClick={exportToExcel} className="w-full md:w-auto">
+                      Export Excel
+                    </Button>
+                  </div>
                 </CardHeader>
                 <Separator />
                 <CardContent className="pt-6 space-y-6">
                   <div className="space-y-3">
-                    {  transports.data.length === 0 ? (
-                      <p className="text-muted-foreground text-center">No Transports found.</p>
-                    ) : (
-                      transports.data.map((trans) => (
-                        <div
-                          key={trans.id}
-                          className="flex items-center justify-between border px-4 py-3 rounded-md bg-muted/50 hover:bg-muted/70 transition shadow-sm"
-                        >
-                          <div className="flex items-center gap-3">
-                            <Building className="h-5 w-5 text-blue-600" />
-                            <div className="space-y-1">
-                              <div className="font-medium text-sm text-foreground">
+                    <table className="w-full border-collapse">
+                      <thead>
+                        <tr className="bg-primary dark:bg-gray-800 text-center">
+                          <th className="border p-2 text-sm font-medium text-white dark:text-gray-200">Vehicle No</th>
+                          <th className="border p-2 text-sm font-medium text-white dark:text-gray-200">Type</th>
+                          <th className="border p-2 text-sm font-medium text-white dark:text-gray-200">Region</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {transports.data.length === 0 ? (
+                          <tr>
+                            <td colSpan={3} className="text-muted-foreground text-center p-4">
+                              No Transports found.
+                            </td>
+                          </tr>
+                        ) : (
+                          transports.data.map((trans) => (
+                            <tr key={trans.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 text-center">
+                              <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">
                                 {trans.vehicle_no}
-                              </div>
-                              <div className="text-xs text-muted-foreground">
-                                Type: {trans.vehicle_type?.name || 'N/A'} | Institute: {trans.institute?.name || 'N/A'}  
-                    
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      ))
-                    )}
+                              </td>
+                              <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">
+                                {trans.vehicle_type?.name || 'N/A'}
+                              </td>
+                              <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">
+                                {trans.region?.name || 'N/A'}
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
                   </div>
                   {transports.links.length > 1 && (
                     <div className="flex justify-center pt-6 flex-wrap gap-2">

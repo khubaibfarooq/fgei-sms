@@ -103,27 +103,37 @@ export default function ProjectIndex({ projects, filters,permissions }: Props) {
             </div>
 
             <div className="space-y-3">
+               <table className="w-full border-collapse">
+  <thead>
+    <tr className="bg-primary dark:bg-gray-800 text-center" >
+      <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Name</th>
+      <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Cost</th>
+            <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Status</th>
+
+
+      <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Action</th>
+     
+      
+    </tr>
+  </thead>
+  <tbody>
               {projects.data.length === 0 ? (
                 <p className="text-muted-foreground text-center">No projects found.</p>
               ) : (
                 projects.data.map((project) => (
-                  <div
-                    key={project.id}
-                    className="flex items-center justify-between border px-4 py-3 rounded-md bg-muted/50 hover:bg-muted/70 transition"
-                  >
-                    <div className="flex items-center gap-3">
-                      <Building className="h-5 w-5 text-muted-foreground" />
-                      <div className="space-y-1">
-                        <div className="font-medium text-sm text-foreground">
+                   <tr  key={project.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 text-center
+                    ">
+                     
+                         <td className="border  text-sm text-gray-900 dark:text-gray-100">
                           {project.name}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                           Cost:{project.cost} | Status: {project.status}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {permissions.can_edit &&
+                         </td>
+                          <td className="border  text-sm text-gray-900 dark:text-gray-100">
+                 {project.cost}
+                         </td>
+                           <td className="border  text-sm text-gray-900 dark:text-gray-100">
+                   {project.status}
+                         </td>
+                          <td className="border  text-sm text-gray-900 dark:text-gray-100">  {permissions.can_edit &&
                       <Link href={`/projects/${project.id}/edit`}>
                         <Button variant="ghost" size="icon">
                           <Edit className="h-4 w-4" />
@@ -155,11 +165,12 @@ export default function ProjectIndex({ projects, filters,permissions }: Props) {
                           </AlertDialogFooter>
                         </AlertDialogContent>
                       </AlertDialog>
-                      }
-                    </div>
-                  </div>
+                      }</td>
+                          </tr>
+                 
                 ))
               )}
+              </tbody></table>
             </div>
 
             {projects.links.length > 1 && (

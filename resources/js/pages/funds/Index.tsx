@@ -106,27 +106,39 @@ console.log(funds);
             </div>
 
             <div className="space-y-3">
+                 <table className="w-full border-collapse">
+  <thead>
+    <tr className="bg-primary dark:bg-gray-800 text-center" >
+      <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Fund Head</th>
+      <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Date</th>
+            <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Amount</th>
+
+
+      <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Action</th>
+     
+      
+    </tr>
+  </thead>
+  <tbody>
               {funds.data.length === 0 ? (
                 <p className="text-muted-foreground text-center">No funds found.</p>
               ) : (
                 funds.data.map((fund) => (
-                  <div
-                    key={fund.id}
-                    className="flex items-center justify-between border px-4 py-3 rounded-md bg-muted/50 hover:bg-muted/70 transition"
-                  >
-                    <div className="flex items-center gap-3">
-                      <Building className="h-5 w-5 text-muted-foreground" />
-                      <div className="space-y-1">
-                        <div className="font-medium text-sm text-foreground">
+
+                   <tr  key={fund.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 text-center
+                    ">
+                     
+                         <td className="border  text-sm text-gray-900 dark:text-gray-100">
                           {fund.fund_head.name}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          {fund.amount} | Date:{new Date(fund.added_date).toDateString()} 
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {permissions.can_edit &&
+                         </td>
+                          <td className="border  text-sm text-gray-900 dark:text-gray-100">
+                   {new Date(fund.added_date).toDateString()} 
+                         </td>
+                           <td className="border  text-sm text-gray-900 dark:text-gray-100">
+                   {fund.amount}
+                         </td>
+                          <td className="border  text-sm text-gray-900 dark:text-gray-100">
+                  {permissions.can_edit &&
                       <Link href={`/funds/${fund.id}/edit`}>
                         <Button variant="ghost" size="icon">
                           <Edit className="h-4 w-4" />
@@ -159,10 +171,12 @@ console.log(funds);
                         </AlertDialogContent>
                       </AlertDialog>
                       }
-                    </div>
-                  </div>
+                         </td>
+                         </tr>
+                 
                 ))
               )}
+              </tbody></table>
             </div>
 
             {funds.links.length > 1 && (

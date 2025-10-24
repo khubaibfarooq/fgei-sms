@@ -38,13 +38,11 @@ $type=session('type');
         })
         ->values();
     }else{
-$regions = Institute::select('region_id as id', 'name')->where('type', 'Regional Office')
-          
-            ->get()
+$regions = Institute::select('region_id as id', 'name')->where('type', 'Regional Office')->get()
             ->filter(function ($region) {
-                return is_numeric($region->region_id) && 
-                       $region->region_id > 0 && 
-                       !empty(trim($region->region_id));
+                return is_numeric($region->id) && 
+                       $region->id > 0 && 
+                       !empty(trim($region->id));
             })
             ->values();
     }  
@@ -63,7 +61,7 @@ $regions = Institute::select('region_id as id', 'name')->where('type', 'Regional
 
     }
     if ($request->region_id && is_numeric($request->region_id) && $request->region_id > 0) {
-       $institutes = Institute::where('region_id', $request->$regionid)
+       $institutes = Institute::where('region_id', $request->$region_id)
         ->select('id', 'name')
         ->get()
         ->filter(function ($institute) {
@@ -110,8 +108,18 @@ $regions = Institute::select('region_id as id', 'name')->where('type', 'Regional
             ->with(['institute', 'room', 'asset'])
             ->get();
     }
-
+if ($request->region_id && is_numeric($request->region_id) && $request->region_id > 0) {
+       $institutes = Institute::where('region_id', $request->region_id)
+        ->select('id', 'name')
+        ->get()
+        ->filter(function ($institute) {
+            return is_numeric($institute->id) && $institute->id > 0 && !empty(trim($institute->name));
+        })
+        ->values();
+ 
+    }
     return response()->json([
+        'institutes'=>$institutes,
         'blocks' => $blocks,
         'rooms' => $rooms,
         'regions' => $regions,
@@ -253,8 +261,13 @@ public function assets(Request $request)
     $regionid = session('region_id');
 $type=session('type');
  $institutes = Institute::query();
+   
+    
+    $regions=[];
     if($type=='Regional Office'){
     // Fetch and filter institutes
+   
+
     $institutes = Institute::where('region_id', $regionid)
         ->select('id', 'name')
         ->get()
@@ -262,7 +275,15 @@ $type=session('type');
             return is_numeric($institute->id) && $institute->id > 0 && !empty(trim($institute->name));
         })
         ->values();
-    }
+    }else{
+$regions = Institute::select('region_id as id', 'name')->where('type', 'Regional Office')->get()
+            ->filter(function ($region) {
+                return is_numeric($region->id) && 
+                       $region->id > 0 && 
+                       !empty(trim($region->id));
+            })
+            ->values();
+    }  
     // Fetch and filter blocks based on institute_id
     $blocks = [];
 
@@ -299,6 +320,7 @@ $type=session('type');
         'assetCategories' => $assetCategories,
         'assets' => $assets,
         'instituteAssets' => $instituteAssets,
+        'regions'=>$regions,
         'filters' => [
             'search' => '',
             'institute_id' =>'',
@@ -306,6 +328,7 @@ $type=session('type');
             'room_id' =>'',
             'asset_category_id' =>'',
             'asset_id' =>'',
+            'region_id' =>'',
         ],
     ]);
 }
@@ -386,6 +409,32 @@ $type=session('type');
         $assets = Asset::where('asset_category_id', $assetCategoryId)->get();
         return response()->json($assets);
     }
+   public function getInstitutes(Request $request)
+{
+    try {
+        $request->validate([
+            'region_id' => 'nullable|integer|min:1',
+        ]);
+
+        $query = Institute::query()->select('id', 'name');
+
+        if ($request->region_id && is_numeric($request->region_id) && $request->region_id > 0) {
+            $query->where('region_id', $request->region_id);
+        }
+
+        $institutes = $query->get()
+            ->filter(function ($institute) {
+                return is_numeric($institute->id) && 
+                       $institute->id > 0 && 
+                       !empty(trim($institute->name ?? ''));
+            })
+            ->values();
+
+        return response()->json($institutes);
+    } catch (\Exception $e) {
+        return response()->json(['error' => 'Failed to fetch institutes'], 500);
+    }
+}
      public function getInstituteAssets(Request $request)
     {
        $query = InstituteAsset::query();
@@ -425,9 +474,13 @@ $type=session('type');
     $hrInstituteId = session('inst_id');
     $regionid = session('region_id');
 $type=session('type');
- $institutes = Institute::query();
+ 
+    $institutes = [];
+ $regions=[];
     if($type=='Regional Office'){
     // Fetch and filter institutes
+   
+
     $institutes = Institute::where('region_id', $regionid)
         ->select('id', 'name')
         ->get()
@@ -435,7 +488,15 @@ $type=session('type');
             return is_numeric($institute->id) && $institute->id > 0 && !empty(trim($institute->name));
         })
         ->values();
-    }
+    }else{
+$regions = Institute::select('region_id as id', 'name')->where('type', 'Regional Office')->get()
+            ->filter(function ($region) {
+                return is_numeric($region->id) && 
+                       $region->id > 0 && 
+                       !empty(trim($region->id));
+            })
+            ->values();
+    } 
    
 
     // Fetch and filter asset categories
@@ -465,19 +526,18 @@ $type=session('type');
         'institutes' => $institutes,
         'vehicleTypes' => $vehicleTypes,
         'transports' => $transports,
-      
+      'regions'=>$regions,
         'filters' => [
             'search' => '',
             'institute_id' =>'',
             'vehicle_type_id' =>  '',
-        
+         'region_id' =>  '',
         ],
     ]);
 }
-
- public function getTransports(Request $request)
-    {
-       $query = Transport::query();
+public function getTransports(Request $request)
+{
+    $query = Transport::query();
 
     // Apply filters
     if ($request->search) {
@@ -486,18 +546,27 @@ $type=session('type');
                   $q->where('name', 'like', '%' . $request->search . '%');
               });
     }
+
     if ($request->institute_id && is_numeric($request->institute_id) && $request->institute_id > 0) {
         $query->where('institute_id', $request->institute_id);
     }
-    if ($request->vehicle_type_id && is_numeric($request->vehicle_type_id) && $request->vehicle_type_id > 0) {
-        $vehicletypeids= VehicleType::where('id', $request->vehicle_type_id)->pluck('id')->toArray();
-        $query->whereIn('vehicle_type_id', $vehicletypeids);
-        }
-  
 
-    $transports = $query->with([ 'institute', 'vehicleType'])->paginate(10)->withQueryString();
-        return response()->json($transports);
+    if ($request->vehicle_type_id && is_numeric($request->vehicle_type_id) && $request->vehicle_type_id > 0) {
+        $query->where('vehicle_type_id', $request->vehicle_type_id);
     }
+
+    if ($request->region_id && is_numeric($request->region_id) && $request->region_id > 0) {
+        $query->whereHas('institute', function ($q) use ($request) {
+            $q->where('region_id', $request->region_id);
+        });
+    }
+
+    $transports = $query->with(['institute.region', 'vehicleType'])
+                        ->paginate(10)
+                        ->withQueryString();
+
+    return response()->json($transports);
+}
 
         public function plants(Request $request)
 {
@@ -505,6 +574,7 @@ $type=session('type');
     $regionid = session('region_id');
 $type=session('type');
  $institutes = Institute::query();
+ $regions=[];
     if($type=='Regional Office'){
     // Fetch and filter institutes
     $institutes = Institute::where('region_id', $regionid)
@@ -514,7 +584,15 @@ $type=session('type');
             return is_numeric($institute->id) && $institute->id > 0 && !empty(trim($institute->name));
         })
         ->values();
-    }
+    }else{
+$regions = Institute::select('region_id as id', 'name')->where('type', 'Regional Office')->get()
+            ->filter(function ($region) {
+                return is_numeric($region->id) && 
+                       $region->id > 0 && 
+                       !empty(trim($region->id));
+            })
+            ->values();
+    } 
    
 
     // Fetch institute assets with related data
@@ -529,11 +607,11 @@ $type=session('type');
     return Inertia::render('Reports/Plants', [
         'institutes' => $institutes,
         'plants' => $plants,
-      
+      'regions'=>$regions,
         'filters' => [
             'search' => '',
             'institute_id' =>'',
-          
+          'region_id' =>'',
         
         ],
     ]);
@@ -563,6 +641,7 @@ $type=session('type');
     $regionid = session('region_id');
 $type=session('type');
  $institutes = Institute::query();
+ $regions=[];
     if($type=='Regional Office'){
     // Fetch and filter institutes
     $institutes = Institute::where('region_id', $regionid)
@@ -572,7 +651,15 @@ $type=session('type');
             return is_numeric($institute->id) && $institute->id > 0 && !empty(trim($institute->name));
         })
         ->values();
-    }
+    }else{
+$regions = Institute::select('region_id as id', 'name')->where('type', 'Regional Office')->get()
+            ->filter(function ($region) {
+                return is_numeric($region->id) && 
+                       $region->id > 0 && 
+                       !empty(trim($region->id));
+            })
+            ->values();
+    } 
    
 
     // Fetch institute assets with related data
@@ -587,7 +674,7 @@ $type=session('type');
     return Inertia::render('Reports/Upgradations', [
         'institutes' => $institutes,
         'upgradations' => $upgradations,
-      
+       'regions'=>$regions,
         'filters' => [
             'search' => '',
             'institute_id' =>'',
