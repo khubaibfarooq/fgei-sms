@@ -15,7 +15,7 @@ import FileSaver from 'file-saver';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { formatDate } from '@/utils/dateFormatter';
-
+import Combobox from '@/components/ui//combobox';
 declare module 'jspdf' {
   interface jsPDF {
     autoTable: (options: any) => jsPDF;
@@ -294,8 +294,20 @@ export default function Upgradations({ upgradations: upgradationProp, institutes
                       )}
                     </SelectContent>
                   </Select>
+                
+<Combobox
+  entity="institute"
+  value={institute}
+  onChange={(value) => setInstitute(value)}
+  options={memoizedInstitutes.map((inst) => ({
+    id: inst.id.toString(), // Convert ID to string to match prop type
+    name: inst.name,
+  }))}
+  includeAllOption={false}
+  
+/>
 
-                  <Select value={institute} onValueChange={(value) => { setInstitute(value); }}>
+                  {/* <Select value={institute} onValueChange={(value) => { setInstitute(value); }}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select Institute" />
                     </SelectTrigger>
@@ -313,7 +325,7 @@ export default function Upgradations({ upgradations: upgradationProp, institutes
                         <div className="text-muted-foreground text-sm p-1">No institutes available</div>
                       )}
                     </SelectContent>
-                  </Select>
+                  </Select> */}
 
                   <Button onClick={debouncedApplyFilters} className="w-full">
                     Apply Filters

@@ -41,7 +41,7 @@ $permissions = [
     }
 
     public function store(Request $request)
-    {
+    {try{
         $data = $request->validate([
  
             'details' => 'required|string',
@@ -56,9 +56,18 @@ $permissions = [
         ]);
 $data['institute_id']=session('sms_inst_id');
 $data['added_by']=auth()->user()->id;
-        Upgradation::updateOrCreate(['id' => $request->id ?? null], $data);
+    $data['from'] = \Carbon\Carbon::parse($data['from'])->format('Y-m-d'); 
+    $data['to'] = \Carbon\Carbon::parse($data['to'])->format('Y-m-d');
 
-        return redirect()->back()->with('success', 'Upgradation saved successfully.');
+        Upgradation::Create( $data);
+
+        return redirect()->back()->with('success', 'Upgradation saved successfully.');} catch (\Illuminate\Validation\ValidationException $e) {
+            // Return validation errors to the frontend
+            return back()->withErrors($e->validator->errors())->withInput();
+        } catch (\Exception $e) {
+            // Handle any unexpected errors
+            return back()->with('error', 'An error occurred while adding the fund: ' . $e->getMessage());
+        }
     }
     public function edit(Upgradation $upgradation)
     {
@@ -83,6 +92,9 @@ $data['added_by']=auth()->user()->id;
         ]);
         $data['institute_id']=session('sms_inst_id');
 $data['added_by']=auth()->user()->id;
+$data['from'] = \Carbon\Carbon::parse($data['from'])->format('Y-m-d'); 
+    $data['to'] = \Carbon\Carbon::parse($data['to'])->format('Y-m-d');
+
         $upgradation->update($data);
         return redirect()->back()->with('success', 'Upgradation updated successfully.');  }
     public function destroy(Upgradation $upgradation)

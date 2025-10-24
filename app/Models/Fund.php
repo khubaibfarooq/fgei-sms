@@ -13,7 +13,8 @@ class Fund extends Model
 {
     use HasFactory,HasRoles;
 
-    protected $fillable = ['fund_head_id', 'amount','institute_id','added_date'];
+    protected $fillable = ['fund_head_id', 'amount','institute_id','added_date','status',	'description'	,'type',	'added_by'	
+];
 
     public function FundHead()
     {

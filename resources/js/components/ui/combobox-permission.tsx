@@ -29,14 +29,14 @@ import {
             aria-expanded={open}
             className="w-full justify-between"
           >
-            {value || 'Pilih permission'}
+            {value || 'Select permissions'}
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-full p-0 max-h-60 overflow-y-auto">
           <Command>
             <CommandInput placeholder="Cari permission..." />
-            <CommandEmpty>Permission tidak ditemukan.</CommandEmpty>
+            <CommandEmpty>permission not found</CommandEmpty>
             <CommandGroup>
               {options.map((item) => (
                 <CommandItem

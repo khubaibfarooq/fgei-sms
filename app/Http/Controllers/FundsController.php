@@ -45,13 +45,20 @@ $permissions = [
     }
 
    public function store(Request $request)
-{
+{    try {
+
     $data = $request->validate([
         'amount' => 'required|numeric',
         'fund_head_id' => 'required|numeric',
-        'added_date' => 'required|date_format:Y-m-d', // Enforce YYYY-MM-DD format
-    ]);
+        'added_date' => 'required|date_format:Y-m-d',
+         'status'=>'required|string',	
+         'description'=>'nullable|string',	
+         'type'	=>'required|string',
+         
 
+    ]);
+   
+$data['added_by']=auth()->user()->id;
     // Add institute_id from session
     $data['institute_id'] = session('sms_inst_id');
 
@@ -59,9 +66,15 @@ $permissions = [
     $data['added_date'] = \Carbon\Carbon::parse($data['added_date'])->format('Y-m-d');
 
     // Update or create the Fund record
-    Fund::updateOrCreate(['id' => $request->id ?? null], $data);
+    Fund::Create( $data);
 
-    return redirect()->back()->with('success', 'Fund saved successfully.');
+    return redirect()->back()->with('success', 'Fund saved successfully.'); } catch (\Illuminate\Validation\ValidationException $e) {
+            // Return validation errors to the frontend
+            return back()->withErrors($e->validator->errors())->withInput();
+        } catch (\Exception $e) {
+            // Handle any unexpected errors
+            return back()->with('error', 'An error occurred while adding the fund: ' . $e->getMessage());
+        }
 } 
     public function edit(Fund $Fund)
     { if(!auth()->user()->can('fund-add')){
@@ -73,18 +86,40 @@ $permissions = [
     'fund'=>$Fund,
     'fundHeads' => $fundHeads,]);
     } 
-    public function update(Request $request, Fund $Fund)
-    { if(!auth()->user()->can('fund-add')){
-            abort(403);
+   public function update(Request $request, Fund $fund)
+    {
+        try {
+            // Check if user has permission to update funds
+            if (!auth()->user()->can('fund-add')) {
+                abort(403, 'Unauthorized action.');
+            }
+
+            // Validate request data
+            $validatedData = $request->validate([
+                'amount' => 'required|numeric',
+                'fund_head_id' => 'required|numeric',
+                'added_date' => 'required|date_format:Y-m-d',
+                'status' => 'required|string|in:Approved,Pending',
+                'description' => 'nullable|string',
+                'type' => 'required|string|in:in,out,service',
+            ]);
+
+            // Add the authenticated user's ID to the data
+            $validatedData['added_by'] = auth()->user()->id;
+
+            // Update the fund
+            $fund->update($validatedData);
+
+            // Return success response
+          
+            return redirect()->back()->with('success', 'Fund updated successfully.');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Return validation errors to the frontend
+            return back()->withErrors($e->validator->errors())->withInput();
+        } catch (\Exception $e) {
+            // Handle any unexpected errors
+            return back()->with('error', 'An error occurred while updating the fund: ' . $e->getMessage());
         }
-        $data = $request->validate([ 
-             'amount' => 'required|numeric',
-        'fund_head_id'=>'required|numeric',
-        'added_date' => 'required|date_format:Y-m-d',]); 
-        $data['institute_id'] = session('sms_inst_id');
- 
-        $Fund->update($data);     
-        return redirect()->back()->with('success', 'Fund  updated successfully.');
     }
     public function destroy(Fund $Fund)
     { if(!auth()->user()->can('fund-delete')){
