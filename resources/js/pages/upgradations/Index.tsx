@@ -69,7 +69,19 @@ export default function UpgradationsIndex({ upgradations, filters,permissions }:
       router.get('/upgradations', { ...filters, search }, { preserveScroll: true });
     }
   };
-
+const getStatusStyles = (status: string) => {
+  switch (status) {
+    case 'pending':
+      return 'bg-yellow-500 text-white';
+    case 'approved':
+      return 'bg-green-500 text-white';
+   
+    case 'rejected':
+      return 'bg-red-500 text-white';
+    default:
+      return 'bg-gray-500 text-white';
+  }
+};
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Upgradations Management" />
@@ -143,8 +155,10 @@ export default function UpgradationsIndex({ upgradations, filters,permissions }:
                          <td className="border  text-sm text-gray-900 dark:text-gray-100">
                         {upgradation.levelto} 
                          </td>
-                         <td className="border  text-sm text-gray-900 dark:text-gray-100">
-                       Status: {upgradation.status} 
+                         <td className="border  text-sm text-gray-900 dark:text-gray-100"><span className={`inline-block px-2 py-1 rounded-full text-xs font-semibold ${getStatusStyles(upgradation.status)}`}>
+                          {upgradation.status} 
+                          </span>
+                       
                          </td>
                           <td className="border  text-sm text-gray-900 dark:text-gray-100">{permissions.can_edit &&(
                       <Link href={`/upgradations/${upgradation.id}/edit`}>
