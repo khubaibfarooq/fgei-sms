@@ -98,7 +98,7 @@ class SSORedirectController extends Controller
 
             // Create or find institute
             $institute = null;
-            if ($institution_id) {
+            if (!empty($institution_id)) {
                 $institute = Institute::firstOrCreate(
                     ['hr_id' => $institution_id],
                     [
@@ -162,7 +162,7 @@ class SSORedirectController extends Controller
             'school', 'college' => 'Institute',
             'directorate' => 'Directorate',
             'regional office', 'region' => 'Region',
-            'admin' => 'Admin',
+            'admin' => 'admin',
             default => 'user',
         };
     }
