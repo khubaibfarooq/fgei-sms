@@ -12,7 +12,7 @@
 /.zed
 /bootstrap/ssr
 /node_modules
-
+node_modules.zip
 /public/hot
 /public/assets
 /storage/*.key
