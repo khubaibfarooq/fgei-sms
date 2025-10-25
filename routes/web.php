@@ -47,11 +47,18 @@ Route::middleware(['auth', 'menu.permission'])->group(function () {
     //     return Inertia::render('dashboard');
     // })->name('dashboard');
   // API routes for counts
-
+//Dashboard API routes
     Route::get('/api/getinstitutes', [DashboardController::class, 'getInstitutes']);
     Route::get('/api/getfunds', [DashboardController::class, 'getFunds']);
         Route::get('/api/getrooms', [DashboardController::class, 'getRooms']);
+        Route::get('/api/getblocks', [DashboardController::class, 'getBlocks']);
+        Route::get('/api/getplants', [DashboardController::class, 'getPlants']);
+        Route::get('/api/gettransports', [DashboardController::class, 'getTransports']);
 
+    Route::get('/api/getusers', [DashboardController::class, 'getUsers']);
+    Route::get('/api/getrequests', [DashboardController::class, 'getRequests']);
+
+//end Dashboard API routes
       Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
       //all institute routes for region and dactotrate
     Route::get('/all-institutes', [InstituteController::class, 'institutes'])->name('all-institutes');
