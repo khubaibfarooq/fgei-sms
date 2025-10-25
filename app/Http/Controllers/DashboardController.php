@@ -83,7 +83,7 @@ return response()->json(['count' => $count]); // Keep 'count' key for frontend c
      
         $sms_inst_id = session('sms_inst_id');
 
-        $blocks = DB::table('blocks')->where('institute_id',$sms_inst_id)->count();;
+        $count = DB::table('blocks')->where('institute_id',$sms_inst_id)->count();;
 
 return response()->json(['count' => $count]); // Keep 'count' key for frontend compatibility
 }
