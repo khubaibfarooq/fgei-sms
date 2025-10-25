@@ -38,14 +38,14 @@ else{
         $role_type = session('type');
         $sms_inst_id = session('sms_inst_id');
 
-        $query = DB::table('fund_held');
+        $query = DB::table('fund_helds');
 
         if ($role_type === 'Regional Office') {
-            $sum = $query->where('region_id', $regionId)->sum('amount'); // Adjust 'amount' to your column name
+            $sum = $query->join("institutes","institutes.id","=","fund_helds.institute_id")->where('institutes.region_id', $regionId)->sum('balance'); 
         } elseif ($role_type === 'School' || $role_type === 'College') {
-            $sum = $query->where('sms_inst_id', $sms_inst_id)->sum('amount'); // Adjusted column name
+            $sum = $query->where('institute_id', $sms_inst_id)->sum('balance'); // Adjusted column name
         } else {
-            $sum = $query->sum('amount'); // Total sum for other roles
+            $sum = $query->sum('balance'); // Total sum for other roles
         }
 
         return response()->json(['count' => $sum]); // Keep 'count' key for frontend compatibility
