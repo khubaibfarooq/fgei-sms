@@ -193,29 +193,30 @@ export default function Dashboard() {
         </div>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          {(loading ? fallbackSummaryData : summaryData).map((item, index) => (
-            <Card 
-              key={index} 
-              className="shadow-lg rounded-xl border-0 overflow-hidden transition-all duration-300 hover:shadow-xl hover:scale-105"
-              style={{ 
-                background: `linear-gradient(135deg, ${item.color}20, ${item.color}40)`,
-                borderLeft: `4px solid ${item.color}`
-              }}
-            >
-              <CardHeader className="px-6 py-4 pb-2">
-                <CardTitle className="text-lg font-semibold text-gray-700 dark:text-white">
-                  {item.label}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="px-6 py-4 pt-2">
-                <div className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-                  {loading ? '...' : item.value}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+       <div className="flex flex-wrap justify-center gap-6">
+  {(loading ? fallbackSummaryData : summaryData).map((item, index) => (
+    <div className="w-full sm:w-64 md:w-56 lg:w-64" key={index}>
+      <Card 
+        className="shadow-lg rounded-xl border-0 overflow-hidden transition-all duration-300 hover:shadow-xl hover:scale-105 h-full"
+        style={{ 
+          background: `linear-gradient(135deg, ${item.color}20, ${item.color}40)`,
+          borderLeft: `4px solid ${item.color}`
+        }}
+      >
+        <CardHeader className="px-6 py-4 pb-2">
+          <CardTitle className="text-lg font-semibold text-gray-700 dark:text-white text-center">
+            {item.label}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="px-6 py-4 pt-2">
+          <div className="text-3xl font-bold text-gray-900 dark:text-gray-100 text-center">
+            {loading ? '...' : item.value}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  ))}
+</div>
 
         {/* Dynamic Table Cards */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
