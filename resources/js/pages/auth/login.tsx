@@ -45,7 +45,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                         <Label htmlFor="email">Email address</Label>
                         <Input
                             id="email"
-                            type="email"
+                         
                             required
                             autoFocus
                             tabIndex={1}
