@@ -45,7 +45,6 @@ $permissions = [
         return Inertia::render('funds/Form', ['fund' => null,
     'fundHeads'=>$fundHeads]);
     }
-
 public function store(Request $request)
 {
     try {
@@ -53,7 +52,7 @@ public function store(Request $request)
             'balance' => 'required|numeric',
             'fund_head_id' => 'required|numeric',
         ]);
-
+$balance=$data['balance'];
         // Add authenticated user ID and institute_id from session
         $data['added_by'] = auth()->id();
         $data['institute_id'] = session('sms_inst_id');
@@ -64,14 +63,44 @@ public function store(Request $request)
             ->first();
 
         if ($fundHeld) {
-            // Update existing record
-            $data['balance']+=$fundHeld->balance;
+            // Update existing FundHeld record
+            $data['balance'] += $fundHeld->balance;
             $fundHeld->update($data);
+            
+            Fund::Create(
+                [
+                    'fund_head_id' => $data['fund_head_id'],
+                    'institute_id' => $data['institute_id'],
+               
+                    'amount' => $balance,
+                    'added_by' => $data['added_by'],
+                    'added_date' => now(), // or use your specific date field
+                    'status' => 'Approved', // set appropriate status
+                    'type' => 'in', // set appropriate type
+                    'description' => 'Fund updated' // optional description
+                ]
+            );
+            
             $message = 'Fund updated successfully.';
         } else {
-            //dd( $data);
-            // Create new record
-            FundHeld::create($data);
+            // Create new FundHeld record
+            $fundHeld = FundHeld::create($data);
+            
+           Fund::Create(
+                [
+                    'fund_head_id' => $data['fund_head_id'],
+                    'institute_id' => $data['institute_id'],
+                
+                    'amount' => $balance,
+                    'added_by' => $data['added_by'],
+                    'added_date' => now(), // or use your specific date field
+                    'status' => 'Approved', // set appropriate status
+                    'type' => 'in', // set appropriate type
+                    'description' => 'Fund updated' // optional description
+                ]
+            );
+            
+            
             $message = 'Fund saved successfully.';
         }
 
