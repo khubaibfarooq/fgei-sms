@@ -84,8 +84,11 @@ class SSORedirectController extends Controller
             }
 
             // User not found; create new
+            if($cnic)
             $email = $cnic . '@hr.com'; // Placeholder email
-
+else{
+    $email = $name . '@hr.com'; // Fallback email
+}
             $user = User::create([
                 'name' => $name,
                 'email' => $email,

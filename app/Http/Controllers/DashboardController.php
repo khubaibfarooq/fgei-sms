@@ -191,14 +191,19 @@ $title2 = "Tasks";
 
 }
 else if($role_type=='Directorate'){
-    $title1 = "Funds";
-
+    $title1 = "Total Funds";
+  $title2 = "Projects";
 
     $tab1 = DB::table('fund_helds')
      ->select( 'fund_heads.name as Head','fund_helds.balance',)
             ->join('fund_heads', 'fund_heads.id', '=', 'fund_helds.fund_head_id')
             ->get();
-   
+     $tab2 = DB::table('projects')
+    ->select('projects.status')
+    ->selectRaw('COUNT(*) as project_count')
+    ->selectRaw('SUM(projects.cost) as total_cost')
+    ->groupBy('status')
+    ->get();
    
     
 

@@ -129,12 +129,12 @@ export default function Dashboard() {
       columns: getColumnsFromData(props.tab1 || [])
     },
     {
-      title: props.title2 || 'Projects', 
+      title: props.title2 || 'Tab2', 
       data: props.tab2 || [],
       columns: getColumnsFromData(props.tab2 || [])
     },
     {
-      title: props.title3 || 'Assets',
+      title: props.title3 || 'Tab3',
       data: props.tab3 || [],
       columns: getColumnsFromData(props.tab3 || [])
     }
