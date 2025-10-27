@@ -76,16 +76,16 @@ export default function FundsTran({ fundheld, fundtrans, filters }: Props) {
   };
 
   const calculateTotalIn = () => {
-    return fundtrans.data
-      .filter(transaction => transaction.type === 'in')
-      .reduce((sum, transaction) => sum + transaction.amount, 0);
-  };
+  return fundtrans.data
+    .filter(transaction => transaction.type === 'in')
+    .reduce((sum, transaction) => sum + Number(transaction.amount), 0);
+};
 
-  const calculateTotalOut = () => {
-    return fundtrans.data
-      .filter(transaction => transaction.type === 'out')
-      .reduce((sum, transaction) => sum + transaction.amount, 0);
-  };
+const calculateTotalOut = () => {
+  return fundtrans.data
+    .filter(transaction => transaction.type === 'out')
+    .reduce((sum, transaction) => sum + Number(transaction.amount), 0);
+};
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
@@ -108,12 +108,12 @@ export default function FundsTran({ fundheld, fundtrans, filters }: Props) {
   const getTypeBadge = (type: 'in' | 'out') => {
     return type === 'in' ? (
       <Badge variant="default" className="bg-green-100 text-green-800 hover:bg-green-200">
-        <DollarSign className="h-3 w-3 mr-1" />
+      
         IN
       </Badge>
     ) : (
       <Badge variant="destructive" className="bg-red-100 text-red-800 hover:bg-red-200">
-        <DollarSign className="h-3 w-3 mr-1" />
+      
         OUT
       </Badge>
     );
