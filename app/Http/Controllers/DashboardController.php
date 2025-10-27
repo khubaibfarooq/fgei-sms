@@ -190,6 +190,19 @@ $title2 = "Tasks";
     
 
 }
+else if($role_type=='Directorate'){
+    $title1 = "Funds";
+
+
+    $tab1 = DB::table('fund_helds')
+     ->select( 'fund_heads.name as Head','fund_helds.balance',)
+            ->join('fund_heads', 'fund_heads.id', '=', 'fund_helds.fund_head_id')
+            ->get();
+   
+   
+    
+
+}
 $institute = Institute::where('hr_id',$hrInstituteId)->first();
 
      if ($institute) {
