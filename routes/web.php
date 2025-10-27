@@ -32,6 +32,8 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ReportsController;
 use App\Http\Controllers\FundHeadsController;
 use App\Http\Controllers\FundsController;
+use App\Http\Controllers\FundHeldController;
+
 use App\Http\Controllers\ProjectTypeController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\DonationTypeController;
@@ -97,7 +99,7 @@ Route::resource('blocks', BlockController::class);
 // fund heads
 Route::resource('fund-heads', FundHeadsController::class);
 // funds
-Route::resource('funds', FundsController::class);
+Route::resource('funds', FundHeldController::class);
 // project type 
 Route::resource('project-types', ProjectTypeController::class);
 // project

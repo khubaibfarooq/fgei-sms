@@ -22,8 +22,8 @@ import { toast } from 'sonner';
 
 interface Fund {
   id: number;
-  amount: number;
-  added_date:Date;
+  balance: number;
+ 
   fund_head_id: number;
   institute_id: number;
   institute: {
@@ -58,7 +58,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 export default function FundIndex({ funds, filters,permissions }: Props) {
   const [search, setSearch] = useState(filters.search || '');
-console.log(funds);
+
   const handleDelete = (id: number) => {
     router.delete(`/funds/${id}`, {
       onSuccess: () => toast.success('Fund deleted successfully'),
@@ -110,8 +110,8 @@ console.log(funds);
   <thead>
     <tr className="bg-primary dark:bg-gray-800 text-center" >
       <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Fund Head</th>
-      <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Date</th>
-            <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Amount</th>
+     
+            <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Balance</th>
 
 
       <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Action</th>
@@ -131,11 +131,9 @@ console.log(funds);
                          <td className="border  text-sm text-gray-900 dark:text-gray-100">
                           {fund.fund_head.name}
                          </td>
-                          <td className="border  text-sm text-gray-900 dark:text-gray-100">
-                   {new Date(fund.added_date).toDateString()} 
-                         </td>
+                        
                            <td className="border  text-sm text-gray-900 dark:text-gray-100">
-                   {fund.amount}
+                   {fund.balance}
                          </td>
                           <td className="border  text-sm text-gray-900 dark:text-gray-100">
                   {permissions.can_edit &&

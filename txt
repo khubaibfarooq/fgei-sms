@@ -1,4 +1,10 @@
 
+
+
+
+php artisan migrate --path=database/migrations/
+
+
 namespace App\Helpers;
 
 use Illuminate\Support\Facades\Session;
