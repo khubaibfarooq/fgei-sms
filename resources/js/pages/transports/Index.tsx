@@ -25,7 +25,7 @@ interface Transport {
   vehicle_no: string;
   vehicle_type_id: number;
   institute_id: number;
-  vehicleType: {
+  vehicle_type: {
     name: string;
   };
   institute: {
@@ -55,6 +55,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function TransportIndex({ transports, filters,permissions }: Props) {
+  console.log(transports);
   const [search, setSearch] = useState(filters.search || '');
 //console.log(transports.data);
   const handleDelete = (id: number) => {
@@ -128,7 +129,7 @@ export default function TransportIndex({ transports, filters,permissions }: Prop
                           {transport.vehicle_no}
                          </td>
                          <td className="border  text-sm text-gray-900 dark:text-gray-100">
-                         {transport.vehicleType?.name}
+                         {transport.vehicle_type?.name}
                          </td>
                           <td className="border  text-sm text-gray-900 dark:text-gray-100">
                           {permissions.can_edit &&

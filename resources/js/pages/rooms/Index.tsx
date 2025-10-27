@@ -169,7 +169,7 @@ export default function RoomIndex({ rooms, filters, blocks,permissions }: Props)
   <thead>
     <tr className="bg-primary dark:bg-gray-800 text-center" >
       <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Name</th>
-      <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Area</th>
+      <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Area(Sq Ft)</th>
        <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Block</th>
               <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Room Type</th>
 

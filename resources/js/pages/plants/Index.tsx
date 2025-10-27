@@ -105,8 +105,8 @@ export default function plantsIndex({ plants, filters,permissions }: Props) {
                <table className="w-full border-collapse">
   <thead>
     <tr className="bg-primary dark:bg-gray-800 text-center" >
-      <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Vehicle No</th>
-      <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Type</th>
+      <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Plants/Tree</th>
+      <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Quantity</th>
       
 
       <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Action</th>

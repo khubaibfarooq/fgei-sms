@@ -65,6 +65,7 @@ public function store(Request $request)
 
         if ($fundHeld) {
             // Update existing record
+            $data['balance']+=$fundHeld->balance;
             $fundHeld->update($data);
             $message = 'Fund updated successfully.';
         } else {
