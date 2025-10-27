@@ -193,7 +193,7 @@ $title2 = "Tasks";
 else if($role_type=='Directorate'){
     $title1 = "Total Funds";
   $title2 = "Projects";
-  $title3 = "Institutes";
+  $title3 = "Institutions";
     $tab1 = DB::table('fund_helds')
      ->select( 'fund_heads.name as Head','fund_helds.balance',)
             ->join('fund_heads', 'fund_heads.id', '=', 'fund_helds.fund_head_id')
@@ -208,6 +208,7 @@ else if($role_type=='Directorate'){
     $tab3 = DB::table('institutes')->where('type','<>','Directorate')
     ->select('type', DB::raw('COUNT(*) as institute_count'))
     ->groupBy('type')
+    ->orderBy('institute_count','desc')
     ->get();
 
 }
