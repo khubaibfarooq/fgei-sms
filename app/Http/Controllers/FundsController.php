@@ -33,8 +33,29 @@ $permissions = [
             'filters' => ['search' => $request->search ?? ''],
             'permissions'=>$permissions,
         ]);
+    }public function getFund(Request $request)
+{
+    // Find the FundHeld record
+    $fundheld = FundHeld::with('institute','fundHead')->find($request->id);
+    
+    if (!$fundheld) {
+        return response()->json(['error' => 'Fund held record not found'], 404);
     }
+   
+    // Get transactions with pagination and relationships
+    $fundtrans = Fund::with(['institute', 'FundHead'])
+        ->where('institute_id', $fundheld->institute_id)
+        ->where('fund_head_id', $fundheld->fund_head_id)
+        ->orderBy('created_at', 'desc')
+        ->paginate(10)
+        ->withQueryString();
 
+    return Inertia::render('funds/FundsTran', [
+        'fundheld' => $fundheld,
+        'fundtrans' => $fundtrans,
+        'filters' => request()->all(['search']),
+    ]);
+}
     public function create()
     {
          if(!auth()->user()->can('fund-add')){

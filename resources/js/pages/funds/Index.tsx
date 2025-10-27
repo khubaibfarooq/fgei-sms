@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { type BreadcrumbItem } from '@/types';
-import { Plus, Edit, Trash2, Building } from 'lucide-react';
+import { Plus, Edit, Trash2, Building, Eye, X, Calendar, DollarSign, FileText } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogTrigger,
@@ -18,21 +18,46 @@ import {
   AlertDialogCancel,
   AlertDialogAction,
 } from '@/components/ui/alert-dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import { toast } from 'sonner';
+
+interface FundTransaction {
+  id: number;
+  amount: number;
+  type: 'credit' | 'debit';
+  description: string;
+  date: string;
+  created_at: string;
+  updated_at: string;
+}
 
 interface Fund {
   id: number;
   balance: number;
- 
   fund_head_id: number;
   institute_id: number;
   institute: {
+    id: number;
     name: string;
+    address?: string;
+    phone?: string;
+    email?: string;
   };
-   fund_head: {
+  fund_head: {
+    id: number;
     name: string;
+    code?: string;
+    description?: string;
   };
- 
+  transactions?: FundTransaction[];
+  created_at?: string;
+  updated_at?: string;
 }
 
 interface Props {
@@ -56,9 +81,10 @@ const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Funds', href: '/funds' },
 ];
 
-export default function FundIndex({ funds, filters,permissions }: Props) {
+export default function FundIndex({ funds, filters, permissions }: Props) {
   const [search, setSearch] = useState(filters.search || '');
-
+  const [selectedFund, setSelectedFund] = useState<Fund | null>(null);
+  
   const handleDelete = (id: number) => {
     router.delete(`/funds/${id}`, {
       onSuccess: () => toast.success('Fund deleted successfully'),
@@ -71,6 +97,11 @@ export default function FundIndex({ funds, filters,permissions }: Props) {
       router.get('/funds', { ...filters, search }, { preserveScroll: true });
     }
   };
+
+ 
+
+  
+
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
@@ -106,75 +137,84 @@ export default function FundIndex({ funds, filters,permissions }: Props) {
             </div>
 
             <div className="space-y-3">
-                 <table className="w-full border-collapse">
-  <thead>
-    <tr className="bg-primary dark:bg-gray-800 text-center" >
-      <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Fund Head</th>
-     
-            <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Balance</th>
-
-
-      <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Action</th>
-     
-      
-    </tr>
-  </thead>
-  <tbody>
-              {funds.data.length === 0 ? (
-                <p className="text-muted-foreground text-center">No funds found.</p>
-              ) : (
-                funds.data.map((fund) => (
-
-                   <tr  key={fund.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 text-center
-                    ">
-                     
-                         <td className="border  text-sm text-gray-900 dark:text-gray-100">
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="bg-primary dark:bg-gray-800 text-center">
+                    <th className="border p-2 text-sm font-medium text-white dark:text-gray-200">Fund Head</th>
+                    <th className="border p-2 text-sm font-medium text-white dark:text-gray-200">Balance</th>
+                    <th className="border p-2 text-sm font-medium text-white dark:text-gray-200">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {funds.data.length === 0 ? (
+                    <tr>
+                      <td colSpan={3} className="border p-4 text-center">
+                        <p className="text-muted-foreground">No funds found.</p>
+                      </td>
+                    </tr>
+                  ) : (
+                    funds.data.map((fund) => (
+                      <tr key={fund.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 text-center">
+                        <td className="border p-3 text-sm text-gray-900 dark:text-gray-100">
                           {fund.fund_head.name}
-                         </td>
-                        
-                           <td className="border  text-sm text-gray-900 dark:text-gray-100">
-                   {fund.balance}
-                         </td>
-                          <td className="border  text-sm text-gray-900 dark:text-gray-100">
-                  {permissions.can_edit &&
-                      <Link href={`/funds/${fund.id}/edit`}>
-                        <Button variant="ghost" size="icon">
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                      </Link>
-                      }
-                      {permissions.can_delete &&
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="ghost" size="icon" className="text-destructive hover:text-red-600">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Delete this fund?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Fund <strong>{fund.fund_head.name}</strong> will be permanently deleted.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction
-                              className="bg-destructive hover:bg-destructive/90"
-                              onClick={() => handleDelete(fund.id)}
+                        </td>
+                        <td className="border p-3 text-sm text-gray-900 dark:text-gray-100">
+                          {fund.balance.toLocaleString()}
+                        </td>
+                        <td className="border p-3 text-sm text-gray-900 dark:text-gray-100">
+                          <div className="flex justify-center items-center gap-1">
+                            <Link href={`/fund-trans/${fund.id}`}>  
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                         
+                            
+                              title="View Fund Transactions"
                             >
-                              Delete
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                      }
-                         </td>
-                         </tr>
-                 
-                ))
-              )}
-              </tbody></table>
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            </Link>
+                            {permissions.can_edit &&
+                            <Link href={`/funds/${fund.id}/edit`}>
+                              <Button variant="ghost" size="icon" title="Edit Fund">
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                            </Link>
+                            }
+                            
+                            {permissions.can_delete &&
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="icon" className="text-destructive hover:text-red-600" title="Delete Fund">
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete this fund?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Fund <strong>{fund.fund_head.name}</strong> will be permanently deleted.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    className="bg-destructive hover:bg-destructive/90"
+                                    onClick={() => handleDelete(fund.id)}
+                                  >
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                            }
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
             </div>
 
             {funds.links.length > 1 && (
@@ -195,6 +235,8 @@ export default function FundIndex({ funds, filters,permissions }: Props) {
           </CardContent>
         </Card>
       </div>
+
+    
     </AppLayout>
   );
 }

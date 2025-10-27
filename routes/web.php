@@ -100,6 +100,9 @@ Route::resource('blocks', BlockController::class);
 Route::resource('fund-heads', FundHeadsController::class);
 // funds
 Route::resource('funds', FundHeldController::class);
+//get funds transactions
+
+Route::get('/fund-trans/{id}', [FundsController::class, 'getFund'])->name('funds.getFund');
 // project type 
 Route::resource('project-types', ProjectTypeController::class);
 // project
