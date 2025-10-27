@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
@@ -17,126 +16,124 @@ use Exception;
 
 class SSORedirectController extends Controller
 {
+    private $secretKey;
 
+    /**
+     * Constructor to initialize the secret key
+     */
+    public function __construct()
+    {
+        $this->secretKey = env('JWT_SECRET_KEY');
+
+        // Ensure secretKey is available
+        if (empty($this->secretKey)) {
+            \Log::error('SSO JWT Error: JWT_SECRET_KEY is not set in the environment.');
+            throw new Exception('JWT_SECRET_KEY is not configured.');
+        }
+    }
 
     public function handle(Request $request)
     {
-        $secretKey = env('JWT_SECRET_KEY');
-       
         $token = $request->query('token');
-
-        // Validate token presence
-        
-  
+    
+        \Log::info('SSO Redirect initiated', ['token_present' => !empty($token)]);
+    
         try {
-            // Decode and verify JWT token
-             $decoded=null;
-             if (!empty($token)) {
-              $decoded = JWT::decode($token, new Key($secretKey, 'HS256'));
-        }
-
-
-        
-            // // Verify audience (optional but recommended)
-            // if ($decoded->aud !== config('app.url')) {
-            //     return redirect('/login')->with('error', 'Token not intended for this system.');
-            // }
-
-            // Extract data from JWT payload
-            $data = (array) $decoded->data;
+            if (empty($token)) {
+                \Log::warning('SSO: No token provided');
+                return redirect('/login')->with('error', 'No authentication token provided.');
+            }
+    
+            // Add leeway for clock skew between servers (60 seconds)
+            JWT::$leeway = 60;
             
+            // Decode and verify JWT token
+            $decoded = JWT::decode($token, new Key($this->secretKey, 'HS256'));
+            $data = (array) $decoded->data;
+    
+            // Extract data...
             $hr_user_id = $data['user_id'] ?? null;
-            $name = $data['name'] ?? null;
-            $cnic = $data['cnic'] ?? null;
-            $roleFromHr = $data['Role'] ?? null;
-            $category = $data['Category'] ?? null;
-            $hashedPassword = $data['password'] ?? null; // Already hashed from HR
-            $institution_id = $data['institution_id'] ?? null;
-            $region_id = $data['region_id'] ?? null;
-
-            // // Required fields check
-            // if (!$hr_user_id || !$name || !$cnic || !$category || !$hashedPassword) {
-            //     \Log::error('SSO JWT Error: Invalid signature for token: ' . $token);
-            //     return redirect('/login')->with('error', 'Missing required data from HR.');
-            // }
-
-            // Check if user exists in SMS by hr_user_id
+            
+            if (!$hr_user_id) {
+                \Log::warning('SSO: No user_id in token');
+                return redirect('/login')->with('error', 'Invalid token: missing user information.');
+            }
+    
             $user = User::where('hr_user_id', $hr_user_id)->first();
-
+    
             if ($user) {
-                // User exists; update their information
+                // Update existing user
                 $user->update([
-                    'name' => $name,
-                    'inst_id' => $institution_id,
-                    'region_id' => $region_id,
-                    'type' => $category,
-                  
+                    'name' => $data['name'] ?? $user->name,
+                    'inst_id' => $data['institution_id'] ?? $user->inst_id,
+                    'region_id' => $data['region_id'] ?? $user->region_id,
+                    'type' => $data['Category'] ?? $user->type,
                 ]);
-
-                // Clear existing session and log in
-                Session::flush();
-                Auth::login($user);
-
-                // Set session variables
-                $this->setSessionVariables($user);
-
-                return redirect('/dashboard');
-            }
-
-            // User not found; create new
-            if($cnic)
-            $email = $cnic . '@hr.com'; // Placeholder email
-else{
-    $email = $name . '@hr.com'; // Fallback email
-}
-            $user = User::create([
-                'name' => $name,
-                'email' => $email,
-                'inst_id' => $institution_id,
-                'region_id' => $region_id,
-                'type' => $category,
-                'password' => $hashedPassword, // Use hashed password from HR
-                'hr_user_id' => $hr_user_id,
-            ]);
-
-            // Create or find institute
-            $institute = null;
-            if (!empty($institution_id)) {
-                $institute = Institute::firstOrCreate(
-                    ['hr_id' => $institution_id],
-                    [
-                        'name' => $name,
-                        'type' => $category,
-                        'region_id' => $region_id,
-                    ]
-                );
-            }
-
-            // Assign role based on Category
-            $smsRole = $this->getSmsRoleFromCategory($category);
-            if ($smsRole) {
-                $user->assignRole($smsRole);
+                
+                \Log::info('SSO: Updated existing user', ['user_id' => $user->id]);
             } else {
-                $user->assignRole('user'); // Default role
+                // Create new user
+                $user = $this->createNewUser($data);
+                \Log::info('SSO: Created new user', ['user_id' => $user->id]);
             }
-
-            // Log in the new user
-            Auth::login($user);
-
+    
+            // Clear any existing session
+            Session::flush();
+            
+            // Login the user
+            Auth::guard('web')->login($user);
+            
+            // Regenerate session ID for security
+            $request->session()->regenerate();
+            
             // Set session variables
-            $this->setSessionVariables($user, $institute);
-
-            return redirect('/dashboard');
-
+            $this->setSessionVariables($user);
+    
+            // Verify login worked
+            if (!Auth::check()) {
+                \Log::error('SSO: Authentication failed after login attempt');
+                return redirect('/login')->with('error', 'Authentication failed.');
+            }
+    
+            \Log::info('SSO: Login successful', [
+                'user_id' => Auth::id(),
+                'session_id' => session()->getId()
+            ]);
+    
+            // CRITICAL: Force session to be saved before redirect
+            $request->session()->save();
+            
+            // Small delay to ensure session is written (especially for file/database drivers)
+            usleep(100000); // 100ms delay
+    
+            return redirect()->intended('/dashboard');
+    
         } catch (ExpiredException $e) {
+            \Log::warning('SSO: Token expired');
             return redirect('/login')->with('error', 'Token has expired. Please login again from HR system.');
         } catch (SignatureInvalidException $e) {
+            \Log::warning('SSO: Invalid token signature');
             return redirect('/login')->with('error', 'Invalid token signature.');
         } catch (Exception $e) {
-            // Log the error for debugging
-            \Log::error('SSO JWT Error: ' . $e->getMessage());
+            \Log::error('SSO Error: ' . $e->getMessage());
             return redirect('/login')->with('error', 'Invalid or tampered token from HR.');
         }
+    }
+
+    /**
+     * Create a new user from HR data
+     */
+    private function createNewUser($data)
+    {
+        return User::create([
+            'hr_user_id' => $data['user_id'],
+            'name' => $data['name'] ?? 'Unknown',
+            'email' => $data['email'] ?? null,
+            'inst_id' => $data['institution_id'] ?? null,
+            'region_id' => $data['region_id'] ?? null,
+            'type' => $data['Category'] ?? 'user',
+            'password' => Hash::make(uniqid()), // Random password for SSO users
+        ]);
     }
 
     /**
@@ -152,7 +149,6 @@ else{
         if (!$institute && $user->inst_id) {
             $institute = Institute::where('hr_id', $user->inst_id)->first();
         }
-
         session(['sms_inst_id' => $institute ? $institute->id : null]);
     }
 
@@ -161,12 +157,19 @@ else{
      */
     private function getSmsRoleFromCategory($category)
     {
-        return match (strtolower($category)) {
-            'school', 'college' => 'Institute',
-            'directorate' => 'Directorate',
-            'regional office', 'region' => 'Region',
-            'admin' => 'admin',
-            default => 'user',
-        };
+        switch (strtolower($category)) {
+            case 'school':
+            case 'college':
+                return 'Institute';
+            case 'directorate':
+                return 'Directorate';
+            case 'regional office':
+            case 'region':
+                return 'Region';
+            case 'admin':
+                return 'admin';
+            default:
+                return 'user';
+        }
     }
 }
