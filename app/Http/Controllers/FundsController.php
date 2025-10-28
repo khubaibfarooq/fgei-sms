@@ -43,7 +43,7 @@ $permissions = [
     }
    
     // Get transactions with pagination and relationships
-    $fundtrans = Fund::with(['institute', 'FundHead'])
+    $fundtrans = Fund::with(['institute', 'FundHead','user'])
         ->where('institute_id', $fundheld->institute_id)
         ->where('fund_head_id', $fundheld->fund_head_id)
         ->orderBy('created_at', 'desc')

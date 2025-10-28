@@ -20,6 +20,11 @@ interface FundTransaction {
   created_at: string;
   updated_at: string;
   added_by: number;
+   user: {
+    id: number;
+    name: string;
+ 
+  };
 }
 
 interface FundHeld {
@@ -40,6 +45,7 @@ interface FundHeld {
     code?: string;
     description?: string;
   };
+ 
   added_by: number;
   created_at: string;
   updated_at: string;
@@ -122,7 +128,7 @@ const calculateTotalOut = () => {
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title={`Fund Transactions - ${fundheld.fund_head.name}`} />
-      <div className="flex-1 p-4 md:p-6">
+      <div className="flex-1 p-2 md:p-3">
         <Card>
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
@@ -134,11 +140,10 @@ const calculateTotalOut = () => {
                 </Link>
                 <div>
                   <CardTitle className="text-2xl font-bold flex items-center gap-2">
-                    <Building className="h-6 w-6" />
-                    Fund Transactions
+                    {fundheld.fund_head.name}
                   </CardTitle>
                   <p className="text-muted-foreground text-sm">
-                    {fundheld.fund_head.name} - {fundheld.institute.name}
+                    {fundheld.institute.name}
                   </p>
                 </div>
               </div>
@@ -151,7 +156,7 @@ const calculateTotalOut = () => {
 
           <Separator />
 
-          <CardContent className="pt-6 space-y-6">
+          <CardContent className="pt-3 space-y-3">
             {/* Summary Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Card>
@@ -196,7 +201,7 @@ const calculateTotalOut = () => {
             </div>
 
             {/* Institute Information */}
-            <Card>
+            {/* <Card>
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
                   <Building className="h-5 w-5" />
@@ -206,24 +211,27 @@ const calculateTotalOut = () => {
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
+                    <label className="text-sm font-medium text-muted-foreground">Institute ID</label>
+                    <p className="text-sm">{fundheld.institute.id}</p>
+                  </div>
+                  <div>
+                        
                     <label className="text-sm font-medium text-muted-foreground">Institute Name</label>
                     <p className="text-sm font-medium">{fundheld.institute.name}</p>
+                  </div>
+                    <div>
+                    <label className="text-sm font-medium text-muted-foreground">Fund Head ID</label>
+                    <p className="text-sm">{fundheld.fund_head.id}</p>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-muted-foreground">Fund Head</label>
                     <p className="text-sm font-medium">{fundheld.fund_head.name}</p>
                   </div>
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">Fund Head ID</label>
-                    <p className="text-sm">{fundheld.fund_head.id}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">Institute ID</label>
-                    <p className="text-sm">{fundheld.institute.id}</p>
-                  </div>
+                
+             
                 </div>
               </CardContent>
-            </Card>
+            </Card> */}
 
             {/* Search */}
             <div className="flex flex-col md:flex-row md:items-center gap-4">
@@ -279,7 +287,7 @@ const calculateTotalOut = () => {
                         <td className="border p-3 text-center text-sm">
                           <div className="flex items-center justify-center gap-2">
                             <User className="h-4 w-4 text-muted-foreground" />
-                            {transaction.added_by}
+                            {transaction.user.name}
                           </div>
                         </td>
                       </tr>
