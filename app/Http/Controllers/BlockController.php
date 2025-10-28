@@ -15,7 +15,7 @@ class BlockController extends Controller
       
 $inst_id = session('sms_inst_id');
 $type=session('type');
-  $query = Block::Where('institute_id', $inst_id)->with('institute');
+  $query = Block::Where('institute_id', $inst_id)->with('institute','rooms');
         $query->where('institute_id', $inst_id);
         if ($request->search) {
             $query->where('name', 'like', '%' . $request->search . '%')
@@ -31,6 +31,10 @@ $permissions = [
         'can_edit'   => auth()->user()->can('block-edit'),
         'can_delete' => auth()->user()->can('block-delete'),
     ];
+    $blocks->getCollection()->transform(function ($block) {
+    $block->rooms_count = $block->rooms->count();
+    return $block;
+});
         return Inertia::render('blocks/Index', [
             'blocks' => $blocks,
             'filters' => ['search' => $request->search ?? ''],

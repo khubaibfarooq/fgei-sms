@@ -106,7 +106,7 @@ export default function BlockIndex({ blocks, filters,permissions }: Props) {
   <thead>
     <tr className="bg-primary dark:bg-gray-800 text-center" >
       <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Name</th>
-      <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Area(Sq Ft)</th>
+      <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Area(Sq ft)</th>
        <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Rooms</th>
       <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Action</th>
      

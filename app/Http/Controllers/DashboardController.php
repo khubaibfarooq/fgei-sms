@@ -92,7 +92,9 @@ return response()->json(['count' => $count]); // Keep 'count' key for frontend c
      
         $sms_inst_id = session('sms_inst_id');
 
-        $count = DB::table('plants')->where('institute_id',$sms_inst_id)->count();;
+       $count = DB::table('plants')
+    ->where('institute_id', $sms_inst_id)
+    ->sum('qty');
 
 return response()->json(['count' => $count]); // Keep 'count' key for frontend compatibility
 }
@@ -101,9 +103,9 @@ return response()->json(['count' => $count]); // Keep 'count' key for frontend c
      
         $sms_inst_id = session('sms_inst_id');
 
-        $blocks = DB::table('transports')->where('institute_id',$sms_inst_id)->count();;
+        $count = DB::table('transports')->where('institute_id',$sms_inst_id)->count();;
 
-return response()->json(['count' => $blocks]); // Keep 'count' key for frontend compatibility
+return response()->json(['count' => $count]); // Keep 'count' key for frontend compatibility
 }
 
 
@@ -143,7 +145,7 @@ $title3 = "Assets";
     ->where('institute_id', $sms_inst_id)
     ->select(
         'asset_categories.name as Category', 
-        DB::raw('COUNT(assets.id) as total_assets')
+        DB::raw('sum(institute_assets.current_qty) as total_assets')
     )
     ->join('assets', 'assets.id', '=', 'institute_assets.asset_id')
     ->join('asset_categories', 'asset_categories.id', '=', 'assets.asset_category_id') // Fixed typo here
