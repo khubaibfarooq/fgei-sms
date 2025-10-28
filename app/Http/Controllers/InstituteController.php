@@ -156,8 +156,8 @@ $data['type'] = $type;
             'total_area' => 'required|numeric',
             'convered_area' => 'required|numeric',
             'video' => 'nullable|file',
-            'img_layout' => 'nullable|file',
-            'img_3d' => 'nullable|file',
+            'img_layout' => 'nullable|file|max:1024',
+            'img_3d' => 'nullable|file|max:1024',
         ]);
 
         $resultImageName = null;

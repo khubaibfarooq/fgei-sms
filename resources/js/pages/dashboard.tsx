@@ -190,93 +190,95 @@ export default function Dashboard() {
           </div>
         
         {/* Summary Cards */}
-       <div className="flex flex-wrap  gap-4">
+      {/* Summary Cards */}
+<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
   {(loading ? fallbackSummaryData : summaryData).map((item, index) => (
-    <div className="w-full sm:w-64 md:w-56 lg:w-64" key={index}>
-      <Card 
-        className="shadow-lg rounded-xl border-0 overflow-hidden transition-all duration-300 hover:shadow-xl hover:scale-105 h-full"
-        style={{ 
-          background: `linear-gradient(135deg, ${item.color}20, ${item.color}40)`,
-          borderLeft: `4px solid ${item.color}`
-        }}
-      >
-        <CardHeader className="px-6 py-4 pb-2">
-          <CardTitle className="text-lg font-semibold text-gray-700 dark:text-white text-center">
-            {item.label}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="px-6 py-4 pt-2">
-          <div className="text-3xl font-bold text-gray-900 dark:text-gray-100 text-center">
-            {loading ? '...' : item.value}
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+    <Card 
+      key={index}
+      className="shadow-lg rounded-xl border-0 overflow-hidden transition-all duration-300 hover:shadow-xl hover:scale-105 h-full"
+      style={{ 
+        background: `linear-gradient(135deg, ${item.color}20, ${item.color}40)`,
+        borderLeft: `4px solid ${item.color}`
+      }}
+    >
+      <CardHeader className="px-6 py-4 pb-2">
+        <CardTitle className="text-lg font-semibold text-gray-700 dark:text-white text-center">
+          {item.label}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="px-6 py-4 pt-2">
+        <div className="text-3xl font-bold text-gray-900 dark:text-gray-100 text-center">
+          {loading ? '...' : item.value}
+        </div>
+      </CardContent>
+    </Card>
   ))}
 </div>
 
         {/* Dynamic Table Cards */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {tableData.map((table, index) => {
-            const theme = tableThemes[index % tableThemes.length];
-            
-            return (
-              <Card 
-                key={index}
-                className={`bg-gradient-to-br ${theme.bg} ${theme.border} shadow-lg rounded-xl overflow-hidden`}
-              >
-                <CardHeader className={`${theme.header} text-white px-6 py-4`}>
-                  <CardTitle className="text-lg font-semibold flex items-center">
-                    <span className="w-3 h-3 bg-white rounded-full mr-2"></span>
-                    {table.title}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-0">
-                  {table.data.length > 0 ? (
-                    <div className="overflow-x-auto">
-                      <table className="w-full">
-                        <thead className={theme.accent}>
-                          <tr>
-                            {table.columns.map((column, colIndex) => (
-                              <th 
-                                key={colIndex} 
-                                className="text-left py-3 px-4 text-sm font-medium"
-                                style={{ color: theme.header.replace('bg-', 'text-') + '900' }}
-                              >
-                                {formatColumnName(column)}
-                              </th>
-                            ))}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {table.data.map((row, rowIndex) => (
-                            <tr 
-                              key={rowIndex} 
-                              className={`border-b ${theme.border}/30 hover:${theme.bg.replace('from-', 'bg-').split(' ')[0]}/50 transition-colors`}
-                            >
-                              {table.columns.map((column, colIndex) => (
-                                <td 
-                                  key={colIndex} 
-                                  className={`py-3 px-4 text-sm ${theme.text}`}
-                                >
-                                  {formatCellValue(row[column])}
-                                </td>
-                              ))}
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  ) : (
-                    <div className="py-8 text-center text-gray-500">
-                      No data available
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
+       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  {tableData.map((table, index) => {
+    const theme = tableThemes[index % tableThemes.length];
+    
+    return (
+      <Card 
+        key={index}
+        className={`bg-gradient-to-br ${theme.bg} ${theme.border} shadow-lg rounded-xl overflow-hidden dark:bg-gray-800 dark:border-gray-700`}
+      >
+        <CardHeader className={`${theme.header} text-white px-6 py-4 dark:bg-gray-700`}>
+          <CardTitle className="text-lg font-semibold flex items-center">
+            <span className="w-3 h-3 bg-white rounded-full mr-2"></span>
+            {table.title}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          {table.data.length > 0 ? (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className={`${theme.accent} dark:bg-gray-600`}>
+                  <tr>
+                    {table.columns.map((column, colIndex) => (
+                      <th 
+                        key={colIndex} 
+                        className="text-left py-3 px-4 text-sm font-medium dark:text-gray-200"
+                        style={{ 
+                          color: theme.header.replace('bg-', 'text-') + '900',
+                        }}
+                      >
+                        {formatColumnName(column)}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {table.data.map((row, rowIndex) => (
+                    <tr 
+                      key={rowIndex} 
+                      className={`border-b ${theme.border}/30 hover:${theme.bg.replace('from-', 'bg-').split(' ')[0]}/50 transition-colors dark:border-gray-600 dark:hover:bg-gray-700/50`}
+                    >
+                      {table.columns.map((column, colIndex) => (
+                        <td 
+                          key={colIndex} 
+                          className={`py-3 px-4 text-sm md:text-lg ${theme.text} dark:white`}
+                        >
+                          {formatCellValue(row[column])}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="py-8 text-center text-gray-500 dark:text-gray-400">
+              No data available
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    );
+  })}
+</div>
 
         {/* Optional: Display raw data for debugging */}
         {/* <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
