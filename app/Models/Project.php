@@ -21,5 +21,9 @@ class Project extends Model
     {
         return $this->belongsTo(ProjectType::class);
     }
+ public function region()
+{
+    return $this->institute?->region ?? null;
+}
    
 }

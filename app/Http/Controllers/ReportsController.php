@@ -14,6 +14,9 @@ use App\Models\Room;
 use App\Models\VehicleType;
 use App\Models\Transport;
 use App\Models\Plant;
+use App\Models\Project;
+use App\Models\ProjectType;
+
 use App\Models\Upgradation;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -702,4 +705,135 @@ $regions = Institute::select('region_id as id', 'name')->where('type', 'Regional
     $upgradations = $query->with([ 'institute'])->paginate(10)->withQueryString();
         return response()->json($upgradations);
     }
+
+  
+    public function Projects(Request $request)
+    {
+        $hrInstituteId = session('inst_id');
+        $regionid      = session('region_id');
+        $type          = session('type');
+
+        $institutes = Institute::query();
+        $regions    = [];
+
+        // -----------------------------------------------------------------
+        // Regional Office → only its own institutes
+        // -----------------------------------------------------------------
+        if ($type === 'Regional Office') {
+            $institutes = Institute::where('region_id', $regionid)
+                ->select('id', 'name')
+                ->get()
+                ->filter(fn($i) => is_numeric($i->id) && $i->id > 0 && !empty(trim($i->name)))
+                ->values();
+        }
+        // -----------------------------------------------------------------
+        // Super-admin / HQ → all regions
+        // -----------------------------------------------------------------
+        else {
+            $regions = Institute::select('region_id as id', \DB::raw('MAX(name) as name'))
+                ->where('type', 'Regional Office')
+                ->groupBy('region_id')
+                ->get()
+                ->filter(fn($r) => is_numeric($r->id) && $r->id > 0 && !empty(trim($r->name)))
+                ->values();
+        }
+
+        // -----------------------------------------------------------------
+        // Project Types (always available)
+        // -----------------------------------------------------------------
+        $projectTypes = ProjectType::select('id', 'name')
+            ->get()
+            ->filter(fn($pt) => is_numeric($pt->id) && $pt->id > 0 && !empty(trim($pt->name)))
+            ->values();
+
+        // -----------------------------------------------------------------
+        // Empty paginator – Inertia will fill it via getProjects()
+        // -----------------------------------------------------------------
+        $emptyPaginator = new LengthAwarePaginator(
+            collect([]),
+            0,
+            10,
+            1,
+            ['path' => $request->url()]
+        );
+
+        return Inertia::render('Reports/Projects', [
+            'institutes'    => $institutes,
+            'regions'       => $regions,
+            'projectTypes'  => $projectTypes,
+            'projects'      => $emptyPaginator,
+            'filters'       => [
+                'search'          => '',
+                'institute_id'    => '',
+                'region_id'       => '',
+                'project_type_id' => '',
+                'status'          => '',
+            ],
+        ]);
+    }
+
+    /**
+     * AJAX – return filtered projects (JSON)
+     */
+    public function getProjects(Request $request)
+    {
+        $hrInstituteId = session('inst_id');
+        $regionid      = session('region_id');
+        $type          = session('type');
+
+        $query = Project::query()->with(['institute', 'projecttype']);
+
+        // -----------------------------------------------------------------
+        // Global search
+        // -----------------------------------------------------------------
+        if ($request->filled('search')) {
+            $query->where('name', 'like', '%' . $request->search . '%');
+        }
+
+        // -----------------------------------------------------------------
+        // Institute filter
+        // -----------------------------------------------------------------
+        if ($request->filled('institute_id') && is_numeric($request->institute_id) && $request->institute_id > 0) {
+            $query->where('institute_id', $request->institute_id);
+        }
+
+        // -----------------------------------------------------------------
+        // Region filter (only for non-Regional users)
+        // -----------------------------------------------------------------
+        if ($request->filled('region_id') && $request->region_id !== '0' && is_numeric($request->region_id)) {
+            $query->whereHas('institute', fn($q) => $q->where('region_id', $request->region_id));
+        }
+        // Regional Office user – restrict to own region automatically
+        elseif ($type === 'Regional Office') {
+            $query->whereHas('institute', fn($q) => $q->where('region_id', $regionid));
+        }
+
+        // -----------------------------------------------------------------
+        // Project-type filter
+        // -----------------------------------------------------------------
+        if ($request->filled('project_type_id') && $request->project_type_id !== '0' && is_numeric($request->project_type_id)) {
+            $query->where('project_type_id', $request->project_type_id);
+        }
+
+        // -----------------------------------------------------------------
+        // Status filter
+        // -----------------------------------------------------------------
+        if ($request->filled('status') && in_array($request->status, ['planned', 'inprogress', 'completed'])) {
+            $query->where('status', $request->status);
+        }
+
+        // -----------------------------------------------------------------
+        // Pagination
+        // -----------------------------------------------------------------
+        $projects = $query->paginate(10)->withQueryString();
+
+        // Attach region name for the front-end (if not already eager-loaded)
+        $projects->getCollection()->transform(function ($project) {
+            $project->region = $project->institute?->region;
+            return $project;
+        });
+
+        return response()->json($projects);
+    }
+
 }

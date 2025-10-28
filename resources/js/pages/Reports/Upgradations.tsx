@@ -277,6 +277,7 @@ export default function Upgradations({ upgradations: upgradationProp, institutes
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {/* Region Filter */}
+                     {memoizedRegions.length > 0 && (
                   <Select value={region} onValueChange={handleRegionChange}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select Region" />
@@ -294,7 +295,7 @@ export default function Upgradations({ upgradations: upgradationProp, institutes
                       )}
                     </SelectContent>
                   </Select>
-                
+                     )}
 <Combobox
   entity="institute"
   value={institute}

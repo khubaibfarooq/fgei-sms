@@ -80,9 +80,9 @@ class InstituteController extends Controller
             'established_date' => 'required|string|max:255',
             'total_area' => 'required|numeric',
             'convered_area' => 'required|numeric',
-            'video' => 'nullable|file|mimes:mp4,mov,avi|max:10240',
-            'img_layout' => 'nullable|file|mimes:jpg,jpeg,png|max:2048',
-            'img_3d' => 'nullable|file|mimes:jpg,jpeg,png|max:2048',
+            'video' => 'nullable|file',
+            'img_layout' => 'nullable|file',
+            'img_3d' => 'nullable|file',
         ]);
  $resultImageName = null;
             if ($request->hasFile('img_layout')) {
@@ -155,9 +155,9 @@ $data['type'] = $type;
             'established_date' => 'required|string|max:255',
             'total_area' => 'required|numeric',
             'convered_area' => 'required|numeric',
-            'video' => 'nullable|file|mimes:mp4,mov,avi|max:10240',
-            'img_layout' => 'nullable|file|mimes:jpg,jpeg,png|max:2048',
-            'img_3d' => 'nullable|file|mimes:jpg,jpeg,png|max:2048',
+            'video' => 'nullable|file',
+            'img_layout' => 'nullable|file',
+            'img_3d' => 'nullable|file',
         ]);
 
         $resultImageName = null;

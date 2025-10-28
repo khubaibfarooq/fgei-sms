@@ -146,9 +146,16 @@ Route::get('/reports/assets/institute-assets', [ReportsController::class, 'getIn
 Route::get('/reports/transports', [ReportsController::class, 'transports'])->name('reports.transports');Route::get('/reports/transports/getTransports', [ReportsController::class, 'getTransports'])->name('reports.getTransports');
 Route::get('/reports/plants', [ReportsController::class, 'plants'])->name('reports.plants');
 Route::get('/reports/plants/getPlants', [ReportsController::class, 'getPlants'])->name('reports.getPlants');
+
 Route::get('/reports/upgradations', [ReportsController::class, 'upgradations'])->name('reports.upgradations');
 Route::get('/reports/upgradations/getUpgradations', [ReportsController::class, 'getUpgradations'])->name('reports.getUpgradations');
+
 Route::get('/reports/getInstitutes', [ReportsController::class, 'getInstitutes'])->name('reports.getInstitutes');
+
+Route::get('/reports/projects', [ReportsController::class, 'projects'])->name('reports.projects');
+
+    Route::get('/reports/projects/getprojects', [ReportsController::class, 'getProjects'])
+         ->name('reports.projects.get');
 //helpdesk
 Route::put('/helpdesk/{helpDesk}', [HelpDeskController::class, 'update'])->name('helpdesk.update');
 Route::get('/helpdesk', [HelpDeskController::class, 'index'])->name('helpdesk.index');

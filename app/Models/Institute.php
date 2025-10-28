@@ -20,4 +20,5 @@ class Institute extends Model implements HasMedia
      */
    
     protected $guarded = [];
+    
 }
