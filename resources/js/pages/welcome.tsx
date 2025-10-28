@@ -7,10 +7,14 @@ export default function Welcome() {
   return (
     <>
       <Head title="Welcome" />
-      <div style={{ 
-       backgroundImage: 'url("/images/fgei banner.jpg")',
-       backgroundBlendMode: 'overlay'
-     }} className="relative min-h-screen flex flex-col items-center justify-center px-4 bg-gradient-to-br from-background to-gray-50 dark:to-gray-900">
+      <div style={{
+  backgroundImage: 'url("/images/fgei banner.jpg")',
+  backgroundSize: 'cover',
+  backgroundPosition: 'center',
+  backgroundRepeat: 'no-repeat',
+  backgroundBlendMode: 'overlay',
+  backgroundColor: 'rgba(0, 0, 0, 0.3)', // Optional: dark overlay for readability
+}}className="relative min-h-screen flex flex-col items-center justify-center px-4 bg-gradient-to-br from-background to-gray-50 dark:to-gray-900">
         {/* Decorative elements */}
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute top-0 left-1/4 w-32 h-32 rounded-full bg-primary/10 blur-3xl" />

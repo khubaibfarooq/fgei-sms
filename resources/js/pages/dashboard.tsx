@@ -106,9 +106,10 @@ const formatCellValue = (value: any, columnName?: string): string => {
         return `$${num.toLocaleString()}`;
       }
     }
-    
+        return value;
+
     // Capitalize first letter of the string
-    return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
+    //return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
   }
   
   return String(value);
@@ -176,19 +177,18 @@ export default function Dashboard() {
         <div className="relative bg-gradient-to-r from-green-600 to-green-900 rounded-2xl shadow-xl overflow-hidden">
           <div className="absolute inset-0 bg-black/10"></div>
           <div className="relative px-8 py-12 text-center">
-            <Card className="inline-block bg-white/95 backdrop-blur-sm shadow-2xl border-0 max-w-2xl mx-auto">
-              <CardContent className="p-8">
-                <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-4">
+            <Card className="inline-block bg-white/95 backdrop-blur-sm shadow-2xl border-0 max-w-3xl mx-auto mb-2"     style={{ borderBottom: `6px solid rgba(0,0,255,0.7)`}}>
+              <CardContent className="p-4" >
+                <h1 className="text-4xl md:text-5xl font-bold text-gray-800 ">
                   School Management System
                 </h1>
-                <p className="text-lg text-gray-600 mb-2">
-                  Welcome back, {user?.name || 'Administrator'}
-                </p>
-                <p className="text-gray-500">
-                  Manage your school operations efficiently and effectively
-                </p>
+             
               </CardContent>
             </Card>
+               <p className="text-lg text-white mb-2">
+                  Welcome back, {user?.name || 'Administrator'}
+                </p>
+             
           </div>
         </div>
 
