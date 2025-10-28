@@ -172,27 +172,25 @@ export default function Dashboard() {
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Dashboard" />
-      <div className="flex flex-col gap-6 p-4 md:p-6">
+      <div className="flex flex-col gap-6  p-5">
         {/* Hero Section */}
-        <div className="relative  rounded-2xl shadow-xl overflow-hidden">
-          <div className="relative px-8 py-12 text-center">
-            <Card className="inline-block bg-primary/95 backdrop-blur-sm shadow-4xl border-0 max-w-3xl mx-auto mb-2"     style={{ borderBottom: `6px solid rgba(0,0,255,0.7)`}}>
-              <CardContent className="p-4" >
-                <h1 className="text-3xl md:text-4xl font-bold text-white">
+        
+
+          <div className="relative px-8 py-6 text-center">
+            <Card className="inline-block bg-primary/95 backdrop-blur-sm shadow-2xl border-0 max-w-3xl mx-auto mb-2"     style={{ borderBottom: `6px solid rgba(0,0,255,0.7)`}}>
+              <CardContent className="p-4 px-10" >
+                <h1 className="text-2xl md:text-3xl font-bold text-white">
                   School Management System
                 </h1>
              
               </CardContent>
             </Card>
-               <p className="text-lg text-gray-800 mb-2">
-                  Welcome back, {user?.name || 'Administrator'}
-                </p>
+              
              
           </div>
-        </div>
-
+        
         {/* Summary Cards */}
-       <div className="flex flex-wrap justify-center gap-6">
+       <div className="flex flex-wrap  gap-4">
   {(loading ? fallbackSummaryData : summaryData).map((item, index) => (
     <div className="w-full sm:w-64 md:w-56 lg:w-64" key={index}>
       <Card 
