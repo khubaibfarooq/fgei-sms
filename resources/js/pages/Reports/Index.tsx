@@ -308,7 +308,7 @@ console.log(memoizedRegions);
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Institutional Report" />
-      <div className="flex-1 p-2 md:p-2">
+      <div className="flex-1 p-3 ">
         <Card>
           <CardHeader>
             <CardTitle>Institutional Report</CardTitle>
@@ -368,9 +368,11 @@ console.log(memoizedRegions);
           </CardContent>
         </Card>
         {/* Shifts */}
-<div className="border rounded-lg mb-4">
+<div className="border rounded-lg mb-4 border-primary/95">
   <button
-    className="w-full p-4 text-left flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-800"
+    className="w-full p-4 text-left flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-800 
+
+  "
     onClick={() => setShiftsOpen(!shiftsOpen)}
   >
     <h3 className="text-lg font-semibold">Shifts({shifts.length})</h3>
@@ -414,7 +416,7 @@ console.log(memoizedRegions);
 </div>
 
 {/* Blocks */}
-<div className="border rounded-lg mb-4">
+<div className="border rounded-lg mb-4 border-primary/95">
   <button
     className="w-full p-4 text-left flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-800"
     onClick={() => setBlocksOpen(!blocksOpen)}
@@ -458,7 +460,7 @@ console.log(memoizedRegions);
 </div>
 
 {/* Rooms */}
-<div className="border rounded-lg mb-4">
+<div className="border rounded-lg mb-4 border-primary/95">
   <button
     className="w-full p-4 text-left flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-800"
     onClick={() => setRoomsOpen(!roomsOpen)}
@@ -504,7 +506,7 @@ console.log(memoizedRegions);
 </div>
 
 {/* Institute Assets */}
-<div className="border rounded-lg mb-4">
+<div className="border rounded-lg mb-4 border-primary/95">
   <button
     className="w-full p-4 text-left flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-800"
     onClick={() => setAssetsOpen(!assetsOpen)}
@@ -554,7 +556,7 @@ console.log(memoizedRegions);
 </div>
 
 {/* Institute Upgradations */}
-<div className="border rounded-lg mb-4">
+<div className="border rounded-lg mb-4 border-primary/95">
   <button
     className="w-full p-4 text-left flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-800"
     onClick={() => setUpgradationsOpen(!upgradationsOpen)}
