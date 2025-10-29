@@ -551,7 +551,7 @@ export default function Assets({ instituteAssets: instituteAssetsProp, institute
                 <CardContent className="pt-6 space-y-6">
                   <table className="w-full border-collapse">
                     <thead>
-                      <tr className="bg-[#0b431b] dark:bg-gray-800">
+                      <tr className="bg-primary dark:bg-gray-800">
                         <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Asset</th>
                         <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Quantity</th>
                         <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Room</th>
