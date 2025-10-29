@@ -145,7 +145,11 @@ export default function InstitutionalReportIndex({ institutes: initialInstitutes
   const [rooms, setRooms] = useState<Room[]>(initialRooms);
   const [shifts, setShifts] = useState<Shifts[]>(initialShifts);
   const [upgradations, setUpgradations] = useState<Upgradations[]>(initialUpgradations);
-
+const [shiftsOpen, setShiftsOpen] = useState(false);
+const [blocksOpen, setBlocksOpen] = useState(false);
+const [roomsOpen, setRoomsOpen] = useState(false);
+const [assetsOpen, setAssetsOpen] = useState(false);
+const [upgradationsOpen, setUpgradationsOpen] = useState(false);
 
 
   const memoizedInstitutes = useMemo(() => institutes.filter(isValidItem), [institutes]);
@@ -363,162 +367,243 @@ console.log(memoizedRegions);
             </div>
           </CardContent>
         </Card>
-        
-            {/* Shifts */}
-            <div>
-              <h3 className="text-lg font-semibold mb-2">Shifts</h3>
-              {shifts.length > 0 ? (
-                <div className="overflow-x-auto">
-                  <table className="w-full border-collapse">
-                    <thead>
-                      <tr className="bg-[#0b431b]  dark:bg-gray-800">
-                        <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Name</th>
-                        <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Building Name</th>
-                        <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Building Type</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {shifts.map((shift) => (
-                        <tr key={shift.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                          <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{shift.name}</td>
-                          <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{shift.building_name}</td>
-                          <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{shift.building_type?.name}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
-                <div className="text-gray-500 dark:text-gray-400 text-sm">No blocks available</div>
-              )}
-            </div>
-            {/* Blocks */}
-            <div>
-              <h3 className="text-lg font-semibold mb-2">Blocks</h3>
-              {blocks.length > 0 ? (
-                <div className="overflow-x-auto">
-                  <table className="w-full border-collapse">
-                    <thead>
-                      <tr className="bg-[#0b431b]  dark:bg-gray-800">
-                        <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Name</th>
-                        <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Area (sq ft)</th>
-                      
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {blocks.map((block) => (
-                        <tr key={block.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                          <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{block.name}</td>
-                          <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{block.area}</td>
-                        
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
-                <div className="text-gray-500 dark:text-gray-400 text-sm">No blocks available</div>
-              )}
-            </div>
+        {/* Shifts */}
+<div className="border rounded-lg mb-4">
+  <button
+    className="w-full p-4 text-left flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-800"
+    onClick={() => setShiftsOpen(!shiftsOpen)}
+  >
+    <h3 className="text-lg font-semibold">Shifts({shifts.length})</h3>
+    <svg
+      className={`w-5 h-5 transform transition-transform ${shiftsOpen ? 'rotate-180' : ''}`}
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+    </svg>
+  </button>
+  {shiftsOpen && (
+    <div className="p-4 border-t">
+      {shifts.length > 0 ? (
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse">
+            <thead>
+              <tr className="bg-[#0b431b] dark:bg-gray-800">
+                <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Name</th>
+                <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Building Name</th>
+                <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Building Type</th>
+              </tr>
+            </thead>
+            <tbody>
+              {shifts.map((shift) => (
+                <tr key={shift.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                  <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{shift.name}</td>
+                  <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{shift.building_name}</td>
+                  <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{shift.building_type?.name}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <div className="text-gray-500 dark:text-gray-400 text-sm">No shifts available</div>
+      )}
+    </div>
+  )}
+</div>
 
-            {/* Rooms */}
-            <div>
-              <h3 className="text-lg font-semibold mb-2">Rooms</h3>
-              {rooms.length > 0 ? (
-                <div className="overflow-x-auto">
-                  <table className="w-full border-collapse">
-                    <thead>
-                      <tr className="bg-[#0b431b]  dark:bg-gray-800">
-                        <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Name</th>
-                        <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Area (sq ft)</th>
-                        <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Block</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {rooms.map((room) => (
-                        <tr key={room.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                          <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{room.name}</td>
-                          <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{room.area}</td>
-                          <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{room.block?.name}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
-                <div className="text-gray-500 dark:text-gray-400 text-sm">No rooms available</div>
-              )}
-            </div>
+{/* Blocks */}
+<div className="border rounded-lg mb-4">
+  <button
+    className="w-full p-4 text-left flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-800"
+    onClick={() => setBlocksOpen(!blocksOpen)}
+  >
+    <h3 className="text-lg font-semibold">Blocks({blocks.length})</h3>
+    <svg
+      className={`w-5 h-5 transform transition-transform ${blocksOpen ? 'rotate-180' : ''}`}
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+    </svg>
+  </button>
+  {blocksOpen && (
+    <div className="p-4 border-t">
+      {blocks.length > 0 ? (
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse">
+            <thead>
+              <tr className="bg-[#0b431b] dark:bg-gray-800">
+                <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Name</th>
+                <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Area (sq ft)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {blocks.map((block) => (
+                <tr key={block.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                  <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{block.name}</td>
+                  <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{block.area}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <div className="text-gray-500 dark:text-gray-400 text-sm">No blocks available</div>
+      )}
+    </div>
+  )}
+</div>
 
-            {/* Institute Assets */}
-            <div>
-              <h3 className="text-lg font-semibold mb-2">Institute Assets</h3>
-              {instituteAssets.length > 0 ? (
-                <div className="overflow-x-auto">
-                  <table className="w-full border-collapse">
-                    <thead>
-                      <tr className="bg-[#0b431b]  dark:bg-gray-800">
-                        <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Asset Name</th>
-                        <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Details</th>
-                        <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Quantity</th>
-                        <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Room</th>
-                      
-                        <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Added Date</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {instituteAssets.map((asset) => (
-                        <tr key={asset.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                          <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{asset.asset.name}</td>
-                          <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{asset.details}</td>
-                          <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{asset.current_qty}</td>
-                          <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{asset.room.name}</td>
-                       
-                          <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{asset.added_date}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
-                <div className="text-gray-500 dark:text-gray-400 text-sm">No assets available</div>
-              )}
-            </div>
-             {/* Institute Upgradations */}
-            <div>
-               
-              <h3 className="text-lg font-semibold mb-2">Institute Upgradations</h3>
-              {upgradations.length > 0 ? (
-                <div className="overflow-x-auto">
-                  <table className="w-full border-collapse">
-                    <thead>
-                      <tr className="bg-[#0b431b]  dark:bg-gray-800">
-                        <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Details</th>
-                        <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Date from</th>
-                        <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Date to</th>
-                        <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Level From</th>
-                        <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Level To</th>
-                        <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {upgradations.map((up) => (
-                        <tr key={up.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                          <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{up.details}</td>
-                          <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{up.from}</td>
-                          <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{up.to}</td>
-                          <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{up.levelfrom}</td>
-                          <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{up.levelto}</td>
-                          <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{up.status}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
-                <div className="text-gray-500 dark:text-gray-400 text-sm">No assets available</div>
-              )}
-            </div>
+{/* Rooms */}
+<div className="border rounded-lg mb-4">
+  <button
+    className="w-full p-4 text-left flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-800"
+    onClick={() => setRoomsOpen(!roomsOpen)}
+  >
+    <h3 className="text-lg font-semibold">Rooms({rooms.length})</h3>
+    <svg
+      className={`w-5 h-5 transform transition-transform ${roomsOpen ? 'rotate-180' : ''}`}
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+    </svg>
+  </button>
+  {roomsOpen && (
+    <div className="p-4 border-t">
+      {rooms.length > 0 ? (
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse">
+            <thead>
+              <tr className="bg-[#0b431b] dark:bg-gray-800">
+                <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Name</th>
+                <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Area (sq ft)</th>
+                <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Block</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rooms.map((room) => (
+                <tr key={room.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                  <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{room.name}</td>
+                  <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{room.area}</td>
+                  <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{room.block?.name}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <div className="text-gray-500 dark:text-gray-400 text-sm">No rooms available</div>
+      )}
+    </div>
+  )}
+</div>
+
+{/* Institute Assets */}
+<div className="border rounded-lg mb-4">
+  <button
+    className="w-full p-4 text-left flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-800"
+    onClick={() => setAssetsOpen(!assetsOpen)}
+  >
+    <h3 className="text-lg font-semibold">Institute Assets({instituteAssets.length})</h3>
+    <svg
+      className={`w-5 h-5 transform transition-transform ${assetsOpen ? 'rotate-180' : ''}`}
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+    </svg>
+  </button>
+  {assetsOpen && (
+    <div className="p-4 border-t">
+      {instituteAssets.length > 0 ? (
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse">
+            <thead>
+              <tr className="bg-[#0b431b] dark:bg-gray-800">
+                <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Asset Name</th>
+                <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Details</th>
+                <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Quantity</th>
+                <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Room</th>
+                <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Added Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {instituteAssets.map((asset) => (
+                <tr key={asset.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                  <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{asset.asset.name}</td>
+                  <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{asset.details}</td>
+                  <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{asset.current_qty}</td>
+                  <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{asset.room.name}</td>
+                  <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{asset.added_date}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <div className="text-gray-500 dark:text-gray-400 text-sm">No assets available</div>
+      )}
+    </div>
+  )}
+</div>
+
+{/* Institute Upgradations */}
+<div className="border rounded-lg mb-4">
+  <button
+    className="w-full p-4 text-left flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-800"
+    onClick={() => setUpgradationsOpen(!upgradationsOpen)}
+  >
+    <h3 className="text-lg font-semibold">Institute Upgradations({upgradations.length})</h3>
+    <svg
+      className={`w-5 h-5 transform transition-transform ${upgradationsOpen ? 'rotate-180' : ''}`}
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+    </svg>
+  </button>
+  {upgradationsOpen && (
+    <div className="p-4 border-t">
+      {upgradations.length > 0 ? (
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse">
+            <thead>
+              <tr className="bg-[#0b431b] dark:bg-gray-800">
+                <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Details</th>
+                <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Date from</th>
+                <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Date to</th>
+                <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Level From</th>
+                <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Level To</th>
+                <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {upgradations.map((up) => (
+                <tr key={up.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                  <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{up.details}</td>
+                  <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{up.from}</td>
+                  <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{up.to}</td>
+                  <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{up.levelfrom}</td>
+                  <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{up.levelto}</td>
+                  <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{up.status}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <div className="text-gray-500 dark:text-gray-400 text-sm">No upgradations available</div>
+      )}
+    </div>
+  )}
+</div>
       </div>
     </AppLayout>
   );
