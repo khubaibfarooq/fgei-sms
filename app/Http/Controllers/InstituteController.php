@@ -76,7 +76,7 @@ class InstituteController extends Controller
     {
 
         $data = $request->validate([
-            'name' => 'required|string',
+            
             'established_date' => 'required|string|max:255',
             'total_area' => 'required|numeric',
             'convered_area' => 'required|numeric',
@@ -151,7 +151,7 @@ $data['type'] = $type;
     public function update(Request $request, Institute $institute)
     {
           $data = $request->validate([
-               'name' => 'required|string',
+            
             'established_date' => 'required|string|max:255',
             'total_area' => 'required|numeric',
             'convered_area' => 'required|numeric',

@@ -135,6 +135,7 @@ export default function InstituteForm({ institute }: InstituteFormProps) {
                 <Label htmlFor="established_date">Name</Label>
                 <Input
                   id="name"
+                 readOnly
                   type="text"
                   value={data.name}
                   onChange={(e) => setData('name', e.target.value)}
