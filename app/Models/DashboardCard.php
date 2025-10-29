@@ -16,6 +16,7 @@ class DashboardCard extends Model
         'link',
           'color',
         'role_id',
+        'redirectlink',
     ];
 
     public function role()

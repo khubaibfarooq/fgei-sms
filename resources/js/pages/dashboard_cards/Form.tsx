@@ -16,7 +16,7 @@ interface FormProps {
     title: string;
     link: string;
         color: string;
-
+redirectlink:string;
     role_id: number;
   };
   roles: Array<{ id: number; name: string }>;
@@ -31,6 +31,7 @@ console.log(dashboardCard);
     link: string;
      color: string;
     role_id: number | '';
+    redirectlink:string | '';
   }>({
     id:dashboardCard?.id ||'',
     title: dashboardCard?.title || '',
@@ -38,6 +39,7 @@ console.log(dashboardCard);
         color: dashboardCard?.color || '',
 
     role_id: dashboardCard?.role_id || '',
+    redirectlink:dashboardCard?.redirectlink || '',
   });
 
   useEffect(() => {
@@ -48,6 +50,7 @@ console.log(dashboardCard);
         link: dashboardCard.link ?? '',
          color: dashboardCard.color ?? '',
         role_id: dashboardCard.role_id ?? '',
+          redirectlink: dashboardCard.redirectlink ?? '',
       }));
     } else {
       setData((prev) => ({
@@ -56,6 +59,7 @@ console.log(dashboardCard);
         link: '',
          color: '',
         role_id: '',
+              redirectlink: '',
       }));
     }
   }, [dashboardCard, setData]);
@@ -155,6 +159,14 @@ const handleSubmit = (e: React.FormEvent) => {
                     onChange={(e) => setData('color', e.target.value)}
                   />
                 {errors.color && <p className="text-red-500 text-sm">{errors.color}</p>}
+                   <Label htmlFor="redirectlink">Redirect Link</Label>
+                <Input
+               
+                    id="redirectlink"
+                    value={data.redirectlink}
+                    onChange={(e) => setData('redirectlink', e.target.value)}
+                  />
+                {errors.redirectlink && <p className="text-red-500 text-sm">{errors.redirectlink}</p>}
               </div>
               </div>
               {/* Actions */}

@@ -116,6 +116,8 @@ public function index(Request $request)
     $hrInstituteId = session('inst_id');
     $regionId = session('region_id');
       $sms_inst_id = session('sms_inst_id');
+    
+
 // dd(session());
 $tab1 = [];
 $tab2 = [];
@@ -214,11 +216,6 @@ else if($role_type=='Directorate'){
     ->get();
 
 }
-$institute = Institute::where('hr_id',$hrInstituteId)->first();
-
-     if ($institute) {
-         session(['sms_inst_id' => $institute->id]);
-     }
 
     $user = Auth::user();
     $roleIds = $user?->roles()->pluck('id');

@@ -96,8 +96,7 @@ $regions = Institute::select('region_id as id', 'name')->where('type', 'Regional
     $instituteAssets = [];
     $blocks = [];
     $rooms = [];
-    $institutes = []; // Assuming institutes are fetched somewhere
-    $regions = []; // Assuming regions are fetched somewhere
+ 
     $shifts=[];
    $upgradations=[];
     if ($request->institute_id && is_numeric($request->institute_id) && $request->institute_id > 0) {
@@ -111,21 +110,12 @@ $regions = Institute::select('region_id as id', 'name')->where('type', 'Regional
             ->with(['institute', 'room', 'asset'])
             ->get();
     }
-if ($request->region_id && is_numeric($request->region_id) && $request->region_id > 0) {
-       $institutes = Institute::where('region_id', $request->region_id)
-        ->select('id', 'name')
-        ->get()
-        ->filter(function ($institute) {
-            return is_numeric($institute->id) && $institute->id > 0 && !empty(trim($institute->name));
-        })
-        ->values();
- 
-    }
+
     return response()->json([
-        'institutes'=>$institutes,
+
         'blocks' => $blocks,
         'rooms' => $rooms,
-        'regions' => $regions,
+     
         'instituteAssets' => $instituteAssets,
         'shifts'=>$shifts,
         'upgradations'=>$upgradations,
@@ -155,109 +145,6 @@ if ($request->region_id && is_numeric($request->region_id) && $request->region_i
             'permissions' => $permissions,
         ]);
     }
-//     public function assets(Request $request)
-// {
-//     $hrInstituteId = session('inst_id');
-//     $regionid = session('region_id');
-
-//     // Fetch and filter institutes
-//     $institutes = Institute::where('region_id', $regionid)
-//         ->select('id', 'name')
-//         ->get()
-//         ->filter(function ($institute) {
-//             return is_numeric($institute->id) && $institute->id > 0 && !empty(trim($institute->name));
-//         })
-//         ->values();
-
-//     // Fetch and filter blocks based on institute_id
-//     $blocks = $request->institute_id && is_numeric($request->institute_id) && $request->institute_id > 0
-//         ? Block::where('institute_id', $request->institute_id)
-//             ->select('id', 'name')
-//             ->get()
-//             ->filter(function ($block) {
-//                 return is_numeric($block->id) && $block->id > 0 && !empty(trim($block->name));
-//             })
-//             ->values()
-//         : [];
-
-//     // Fetch and filter rooms based on block_id
-//     $rooms = $request->block_id && is_numeric($request->block_id) && $request->block_id > 0
-//         ? Room::where('block_id', $request->block_id)
-//             ->select('id', 'name')
-//             ->get()
-//             ->filter(function ($room) {
-//                 return is_numeric($room->id) && $room->id > 0 && !empty(trim($room->name));
-//             })
-//             ->values()
-//         : [];
-
-//     // Fetch and filter asset categories
-//     $assetCategories = AssetCategory::select('id', 'name')
-//         ->get()
-//         ->filter(function ($category) {
-//             return is_numeric($category->id) && $category->id > 0 && !empty(trim($category->name));
-//         })
-//         ->values();
-
-//     // Fetch and filter assets based on asset_category_id
-//     $assets = $request->asset_category_id && is_numeric($request->asset_category_id) && $request->asset_category_id > 0
-//         ? Asset::where('asset_category_id', $request->asset_category_id)
-//             ->select('id', 'name')
-//             ->get()
-//             ->filter(function ($asset) {
-//                 return is_numeric($asset->id) && $asset->id > 0 && !empty(trim($asset->name));
-//             })
-//             ->values()
-//         : [];
-
-//     // Build the instituteAssets query
-//     $query = InstituteAsset::query()->whereHas('institute', function ($q) use ($hrInstituteId) {
-//         $q->where('hr_id', $hrInstituteId);
-//     });
-
-//     // Apply filters
-//     if ($request->search) {
-//         $query->where('details', 'like', '%' . $request->search . '%')
-//               ->orWhereHas('assetCategory', function ($q) use ($request) {
-//                   $q->where('name', 'like', '%' . $request->search . '%');
-//               });
-//     }
-//     if ($request->institute_id && is_numeric($request->institute_id) && $request->institute_id > 0) {
-//         $query->where('institute_id', $request->institute_id);
-//     }
-//     if ($request->block_id && is_numeric($request->block_id) && $request->block_id > 0) {
-//         $query->where('block_id', $request->block_id);
-//     }
-//     if ($request->room_id && is_numeric($request->room_id) && $request->room_id > 0) {
-//         $query->where('room_id', $request->room_id);
-//     }
-//     if ($request->asset_category_id && is_numeric($request->asset_category_id) && $request->asset_category_id > 0) {
-//         $query->where('asset_category_id', $request->asset_category_id);
-//     }
-//     if ($request->asset_id && is_numeric($request->asset_id) && $request->asset_id > 0) {
-//         $query->where('asset_id', $request->asset_id);
-//     }
-
-//     // Fetch institute assets with pagination
-//     $instituteAssets = $query->with(['assetCategory', 'institute', 'block', 'room', 'asset'])->paginate(10)->withQueryString();
-
-//     return Inertia::render('Reports/Assets', [
-//         'institutes' => $institutes,
-//         'blocks' => $blocks,
-//         'rooms' => $rooms,
-//         'assetCategories' => $assetCategories,
-//         'assets' => $assets,
-//         'instituteAssets' => $instituteAssets,
-//         'filters' => [
-//             'search' => $request->search ?? '',
-//             'institute_id' => $request->institute_id ?? '',
-//             'block_id' => $request->block_id ?? '',
-//             'room_id' => $request->room_id ?? '',
-//             'asset_category_id' => $request->asset_category_id ?? '',
-//             'asset_id' => $request->asset_id ?? '',
-//         ],
-//     ]);
-// }
 public function assets(Request $request)
 {
     $hrInstituteId = session('inst_id');

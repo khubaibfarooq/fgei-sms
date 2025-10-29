@@ -50,6 +50,7 @@ class DashboardCardController extends Controller
             'link'    => 'required|string|max:255',
             'color'   => 'nullable|string|max:255',
             'role_id' => 'required|exists:roles,id',
+            'redirectlink' => 'nullable|string',
         ]);
 
         DashboardCard::create($data);
@@ -82,6 +83,7 @@ class DashboardCardController extends Controller
 
         'link'    => 'required|string|max:255',
         'role_id' => 'required|exists:roles,id',
+          'redirectlink' => 'nullable|string',
     ]);
 $dashboardCard=DashboardCard::find($request->id);
     if ($dashboardCard->update($data)) {

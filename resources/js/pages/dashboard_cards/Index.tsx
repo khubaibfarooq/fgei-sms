@@ -25,6 +25,7 @@ interface DashboardCard {
   link: string;
   role_id: number;
   role?: { name: string };
+    redirectlink:string;
 }
 
 interface PageProps {
@@ -98,6 +99,7 @@ export default function DashboardCards({ dashboardCards, filters }: PageProps){
                         <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Name</th>
                         <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Role</th>
                         <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">link</th>
+                               <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Redirect Link</th>
                           <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Actions</th>
                       </tr>
                     </thead>
@@ -110,6 +112,7 @@ export default function DashboardCards({ dashboardCards, filters }: PageProps){
                           <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{card.title}</td>
                           <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{card.role?.name}</td>
                           <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{card.link}</td>
+                          <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{card.redirectlink}</td>
                            <td className="border p-2 text-sm text-gray-900 dark:text-gray-100"><Link href={`/dashboardcards/${card.id}/edit`}>
                                                    <Button variant="ghost" size="icon">
                                                      <Edit className="h-4 w-4" />

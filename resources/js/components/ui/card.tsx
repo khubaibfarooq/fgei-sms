@@ -1,11 +1,48 @@
 import * as React from 'react';
-
+import { router } from '@inertiajs/react';
 import { cn } from '@/lib/utils';
+interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
+  /** URL to navigate to when the card is clicked */
+  redirectLink?: string;
+}
 
-const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(({ className, ...props }, ref) => (
-    <div ref={ref} className={cn('  rounded-lg border text-card-foreground shadow-xs', className)} {...props} />
-));
+const Card = React.forwardRef<HTMLDivElement, CardProps>(
+  ({ className, redirectLink, onClick, ...props }, ref) => {
+    // -----------------------------------------------------------------
+    //  Build a click handler that:
+    //   1. Calls any user-provided onClick first
+    //   2. Then navigates via Inertia if a redirectLink exists
+    // -----------------------------------------------------------------
+    const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+      // Let the consumer run their own logic first
+      onClick?.(e);
+
+      if (redirectLink) {
+        // Prevent navigation if the event was already stopped
+        if (!e.defaultPrevented) {
+          router.visit(redirectLink);
+        }
+      }
+    };
+
+    return (
+      <div
+        ref={ref}
+        onClick={handleClick}
+        className={cn(
+          'rounded-lg border text-card-foreground shadow-xs cursor-pointer',
+          className
+        )}
+        {...props}
+      />
+    );
+  }
+);
+
 Card.displayName = 'Card';
+
+
+
 
 const CardHeader = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(({ className, ...props }, ref) => (
     <div ref={ref} className={cn('flex flex-col space-y-1.5 p-6', className)} {...props} />

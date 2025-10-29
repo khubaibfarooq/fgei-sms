@@ -159,7 +159,6 @@ console.log(memoizedRegions);
         throw new Error('Failed to fetch data');
       }
       const data = await response.json();
-      setInstitutes(data.institutes || []);
       setBlocks(data.blocks || []);
       setInstituteAssets(data.instituteAssets || []);
       setRooms(data.rooms || []);
@@ -172,9 +171,7 @@ console.log(memoizedRegions);
     }
   };
 
-  useEffect(() => {
-    fetchData({ search});
-  }, [search]);
+
 
   const handleSearchKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
@@ -186,10 +183,29 @@ console.log(memoizedRegions);
     setInstitute(value);
     fetchData({ search, institute_id: value, region_id: region });
   };
-
-  const handleRegionChange = (value: string) => {
+  const fetchInstitutes = async (regionId: string) => {
+    try {
+      const params = new URLSearchParams({ region_id: regionId || '' }).toString();
+      const response = await fetch(`/reports/getInstitutes?${params}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch institutes');
+      }
+      const data = await response.json();
+      console.log('Fetched institutes:', data);
+      setInstitutes(data);
+      // Reset institute if the selected institute is not in the new list
+      if (institute && regionId !== '0' && !data.some((inst: Item) => inst.id.toString() === institute)) {
+        setInstitute('');
+      }
+    } catch (error) {
+      console.error('Error fetching institutes:', error);
+      toast.error('Failed to load institutes');
+      setInstitutes([]);
+    }
+  };
+  const  handleRegionChange = async(value: string) => {
     setRegion(value);
-    fetchData({ search, institute_id: institute, region_id: value });
+   fetchInstitutes(value);
   };
 
 

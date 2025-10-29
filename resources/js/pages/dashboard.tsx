@@ -11,12 +11,13 @@ import {
 import axios from 'axios';
 import { iconMapper } from '@/lib/iconMapper';
 import type { LucideIcon } from 'lucide-react';
-
+import { router } from '@inertiajs/react';
 // Define interface for card data from props.cards
 interface CardData {
   id: number;
   title: string;
   link: string;
+    redirectlink: string;
   color: string;
   role_id: number;
   created_at: string;
@@ -28,6 +29,7 @@ interface SummaryItem {
   label: string;
   value: number;
   color: string;
+     redirectlink: string;
 }
 
 // Define interfaces for table data
@@ -59,9 +61,9 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 // Static fallback data
 const fallbackSummaryData: SummaryItem[] = [
-  { label: 'Users', value: 420, color: '#3b82f6' },
-  { label: 'Backups', value: 80, color: '#10b981' },
-  { label: 'Activity Logs', value: 1570, color: '#f59e0b' },
+  { label: 'Users', value: 420, color: '#3b82f6',redirectlink:'' },
+  { label: 'Backups', value: 80, color: '#10b981',redirectlink:'' },
+  { label: 'Activity Logs', value: 1570, color: '#f59e0b' ,redirectlink:''},
 ];
 
 // Color themes for different tables
@@ -150,10 +152,10 @@ export default function Dashboard() {
         const countPromises = cards.map(async (card: CardData) => {
           try {
             const response = await axios.get<{ count: number }>(card.link);
-            return { label: card.title, value: response.data.count || 0, color: card.color };
+            return { label: card.title, value: response.data.count || 0, color: card.color,redirectlink: card.redirectlink };
           } catch (error) {
             console.error(`Failed to fetch count for ${card.title}:`, error);
-            return { label: card.title, value: 0, color: card.color };
+            return { label: card.title, value: 0, color: card.color , redirectlink: card.redirectlink};
           }
         });
 
@@ -195,6 +197,7 @@ export default function Dashboard() {
   {(loading ? fallbackSummaryData : summaryData).map((item, index) => (
     <Card 
       key={index}
+      redirectLink={item.redirectlink}
       className="shadow-lg rounded-xl border-0 overflow-hidden transition-all duration-300 hover:shadow-xl hover:scale-105 h-full"
       style={{ 
         background: `linear-gradient(135deg, ${item.color}20, ${item.color}40)`,
@@ -207,7 +210,7 @@ export default function Dashboard() {
         </CardTitle>
       </CardHeader>
       <CardContent className="px-6 py-4 pt-2">
-        <div className="text-3xl font-bold text-gray-900 dark:text-gray-100 text-center">
+        <div className="text-3xl font-bold text-blue-700 dark:text-gray-100 text-center">
           {loading ? '...' : item.value}
         </div>
       </CardContent>

@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Inertia\Response;
-
+use App\Models\Institute;
 class AuthenticatedSessionController extends Controller
 {
     /**
@@ -40,7 +40,11 @@ session(['type' => Auth::user()->type]);
 session(['inst_id' => Auth::user()->inst_id]);
 session(['region_id' => Auth::user()->region_id]);
 session(['role_id' => Auth::user()->role_id]);
+  $institute = Institute::where('hr_id',Auth::user()->inst_id)->first();
 
+     if ($institute) {
+         session(['sms_inst_id' => $institute->id]);
+     }
         return redirect()->intended(route('dashboard', absolute: false));
     }
 
