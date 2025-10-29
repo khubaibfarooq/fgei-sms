@@ -13,7 +13,7 @@ import { debounce } from 'lodash';
 import ExcelJS from 'exceljs';
 import FileSaver from 'file-saver';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
 declare module 'jspdf' {
   interface jsPDF {
@@ -231,7 +231,7 @@ console.log(regions);
       item.region?.name || 'N/A',
     ]);
 
-    doc.autoTable({
+  autoTable(doc,{
       head: [tableColumn],
       body: tableRows,
       startY: 25,

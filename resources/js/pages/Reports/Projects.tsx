@@ -13,7 +13,7 @@ import { debounce } from 'lodash';
 import ExcelJS from 'exceljs';
 import FileSaver from 'file-saver';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 import { formatDate } from '@/utils/dateFormatter';
 import Combobox from '@/components/ui/combobox';
 
@@ -196,11 +196,22 @@ export default function Projects({ projects: initialProjects, institutes, region
       p.region?.name || 'N/A',
     ]);
 
-    doc.autoTable({
+    autoTable(doc,{
       head: [headers],
       body: rows,
-      startY: 25,
-      styles: { fontSize: 10 },
+     startY: 25,
+      styles: { 
+        fontSize: 9,
+        cellPadding: 2,
+      },
+      headStyles: {
+        fillColor: [66, 139, 202],
+        textColor: 255,
+        fontStyle: 'bold'
+      },
+      alternateRowStyles: {
+        fillColor: [240, 240, 240]
+      }
     });
 
     doc.save('Projects_Report.pdf');

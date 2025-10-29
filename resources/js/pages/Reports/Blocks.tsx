@@ -78,14 +78,7 @@ export default function BlockIndex({ blocks, filters,permissions }: Props) {
               <CardTitle className="text-2xl font-bold">Blocks</CardTitle>
               <p className="text-muted-foreground text-sm">Manage institutional blocks</p>
             </div>
-            {permissions.can_add &&
-            <Link href="/blocks/create">
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Block
-              </Button>
-            </Link>
-            }
+           
           </CardHeader>
 
           <Separator />

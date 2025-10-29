@@ -13,7 +13,7 @@ import { debounce } from 'lodash';
 import ExcelJS from 'exceljs';
 import FileSaver from 'file-saver';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
 declare module 'jspdf' {
   interface jsPDF {
@@ -305,7 +305,9 @@ export default function Assets({ instituteAssets: instituteAssetsProp, institute
     FileSaver.saveAs(blob, 'Assets_Report.xlsx');
   };
 
-  const exportToPDF = () => {
+
+const exportToPDF = () => {
+  try {
     const doc = new jsPDF();
 
     doc.setFontSize(16);
@@ -323,8 +325,8 @@ export default function Assets({ instituteAssets: instituteAssetsProp, institute
     ];
 
     const tableRows = instituteAssets.data.map((instAsset) => [
-      instAsset.details,
-      instAsset.current_qty,
+      instAsset.details || 'N/A',
+      instAsset.current_qty.toString(),
       instAsset.institute?.name || 'N/A',
       instAsset.block?.name || 'N/A',
       instAsset.room?.name || 'N/A',
@@ -333,15 +335,32 @@ export default function Assets({ instituteAssets: instituteAssetsProp, institute
       instAsset.region?.name || 'N/A',
     ]);
 
-    doc.autoTable({
+    // Use autoTable as a standalone function
+    autoTable(doc, {
       head: [tableColumn],
       body: tableRows,
       startY: 25,
-      styles: { fontSize: 10 },
+      styles: { 
+        fontSize: 9,
+        cellPadding: 2,
+      },
+      headStyles: {
+        fillColor: [66, 139, 202],
+        textColor: 255,
+        fontStyle: 'bold'
+      },
+      alternateRowStyles: {
+        fillColor: [240, 240, 240]
+      }
     });
 
     doc.save('Assets_Report.pdf');
-  };
+    toast.success('PDF exported successfully');
+  } catch (error) {
+    console.error('Error exporting to PDF:', error);
+    toast.error('Failed to export PDF');
+  }
+};
 
   const debouncedApplyFilters = useMemo(
     () =>

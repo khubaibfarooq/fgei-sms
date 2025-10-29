@@ -13,7 +13,7 @@ import { debounce } from 'lodash';
 import ExcelJS from 'exceljs';
 import FileSaver from 'file-saver';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable'; 
 import { formatDate } from '@/utils/dateFormatter';
 
 declare module 'jspdf' {
@@ -229,7 +229,7 @@ export default function Upgradations({ upgradations: upgradationProp, institutes
       item.region?.name || 'N/A',
     ]);
 
-    doc.autoTable({
+autoTable(doc, {
       head: [tableColumn],
       body: tableRows,
       startY: 25,
