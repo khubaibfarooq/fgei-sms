@@ -127,35 +127,61 @@ export default function Assets({ instituteAssets: instituteAssetsProp, institute
   const [isLoadingAssets, setIsLoadingAssets] = useState(false);
   const [instituteAssets, setInstituteAssets] = useState(instituteAssetsProp);
   const [filteredInstitutes, setFilteredInstitutes] = useState<Item[]>(institutes || []);
+  const [allAssetsForExport, setAllAssetsForExport] = useState<instituteAssetsProp[]>([]);
 
   // Fetch institutes based on region selection
   const fetchInstitutes = async (regionId: string) => {
-    try {
-      const params = new URLSearchParams({ region_id: regionId || '' }).toString();
-      const response = await fetch(`/reports/getInstitutes?${params}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch institutes');
-      }
-      const data = await response.json();
-      console.log('Fetched institutes:', data);
-      setFilteredInstitutes(data);
-      // Reset institute if the selected institute is not in the new list
-      if (institute && regionId !== '0' && !data.some((inst: Item) => inst.id.toString() === institute)) {
-        setInstitute('');
-      }
-    } catch (error) {
-      console.error('Error fetching institutes:', error);
-      toast.error('Failed to load institutes');
-      setFilteredInstitutes([]);
+  try {
+    const params = new URLSearchParams({ region_id: regionId || '' }).toString();
+    const response = await fetch(`/reports/getInstitutes?${params}`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch institutes');
     }
-  };
+    const data: Item[] = await response.json(); // Fixed: response.json() not Response.json()
+    console.log('Fetched institutes:', data);
+    setFilteredInstitutes(data);
+    // Reset institute if the selected institute is not in the new list
+    if (institute && regionId !== '0' && !data.some((inst: Item) => inst.id.toString() === institute)) {
+      setInstitute('');
+    }
+  } catch (error) {
+    console.error('Error fetching institutes:', error);
+    toast.error('Failed to load institutes');
+    setFilteredInstitutes([]);
+  }
+};
 
   const handleRegionChange = (value: string) => {
     setRegion(value);
     fetchInstitutes(value);
-    //debouncedApplyFilters(); // Trigger asset filter update
   };
+// Fetch all assets for export (without pagination)
+const fetchAllAssetsForExport = async (): Promise<instituteAssetsProp[]> => {
+  try {
+    const params = new URLSearchParams({
+      search: search || '',
+      institute_id: institute || '',
+      block_id: block || '',
+      room_id: room || '',
+      asset_category_id: assetCategory || '',
+      asset_id: asset || '',
+      region_id: region || '',
+      all: 'true' // Add parameter to indicate we want all data
+    });
 
+    const response = await fetch(`/reports/assets/institute-assets?${params.toString()}`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch all assets for export');
+    }
+    const data: instituteAssetsProp[] = await response.json();
+    setAllAssetsForExport(data);
+    return data;
+  } catch (error) {
+    console.error('Error fetching all assets for export:', error);
+    toast.error('Failed to fetch assets for export');
+    return [];
+  }
+};
   // Log initial props for debugging
   useEffect(() => {
     const invalidItems = {
@@ -271,96 +297,107 @@ export default function Assets({ instituteAssets: instituteAssetsProp, institute
   }, [assetCategory]);
 
   const exportToExcel = async () => {
-    const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet('Assets');
+    try {
+      // Fetch all data for export
+      const allAssets = await fetchAllAssetsForExport();
+      
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet('Assets');
 
-    worksheet.columns = [
-      { header: 'Details', key: 'details', width: 30 },
-      { header: 'Quantity', key: 'qty', width: 10 },
-      { header: 'Institute', key: 'institute', width: 20 },
-      { header: 'Block', key: 'block', width: 20 },
-      { header: 'Room', key: 'room', width: 20 },
-      { header: 'Category', key: 'category', width: 20 },
-      { header: 'Asset', key: 'asset', width: 20 },
-      { header: 'Region', key: 'region', width: 20 },
-    ];
+      worksheet.columns = [
+        { header: 'Details', key: 'details', width: 30 },
+        { header: 'Quantity', key: 'qty', width: 10 },
+        { header: 'Institute', key: 'institute', width: 20 },
+        { header: 'Block', key: 'block', width: 20 },
+        { header: 'Room', key: 'room', width: 20 },
+        { header: 'Category', key: 'category', width: 20 },
+        { header: 'Asset', key: 'asset', width: 20 },
+        { header: 'Region', key: 'region', width: 20 },
+      ];
 
-    instituteAssets.data.forEach((instAsset) => {
-      worksheet.addRow({
-        details: instAsset.details,
-        qty: instAsset.current_qty,
-        institute: instAsset.institute?.name || 'N/A',
-        block: instAsset.block?.name || 'N/A',
-        room: instAsset.room?.name || 'N/A',
-        category: instAsset.assetCategory?.name || 'N/A',
-        asset: instAsset.asset?.name || 'N/A',
-        region: instAsset.region?.name || 'N/A',
+      allAssets.forEach((instAsset) => {
+        worksheet.addRow({
+          details: instAsset.details,
+          qty: instAsset.current_qty,
+          institute: instAsset.institute?.name || 'N/A',
+          block: instAsset.block?.name || 'N/A',
+          room: instAsset.room?.name || 'N/A',
+          category: instAsset.assetCategory?.name || 'N/A',
+          asset: instAsset.asset?.name || 'N/A',
+          region: instAsset.region?.name || 'N/A',
+        });
       });
-    });
 
-    const buffer = await workbook.xlsx.writeBuffer();
-    const blob = new Blob([buffer], {
-      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    });
-    FileSaver.saveAs(blob, 'Assets_Report.xlsx');
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      });
+      FileSaver.saveAs(blob, 'Assets_Report.xlsx');
+      toast.success('Excel exported successfully');
+    } catch (error) {
+      console.error('Error exporting to Excel:', error);
+      toast.error('Failed to export Excel');
+    }
   };
 
+  const exportToPDF = async () => {
+    try {
+      // Fetch all data for export
+      const allAssets = await fetchAllAssetsForExport();
+      
+      const doc = new jsPDF();
 
-const exportToPDF = () => {
-  try {
-    const doc = new jsPDF();
+      doc.setFontSize(16);
+      doc.text('Assets Report', 14, 15);
 
-    doc.setFontSize(16);
-    doc.text('Assets Report', 14, 15);
+      const tableColumn = [
+        'Details',
+        'Qty',
+        'Institute',
+        'Block',
+        'Room',
+        'Category',
+        'Asset',
+        'Region',
+      ];
 
-    const tableColumn = [
-      'Details',
-      'Qty',
-      'Institute',
-      'Block',
-      'Room',
-      'Category',
-      'Asset',
-      'Region',
-    ];
+      const tableRows = allAssets.map((instAsset) => [
+        instAsset.details || 'N/A',
+        instAsset.current_qty.toString(),
+        instAsset.institute?.name || 'N/A',
+        instAsset.block?.name || 'N/A',
+        instAsset.room?.name || 'N/A',
+        instAsset.assetCategory?.name || 'N/A',
+        instAsset.asset?.name || 'N/A',
+        instAsset.region?.name || 'N/A',
+      ]);
 
-    const tableRows = instituteAssets.data.map((instAsset) => [
-      instAsset.details || 'N/A',
-      instAsset.current_qty.toString(),
-      instAsset.institute?.name || 'N/A',
-      instAsset.block?.name || 'N/A',
-      instAsset.room?.name || 'N/A',
-      instAsset.assetCategory?.name || 'N/A',
-      instAsset.asset?.name || 'N/A',
-      instAsset.region?.name || 'N/A',
-    ]);
+      // Use autoTable as a standalone function
+      autoTable(doc, {
+        head: [tableColumn],
+        body: tableRows,
+        startY: 25,
+        styles: { 
+          fontSize: 9,
+          cellPadding: 2,
+        },
+        headStyles: {
+          fillColor: [66, 139, 202],
+          textColor: 255,
+          fontStyle: 'bold'
+        },
+        alternateRowStyles: {
+          fillColor: [240, 240, 240]
+        }
+      });
 
-    // Use autoTable as a standalone function
-    autoTable(doc, {
-      head: [tableColumn],
-      body: tableRows,
-      startY: 25,
-      styles: { 
-        fontSize: 9,
-        cellPadding: 2,
-      },
-      headStyles: {
-        fillColor: [66, 139, 202],
-        textColor: 255,
-        fontStyle: 'bold'
-      },
-      alternateRowStyles: {
-        fillColor: [240, 240, 240]
-      }
-    });
-
-    doc.save('Assets_Report.pdf');
-    toast.success('PDF exported successfully');
-  } catch (error) {
-    console.error('Error exporting to PDF:', error);
-    toast.error('Failed to export PDF');
-  }
-};
+      doc.save('Assets_Report.pdf');
+      toast.success('PDF exported successfully');
+    } catch (error) {
+      console.error('Error exporting to PDF:', error);
+      toast.error('Failed to export PDF');
+    }
+  };
 
   const debouncedApplyFilters = useMemo(
     () =>

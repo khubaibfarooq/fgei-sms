@@ -353,9 +353,13 @@ $regions = Institute::select('region_id as id', 'name')->where('type', 'Regional
     if ($request->asset_id && is_numeric($request->asset_id) && $request->asset_id > 0) {
         $query->where('asset_id', $request->asset_id);
     }
-
-    // Fetch institute assets with related data
-    $instituteAssets = $query->with([ 'institute', 'room', 'asset'])->paginate(10)->withQueryString();
+ // Check if all data is requested (for exports)
+    if ($request->boolean('all') || $request->get('export')) {
+        $instituteAssets = $query->with(['institute', 'room', 'asset'])->get();
+    } else {
+        // Default to pagination for normal display
+        $instituteAssets = $query->with(['institute', 'room', 'asset'])->paginate(10)->withQueryString();
+    }
         return response()->json($instituteAssets);
     }
 
