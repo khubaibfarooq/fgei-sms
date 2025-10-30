@@ -22,7 +22,8 @@ import {
 import ExcelJS from 'exceljs';
 import FileSaver from 'file-saver';
 import { toast } from 'sonner';
-
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable'; 
 interface Item {
   id: number;
   name: string;
@@ -305,16 +306,118 @@ console.log(memoizedRegions);
     });
     FileSaver.saveAs(blob, 'Institutional_Report.xlsx');
   };
+  const exportToPDF = () => {
+  const doc = new jsPDF();
+  let startY = 20; // Initial Y position
+
+  // Helper function to add a section to PDF
+  const addSectionToPDF = (title: string, columns: string[], data: any[]) => {
+    // Add section title
+    doc.setFontSize(14);
+    doc.text(title, 14, startY);
+    
+    // Add table
+    autoTable(doc, {
+      head: [columns],
+      body: data,
+      startY: startY +3,
+      styles: { fontSize: 10 },
+      headStyles: { fillColor: [11, 67, 27] }, // Dark green header
+    });
+
+    // Update startY for next section
+    startY = (doc as any).lastAutoTable.finalY + 8;
+
+    // Add new page if needed for next section
+    if (startY > doc.internal.pageSize.height - 50) {
+      doc.addPage();
+      startY = 20;
+    }
+  };
+
+  // Start with main title
+  doc.setFontSize(16);
+  doc.text('Institutional Report', 14, 15);
+  startY = 25; // Set initial position after title
+
+  // Shifts Section
+  if (shifts.length > 0) {
+    const shiftsColumns = ['Name', 'Building Name', 'Building Type'];
+    const shiftsData = shifts.map(shift => [
+      shift.name,
+      shift.building_name,
+      shift.building_type?.name || 'N/A'
+    ]);
+    addSectionToPDF('Shifts', shiftsColumns, shiftsData);
+  }
+
+  // Blocks Section
+  if (blocks.length > 0) {
+    const blocksColumns = ['Name', 'Area (sq ft)'];
+    const blocksData = blocks.map(block => [
+      block.name,
+      block.area
+    ]);
+    addSectionToPDF('Blocks', blocksColumns, blocksData);
+  }
+
+  // Rooms Section
+  if (rooms.length > 0) {
+    const roomsColumns = ['Name', 'Area (sq ft)', 'Block'];
+    const roomsData = rooms.map(room => [
+      room.name,
+      room.area,
+      room.block?.name || 'N/A'
+    ]);
+    addSectionToPDF('Rooms', roomsColumns, roomsData);
+  }
+
+  // Institute Assets Section
+  if (instituteAssets.length > 0) {
+    const assetsColumns = ['Asset Name', 'Details', 'Quantity', 'Room', 'Added Date'];
+    const assetsData = instituteAssets.map(asset => [
+      asset.asset.name,
+      asset.details,
+      asset.current_qty.toString(),
+      asset.room.name,
+      asset.added_date
+    ]);
+    addSectionToPDF('Institute Assets', assetsColumns, assetsData);
+  }
+
+  // Upgradations Section
+  if (upgradations.length > 0) {
+    const upgradationsColumns = ['Details', 'Date From', 'Date To', 'Level From', 'Level To', 'Status'];
+    const upgradationsData = upgradations.map(up => [
+      up.details,
+      up.from,
+      up.to,
+      up.levelfrom,
+      up.levelto,
+      up.status
+    ]);
+    addSectionToPDF('Institute Upgradations', upgradationsColumns, upgradationsData);
+  }
+
+  doc.save('Institutional_Report.pdf');
+};
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Institutional Report" />
       <div className="flex-1 p-3 ">
         <Card>
-          <CardHeader>
-            <CardTitle>Institutional Report</CardTitle>
-            <Button onClick={exportToExcel} className="w-full">
-              Export Excel
-            </Button>
+          <CardHeader className="pb-3 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>          <CardTitle>Institutional Report</CardTitle></div>
+  
+        
+             <div className="flex gap-2">
+                                <Button onClick={exportToPDF} className="w-full md:w-auto">
+                                  Export PDF
+                                </Button>
+                                <Button onClick={exportToExcel} className="w-full md:w-auto">
+                                  Export Excel
+                                </Button>
+                              </div>
           </CardHeader>
           <Separator />
           <CardContent className="py-3 space-y-2">
