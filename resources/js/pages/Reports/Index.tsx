@@ -24,6 +24,7 @@ import FileSaver from 'file-saver';
 import { toast } from 'sonner';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable'; 
+import FundsTran from '../funds/FundsTran';
 interface Item {
   id: number;
   name: string;
@@ -64,6 +65,13 @@ interface Institute {
   updated_at: string;
 }
 
+interface Project {
+
+  completed: string;
+  inprogress: string;
+  planned: string;
+name:string;
+}
 interface Asset {
   id: number;
   name: string;
@@ -97,6 +105,11 @@ interface Upgradations {
      levelto: string;
     status: string;
   }
+  interface Funds {
+    id: number;
+fund_head: { id: number; name?: string };
+balance: number;
+  }
   interface Shifts {
   id: number;
   name: string;
@@ -108,6 +121,9 @@ interface Props {
   blocks?: Block[];
   shifts?:Shifts[];
   upgradations?:Upgradations[];
+  funds?:Funds[];
+    projects?:Project[];
+
   instituteAssets?: InstituteAsset[];
   rooms?: Room[];
   filters?: {
@@ -135,7 +151,7 @@ const isValidItem = (item: any): item is Item => {
   return isValid;
 };
 
-export default function InstitutionalReportIndex({ institutes: initialInstitutes = [], regions: initialRegions = [], blocks: initialBlocks = [], instituteAssets: initialAssets = [], rooms: initialRooms = [],shifts:initialShifts=[],upgradations:initialUpgradations=[], filters: initialFilters = { search: '', institute_id: '', region_id: '' } }: Props) {
+export default function InstitutionalReportIndex({ institutes: initialInstitutes = [], regions: initialRegions = [], blocks: initialBlocks = [], instituteAssets: initialAssets = [], rooms: initialRooms = [],shifts:initialShifts=[],upgradations:initialUpgradations=[],funds:initialFunds=[],projects:initialProjects=[], filters: initialFilters = { search: '', institute_id: '', region_id: '' } }: Props) {
    const [search, setSearch] = useState(initialFilters.search || '');
   const [institute, setInstitute] = useState(initialFilters.institute_id || '');
   const [region, setRegion] = useState(initialFilters.region_id || '');
@@ -151,6 +167,10 @@ const [blocksOpen, setBlocksOpen] = useState(false);
 const [roomsOpen, setRoomsOpen] = useState(false);
 const [assetsOpen, setAssetsOpen] = useState(false);
 const [upgradationsOpen, setUpgradationsOpen] = useState(false);
+const [fundsOpen, setFundsOpen] = useState(false);
+  const [funds, setFunds] = useState<Funds[]>(initialFunds);
+  const [projects, setProjects] = useState<Project[]>(initialProjects);
+const [projectsOpen, setProjectsOpen] = useState(false);
 
 
   const memoizedInstitutes = useMemo(() => institutes.filter(isValidItem), [institutes]);
@@ -169,6 +189,9 @@ console.log(memoizedRegions);
       setRooms(data.rooms || []);
       setShifts(data.shifts || []);
             setUpgradations(data.upgradations || []);
+  setFunds(data.funds || []);
+  console.log(data.projects);
+    setProjects(data.projects || []);
 
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -280,6 +303,20 @@ console.log(memoizedRegions);
     });
 
     // Upgradations Worksheet
+    const fundsSheet = workbook.addWorksheet('Funds');
+    fundsSheet.columns = [
+      { header: 'Fund Head', key: 'Fundhead', width: 30 },
+      { header: 'Balance', key: 'balance', width: 15 },
+     
+    ];
+    funds.forEach((f) => {
+      fundsSheet.addRow({
+        Fundhead: f.fund_head?.name,
+        balance: f.balance,
+ 
+      });
+    });
+    // Upgradations Worksheet
     const upgradationsSheet = workbook.addWorksheet('Upgradations');
     upgradationsSheet.columns = [
       { header: 'Details', key: 'details', width: 30 },
@@ -299,7 +336,24 @@ console.log(memoizedRegions);
         status: up.status,
       });
     });
-
+ // Projectd Worksheet
+    const projectsSheet = workbook.addWorksheet('Projects');
+    projectsSheet.columns = [
+      { header: 'Project Type', key: 'projecttype', width: 30 },
+      { header: 'Completed', key: 'completed', width: 15 },
+      { header: 'In  Progress', key: 'inprogress', width: 15 },
+      { header: 'Planned', key: 'planned', width: 15 },
+     
+    ];
+    projects.forEach((p) => {
+      projectsSheet.addRow({
+        projecttype: p.name,
+        completed: p.completed,
+        inprogress: p.inprogress,
+        planned: p.planned,
+       
+      });
+    });
     const buffer = await workbook.xlsx.writeBuffer();
     const blob = new Blob([buffer], {
       type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -384,7 +438,15 @@ console.log(memoizedRegions);
     ]);
     addSectionToPDF('Institute Assets', assetsColumns, assetsData);
   }
-
+  // Funds Section
+  if (funds.length > 0) {
+    const fundsColumns = ['Fund Head', 'Balance'];
+    const fundsData = funds.map(f => [
+      f.fund_head?.name,
+      f.balance,
+    
+    ]);    addSectionToPDF('Institute Funds', fundsColumns, fundsData);
+}
   // Upgradations Section
   if (upgradations.length > 0) {
     const upgradationsColumns = ['Details', 'Date From', 'Date To', 'Level From', 'Level To', 'Status'];
@@ -398,7 +460,17 @@ console.log(memoizedRegions);
     ]);
     addSectionToPDF('Institute Upgradations', upgradationsColumns, upgradationsData);
   }
-
+// Projects Section
+  if (projects.length > 0) {
+    const projectsColumns = ['Project Type', 'Completed','In Progress','Planned'];
+    const projectsData = projects.map(p => [
+   p.name,
+     p.completed,
+      p.inprogress,
+      p.planned
+    
+    ]);    addSectionToPDF('Institute Projects', projectsColumns, projectsData);
+}
   doc.save('Institutional_Report.pdf');
 };
   return (
@@ -705,6 +777,55 @@ console.log(memoizedRegions);
         </div>
       ) : (
         <div className="text-gray-500 dark:text-gray-400 text-sm">No upgradations available</div>
+      )}
+    </div>
+  )}
+</div>
+{/* Institute Projects */}
+<div className="border rounded-lg mb-4 border-primary/95">
+  <button
+    className="w-full p-4 text-left flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-800"
+    onClick={() => setProjectsOpen(!projectsOpen)}
+  >
+    <h3 className="text-lg font-semibold">Institute Projects({projects.length})</h3>
+    <svg
+      className={`w-5 h-5 transform transition-transform ${projectsOpen ? 'rotate-180' : ''}`}
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+    </svg>
+  </button>
+  {projectsOpen && (
+    <div className="p-4 border-t">
+      {projects.length > 0 ? (
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse">
+            <thead>
+              <tr className="bg-[#0b431b] dark:bg-gray-800">
+                <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Project Type</th>
+                <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Completed</th>
+                <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">In Progress</th>
+                <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Planned</th>
+
+              </tr>
+            </thead>
+            <tbody>
+              {projects.map((p) => (
+                <tr className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                  <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{p.name}</td>
+                  <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{p.completed}</td>
+                                 <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{p.inprogress}</td>
+                  <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{p.planned}</td>
+
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <div className="text-gray-500 dark:text-gray-400 text-sm">No Fund available</div>
       )}
     </div>
   )}

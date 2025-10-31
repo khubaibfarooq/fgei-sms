@@ -296,109 +296,156 @@ const fetchAllAssetsForExport = async (): Promise<instituteAssetsProp[]> => {
     }
   }, [assetCategory]);
 
-  const exportToExcel = async () => {
-    try {
-      // Fetch all data for export
-      const allAssets = await fetchAllAssetsForExport();
-      
-      const workbook = new ExcelJS.Workbook();
-      const worksheet = workbook.addWorksheet('Assets');
+const exportToExcel = async () => {
+  try {
+    // Fetch all data for export
+    const allAssets = await fetchAllAssetsForExport();
+    
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Assets');
 
-      worksheet.columns = [
-        { header: 'Details', key: 'details', width: 30 },
-        { header: 'Quantity', key: 'qty', width: 10 },
-        { header: 'Institute', key: 'institute', width: 20 },
-        { header: 'Block', key: 'block', width: 20 },
-        { header: 'Room', key: 'room', width: 20 },
-        { header: 'Category', key: 'category', width: 20 },
-        { header: 'Asset', key: 'asset', width: 20 },
-        { header: 'Region', key: 'region', width: 20 },
-      ];
+    // Get institute name from first asset (if available) or use default
+    const instituteName = allAssets.length > 0 && allAssets[0].institute?.name 
+      ? allAssets[0].institute.name 
+      : 'All Institutes';
 
-      allAssets.forEach((instAsset) => {
-        worksheet.addRow({
-          details: instAsset.details,
-          qty: instAsset.current_qty,
-          institute: instAsset.institute?.name || 'N/A',
-          block: instAsset.block?.name || 'N/A',
-          room: instAsset.room?.name || 'N/A',
-          category: instAsset.assetCategory?.name || 'N/A',
-          asset: instAsset.asset?.name || 'N/A',
-          region: instAsset.region?.name || 'N/A',
-        });
-      });
+    console.log('Institute Name for Excel:', instituteName);
 
-      const buffer = await workbook.xlsx.writeBuffer();
-      const blob = new Blob([buffer], {
-        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      });
-      FileSaver.saveAs(blob, 'Assets_Report.xlsx');
-      toast.success('Excel exported successfully');
-    } catch (error) {
-      console.error('Error exporting to Excel:', error);
-      toast.error('Failed to export Excel');
-    }
-  };
+    // Add institute name as header
+    worksheet.mergeCells('A1:F1');
+    const instituteCell = worksheet.getCell('A1');
+    instituteCell.value = `Institute: ${instituteName}`;
+    instituteCell.font = { size: 16, bold: true };
+    instituteCell.alignment = { horizontal: 'center' };
 
-  const exportToPDF = async () => {
-    try {
-      // Fetch all data for export
-      const allAssets = await fetchAllAssetsForExport();
-      
-      const doc = new jsPDF();
+    // Add report title
+    worksheet.mergeCells('A2:F2');
+    const titleCell = worksheet.getCell('A2');
+    titleCell.value = 'Assets Report';
+    titleCell.font = { size: 14, bold: true };
+    titleCell.alignment = { horizontal: 'center' };
 
-      doc.setFontSize(16);
-      doc.text('Assets Report', 14, 15);
+    // Add empty row for spacing
+    worksheet.addRow([]);
 
-      const tableColumn = [
-        'Details',
-        'Qty',
-        'Institute',
-        'Block',
-        'Room',
-        'Category',
-        'Asset',
-        'Region',
-      ];
+    // Define headers explicitly to avoid TypeScript errors
+    const headers = ['Details', 'Quantity', 'Block', 'Room', 'Category', 'Asset'];
 
-      const tableRows = allAssets.map((instAsset) => [
-        instAsset.details || 'N/A',
-        instAsset.current_qty.toString(),
-        instAsset.institute?.name || 'N/A',
+    // Add table headers
+    const headerRow = worksheet.addRow(headers);
+    headerRow.font = { bold: true };
+    headerRow.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FF428BCA' }
+    };
+    headerRow.alignment = { horizontal: 'center' };
+
+    // Add data rows
+    allAssets.forEach((instAsset) => {
+      worksheet.addRow([
+        instAsset.details,
+        instAsset.current_qty,
         instAsset.block?.name || 'N/A',
         instAsset.room?.name || 'N/A',
         instAsset.assetCategory?.name || 'N/A',
         instAsset.asset?.name || 'N/A',
-        instAsset.region?.name || 'N/A',
       ]);
+    });
 
-      // Use autoTable as a standalone function
-      autoTable(doc, {
-        head: [tableColumn],
-        body: tableRows,
-        startY: 25,
-        styles: { 
-          fontSize: 9,
-          cellPadding: 2,
-        },
-        headStyles: {
-          fillColor: [66, 139, 202],
-          textColor: 255,
-          fontStyle: 'bold'
-        },
-        alternateRowStyles: {
-          fillColor: [240, 240, 240]
-        }
-      });
+    // Auto-fit columns for better readability
+    worksheet.columns.forEach(column => {
+      if (column.eachCell) {
+        let maxLength = 0;
+        column.eachCell({ includeEmpty: true }, (cell) => {
+          const columnLength = cell.value ? cell.value.toString().length : 5;
+          if (columnLength > maxLength) {
+            maxLength = columnLength;
+          }
+        });
+        column.width = Math.min(maxLength + 2, 15);
+      }
+    });
 
-      doc.save('Assets_Report.pdf');
-      toast.success('PDF exported successfully');
-    } catch (error) {
-      console.error('Error exporting to PDF:', error);
-      toast.error('Failed to export PDF');
-    }
-  };
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    });
+    FileSaver.saveAs(blob, 'Assets_Report.xlsx');
+    toast.success('Excel exported successfully');
+  } catch (error) {
+    console.error('Error exporting to Excel:', error);
+    toast.error('Failed to export Excel');
+  }
+};
 
+const exportToPDF = async () => {
+  try {
+    // Fetch all data for export
+    const allAssets = await fetchAllAssetsForExport();
+    
+    const doc = new jsPDF();
+
+    // Get institute name from first asset (if available) or use default
+    const instituteName = allAssets.length > 0 && allAssets[0].institute?.name 
+      ? allAssets[0].institute.name 
+      : 'All Institutes';
+
+    // Add institute name as header
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`Institute: ${instituteName}`, 14, 15);
+    
+    // Add report title
+    doc.setFontSize(14);
+    doc.text('Assets Report', 14, 25);
+
+    const tableColumn = [
+      'Details',
+      'Qty',
+      'Block',
+      'Room',
+      'Category',
+      'Asset',
+     
+    ];
+
+    const tableRows = allAssets.map((instAsset) => [
+      instAsset.details || 'N/A',
+      instAsset.current_qty.toString(),
+      instAsset.block?.name || 'N/A',
+      instAsset.room?.name || 'N/A',
+      instAsset.assetCategory?.name || 'N/A',
+      instAsset.asset?.name || 'N/A',
+      
+    ]);
+
+    // Use autoTable as a standalone function
+    autoTable(doc, {
+      head: [tableColumn],
+      body: tableRows,
+      startY: 35, // Increased startY to accommodate the header and title
+      styles: { 
+        fontSize: 9,
+        cellPadding: 2,
+      },
+      headStyles: {
+        fillColor: [66, 139, 202],
+        textColor: 255,
+        fontStyle: 'bold'
+      },
+      alternateRowStyles: {
+        fillColor: [240, 240, 240]
+      }
+    });
+
+    doc.save('Assets_Report.pdf');
+    toast.success('PDF exported successfully');
+  } catch (error) {
+    console.error('Error exporting to PDF:', error);
+    toast.error('Failed to export PDF');
+  }
+};
   const debouncedApplyFilters = useMemo(
     () =>
       debounce(() => {

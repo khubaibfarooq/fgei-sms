@@ -7,6 +7,13 @@ use App\Models\Institute;
 use App\Models\DashboardCard;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use App\Models\Block;
+use App\Models\Shift;
+use App\Models\Upgradation;
+use App\Models\Room;;
+use App\Models\Plant;
+use App\Models\Transport;
+use App\Models\InstituteAsset;
 class DashboardController extends Controller
 {
     public function getInstitutes()
@@ -50,6 +57,47 @@ else{
 
         return response()->json(['count' => $sum]); // Keep 'count' key for frontend compatibility
     }
+     public function getProfilePercentage()
+{
+    $sms_inst_id = session('sms_inst_id');
+    $percentage = 0;
+    
+    // Define completion criteria with their percentage weights
+    $criteria = [
+        'institute' => ['weight' => 10, 'check' => fn() => DB::table('institutes')->where('id', $sms_inst_id)->exists()],
+        'funds' => ['weight' => 10, 'check' => fn() => DB::table('fund_helds')->where('institute_id', $sms_inst_id)->exists()],
+        'blocks' => ['weight' => 10, 'check' => fn() => Block::where('institute_id', $sms_inst_id)->exists()],
+        'rooms' => ['weight' => 10, 'check' => fn() => $this->hasRoomsInBlocks($sms_inst_id)],
+        'shifts' => ['weight' => 10, 'check' => fn() => Shift::where('institute_id', $sms_inst_id)->exists()],
+        'upgradations' => ['weight' => 10, 'check' => fn() => Upgradation::where('institute_id', $sms_inst_id)->exists()],
+        'plants' => ['weight' => 10, 'check' => fn() => Plant::where('institute_id', $sms_inst_id)->exists()],
+        'transports' => ['weight' => 10, 'check' => fn() => Transport::where('institute_id', $sms_inst_id)->exists()],
+        'assets' => ['weight' => 20, 'check' => fn() => InstituteAsset::where('institute_id', $sms_inst_id)->count() > 50],
+    ];
+    
+    // Calculate percentage based on completed criteria
+    foreach ($criteria as $criterion) {
+        if ($criterion['check']()) {
+            $percentage += $criterion['weight'];
+        }
+    }
+    
+    return response()->json(['count' => $percentage]);
+}
+
+/**
+ * Check if institute has any rooms in its blocks
+ */
+private function hasRoomsInBlocks($instituteId)
+{
+    $blockIds = Block::where('institute_id', $instituteId)->pluck('id');
+    
+    if ($blockIds->isEmpty()) {
+        return false;
+    }
+    
+    return Room::whereIn('block_id', $blockIds)->exists();
+}
      public function getRooms(Request $request)
     {
      

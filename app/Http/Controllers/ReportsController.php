@@ -16,7 +16,7 @@ use App\Models\Transport;
 use App\Models\Plant;
 use App\Models\Project;
 use App\Models\ProjectType;
-
+use App\Models\FundHeld;
 use App\Models\Upgradation;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -99,6 +99,8 @@ $regions = Institute::select('region_id as id', 'name')->where('type', 'Regional
  
     $shifts=[];
    $upgradations=[];
+    $funds=[];
+    $projects=[];
     if ($request->institute_id && is_numeric($request->institute_id) && $request->institute_id > 0) {
         $shifts=Shift::where('institute_id', $request->institute_id)->with('buildingType')->get();
       $upgradations=Upgradation::where('institute_id', $request->institute_id)->get();
@@ -109,7 +111,26 @@ $regions = Institute::select('region_id as id', 'name')->where('type', 'Regional
         $instituteAssets = InstituteAsset::where('institute_id', $request->institute_id)
             ->with(['institute', 'room', 'asset'])
             ->get();
-    }
+            $funds=FundHeld::where('institute_id', $request->institute_id)->with('fundHead')->get();
+$projects = ProjectType::whereHas('projects', function($query) use ($request) {
+        $query->where('institute_id', $request->institute_id);
+    })
+    ->withCount([
+        'projects as completed' => function($query) use ($request) {
+            $query->where('institute_id', $request->institute_id)
+                  ->where('status', 'completed');
+        },
+        'projects as inprogress' => function($query) use ($request) {
+            $query->where('institute_id', $request->institute_id)
+                  ->where('status', 'inprogress');
+        },
+        'projects as planned' => function($query) use ($request) {
+            $query->where('institute_id', $request->institute_id)
+                  ->where('status', 'planned');
+        }
+    ])
+    ->get();  
+}
 
     return response()->json([
 
@@ -119,6 +140,8 @@ $regions = Institute::select('region_id as id', 'name')->where('type', 'Regional
         'instituteAssets' => $instituteAssets,
         'shifts'=>$shifts,
         'upgradations'=>$upgradations,
+        'funds'=>$funds,
+        'projects'=>$projects,
        
     ]);
 }

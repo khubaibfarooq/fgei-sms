@@ -50,6 +50,8 @@ Route::middleware(['auth', 'menu.permission'])->group(function () {
     // })->name('dashboard');
   // API routes for counts
 //Dashboard API routes
+    Route::get('/api/getcompeletion', [DashboardController::class, 'getProfilePercentage']);
+
     Route::get('/api/getinstitutes', [DashboardController::class, 'getInstitutes']);
     Route::get('/api/getfunds', [DashboardController::class, 'getFunds']);
         Route::get('/api/getrooms', [DashboardController::class, 'getRooms']);
