@@ -114,7 +114,7 @@ public function GetAssets(Request $request)
         'items.*.asset_id'     => 'required|exists:assets,id',
         'items.*.purchase_qty' => 'required|integer|min:1',
         'items.*.amount'       => 'required|numeric|min:0.01',
-        'bill_img'             => 'nullable|image|max:2048', // 2MB
+        'bill_img'             => 'nullable|file|max:2048', // 2MB
     ]);
 
     // -----------------------------------------------------------------
