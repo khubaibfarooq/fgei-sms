@@ -18,6 +18,10 @@ use App\Models\Project;
 use App\Models\ProjectType;
 use App\Models\FundHeld;
 use App\Models\Upgradation;
+use App\Models\User;
+use App\Models\Transaction;
+use App\Models\TransactionDetail;
+
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Pagination\LengthAwarePaginator;
 
@@ -685,7 +689,87 @@ $regions = Institute::select('region_id as id', 'name')->where('type', 'Regional
             ],
         ]);
     }
+ public function Transactions(Request $request)
+{
+    $hrInstituteId = session('inst_id');
+    $regionId      = session('region_id');
+    $userType      = session('type'); // e.g., 'Regional Office', 'Super Admin', 'HQ'
 
+    // -----------------------------------------------------------------
+    // 1. Build filter options based on user role
+    // -----------------------------------------------------------------
+    $institutes = collect();
+    $regions    = collect();
+    $users      = User::select('id', 'name')
+        ->whereNotNull('name')
+        ->where('name', '!=', '')
+        ->orderBy('name')
+        ->get()
+        ->filter(fn($u) => is_numeric($u->id) && $u->id > 0 && trim($u->name) !== '')
+        ->values();
+
+    // Regional Office → only institutes in their region
+    if ($userType === 'Regional Office' && $regionId) {
+        $institutes = Institute::where('region_id', $regionId)
+            ->select('id', 'name')
+            ->get()
+            ->filter(fn($i) => is_numeric($i->id) && $i->id > 0 && trim($i->name) !== '')
+            ->values();
+    }
+    // Super Admin / HQ → all regions + all institutes
+    else {
+        // Regions: one entry per region (using Regional Office institutes)
+        $regions = Institute::select('region_id as id', \DB::raw('MAX(name) as name'))
+            ->where('type', 'Regional Office')
+            ->groupBy('region_id')
+            ->get()
+            ->filter(fn($r) => is_numeric($r->id) && $r->id > 0 && trim($r->name) !== '')
+            ->values();
+
+        // All institutes (optional: limit to active ones)
+        $institutes = Institute::select('id', 'name')
+            ->get()
+            ->filter(fn($i) => is_numeric($i->id) && $i->id > 0 && trim($i->name) !== '')
+            ->values();
+    }
+
+    // -----------------------------------------------------------------
+    // 2. Empty paginator for initial load (Inertia will fetch via AJAX)
+    // -----------------------------------------------------------------
+    $emptyPaginator = new LengthAwarePaginator(
+        collect([]),
+        0,
+        15, // same per_page as in getTransactions()
+        1,
+        [
+            'path' => $request->url(),
+            'pageName' => 'page',
+        ]
+    );
+
+    // -----------------------------------------------------------------
+    // 3. Return to Inertia with all needed props
+    // -----------------------------------------------------------------
+    return Inertia::render('Reports/Transactions', [
+        'institutes' => $institutes,
+        'regions'    => $regions,
+        'users'      => $users,
+
+        'transactions' => $emptyPaginator,
+
+        'filters' => [
+            'search'        => $request->get('search', ''),
+            'institute_id'  => $request->get('institute_id', ''),
+            'region_id'     => $request->get('region_id', ''),
+            'added_by'      => $request->get('added_by', ''),
+            'approved_by'   => $request->get('approved_by', ''),
+            'type'          => $request->get('type', ''),
+            'status'        => $request->get('status', ''),
+            'date_from'     => $request->get('date_from', ''),
+            'date_to'       => $request->get('date_to', ''),
+        ],
+    ]);
+}
     /**
      * AJAX – return filtered projects (JSON)
      */
@@ -749,5 +833,126 @@ $regions = Institute::select('region_id as id', 'name')->where('type', 'Regional
 
         return response()->json($projects);
     }
+public function getTransactions(Request $request)
+{
+    $hrInstituteId = session('inst_id');
+    $regionId      = session('region_id');
+    $userType      = session('type');
 
+    $query = Transaction::with(['institute', 'addedBy', 'approvedBy'])
+        ->select('transactions.*');
+
+    // -----------------------------------------------------------------
+    // Role-based scoping
+    // -----------------------------------------------------------------
+    if ($userType === 'Regional Office' && $regionId) {
+        $query->whereHas('institute', fn($q) => $q->where('region_id', $regionId));
+    }
+
+    // -----------------------------------------------------------------
+    // Filters
+    // -----------------------------------------------------------------
+    if ($search = $request->search) {
+        $query->where(function ($q) use ($search) {
+            $q->where('id', 'like', "%{$search}%")
+              ->orWhere('total_amount', 'like', "%{$search}%")
+              ->orWhere('type', 'like', "%{$search}%")
+              ->orWhere('status', 'like', "%{$search}%");
+        });
+    }
+
+    if ($instituteId = $request->institute_id) {
+        $query->where('institute_id', $instituteId);
+    }
+
+    if ($regionIdFilter = $request->region_id) {
+        $query->whereHas('institute', fn($q) => $q->where('region_id', $regionIdFilter));
+    }
+
+    if ($addedBy = $request->added_by) {
+        $query->where('added_by', $addedBy);
+    }
+
+    if ($approvedBy = $request->approved_by) {
+        $query->where('approved_by', $approvedBy);
+    }
+
+    if ($type = $request->type) {
+        $query->where('type', $type);
+    }
+
+    if ($status = $request->status) {
+        $query->where('status', $status);
+    }
+
+    if ($dateFrom = $request->date_from) {
+        $query->whereDate('created_at', '>=', $dateFrom);
+    }
+
+    if ($dateTo = $request->date_to) {
+        $query->whereDate('created_at', '<=', $dateTo);
+    }
+
+    // -----------------------------------------------------------------
+    // Pagination
+    // -----------------------------------------------------------------
+    $transactions = $query->orderBy('created_at', 'desc')
+        ->paginate(15)
+        ->withQueryString();
+
+    return response()->json($transactions);
+
+    {
+        $hrInstituteId = session('inst_id');
+        $regionid      = session('region_id');
+        $type          = session('type');
+
+        $query = Transaction::query()->with(['institute']);
+
+        // -----------------------------------------------------------------
+        // Global search
+        // -----------------------------------------------------------------
+        if ($request->filled('search')) {
+            $query->where('name', 'like', '%' . $request->search . '%');
+        }
+
+        // -----------------------------------------------------------------
+        // Institute filter
+        // -----------------------------------------------------------------
+        if ($request->filled('institute_id') && is_numeric($request->institute_id) && $request->institute_id > 0) {
+            $query->where('institute_id', $request->institute_id);
+        }
+
+        // -----------------------------------------------------------------
+        // Region filter (only for non-Regional users)
+        // -----------------------------------------------------------------
+        if ($request->filled('region_id') && $request->region_id !== '0' && is_numeric($request->region_id)) {
+            $query->whereHas('institute', fn($q) => $q->where('region_id', $request->region_id));
+        }
+        // Regional Office user – restrict to own region automatically
+        elseif ($type === 'Regional Office') {
+            $query->whereHas('institute', fn($q) => $q->where('region_id', $regionid));
+        }
+
+      
+        // -----------------------------------------------------------------
+        // Status filter
+        // -----------------------------------------------------------------
+        if ($request->filled('type') && in_array($request->type, ['purchase', 'maintenance', 'condemned'])) {
+            $query->where('type', $request->type);
+        }
+
+        // -----------------------------------------------------------------
+        // Pagination
+        // -----------------------------------------------------------------
+        $transactions = $query->paginate(10)->withQueryString();
+
+        // Attach region name for the front-end (if not already eager-loaded)
+        $transactions->getCollection()->transform(function ($transaction) {
+            $transaction->region = $transaction->institute?->region;
+            return $transaction;
+        });
+
+        return response()->json($transactions);
+    }}
 }

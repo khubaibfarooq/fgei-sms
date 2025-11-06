@@ -20,8 +20,8 @@ use App\Http\Controllers\RoomTypeController;
 use App\Http\Controllers\RoomController;
 use App\Http\Controllers\AssetCategoryController;
 use App\Http\Controllers\AssetController;
-use App\Http\Controllers\InstituteAssetController;
 use App\Http\Controllers\AssetTransactionController;
+use App\Http\Controllers\InstituteAssetController;
 use App\Http\Controllers\VehicleTypeController;
 use App\Http\Controllers\BlockTypeController;
 
@@ -132,7 +132,12 @@ Route::resource('asset-transactions', AssetTransactionController::class);
 Route::resource('vehicle-types', VehicleTypeController::class);
 Route::resource('transports', TransportController::class);
 Route::resource('block-types', BlockTypeController::class);
-
+Route::get('/asset-trans', [AssetTransactionController::class, 'Transaction']);
+Route::get('/asset-trans/getbalance', [AssetTransactionController::class, 'FundBalance']);
+ Route::get('/asset-trans/getassets', [AssetTransactionController::class, 'GetAssets']);
+ Route::get('/asset-trans/getrooms', [AssetTransactionController::class, 'getRooms']);
+Route::post('/asset-transactions', [AssetTransactionController::class, 'store'])
+     ->name('asset-transactions.store');
 // Plants
 Route::resource('plants', PlantController::class);
 //Reports
@@ -158,6 +163,11 @@ Route::get('/reports/projects', [ReportsController::class, 'projects'])->name('r
 
     Route::get('/reports/projects/getprojects', [ReportsController::class, 'getProjects'])
          ->name('reports.projects.get');
+
+         Route::get('/reports/transactions', [ReportsController::class, 'Transactions'])->name('reports.transactions');
+
+    Route::get('/reports/transactions/gettransactions', [ReportsController::class, 'getTransactions'])
+         ->name('reports.transactions.get');
 //helpdesk
 Route::put('/helpdesk/{helpDesk}', [HelpDeskController::class, 'update'])->name('helpdesk.update');
 Route::get('/helpdesk', [HelpDeskController::class, 'index'])->name('helpdesk.index');
