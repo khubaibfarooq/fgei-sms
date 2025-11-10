@@ -6,8 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { type BreadcrumbItem } from '@/types';
-import { DollarSign, FileText, User, CheckCircle, XCircle, Calendar } from 'lucide-react';
+import { DollarSign, FileText, User, CheckCircle, XCircle, Calendar, Eye, Download, Loader2, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { debounce } from 'lodash';
 import type { DebouncedFunc } from 'lodash';
@@ -67,7 +68,7 @@ interface Props {
     date_from?: string;
     date_to?: string;
   };
-  user_type?: string; // 'Regional Office', 'Super Admin', etc.
+  user_type?: string;
 }
 
 // Error Boundary
@@ -119,6 +120,37 @@ export default function Transaction({
   const [dateTo, setDateTo] = useState(filters.date_to || '');
   const [transactions, setTransactions] = useState(initialTransactions);
   const [filteredInstitutes, setFilteredInstitutes] = useState<Item[]>(initialInstitutes || []);
+  const [isApproving, setIsApproving] = useState(false);
+
+  // Modal state
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedTx, setSelectedTx] = useState<TransactionProp | null>(null);
+  const [txDetails, setTxDetails] = useState<any[]>([]);
+  const [modalLoading, setModalLoading] = useState(false);
+
+  const approveTransaction = async (transactionId: number) => {
+    if (isApproving) return;
+
+    setIsApproving(true);
+    try {
+      const response = await fetch(`/reports/transactions/approve?tid=${transactionId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+        },
+      });
+
+      if (!response.ok) throw new Error('Failed to approve');
+
+      toast.success('Transaction approved successfully');
+      debouncedApplyFilters();
+    } catch (err) {
+      toast.error('Failed to approve transaction');
+    } finally {
+      setIsApproving(false);
+    }
+  };
 
   // Memoized options
   const memoizedInstitutes = useMemo(() => filteredInstitutes.filter(isValidItem), [filteredInstitutes]);
@@ -152,7 +184,6 @@ export default function Transaction({
   const handleRegionChange = (value: string) => {
     setRegion(value);
     fetchInstitutes(value);
-  
   };
 
   // Export to Excel
@@ -218,48 +249,113 @@ export default function Transaction({
 
     doc.save('Transactions_Report.pdf');
   };
-// Debounced filter apply
-// Debounced filter apply – **FIXED**
-const debouncedApplyFilters = useMemo(
-  () =>
-    debounce(() => {
-      const params = new URLSearchParams({
-        search: search.trim(),
-        institute_id: institute || '',
-        region_id: region || '',
-        added_by: addedBy || '',
-        approved_by: approvedBy || '',
-        type: type || '',
-        status: status || '',
-        date_from: dateFrom || '',
-        date_to: dateTo || '',
-      });
 
-      fetch(`/reports/transactions/gettransactions?${params.toString()}`)
-        .then((res) => {
-          if (!res.ok) throw new Error('Network error');
-          return res.json();
-        })
-        .then((data) => {
-          console.log('Filtered transactions:', data);
-          setTransactions(data);
-        })
-        .catch((err) => {
-          console.error('Fetch error:', err);
-          toast.error('Failed to load transactions');
+  // Debounced filter apply
+  const debouncedApplyFilters = useMemo(
+    () =>
+      debounce(() => {
+        const params = new URLSearchParams({
+          search: search.trim(),
+          institute_id: institute || '',
+          region_id: region || '',
+          added_by: addedBy || '',
+          approved_by: approvedBy || '',
+          type: type || '',
+          status: status || '',
+          date_from: dateFrom || '',
+          date_to: dateTo || '',
         });
-    }, 400) as DebouncedFunc<() => void>, // <-- Use lodash DebouncedFunc so .cancel() exists
-  [search, institute, region, addedBy, approvedBy, type, status, dateFrom, dateTo]
-);
 
+        fetch(`/reports/transactions/gettransactions?${params.toString()}`)
+          .then((res) => {
+            if (!res.ok) throw new Error('Network error');
+            return res.json();
+          })
+          .then((data) => {
+            setTransactions(data);
+          })
+          .catch((err) => {
+            console.error('Fetch error:', err);
+            toast.error('Failed to load transactions');
+          });
+      }, 400) as DebouncedFunc<() => void>,
+    [search, institute, region, addedBy, approvedBy, type, status, dateFrom, dateTo]
+  );
 
-  // Trigger filter on change
- useEffect(() => {
-  debouncedApplyFilters();
-  return () => {
-    debouncedApplyFilters.cancel();
+  
+
+  // Fetch transaction details for modal
+  const fetchTransactionDetails = async (tid: number) => {
+    setModalLoading(true);
+    try {
+      const res = await fetch(`/reports/transactions/getbytid?tid=${tid}`);
+      if (!res.ok) throw new Error('Failed to load details');
+      const { transaction, transdetails } = await res.json();
+
+      setSelectedTx(transaction);
+      setTxDetails(transdetails);
+      setModalOpen(true);
+    } catch (err) {
+      toast.error('Could not load transaction details');
+      console.error(err);
+    } finally {
+      setModalLoading(false);
+    }
   };
-}, [debouncedApplyFilters]);
+
+  // Generate PDF for download
+  const downloadPdf = (tx: TransactionProp, details: any[]) => {
+    const doc = new jsPDF();
+    doc.setFontSize(16);
+    doc.text(`Transaction #${tx.id}`, 14, 15);
+
+    const basicRows = [
+      ['Amount', `RS ${parseFloat(tx.total_amount.toString()).toFixed(2)}`],
+      ['Type', tx.type.charAt(0).toUpperCase() + tx.type.slice(1)],
+      ['Status', tx.status.charAt(0).toUpperCase() + tx.status.slice(1)],
+      ['Institute', tx.institute?.name || 'N/A'],
+      ['Added By', tx.added_by?.name || 'N/A'],
+      ['Approved By', tx.approved_by?.name || 'N/A'],
+      ['Date', formatDate(tx.created_at)],
+    ];
+
+    autoTable(doc, {
+      head: [['Field', 'Value']],
+      body: basicRows,
+      startY: 25,
+      styles: { fontSize: 10 },
+      headStyles: { fillColor: [46, 124, 196] },
+    });
+
+    if (details.length) {
+      const detailRows = details.map(d => [
+        d.asset?.name || '-',
+        d.room?.name || '-',
+        d.fund_head?.name || '-',
+        d.qty ?? '-',
+        `RS ${parseFloat(d.amount?.toString() ?? '0').toFixed(2)}`,
+      ]);
+
+      autoTable(doc, {
+        head: [['Asset', 'Room', 'Fund Head', 'Qty', 'Amount']],
+        body: detailRows,
+        startY: (doc as any).lastAutoTable.finalY + 10,
+        styles: { fontSize: 9 },
+      });
+    }
+
+    doc.save(`Transaction_#${tx.id}.pdf`);
+  };
+
+  // Cleanup modal on unmount
+  useEffect(() => {
+    return () => {
+      setModalOpen(false);
+      setSelectedTx(null);
+      setTxDetails([]);
+    };
+  }, []);
+
   return (
     <ErrorBoundary>
       <AppLayout breadcrumbs={breadcrumbs}>
@@ -267,7 +363,7 @@ const debouncedApplyFilters = useMemo(
         <div className="flex-1 p-1 md:p-1">
           <div className="flex flex-col md:flex-row gap-3">
             {/* Left: Filters */}
-            <div className="w-full md:w-1/3">
+            <div className="w-full md:w-1/4">
               <Card>
                 <CardHeader>
                   <CardTitle className="text-xl font-bold flex items-center gap-2">
@@ -276,14 +372,12 @@ const debouncedApplyFilters = useMemo(
                   <p className="text-muted-foreground text-sm">Refine transaction search</p>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {/* Search */}
                   <Input
                     placeholder="Search by ID, amount, type..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                   />
 
-                  {/* Region (Super Admin only) */}
                   {user_type !== 'Regional Office' && memoizedRegions.length > 0 && (
                     <Select value={region} onValueChange={handleRegionChange}>
                       <SelectTrigger>
@@ -300,7 +394,6 @@ const debouncedApplyFilters = useMemo(
                     </Select>
                   )}
 
-                  {/* Institute */}
                   <Combobox
                     entity="institute"
                     value={institute}
@@ -311,7 +404,6 @@ const debouncedApplyFilters = useMemo(
                     placeholder="Select Institute"
                   />
 
-                  {/* Added By */}
                   <Combobox
                     entity="user"
                     value={addedBy}
@@ -322,7 +414,6 @@ const debouncedApplyFilters = useMemo(
                     placeholder="Added By"
                   />
 
-                  {/* Approved By */}
                   <Combobox
                     entity="user"
                     value={approvedBy}
@@ -333,7 +424,6 @@ const debouncedApplyFilters = useMemo(
                     placeholder="Approved By"
                   />
 
-                  {/* Type */}
                   <Select value={type} onValueChange={setType}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select Type" />
@@ -346,7 +436,6 @@ const debouncedApplyFilters = useMemo(
                     </SelectContent>
                   </Select>
 
-                  {/* Status */}
                   <Select value={status} onValueChange={setStatus}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select Status" />
@@ -359,7 +448,6 @@ const debouncedApplyFilters = useMemo(
                     </SelectContent>
                   </Select>
 
-                  {/* Date Range */}
                   <div className="flex gap-2">
                     <Input
                       type="date"
@@ -383,7 +471,7 @@ const debouncedApplyFilters = useMemo(
             </div>
 
             {/* Right: Transactions List */}
-            <div className="w-full md:w-2/3">
+            <div className="w-full md:w-full">
               <Card>
                 <CardHeader className="pb-3 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                   <div>
@@ -415,12 +503,13 @@ const debouncedApplyFilters = useMemo(
                           <th className="border p-2 font-medium">Added By</th>
                           <th className="border p-2 font-medium">Approved By</th>
                           <th className="border p-2 font-medium">Date</th>
+                          <th className="border p-2 font-medium">Action</th>
                         </tr>
                       </thead>
                       <tbody>
                         {transactions.data.length === 0 ? (
                           <tr>
-                            <td colSpan={8} className="text-center p-4 text-muted-foreground">
+                            <td colSpan={9} className="text-center p-4 text-muted-foreground">
                               No transactions found.
                             </td>
                           </tr>
@@ -463,12 +552,127 @@ const debouncedApplyFilters = useMemo(
                               <td className="border p-2 text-xs">
                                 {formatDate(tx.created_at)}
                               </td>
+                              <td className="border p-2">
+                                <div className="flex items-center justify-center gap-2">
+                                  {/* View Icon */}
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    className="h-8 w-8"
+                                    onClick={() => fetchTransactionDetails(tx.id)}
+                                    disabled={modalLoading}
+                                    title="View details"
+                                  >
+                                    {modalLoading ? (
+                                      <Loader2 className="h-4 w-4 animate-spin" />
+                                    ) : (
+                                      <Eye className="h-4 w-4" />
+                                    )}
+                                  </Button>
+
+                                  {/* Download Icon */}
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    className="h-8 w-8"
+                                    onClick={() => {
+                                      if (modalOpen && selectedTx?.id === tx.id) {
+                                        downloadPdf(selectedTx, txDetails);
+                                      } else {
+                                        fetch(`/reports/transactions/getbytid?tid=${tx.id}`)
+                                          .then(r => r.json())
+                                          .then(({ transaction, transdetails }) => {
+                                            downloadPdf(transaction, transdetails);
+                                          })
+                                          .catch(() => toast.error('Failed to generate PDF'));
+                                      }
+                                    }}
+                                    title="Download PDF"
+                                  >
+                                    <Download className="h-4 w-4" />
+                                  </Button>
+
+                                  {/* Approve Button */}
+                                  {tx.status === 'pending' && (
+                                    <Button
+                                      size="sm"
+                                      variant="default"
+                                      className="bg-green-600 hover:bg-green-700"
+                                      onClick={() => approveTransaction(tx.id)}
+                                      disabled={isApproving}
+                                    >
+                                      {isApproving ? 'Approving...' : 'Approve'}
+                                    </Button>
+                                  )}
+                                </div>
+                              </td>
                             </tr>
                           ))
                         )}
                       </tbody>
                     </table>
                   </div>
+
+                  {/* Details Modal */}
+                  <Dialog open={modalOpen} onOpenChange={setModalOpen}>
+                    <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                      <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                          <FileText className="w-5 h-5" />
+                          Transaction #{selectedTx?.id}
+                        </DialogTitle>
+           
+                  
+                      </DialogHeader>
+
+                      {selectedTx && (
+                        <div className="mt-4 space-y-6">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                            <div><span className="font-medium">Amount:</span> RS {parseFloat(selectedTx.total_amount.toString()).toFixed(2)}</div>
+                            <div><span className="font-medium">Type:</span> {selectedTx.type.charAt(0).toUpperCase() + selectedTx.type.slice(1)}</div>
+                            <div><span className="font-medium">Status:</span> {selectedTx.status.charAt(0).toUpperCase() + selectedTx.status.slice(1)}</div>
+                            <div><span className="font-medium">Institute:</span> {selectedTx.institute?.name || 'N/A'}</div>
+                            <div><span className="font-medium">Added By:</span> {selectedTx.added_by?.name || 'N/A'}</div>
+                            <div><span className="font-medium">Approved By:</span> {selectedTx.approved_by?.name || 'N/A'}</div>
+                            <div className="col-span-2"><span className="font-medium">Date:</span> {formatDate(selectedTx.created_at)}</div>
+                          </div>
+
+                          <Separator />
+
+                          {txDetails.length ? (
+                            <div className="overflow-x-auto">
+                              <table className="w-full text-sm border">
+                                <thead className="bg-muted">
+                                  <tr>
+                                    <th className="border p-2 text-left">Asset</th>
+                                    <th className="border p-2 text-left">Room</th>
+                                    <th className="border p-2 text-left">Fund Head</th>
+                                    <th className="border p-2 text-left">Qty</th>
+                                    <th className="border p-2 text-left">Amount</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {txDetails.map((d, i) => (
+                                    <tr key={i} className="hover:bg-muted/50">
+                                      <td className="border p-2">{d.asset?.name || '-'}</td>
+                                      <td className="border p-2">{d.room?.name || '-'}</td>
+                                      <td className="border p-2">{d.fund_head?.name || '-'}</td>
+                                      <td className="border p-2">{d.qty ?? '-'}</td>
+                                      <td className="border p-2">
+                                        RS {parseFloat(d.amount?.toString() ?? '0').toFixed(2)}
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          ) : (
+                            <p className="text-muted-foreground">No line items.</p>
+                          )}
+                        </div>
+                      )}
+                    </DialogContent>
+                  </Dialog>
 
                   {/* Pagination */}
                   {transactions.links.length > 1 && (

@@ -51,6 +51,7 @@ public function store(Request $request)
         $data = $request->validate([
             'balance' => 'required|numeric',
             'fund_head_id' => 'required|numeric',
+             'description' => 'required|string',
         ]);
 $balance=$data['balance'];
         // Add authenticated user ID and institute_id from session
@@ -77,7 +78,7 @@ $balance=$data['balance'];
                     'added_date' => now(), // or use your specific date field
                     'status' => 'Approved', // set appropriate status
                     'type' => 'in', // set appropriate type
-                    'description' => 'Fund updated' // optional description
+                    'description' => $data['description']
                 ]
             );
             
@@ -96,7 +97,7 @@ $balance=$data['balance'];
                     'added_date' => now(), // or use your specific date field
                     'status' => 'Approved', // set appropriate status
                     'type' => 'in', // set appropriate type
-                    'description' => 'Fund updated' // optional description
+                    'description' => $data['description']// optional description
                 ]
             );
             

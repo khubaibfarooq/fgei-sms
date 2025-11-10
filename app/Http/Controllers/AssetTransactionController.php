@@ -100,7 +100,8 @@ public function GetAssets(Request $request)
     public function create()
     {
         return Inertia::render('assettransactions/Form', ['assetTransaction' => null]);
-    }public function store(Request $request)
+    }
+    public function store(Request $request)
 {
     // -----------------------------------------------------------------
     // 1. Validation

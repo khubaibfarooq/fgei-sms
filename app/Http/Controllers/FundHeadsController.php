@@ -35,7 +35,7 @@ class FundHeadsController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'amount' => 'required|string|max:255',
+            'name' => 'required|string|max:255',
             'parent_id'=>'nullable|numeric',
         ]);
 

@@ -20,7 +20,9 @@ use App\Http\Controllers\RoomTypeController;
 use App\Http\Controllers\RoomController;
 use App\Http\Controllers\AssetCategoryController;
 use App\Http\Controllers\AssetController;
+use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\AssetTransactionController;
+
 use App\Http\Controllers\InstituteAssetController;
 use App\Http\Controllers\VehicleTypeController;
 use App\Http\Controllers\BlockTypeController;
@@ -133,6 +135,16 @@ Route::resource('vehicle-types', VehicleTypeController::class);
 Route::resource('transports', TransportController::class);
 Route::resource('block-types', BlockTypeController::class);
 Route::get('/asset-trans', [AssetTransactionController::class, 'Transaction']);
+
+Route::get('/transactions', [TransactionController::class, 'index'])
+    ->name('transactions.index');
+
+Route::get('/transactions/gettransactions', [TransactionController::class, 'getTransactions'])
+    ->name('transactions.gettransactions');
+
+// Fix typo: getransdet → getbytid
+Route::get('/transactions/getbytid', [TransactionController::class, 'getTransactionDetails'])
+    ->name('transactions.getbytid');
 Route::get('/asset-trans/getbalance', [AssetTransactionController::class, 'FundBalance']);
  Route::get('/asset-trans/getassets', [AssetTransactionController::class, 'GetAssets']);
  Route::get('/asset-trans/getrooms', [AssetTransactionController::class, 'getRooms']);
@@ -165,9 +177,13 @@ Route::get('/reports/projects', [ReportsController::class, 'projects'])->name('r
          ->name('reports.projects.get');
 
          Route::get('/reports/transactions', [ReportsController::class, 'Transactions'])->name('reports.transactions');
+         Route::get('/reports/transactions/approve', [ReportsController::class, 'ApproveTransaction'])->name('reports.ApproveTransaction');
 
     Route::get('/reports/transactions/gettransactions', [ReportsController::class, 'getTransactions'])
          ->name('reports.transactions.get');
+         
+    Route::get('/reports/transactions/getbytid', [ReportsController::class, 'getByTid'])
+         ->name('reports.transactions.getbytid');
 //helpdesk
 Route::put('/helpdesk/{helpDesk}', [HelpDeskController::class, 'update'])->name('helpdesk.update');
 Route::get('/helpdesk', [HelpDeskController::class, 'index'])->name('helpdesk.index');

@@ -7,6 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Save, ArrowLeft } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+
 import {
   Select,
   SelectTrigger,
@@ -23,6 +25,8 @@ interface FundFormProps {
     balance: number;
     institute_id: number;
     fund_head_id?: number;
+        description?: string;
+
 
   };
   fundHeads: Record<string, string>; // Changed from Array to Record (object)
@@ -53,11 +57,13 @@ export default function FundForm({ fund, fundHeads }: FundFormProps) {
   balance: number;
   institute_id: number;
   fund_head_id: number;
+  description?: string;
   // Allow null if the field is optional
 }>({
   balance: fund?.balance || 0,
   institute_id: fund?.institute_id || 0,
   fund_head_id: fund?.fund_head_id || 0,
+  description: fund?.description || '',
 
 });
 const handleSubmit = (e: React.FormEvent) => {
@@ -135,8 +141,27 @@ const handleSubmit = (e: React.FormEvent) => {
                     </SelectContent>
                   </Select>
                 </div>
-              </div>
+          
 
+               
+
+        
+                 
+              <div className="space-y-2">
+                <Label htmlFor="description">Description</Label>
+                <Textarea
+                  id="description"
+                  value={data.description}
+                  onChange={(e) => setData('description', e.target.value)}
+                  placeholder="Enter description"
+                  rows={4}
+                />
+                {errors.description && (
+                  <p className="text-sm text-destructive">{errors.description}</p>
+                )}
+              </div>       
+                
+                </div>
              
 
               <div className="flex items-center justify-between pt-6">
