@@ -23,6 +23,7 @@ import { toast } from 'sonner';
 interface FundHead {
   id: number;
   name: string;
+  type: string;
   parent_id:number;
 }
 
@@ -97,7 +98,8 @@ export default function FundHeadIndex({ fundHeads, filters }: Props) {
       <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">ID</th>
       <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Name</th>
      
-     
+           <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Type</th>
+
       <th className="border p-2 text-sm font-medium text-white dark:text-gray-200">Actions</th>
     </tr>
   </thead>
@@ -113,6 +115,9 @@ export default function FundHeadIndex({ fundHeads, filters }: Props) {
                          </td>
                            <td className="border  text-sm text-gray-900 dark:text-gray-100">
                           {fundHead.name}
+                         </td>
+                             <td className="border  text-sm text-gray-900 dark:text-gray-100">
+                          {fundHead.type}
                          </td>
                          <td className="border  text-sm text-gray-900 dark:text-gray-100">
                         <Link href={`/fund-heads/${fundHead.id}/edit`}>

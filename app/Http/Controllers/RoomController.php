@@ -79,7 +79,18 @@ class RoomController extends Controller
             'area' => 'required|numeric',
             'room_type_id' => 'required|exists:room_types,id',
             'block_id' => 'required|exists:blocks,id',
+                        'img' => 'nullable|file|image|max:2048',
+
         ]);
+          $resultImageName = null;
+        if ($request->hasFile('img')) {
+            $resultImage = $request->file('img');
+            $resultImageName = time() . '-' . uniqid() . '.' . $resultImage->getClientOriginalExtension();
+            $resultImage->move('assets/room_img', $resultImageName);
+            $data['img'] = 'room_img/' . $resultImageName;
+        } else {
+            unset($data['img']);
+        }
 $data['institute_id'] = session('sms_inst_id');
         Room::updateOrCreate(
             ['id' => $request->id ?? null],
@@ -109,7 +120,18 @@ $data['institute_id'] = session('sms_inst_id');
             'area' => 'required|numeric',
             'room_type_id' => 'required|exists:room_types,id',
             'block_id' => 'required|exists:blocks,id',
+             'img' => 'nullable|file|image|max:2048',
+
         ]);
+           $resultImageName = null;
+        if ($request->hasFile('img')) {
+            $resultImage = $request->file('img');
+            $resultImageName = time() . '-' . uniqid() . '.' . $resultImage->getClientOriginalExtension();
+            $resultImage->move('assets/room_img', $resultImageName);
+            $data['img'] = 'room_img/' . $resultImageName;
+        } else {
+            unset($data['img']);
+        }
             $data['institute_id'] = session('sms_inst_id');
         $room->update($data);
         return redirect()->back()->with('success', 'Room updated successfully.');}

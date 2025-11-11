@@ -37,6 +37,7 @@ class FundHeadsController extends Controller
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'parent_id'=>'nullable|numeric',
+            'type'=>'required|in:public,institutional,regional',
         ]);
 
         FundHead::Create($data);
@@ -55,7 +56,8 @@ class FundHeadsController extends Controller
     public function update(Request $request, FundHead $FundHead)
     {
         $data = $request->validate(['name' => 'required|string|max:255',
-         'parent_id'=>'nullable|numeric',]);  
+         'parent_id'=>'nullable|numeric',
+        'type'=>'required|in:public,institutional,regional',]);  
         $FundHead->update($data);     
         return redirect()->back()->with('success', 'Fund Head updated successfully.');
     }

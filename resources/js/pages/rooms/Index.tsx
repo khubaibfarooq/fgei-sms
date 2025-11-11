@@ -7,6 +7,7 @@ import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { type BreadcrumbItem } from '@/types';
 import { Plus, Edit, Trash2, DoorOpen } from 'lucide-react';
+import { ImagePreview } from '@/components/ui/image-preview';
 import {
   AlertDialog,
   AlertDialogTrigger,
@@ -26,6 +27,7 @@ interface Room {
   area: number;
   room_type_id: number;
   block_id: number;
+  img:string | null;
   type: {
     name: string;
   };
@@ -105,6 +107,7 @@ export default function RoomIndex({ rooms, filters, blocks,permissions }: Props)
   const blockOptions = Object.entries(blocks).map(([id, name]) => ({
     id: id,
     name: name,
+
   }));
 
   return (
@@ -187,7 +190,7 @@ export default function RoomIndex({ rooms, filters, blocks,permissions }: Props)
                     <tr  key={room.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 text-center
                     ">
                       <td className="border  text-sm text-gray-900 dark:text-gray-100">
-                          {room.name}
+                   <div className='flex flex-column gap-2 align-middle'> <ImagePreview dataImg={room.img} size="h-20" />  <span className='font-bold'>{room.name}</span></div> 
                          </td>
                          <td className="border  text-sm text-gray-900 dark:text-gray-100">
                          {room.area}

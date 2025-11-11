@@ -9,7 +9,7 @@ use Spatie\Permission\Traits\HasRoles;
 class FundHead extends Model
 {
        use HasFactory,HasRoles;
-         protected $fillable = ['name','parent_id'];
+         protected $fillable = ['name','parent_id','type'];
           public function Funds()
     {
         return $this->hasMany(Funds::class);

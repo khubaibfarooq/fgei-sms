@@ -21,6 +21,7 @@ interface BlockFormProps {
     id: number;
     name: string;
     area: number;
+    img:string | null;
     institute_id: number;
     block_type_id?: number;
   };
@@ -53,23 +54,49 @@ export default function BlockForm({ block, blockTypes }: BlockFormProps) {
     area: number;
     institute_id: number;
     block_type_id: number;
+    img:string |File | null;
   }>({
     name: block?.name || '',
     area: block?.area || 0,
     institute_id: block?.institute_id || 0,
     block_type_id: block?.block_type_id || 0,
+    img: block?.img || null,
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+       const formData = new FormData();
+    (Object.keys(data) as Array<keyof typeof data>).forEach(key => {
+      // Skip null or empty values
+  
+      if (data[key] === null || data[key] === '') {
+        return;
+      }
+      // Handle file uploads separately
+      if (key === 'img') {
+        if (data[key] instanceof File) {
+          formData.append(key, data[key] as File);
+        }
+        return;
+      }
+
+     
+
+      // Handle all other values
+      formData.append(key, data[key] as string);
+    });
     if (isEdit) {
-      router.put(`/blocks/${block.id}`, data, {
+         formData.append('_method', 'PUT');
+      router.post(`/blocks/${block.id}`, formData, {
+                forceFormData: true,
         preserveScroll: true,
         preserveState: true,
+          onSuccess: () => {
+           router.get('/blocks'); 
+        },
       });
     } else {
-      router.post('/blocks', data, {
+      router.post('/blocks', formData, {
         onSuccess: () => {
           reset(); // Clear form data on successful POST
         },
@@ -100,7 +127,7 @@ export default function BlockForm({ block, blockTypes }: BlockFormProps) {
           <Separator />
 
           <CardContent className="pt-6">
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-6" encType='multipart/form-data'>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label htmlFor="name">Block Name</Label>
@@ -141,6 +168,19 @@ export default function BlockForm({ block, blockTypes }: BlockFormProps) {
                     </SelectContent>
                   </Select>
                 </div>
+                  <div className="space-y-2">
+            
+                                    <Label htmlFor="img">Image</Label>
+                                    <Input
+                                      id="img"
+                                      type="file"
+                                      accept="image/*"
+                                      onChange={(e) => setData('img', e.target.files?.[0] || null)}
+                                    />
+                                  
+                                <Label>Image</Label>
+                                <ImagePreview dataImg={data.img} />
+                              </div>
               </div>
 
              
@@ -168,5 +208,36 @@ export default function BlockForm({ block, blockTypes }: BlockFormProps) {
         </Card>
       </div>
     </AppLayout>
+  );
+}
+
+function ImagePreview({ dataImg }: { dataImg: string | File | null }) {
+  const [previewUrl, setPreviewUrl] = React.useState<string | null>(() => {
+    if (!dataImg) return null;
+    return typeof dataImg === 'string' ? `/assets/${dataImg}` : null;
+  });
+
+  React.useEffect(() => {
+    if (dataImg instanceof File) {
+      const url = URL.createObjectURL(dataImg);
+      setPreviewUrl(url);
+      return () => URL.revokeObjectURL(url);
+    } else if (typeof dataImg === 'string' && dataImg) {
+      setPreviewUrl(`/assets/${dataImg}`);
+    } else {
+      setPreviewUrl(null);
+    }
+  }, [dataImg]);
+
+  if (!previewUrl) {
+    return <p className="text-sm text-muted-foreground">No image uploaded.</p>;
+  }
+
+  return (
+    <img
+      src={previewUrl}
+      alt="Layout"
+      className="w-full h-48 object-cover rounded"
+    />
   );
 }

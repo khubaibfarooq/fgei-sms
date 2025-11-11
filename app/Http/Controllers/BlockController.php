@@ -56,12 +56,22 @@ $permissions = [
     {
         $data = $request->validate([
             'name' => 'required|string|max:255',
+            // accept uploaded image files
+            'img' => 'nullable|file|image|max:2048',
             'area' => 'required|numeric',
            'block_type_id' => 'required|exists:block_types,id',
         ]);
-$data['institute_id'] = session('sms_inst_id');
-
-        Block::updateOrCreate(['id' => $request->id ?? null], $data);
+        $data['institute_id'] = session('sms_inst_id');
+        $resultImageName = null;
+        if ($request->hasFile('img')) {
+            $resultImage = $request->file('img');
+            $resultImageName = time() . '-' . uniqid() . '.' . $resultImage->getClientOriginalExtension();
+            $resultImage->move('assets/block_img', $resultImageName);
+            $data['img'] = 'block_img/' . $resultImageName;
+        } else {
+            unset($data['img']);
+        }
+        Block::Create($data);
 
         return redirect()->back()->with('success', 'Block saved successfully.');
     }
@@ -78,12 +88,22 @@ $data['institute_id'] = session('sms_inst_id');
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'area' => 'required|numeric',
-                       'block_type_id' => 'required|exists:block_types,id',
-
-        ]); 
+            'block_type_id' => 'required|exists:block_types,id',
+            // accept uploaded image files
+            'img' => 'nullable|file|image|max:2048',
+        ]);
         $data['institute_id'] = session('sms_inst_id');
-
-        $block->update($data);       
+        $resultImageName = null;
+        if ($request->hasFile('img')) {
+            $resultImage = $request->file('img');
+            $resultImageName = time() . '-' . uniqid() . '.' . $resultImage->getClientOriginalExtension();
+            $resultImage->move('assets/block_img', $resultImageName);
+            $data['img'] = 'block_img/' . $resultImageName;
+        } else {
+            unset($data['img']);
+        }
+       
+        $block->update($data);
         return redirect()->back()->with('success', 'Block updated successfully.');
     }
     public function destroy(Block $block)

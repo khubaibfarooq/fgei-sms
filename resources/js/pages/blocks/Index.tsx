@@ -7,6 +7,7 @@ import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { type BreadcrumbItem } from '@/types';
 import { Plus, Edit, Trash2, Building } from 'lucide-react';
+import { ImagePreview } from '@/components/ui/image-preview';
 import {
   AlertDialog,
   AlertDialogTrigger,
@@ -25,6 +26,7 @@ interface Block {
   name: string;
   area: number;
   institute_id: number;
+  img:string | null
   institute: {
     name: string;
   };
@@ -122,7 +124,7 @@ export default function BlockIndex({ blocks, filters,permissions }: Props) {
                    <tr  key={block.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 text-center
                     ">
                       <td className="border  text-sm text-gray-900 dark:text-gray-100">
-                          {block.name}
+                       <div className='flex flex-column gap-2 align-middle'> <ImagePreview dataImg={block.img} size="h-20" />  <span className='font-bold'>{block.name}</span></div> 
                          </td>
                            <td className="border  text-sm text-gray-900 dark:text-gray-100">
                         {block.area}

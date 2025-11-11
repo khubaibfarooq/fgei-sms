@@ -23,6 +23,8 @@ interface RoomFormProps {
     area: number;
     room_type_id: number;
     block_id: number;
+        img:string | null;
+
   };
   roomTypes: Array<{ id: number; name: string }>;
   blocks: Array<{ id: number; name: string; institute: { name: string } }>;
@@ -36,23 +38,48 @@ export default function RoomForm({ room, roomTypes, blocks }: RoomFormProps) {
     area: number;
     room_type_id: number;
     block_id: number;
+     img:string |File | null;
   }>({
     name: room?.name || '',
     area: room?.area || 0,
     room_type_id: room?.room_type_id || 0,
     block_id: room?.block_id || 0,
+    img: room?.img || null,
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+     const formData = new FormData();
+    (Object.keys(data) as Array<keyof typeof data>).forEach(key => {
+      // Skip null or empty values
+  
+      if (data[key] === null || data[key] === '') {
+        return;
+      }
+      // Handle file uploads separately
+      if (key === 'img') {
+        if (data[key] instanceof File) {
+          formData.append(key, data[key] as File);
+        }
+        return;
+      }
+
+     
+
+      // Handle all other values
+      formData.append(key, data[key] as string);
+    });
     if (isEdit) {
-      router.put(`/rooms/${room.id}`, data, {
+         formData.append('_method', 'PUT');
+      router.post(`/rooms/${room.id}`, formData, {
         preserveScroll: true,
-        preserveState: true,
+        preserveState: true, 
+         onSuccess: () => {
+                   router.get('/rooms'); 
+                },
       });
     } else {
-      router.post('/rooms', data, {
+      router.post('/rooms', formData, {
         onSuccess: () => {
           reset(); // Clear form data on successful POST
         },
@@ -83,7 +110,7 @@ export default function RoomForm({ room, roomTypes, blocks }: RoomFormProps) {
           <Separator />
 
           <CardContent className="pt-6">
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-6" encType='multipart/form-data'>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label htmlFor="name">Room Name</Label>
@@ -145,6 +172,19 @@ export default function RoomForm({ room, roomTypes, blocks }: RoomFormProps) {
                     </SelectContent>
                   </Select>
                 </div>
+                  <div className="space-y-2">
+                            
+                                                    <Label htmlFor="img">Image</Label>
+                                                    <Input
+                                                      id="img"
+                                                      type="file"
+                                                      accept="image/*"
+                                                      onChange={(e) => setData('img', e.target.files?.[0] || null)}
+                                                    />
+                                                  
+                                                <Label>Image</Label>
+                                                <ImagePreview dataImg={data.img} />
+                                              </div>
               </div>
 
               <div className="flex items-center justify-between pt-6">
@@ -170,5 +210,36 @@ export default function RoomForm({ room, roomTypes, blocks }: RoomFormProps) {
         </Card>
       </div>
     </AppLayout>
+  );
+}
+
+function ImagePreview({ dataImg }: { dataImg: string | File | null }) {
+  const [previewUrl, setPreviewUrl] = React.useState<string | null>(() => {
+    if (!dataImg) return null;
+    return typeof dataImg === 'string' ? `/assets/${dataImg}` : null;
+  });
+
+  React.useEffect(() => {
+    if (dataImg instanceof File) {
+      const url = URL.createObjectURL(dataImg);
+      setPreviewUrl(url);
+      return () => URL.revokeObjectURL(url);
+    } else if (typeof dataImg === 'string' && dataImg) {
+      setPreviewUrl(`/assets/${dataImg}`);
+    } else {
+      setPreviewUrl(null);
+    }
+  }, [dataImg]);
+
+  if (!previewUrl) {
+    return <p className="text-sm text-muted-foreground">No image uploaded.</p>;
+  }
+
+  return (
+    <img
+      src={previewUrl}
+      alt="Layout"
+      className="w-full h-48 object-cover rounded"
+    />
   );
 }

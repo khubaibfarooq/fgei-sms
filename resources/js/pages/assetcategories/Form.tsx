@@ -13,6 +13,7 @@ interface AssetCategoryFormProps {
   assetCategory?: {
     id: number;
     name: string;
+    type: 'consumable' | 'fixed';
   };
 }
 
@@ -21,8 +22,10 @@ export default function AssetCategoryForm({ assetCategory }: AssetCategoryFormPr
 
   const { data, setData, processing, errors, reset } = useForm<{
     name: string;
+    type: 'consumable' | 'fixed';
   }>({
     name: assetCategory?.name || '',
+    type: assetCategory?.type || 'fixed',
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -32,6 +35,9 @@ export default function AssetCategoryForm({ assetCategory }: AssetCategoryFormPr
       router.put(`/asset-categories/${assetCategory.id}`, data, {
         preserveScroll: true,
         preserveState: true,
+        onSuccess: () => {
+        router.get('/asset-categories');
+        },
       });
     } else {
       router.post('/asset-categories', data, {
@@ -75,7 +81,18 @@ export default function AssetCategoryForm({ assetCategory }: AssetCategoryFormPr
                   placeholder="Enter category name"
                 />
               </div>
-
+<div className="space-y-2">
+                <Label htmlFor="type">Type</Label>
+                <select
+                  id="type"
+                  value={data.type}
+                  onChange={(e) => setData('type', e.target.value as 'consumable' | 'fixed')}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                >
+                  <option value="consumable">Consumable</option>
+                  <option value="fixed">Fixed</option>
+                </select>
+              </div>
               <div className="flex items-center justify-between pt-6">
                 <Link href="/asset-categories">
                   <Button type="button" variant="secondary">

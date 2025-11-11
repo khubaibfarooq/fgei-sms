@@ -23,6 +23,7 @@ import { toast } from 'sonner';
 interface AssetCategory {
   id: number;
   name: string;
+  type: 'consumable' | 'fixed';
   assets_count?: number;
 }
 
@@ -95,7 +96,8 @@ console.log(assetCategories);
     <tr className="bg-primary dark:bg-gray-800">
       <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">ID</th>
       <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Category</th>
-     
+           <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Type</th>
+
      
       <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Actions</th>
     </tr>
@@ -112,7 +114,9 @@ console.log(assetCategories);
         <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">
          {category.name}
         </td>
-       
+         <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">
+         {category.type}
+        </td>
        
        
         <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">
