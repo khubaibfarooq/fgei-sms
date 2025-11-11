@@ -31,8 +31,8 @@ class AssetCategoryController extends Controller
 
     public function store(Request $request)
     {
-        $data = $request->validate(['name' => 'required|string|max:255'
-    ,'type'=>'required|in:consumable,fixed']);
+        $data = $request->validate(['name' => 'required|string|max:255',
+    ]);
 
         AssetCategory::updateOrCreate(['id' => $request->id ?? null], $data);
 
@@ -44,8 +44,7 @@ class AssetCategoryController extends Controller
     } 
     public function update(Request $request, AssetCategory $assetCategory)
     {
-        $data = $request->validate(['name' => 'required|string|max:255',
-    'type'=>'required|in:consumable,fixed']);
+        $data = $request->validate(['name' => 'required|string|max:255',]);
 
         $assetCategory->update($data);
 

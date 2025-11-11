@@ -25,6 +25,8 @@ interface Asset {
   name: string;
   asset_category_id: number;
   details: string;
+    type: 'consumable' | 'fixed';
+
   category: {
     name: string;
   };
@@ -98,6 +100,8 @@ export default function AssetIndex({ assets, filters }: Props) {
                     <thead>
                       <tr className="bg-primary dark:bg-gray-800">
                         <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Asset</th>
+                                                <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Type</th>
+
                         <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Category</th>
                         <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Details</th>
                           <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Actions</th>
@@ -110,6 +114,8 @@ export default function AssetIndex({ assets, filters }: Props) {
                 assets.data.map((asset) => (
  <tr key={asset.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                           <td className="border p-2 text-sm text-gray-900 dark:text-gray-100"> {asset.name}</td>
+                                                    <td className="border p-2 text-sm text-gray-900 dark:text-gray-100"> {asset.type}</td>
+
                           <td className="border p-2 text-sm text-gray-900 dark:text-gray-100"> {asset.category?.name}</td>
                           <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{asset.details}</td>
                            <td className="border p-2 text-sm text-gray-900 dark:text-gray-100"> <Link href={`/asset/${asset.id}/edit`}>

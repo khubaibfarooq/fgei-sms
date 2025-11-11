@@ -21,6 +21,7 @@ interface AssetFormProps {
   asset?: {
     id: number;
     name: string;
+      type: 'consumable' | 'fixed';
     asset_category_id: number;
     details: string;
   };
@@ -34,10 +35,12 @@ export default function AssetForm({ asset, assetCategories }: AssetFormProps) {
     name: string;
     asset_category_id: number;
     details: string;
+        type: 'consumable' | 'fixed';
   }>({
     name: asset?.name || '',
     asset_category_id: asset?.asset_category_id || 0,
     details: asset?.details || '',
+    type: asset?.type || 'fixed',
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -122,7 +125,18 @@ export default function AssetForm({ asset, assetCategories }: AssetFormProps) {
                   rows={4}
                 />
               </div>
-
+<div className="space-y-2">
+                <Label htmlFor="type">Type</Label>
+                <select
+                  id="type"
+                  value={data.type}
+                  onChange={(e) => setData('type', e.target.value as 'consumable' | 'fixed')}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                >
+                  <option value="consumable">Consumable</option>
+                  <option value="fixed">Fixed</option>
+                </select>
+              </div>
               <div className="flex items-center justify-between pt-6">
                 <Link href="/asset">
                   <Button type="button" variant="secondary">

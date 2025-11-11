@@ -37,9 +37,10 @@ class AssetController extends Controller
             'asset_category_id' => 'required|exists:asset_categories,id',
             'name' => 'required|string|max:255',
             'details' => 'nullable|string',
+            'type'=>'required|in:consumable,fixed',
         ]);
 
-        Asset::updateOrCreate(['id' => $request->id ?? null], $data);
+        Asset::Create( $data);
 
         return redirect()->back()->with('success', 'Asset saved successfully.');
     }
@@ -55,6 +56,7 @@ class AssetController extends Controller
             'asset_category_id' => 'required|exists:asset_categories,id',
             'name' => 'required|string|max:255',
             'details' => 'nullable|string',
+            'type'=>'required|in:consumable,fixed',
         ]);
 
         $asset->update($data);
