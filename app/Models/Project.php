@@ -26,4 +26,8 @@ class Project extends Model
     return $this->institute?->region ?? null;
 }
    
+    public function milestones()
+    {
+        return $this->hasMany(Milestone::class);
+    }
 }
