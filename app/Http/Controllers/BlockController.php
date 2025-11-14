@@ -57,7 +57,7 @@ $permissions = [
         $data = $request->validate([
             'name' => 'required|string|max:255',
             // accept uploaded image files
-            'img' => 'nullable|file|image|max:2048',
+            'img' => 'nullable|file|max:2048',
             'area' => 'required|numeric',
            'block_type_id' => 'required|exists:block_types,id',
         ]);
@@ -90,7 +90,7 @@ $permissions = [
             'area' => 'required|numeric',
             'block_type_id' => 'required|exists:block_types,id',
             // accept uploaded image files
-            'img' => 'nullable|file|image|max:2048',
+            'img' => 'nullable|file|max:2048',
         ]);
         $data['institute_id'] = session('sms_inst_id');
         $resultImageName = null;

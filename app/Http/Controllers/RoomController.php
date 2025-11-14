@@ -79,7 +79,7 @@ class RoomController extends Controller
             'area' => 'required|numeric',
             'room_type_id' => 'required|exists:room_types,id',
             'block_id' => 'required|exists:blocks,id',
-                        'img' => 'nullable|file|image|max:2048',
+                        'img' => 'nullable|file|max:2048',
 
         ]);
           $resultImageName = null;
@@ -120,7 +120,7 @@ $data['institute_id'] = session('sms_inst_id');
             'area' => 'required|numeric',
             'room_type_id' => 'required|exists:room_types,id',
             'block_id' => 'required|exists:blocks,id',
-             'img' => 'nullable|file|image|max:2048',
+             'img' => 'nullable|file|max:2048',
 
         ]);
            $resultImageName = null;
