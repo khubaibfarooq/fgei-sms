@@ -242,7 +242,7 @@ $title2 = "Tasks";
     
 
 }
-else if($role_type=='Directorate' || $role_type=='DirHRM'){
+else if($role_type=='Directorate' || $role_type=='Director HRM'){
     $title1 = "Total Funds";
   $title2 = "Projects";
   $title3 = "Institutions";
