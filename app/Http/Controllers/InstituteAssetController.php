@@ -44,7 +44,7 @@ $permissions = [
         $rooms = Room::whereHas('block', function ($query) use ($inst_id) {
             $query->where('institute_id', $inst_id);
         })->with(['block', 'type'])->get();
-     
+     $categories = AssetCategory::pluck('name', 'id');
         return Inertia::render('institute_assets/Index', [
             'instituteAssets' => $instituteAssets,
             'filters' => ['search' => $request->search ?? '',
@@ -52,8 +52,8 @@ $permissions = [
                         'room' => $request->room ?? '',
                         ],
             'permissions' => $permissions,
-            'blocks' => $blocks,
-            'rooms' => $rooms
+            'rooms' => $rooms,
+        
         ]);
     }
 

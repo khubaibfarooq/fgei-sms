@@ -73,7 +73,11 @@ class SSORedirectController extends Controller
                 \Log::info('SSO: Updated existing user', ['user_id' => $user->id]);
             } else {
                 // Create new user
+                
                 $user = $this->createNewUser($data);
+                    // Assign role based on Category
+                $smsRole = $this->getSmsRoleFromCategory($data['Category'] ?? 'user');
+                $user->assignRole($smsRole);
                 \Log::info('SSO: Created new user', ['user_id' => $user->id]);
             }
     
@@ -128,12 +132,14 @@ class SSORedirectController extends Controller
         return User::create([
             'hr_user_id' => $data['user_id'],
             'name' => $data['name'] ?? 'Unknown',
-            'email' => $data['email'] ?? null,
+            'email' => $data['cnic'] ?? null,
             'inst_id' => $data['institution_id'] ?? null,
             'region_id' => $data['region_id'] ?? null,
             'type' => $data['Category'] ?? 'user',
-            'password' => Hash::make(uniqid()), // Random password for SSO users
+            'password' => $data['Password'] ?? Hash::make('admin123'), // Random password for SSO users
+
         ]);
+
     }
 
     /**
@@ -163,6 +169,8 @@ class SSORedirectController extends Controller
                 return 'Institute';
             case 'directorate':
                 return 'Directorate';
+                   case 'director hrm':
+                return 'DirHRM';
             case 'regional office':
             case 'region':
                 return 'Region';

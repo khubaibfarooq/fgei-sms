@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Save, ArrowLeft } from 'lucide-react';
 import { BreadcrumbItem } from '@/types';
+import Combobox from '@/components/ui//combobox';
 
 interface InstituteAssetFormProps {
   instituteAsset?: {
@@ -29,6 +30,7 @@ interface InstituteAssetFormProps {
       };
     };
   };
+  
   assets: Array<{
     id: number;
     name: string;
@@ -80,7 +82,13 @@ export default function InstituteAssetForm({ instituteAsset, assets, rooms }: In
     } else {
       router.post('/institute-assets', data, {
         onSuccess: () => {
-          reset(); // Clear form data on successful POST
+          // reset only quantity and details fields
+          reset('current_qty', 'details','asset_id');
+
+          // focus asset combobox input after reset
+          setTimeout(() => {
+            (document.querySelector<HTMLInputElement>('#asset_id input') as HTMLInputElement | null)?.focus();
+          }, 0);
         },
       });
     }
@@ -113,27 +121,62 @@ export default function InstituteAssetForm({ instituteAsset, assets, rooms }: In
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label htmlFor="asset_id">Asset</Label>
-                  <Select
-                    value={data.asset_id ? data.asset_id.toString() : ''}
-                    onValueChange={(value) => setData('asset_id', value ? parseInt(value) : '')}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Asset" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {assets.map((asset) => (
-                        <SelectItem key={asset.id} value={asset.id.toString()}>
-                          {asset.name} {asset.category && `(${asset.category.name})`}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Combobox
+                   
+                    entity="asset"
+                    value={data.asset_id.toString()}
+                    onChange={(value) => setData('asset_id', value ? parseInt(value) : '')}
+                    options={assets.map((asset) => ({
+                      id: asset.id.toString(), // Convert ID to string to match prop type
+                      name: asset.name + (asset.category ? ` (${asset.category.name})` : ''),
+                    }))}
+                    includeAllOption={false}
+                    
+                  />
+                  
+               
                   {errors.asset_id && (
                     <p className="text-sm text-destructive">{errors.asset_id}</p>
                   )}
                 </div>
+ <div className="space-y-2">
+                  <Label htmlFor="room_id">Room</Label>
+                      <Combobox
+                    entity="room"
+                    value={data.room_id.toString()}
+                    onChange={(value) => setData('room_id', value ? parseInt(value) : '')}
+                    options={rooms.map((room) => ({
+                      id: room.id.toString(), // Convert ID to string to match prop type
+                      name: room.name + (room.block ? ` (${room.block.name})` : '') + (room.type ? ` - ${room.type.name}` : ''),
+                    }))}
+                    includeAllOption={false}
+                    
+                  />
+                  
+ 
+                  {errors.room_id && (
+                    <p className="text-sm text-destructive">{errors.room_id}</p>
+                  )}
+                </div>
+              
 
+             
                 <div className="space-y-2">
+                  <Label htmlFor="added_date">Added Date</Label>
+                  <Input
+                    id="added_date"
+                    type="date"
+                    value={data.added_date}
+                    onChange={(e) => setData('added_date', e.target.value)}
+                  />
+                  {errors.added_date && (
+                    <p className="text-sm text-destructive">{errors.added_date}</p>
+                  )}
+                </div>
+
+               
+            
+  <div className="space-y-2">
                   <Label htmlFor="current_qty">Quantity</Label>
                   <Input
                     id="current_qty"
@@ -148,44 +191,6 @@ export default function InstituteAssetForm({ instituteAsset, assets, rooms }: In
                   )}
                 </div>
               </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="added_date">Added Date</Label>
-                  <Input
-                    id="added_date"
-                    type="date"
-                    value={data.added_date}
-                    onChange={(e) => setData('added_date', e.target.value)}
-                  />
-                  {errors.added_date && (
-                    <p className="text-sm text-destructive">{errors.added_date}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="room_id">Room</Label>
-                  <Select
-                    value={data.room_id ? data.room_id.toString() : ''}
-                    onValueChange={(value) => setData('room_id', value ? parseInt(value) : '')}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a room" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {rooms.map((room) => (
-                        <SelectItem key={room.id} value={room.id.toString()}>
-                          {room.name} {room.block && `(${room.block.name})`} {room.type && `- ${room.type.name}`}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {errors.room_id && (
-                    <p className="text-sm text-destructive">{errors.room_id}</p>
-                  )}
-                </div>
-              </div>
-
               <div className="space-y-2">
                 <Label htmlFor="details">Details</Label>
                 <Textarea
