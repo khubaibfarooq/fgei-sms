@@ -8,6 +8,8 @@ import { Input } from '@/components/ui/input';
 import { type BreadcrumbItem } from '@/types';
 import { Plus, Edit, Trash2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import Combobox from '@/components/ui//combobox';
+
 import {
   AlertDialog,
   AlertDialogTrigger,
@@ -504,25 +506,49 @@ console.log(memoizedRegions);
             </div>
             <div className="flex flex-col md:flex-row md:items-center gap-4">
               {memoizedRegions.length > 0 && (
-                <Select value={region} onValueChange={handleRegionChange}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Region" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="0">All Regions</SelectItem>
-                    {memoizedRegions.length > 0 ? (
-                      memoizedRegions.map((reg) => (
-                        <SelectItem key={reg.id} value={reg.id.toString()}>
-                          {reg.name}
-                        </SelectItem>
-                      ))
-                    ) : (
-                      <div className="text-muted-foreground text-sm p-2">No Regions available</div>
-                    )}
-                  </SelectContent>
-                </Select>
+
+                  <Combobox
+                entity="region"
+                value={region}
+                onChange={(value) => handleRegionChange(value)}
+                options={memoizedRegions.map((reg) => ({
+                  id: reg.id.toString(), // Convert ID to string to match prop type
+                  name: reg.name,
+                }))}
+                includeAllOption={false}
+                
+              />
+
+                // <Select value={region} onValueChange={handleRegionChange}>
+                //   <SelectTrigger>
+                //     <SelectValue placeholder="Select Region" />
+                //   </SelectTrigger>
+                //   <SelectContent>
+                //     <SelectItem value="0">All Regions</SelectItem>
+                //     {memoizedRegions.length > 0 ? (
+                //       memoizedRegions.map((reg) => (
+                //         <SelectItem key={reg.id} value={reg.id.toString()}>
+                //           {reg.name}
+                //         </SelectItem>
+                //       ))
+                //     ) : (
+                //       <div className="text-muted-foreground text-sm p-2">No Regions available</div>
+                //     )}
+                //   </SelectContent>
+                // </Select>
               )}
-              <Select value={institute} onValueChange={handleInstituteChange}>
+              <Combobox
+                entity="institute"
+                value={institute}
+                onChange={(value) => handleInstituteChange(value)}
+                options={memoizedInstitutes.map((inst) => ({
+                  id: inst.id.toString(), // Convert ID to string to match prop type
+                  name: inst.name,
+                }))}
+                includeAllOption={true}
+                
+              />
+              {/* <Select value={institute} onValueChange={handleInstituteChange}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select Institute" />
                 </SelectTrigger>
@@ -538,7 +564,7 @@ console.log(memoizedRegions);
                     <div className="text-muted-foreground text-sm p-2">No institutes available</div>
                   )}
                 </SelectContent>
-              </Select>
+              </Select> */}
             </div>
           </CardContent>
         </Card>

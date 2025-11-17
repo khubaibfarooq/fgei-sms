@@ -163,7 +163,7 @@ export default function Upgradations({ upgradations: upgradationProp, institutes
   const handleRegionChange = (value: string) => {
     setRegion(value);
     fetchInstitutes(value);
-    debouncedApplyFilters(); // Trigger upgradation filter update
+   // debouncedApplyFilters(); // Trigger upgradation filter update
   };
 
   const exportToExcel = async () => {
@@ -229,7 +229,7 @@ export default function Upgradations({ upgradations: upgradationProp, institutes
       item.region?.name || 'N/A',
     ]);
 
-   autoTable(doc, {
+    autoTable(doc, {
       head: [tableColumn],
       body: tableRows,
       startY: 25,
@@ -277,36 +277,33 @@ export default function Upgradations({ upgradations: upgradationProp, institutes
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {/* Region Filter */}
-                     {memoizedRegions.length > 0 && (
-                  <Select value={region} onValueChange={handleRegionChange}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Region" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="0">All Regions</SelectItem>
-                      {memoizedRegions.length > 0 ? (
-                        memoizedRegions.map((reg) => (
-                          <SelectItem key={reg.id} value={reg.id.toString()}>
-                            {reg.name}
-                          </SelectItem>
-                        ))
-                      ) : (
-                        <div className="text-muted-foreground text-sm p-1">No regions available</div>
-                      )}
-                    </SelectContent>
-                  </Select>
-                     )}
-<Combobox
-  entity="institute"
-  value={institute}
-  onChange={(value) => setInstitute(value)}
-  options={memoizedInstitutes.map((inst) => ({
-    id: inst.id.toString(), // Convert ID to string to match prop type
-    name: inst.name,
-  }))}
-  includeAllOption={false}
-  
-/>
+                  {memoizedRegions.length > 0 && (
+
+
+
+                    <Combobox
+                      entity="region"
+                      value={region}
+                      onChange={(value) => handleRegionChange(value)}
+                      options={memoizedRegions.map((reg) => ({
+                        id: reg.id.toString(), // Convert ID to string to match prop type
+                        name: reg.name,
+                      }))}
+                      includeAllOption={false}
+
+                    />
+                  )}
+                  <Combobox
+                    entity="institute"
+                    value={institute}
+                    onChange={(value) => setInstitute(value)}
+                    options={memoizedInstitutes.map((inst) => ({
+                      id: inst.id.toString(), // Convert ID to string to match prop type
+                      name: inst.name,
+                    }))}
+                    includeAllOption={false}
+
+                  />
 
                   {/* <Select value={institute} onValueChange={(value) => { setInstitute(value); }}>
                     <SelectTrigger>

@@ -147,7 +147,7 @@ export default function Projects({ projects: initialProjects, institutes, region
   const handleRegionChange = (value: string) => {
     setRegion(value);
     fetchInstitutes(value);
-    debouncedApplyFilters();
+    //debouncedApplyFilters();
   };
 
   // Export to Excel
@@ -263,19 +263,17 @@ export default function Projects({ projects: initialProjects, institutes, region
 
                   {/* Region */}
                      {memoizedRegions.length > 0 && (
-                  <Select value={region} onValueChange={handleRegionChange}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Region" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="0">All Regions</SelectItem>
-                      {memoizedRegions.map((r) => (
-                        <SelectItem key={r.id} value={r.id.toString()}>
-                          {r.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    <Combobox
+                                                      entity="region"
+                                                      value={region}
+                                                      onChange={(value) => handleRegionChange(value)}
+                                                      options={memoizedRegions.map((reg) => ({
+                                                        id: reg.id.toString(), // Convert ID to string to match prop type
+                                                        name: reg.name,
+                                                      }))}
+                                                      includeAllOption={false}
+                                                      
+                                                    />
                      )}
                   {/* Institute (Combobox) */}
                   <Combobox

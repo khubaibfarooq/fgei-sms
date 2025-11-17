@@ -15,6 +15,7 @@ import FileSaver from 'file-saver';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
+import Combobox from '@/components/ui/combobox';
 declare module 'jspdf' {
   interface jsPDF {
     autoTable: (options: any) => jsPDF;
@@ -158,7 +159,7 @@ console.log(regions);
   const handleRegionChange = (value: string) => {
     setRegion(value);
     fetchInstitutes(value);
-    debouncedApplyFilters(); // Trigger plant filter update
+    //debouncedApplyFilters(); // Trigger plant filter update
   };
 
   const debouncedApplyFilters = useMemo(
@@ -256,43 +257,49 @@ console.log(regions);
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {/* Region Filter */}
-                  {memoizedRegions.length > 0 && ( <Select value={region} onValueChange={handleRegionChange}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Region" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="0">All Regions</SelectItem>
-                      {memoizedRegions.length > 0 ? (
-                        memoizedRegions.map((reg) => (
-                          <SelectItem key={reg.id} value={reg.id.toString()}>
-                            {reg.name}
-                          </SelectItem>
-                        ))
-                      ) : (
-                        <div className="text-muted-foreground text-sm p-2">No regions available</div>
-                      )}
-                    </SelectContent>
-                  </Select>
+                  {memoizedRegions.length > 0 && ( 
+                         <Combobox
+                                    entity="region"
+                                    value={region}
+                                    onChange={(value) => handleRegionChange(value)}
+                                    options={memoizedRegions.map((reg) => ({
+                                      id: reg.id.toString(), // Convert ID to string to match prop type
+                                      name: reg.name,
+                                    }))}
+                                    includeAllOption={false}
+                                    
+                                  />
+                    
+                  //   <Select value={region} onValueChange={handleRegionChange}>
+                  //   <SelectTrigger>
+                  //     <SelectValue placeholder="Select Region" />
+                  //   </SelectTrigger>
+                  //   <SelectContent>
+                  //     <SelectItem value="0">All Regions</SelectItem>
+                  //     {memoizedRegions.length > 0 ? (
+                  //       memoizedRegions.map((reg) => (
+                  //         <SelectItem key={reg.id} value={reg.id.toString()}>
+                  //           {reg.name}
+                  //         </SelectItem>
+                  //       ))
+                  //     ) : (
+                  //       <div className="text-muted-foreground text-sm p-2">No regions available</div>
+                  //     )}
+                  //   </SelectContent>
+                  // </Select>
                   )}
-                  <Select value={institute} onValueChange={(value) => { setInstitute(value); }}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Institute" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="0">All Institutes</SelectItem>
-                      {memoizedInstitutes.length > 0 ? (
-                        memoizedInstitutes.map((inst) => {
-                          return (
-                            <SelectItem key={inst.id} value={inst.id.toString()}>
-                              {inst.name}
-                            </SelectItem>
-                          );
-                        })
-                      ) : (
-                        <div className="text-muted-foreground text-sm p-2">No institutes available</div>
-                      )}
-                    </SelectContent>
-                  </Select>
+                       <Combobox
+                                                    entity="institute"
+                                                    value={institute}
+                                                    onChange={(value) => setInstitute(value)}
+                                                    options={memoizedInstitutes.map((inst) => ({
+                                                      id: inst.id.toString(), // Convert ID to string to match prop type
+                                                      name: inst.name,
+                                                    }))}
+                                                    includeAllOption={true}
+                                                    
+                                                  />
+            
 
                   <Button onClick={debouncedApplyFilters} className="w-full">
                     Apply Filters
@@ -326,7 +333,7 @@ console.log(regions);
                           <th className="border p-2 text-sm font-medium text-white dark:text-gray-200">Name</th>
                           <th className="border p-2 text-sm font-medium text-white dark:text-gray-200">Quantity</th>
                           <th className="border p-2 text-sm font-medium text-white dark:text-gray-200">Institute</th>
-                          <th className="border p-2 text-sm font-medium text-white dark:text-gray-200">Region</th>
+                        
                         </tr>
                       </thead>
                       <tbody>
@@ -348,9 +355,7 @@ console.log(regions);
                               <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">
                                 {p.institute?.name || 'N/A'}
                               </td>
-                              <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">
-                                {p.region?.name || 'N/A'}
-                              </td>
+                           
                             </tr>
                           ))
                         )}

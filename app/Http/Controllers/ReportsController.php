@@ -484,7 +484,7 @@ public function getTransports(Request $request)
         });
     }
 
-    $transports = $query->with(['institute.region', 'vehicleType'])
+    $transports = $query->with(['institute', 'vehicleType'])
                         ->paginate(10)
                         ->withQueryString();
 

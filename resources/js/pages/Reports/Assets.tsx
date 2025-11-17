@@ -14,7 +14,7 @@ import ExcelJS from 'exceljs';
 import FileSaver from 'file-saver';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-
+import Combobox from '@/components/ui/combobox';
 declare module 'jspdf' {
   interface jsPDF {
     autoTable: (options: any) => jsPDF;
@@ -503,25 +503,36 @@ const exportToPDF = async () => {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {/* Region Filter - Added based on Transport.tsx */}
-                  {memoizedRegions.length > 0 && ( <Select value={region} onValueChange={handleRegionChange}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Region" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="0">All Regions</SelectItem>
-                      {memoizedRegions.length > 0 ? (
-                        memoizedRegions.map((reg) => (
-                          <SelectItem key={reg.id} value={reg.id.toString()}>
-                            {reg.name}
-                          </SelectItem>
-                        ))
-                      ) : (
-                        <div className="text-muted-foreground text-sm p-2">No regions available</div>
-                      )}
-                    </SelectContent>
-                  </Select>
+                  {memoizedRegions.length > 0 && ( 
+                     <Combobox
+                entity="region"
+                value={region}
+                onChange={(value) => handleRegionChange(value)}
+                options={memoizedRegions.map((reg) => ({
+                  id: reg.id.toString(), // Convert ID to string to match prop type
+                  name: reg.name,
+                }))}
+                includeAllOption={false}
+                
+              />
+                    
+                    
+                    
+                 
                   )}
-                  <Select value={institute} onValueChange={(value) => { setInstitute(value); }}>
+
+                       <Combobox
+                                  entity="institute"
+                                  value={institute}
+                                  onChange={(value) => setInstitute(value)}
+                                  options={memoizedInstitutes.map((inst) => ({
+                                    id: inst.id.toString(), // Convert ID to string to match prop type
+                                    name: inst.name,
+                                  }))}
+                                  includeAllOption={true}
+                                  
+                                />
+                  {/* <Select value={institute} onValueChange={(value) => { setInstitute(value); }}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select Institute" />
                     </SelectTrigger>
@@ -539,7 +550,7 @@ const exportToPDF = async () => {
                         <div className="text-muted-foreground text-sm p-2">No institutes available</div>
                       )}
                     </SelectContent>
-                  </Select>
+                  </Select> */}
 
                   <Select value={block} onValueChange={(value) => { setBlock(value); }} disabled={isLoadingBlocks}>
                     <SelectTrigger>

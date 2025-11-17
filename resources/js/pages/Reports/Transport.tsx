@@ -14,6 +14,8 @@ import ExcelJS from 'exceljs';
 import FileSaver from 'file-saver';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import Combobox from '@/components/ui/combobox';
+
 declare module 'jspdf' {
   interface jsPDF {
     autoTable: (options: any) => jsPDF;
@@ -169,7 +171,7 @@ export default function Transports({ transports: transportProp, institutes, vehi
   const handleRegionChange = (value: string) => {
     setRegion(value);
     fetchInstitutes(value);
-    debouncedApplyFilters(); // Trigger transport filter update
+   // debouncedApplyFilters(); // Trigger transport filter update
   };
 
   const debouncedApplyFilters = useMemo(
@@ -262,41 +264,27 @@ export default function Transports({ transports: transportProp, institutes, vehi
                   <p className="text-muted-foreground text-sm">Refine your Transport search</p>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                   {memoizedRegions.length > 0 && (<Select value={region} onValueChange={handleRegionChange}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Region" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="0">All Regions</SelectItem>
-                      {memoizedRegions.length > 0 ? (
-                        memoizedRegions.map((reg) => (
-                          <SelectItem key={reg.id} value={reg.id.toString()}>
-                            {reg.name}
-                          </SelectItem>
-                        ))
-                      ) : (
-                        <div className="text-muted-foreground text-sm p-2">No regions available</div>
-                      )}
-                    </SelectContent>
-                  </Select>
+                   {memoizedRegions.length > 0 && (
+                     <Combobox
+                                                                        entity="region"
+                                                                        value={region}
+                                                                        onChange={(value) => handleRegionChange(value)}
+                                                                        options={memoizedRegions.map((reg) => ({
+                                                                          id: reg.id.toString(), // Convert ID to string to match prop type
+                                                                          name: reg.name,
+                                                                        }))}
+                                                                        includeAllOption={false}
+                                                                        
+                                                                      />
                    )}
-                  <Select value={institute} onValueChange={(value) => setInstitute(value)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Institute" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="0">All Institutes</SelectItem>
-                      {memoizedInstitutes.length > 0 ? (
-                        memoizedInstitutes.map((inst) => (
-                          <SelectItem key={inst.id} value={inst.id.toString()}>
-                            {inst.name}
-                          </SelectItem>
-                        ))
-                      ) : (
-                        <div className="text-muted-foreground text-sm p-2">No institutes available</div>
-                      )}
-                    </SelectContent>
-                  </Select>
+                 <Combobox
+                                    entity="institute"
+                                    value={institute}
+                                    onChange={setInstitute}
+                                    options={memoizedInstitutes.map((i) => ({ id: i.id.toString(), name: i.name }))}
+                                    includeAllOption={false}
+                                    placeholder="Select Institute"
+                                  />
                   <Select value={vehicleType} onValueChange={(value) => setVehicleType(value)}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select Vehicle Type" />

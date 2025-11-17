@@ -22,7 +22,7 @@ $role_type=session('type');
 if($role_type=="Regional Office")
         $count =  DB::table('institutes')->where('region_id',$regionId)->count();
 else{
-     $count =  DB::table('institutes')->count();
+     $count =  DB::table('institutes')->whereIn('type', ['School', 'College'])->count();
 }
         return response()->json(['count' => $count]);
     }
