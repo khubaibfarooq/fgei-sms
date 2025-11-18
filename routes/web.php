@@ -171,10 +171,17 @@ Route::get('/reports/upgradations/getUpgradations', [ReportsController::class, '
 
 Route::get('/reports/getInstitutes', [ReportsController::class, 'getInstitutes'])->name('reports.getInstitutes');
 
-Route::get('/reports/projects', [ReportsController::class, 'projects'])->name('reports.projects');
+Route::get('/reports/projects', [ReportsController::class, 'Projects'])->name('reports.projects');
 
     Route::get('/reports/projects/getprojects', [ReportsController::class, 'getProjects'])
          ->name('reports.projects.get');
+
+         
+Route::get('/reports/funds', [ReportsController::class, 'Funds'])->name('reports.funds');
+
+    Route::get('/reports/funds/getfunds', [ReportsController::class, 'getFunds'])
+         ->name('reports.funds.get');
+
 
          Route::get('/reports/transactions', [ReportsController::class, 'Transactions'])->name('reports.transactions');
          Route::get('/reports/transactions/approve', [ReportsController::class, 'ApproveTransaction'])->name('reports.ApproveTransaction');

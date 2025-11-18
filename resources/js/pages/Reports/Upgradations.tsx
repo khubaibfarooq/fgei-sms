@@ -361,7 +361,7 @@ export default function Upgradations({ upgradations: upgradationProp, institutes
                           <th className="border p-2 text-sm font-medium text-white dark:text-gray-200">Level To</th>
                           <th className="border p-2 text-sm font-medium text-white dark:text-gray-200">Status</th>
                           <th className="border p-2 text-sm font-medium text-white dark:text-gray-200">Institute</th>
-                          <th className="border p-2 text-sm font-medium text-white dark:text-gray-200">Region</th>
+                       
                         </tr>
                       </thead>
                       <tbody>
@@ -395,9 +395,7 @@ export default function Upgradations({ upgradations: upgradationProp, institutes
                               <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">
                                 {upgradation.institute?.name || 'N/A'}
                               </td>
-                              <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">
-                                {upgradation.region?.name || 'N/A'}
-                              </td>
+                            
                             </tr>
                           ))
                         )}

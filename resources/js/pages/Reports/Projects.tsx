@@ -100,11 +100,11 @@ const isValidItem = (item: any): item is Item => {
 export default function Projects({ projects: initialProjects, institutes, regions, projectTypes, filters }: Props) {
   const [search, setSearch] = useState(filters.search || '');
   const [institute, setInstitute] = useState(filters.institute_id || '');
-  const [region, setRegion] = useState(filters.region_id || '');
   const [projectType, setProjectType] = useState(filters.project_type_id || '');
   const [status, setStatus] = useState(filters.status || '');
   const [projects, setProjects] = useState(initialProjects);
   const [filteredInstitutes, setFilteredInstitutes] = useState<Item[]>(institutes || []);
+  const [region, setRegion] = useState(filters.region_id || '');
 
   // Memoized dropdown options
   const memoizedInstitutes = useMemo(() => {

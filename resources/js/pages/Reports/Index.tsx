@@ -495,15 +495,7 @@ console.log(memoizedRegions);
           </CardHeader>
           <Separator />
           <CardContent className="py-3 space-y-2">
-            <div className="flex flex-col md:flex-row md:items-center gap-4">
-              <Input
-                type="text"
-                placeholder="Search institutes... (press Enter)"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                onKeyDown={handleSearchKey}
-              />
-            </div>
+           
             <div className="flex flex-col md:flex-row md:items-center gap-4">
               {memoizedRegions.length > 0 && (
 

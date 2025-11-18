@@ -372,11 +372,7 @@ export default function Transaction({
                   <p className="text-muted-foreground text-sm">Refine transaction search</p>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <Input
-                    placeholder="Search by ID, amount, type..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                  />
+                 
 
                   {user_type !== 'Regional Office' && memoizedRegions.length > 0 && (
                     <Select value={region} onValueChange={handleRegionChange}>
