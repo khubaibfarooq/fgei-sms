@@ -383,7 +383,7 @@ export default function Transaction({
                         <SelectItem value="0">All Regions</SelectItem>
                         {memoizedRegions.map((r) => (
                           <SelectItem key={r.id} value={r.id.toString()}>
-                            {r.name}
+                            { r.name.split(' ').pop() || r.name}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -488,14 +488,15 @@ export default function Transaction({
                 <Separator />
                 <CardContent className="pt-6 space-y-6">
                   <div className="overflow-x-auto">
-                    <table className="w-full border-collapse text-sm">
+                    <table className="w-full border-collapse border-1 rounded-md overflow-hidden shadow-sm">
                       <thead>
                         <tr className="bg-primary text-white text-center">
                           <th className="border p-2 font-medium">ID</th>
+                                                    <th className="border p-2 font-medium">Institute</th>
+
                           <th className="border p-2 font-medium">Amount</th>
                           <th className="border p-2 font-medium">Type</th>
                           <th className="border p-2 font-medium">Status</th>
-                          <th className="border p-2 font-medium">Institute</th>
                           <th className="border p-2 font-medium">Added By</th>
                           <th className="border p-2 font-medium">Approved By</th>
                           <th className="border p-2 font-medium">Date</th>
@@ -513,7 +514,9 @@ export default function Transaction({
                           transactions.data.map((tx) => (
                             <tr key={tx.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 text-center">
                               <td className="border p-2">#{tx.id}</td>
-                              <td className="border p-2 font-medium">
+                                                            <td className="border p-2 md:text-md lg:text-lg border-r-1 ">{tx.institute?.name || 'N/A'}</td>
+
+                              <td className="border p-2 font-bold md:text-md lg:text-lg">
                                 {parseFloat(tx.total_amount.toString()).toFixed(2)}
                               </td>
                               <td className="border p-2">
@@ -542,10 +545,9 @@ export default function Transaction({
                                   {tx.status.charAt(0).toUpperCase() + tx.status.slice(1)}
                                 </span>
                               </td>
-                              <td className="border p-2">{tx.institute?.name || 'N/A'}</td>
-                              <td className="border p-2">{tx.added_by?.name || 'N/A'}</td>
-                              <td className="border p-2">{tx.approved_by?.name || 'N/A'}</td>
-                              <td className="border p-2 text-xs">
+                              <td className="border p-2 md:text-md lg:text-lg border-r-1 ">{tx.added_by?.name || 'N/A'}</td>
+                              <td className="border p-2 md:text-md lg:text-lg border-r-1 ">{tx.approved_by?.name || 'N/A'}</td>
+                              <td className="border p-2 md:text-md lg:text-lg border-r-1">
                                 {formatDate(tx.created_at)}
                               </td>
                               <td className="border p-2">

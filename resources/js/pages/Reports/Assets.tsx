@@ -510,7 +510,7 @@ const exportToPDF = async () => {
                 onChange={(value) => handleRegionChange(value)}
                 options={memoizedRegions.map((reg) => ({
                   id: reg.id.toString(), // Convert ID to string to match prop type
-                  name: reg.name,
+                  name: reg.name.split(' ').pop() || reg.name,
                 }))}
                 includeAllOption={false}
                 
@@ -586,7 +586,7 @@ const exportToPDF = async () => {
                         memoizedRooms.map((r) => {
                           return (
                             <SelectItem key={r.id} value={r.id.toString()}>
-                              {r.name}
+                              { r.name.split(' ').pop() || r.name}
                             </SelectItem>
                           );
                         })
@@ -663,13 +663,15 @@ const exportToPDF = async () => {
                 </CardHeader>
                 <Separator />
                 <CardContent className="pt-6 space-y-6">
-                  <table className="w-full border-collapse">
+                  <table className="w-full border-collapse border-1 rounded-md overflow-hidden shadow-sm">
                     <thead>
                       <tr className="bg-primary dark:bg-gray-800">
                         <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Asset</th>
-                        <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Quantity</th>
+                                            <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Description</th>
+
                         <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Room</th>
-                        <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Description</th>
+                                            <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Quantity</th>
+
                       </tr>
                     </thead>
                     <tbody>
@@ -681,24 +683,24 @@ const exportToPDF = async () => {
                         </tr>
                       ) : (
                         instituteAssets.data?.map((instAsset) => (
-                          <tr key={instAsset.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                            <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">
-                              <div className="flex items-center gap-3">
-                                <Building className="h-5 w-5 text-blue-600" />
-                                <div className="space-y-1">
-                                  <div className="font-medium">{instAsset.asset?.name}</div>
-                                </div>
-                              </div>
+                          <tr key={instAsset.id} className="hover:bg-primary/10 dark:hover:bg-gray-700">
+                            <td className="border p-2 text-left border-r-1 font-bold dark:text-gray-100">
+                              
+                                 {instAsset.asset?.name}
+                           
+                              
                             </td>
-                            <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">
-                              {instAsset.current_qty}
+                                 <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">
+                              {instAsset.details || 'N/A'}
                             </td>
                             <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">
                               {instAsset.room?.name || 'N/A'}
                             </td>
                             <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">
-                              {instAsset.details || 'N/A'}
+                              {instAsset.current_qty}
                             </td>
+                            
+                       
                           </tr>
                         ))
                       )}

@@ -184,7 +184,10 @@ export default function Funds({ funds: initialFunds, institutes: initialInstitut
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Funds Report" />
-      <div className="flex-1 p-4 md:p-6">
+             <div className="flex-1 p-2 md:p-2">
+          <div className="flex flex-col md:flex-row gap-3">
+                    <div className="w-full md:w-1/3">
+
         <Card>
           <CardHeader>
             <CardTitle className="text-2xl font-bold">Funds Report</CardTitle>
@@ -193,15 +196,14 @@ export default function Funds({ funds: initialFunds, institutes: initialInstitut
 
           <Separator />
 
-          <CardContent className="pt-6 space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+  <CardContent className="space-y-4">
               
               <Combobox
                 entity="region"
                 value={region}
                 onChange={handleRegionChange}
-                options={memoizedRegions.map((r) => ({ id: r.id.toString(), name: r.name }))}
-                includeAllOption={false}
+                options={memoizedRegions.map((r) => ({ id: r.id.toString(), name:  r.name.split(' ').pop() || r.name }))}
+                includeAllOption={true}
                 placeholder="Select Region"
               />
               <Combobox
@@ -221,37 +223,57 @@ export default function Funds({ funds: initialFunds, institutes: initialInstitut
                   {fundheads.map((f) => <SelectItem key={f.id} value={f.id.toString()}>{f.name}</SelectItem>)}
                 </SelectContent>
               </Select>
-            </div>
+
 
             <div className="flex gap-2">
               <Button onClick={() => applyFilters()}>Apply Filters</Button>
               <Button onClick={() => { setSearch(''); setRegion(''); setInstitute(''); setFundHead(''); }}>Reset</Button>
+              
+            </div>
+
+          
+          </CardContent>
+        </Card>
+        </div>
+           <div className="w-full md:w-2/3">
+              <Card>
+          <CardHeader>
+            <CardTitle className="text-2xl font-bold">Funds Report</CardTitle>
+            <p className="text-sm text-muted-foreground">View fund balances by institute / fund head</p>
+             <div className="flex float-end gap-2">
+             
               <Button onClick={exportToPDF} className="w-full md:w-auto">Export PDF</Button> {/* { changed code } */}
               <Button onClick={exportToExcel} className="w-full md:w-auto">Export Excel</Button> {/* { changed code } */}
             </div>
+          </CardHeader>
+
+          <Separator />
+
+          <CardContent className="pt-6 space-y-6">
+         
 
             <div>
-              <table className="w-full border-collapse">
+              <table className="w-full border-collapse border-1 rounded-md overflow-hidden shadow-sm">
                 <thead>
-                  <tr className="bg-primary text-white">
+                  <tr className="bg-primary text-white ">
                     <th className="p-2">Fund Head</th>
                     <th className="p-2">Balance</th>
                   </tr>
                 </thead>
                 <tbody>
                   {funds.data.length === 0 ? (
-                    <tr><td colSpan={4} className="p-4 text-center text-muted-foreground">No funds found.</td></tr>
+                    <tr><td colSpan={4} className="p-4 text-muted-foreground">No funds found.</td></tr>
                   ) : (
                     funds.data.map((f: FundItem) => (
-                      <tr key={f.id} className="text-center">
-                        <td className="p-2">{f.fund_head?.name || 'N/A'}</td>
-                        <td className="p-2">{typeof f.balance === 'number' ? f.balance.toFixed(2) : (f.balance ?? '0')}</td>
+                      <tr key={f.id}  className='border-1 hover:bg-primary/10  dark:hover:bg-gray-700'>
+                        <td className="p-2 text-left border-r-1 font-bold">{f.fund_head?.name || 'N/A'}</td>
+                        <td className="p-2 text-right">{typeof f.balance === 'number' ? f.balance.toFixed(2) : (f.balance ?? '0')}</td>
                       </tr>
                     ))
                   )}
                 </tbody>
               </table>
-            </div>
+           
 
             {funds.links && funds.links.length > 1 && (
               <div className="flex justify-center pt-6 flex-wrap gap-2">
@@ -269,8 +291,11 @@ export default function Funds({ funds: initialFunds, institutes: initialInstitut
                 ))}
               </div>
             )}
+             </div>
           </CardContent>
         </Card>
+           </div>
+      </div>
       </div>
     </AppLayout>
   );

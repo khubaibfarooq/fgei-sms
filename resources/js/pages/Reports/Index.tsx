@@ -479,7 +479,7 @@ console.log(memoizedRegions);
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Institutional Report" />
       <div className="flex-1 p-3 ">
-        <Card>
+        <Card >
           <CardHeader className="pb-3 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>          <CardTitle>Institutional Report</CardTitle></div>
   
@@ -505,7 +505,8 @@ console.log(memoizedRegions);
                 onChange={(value) => handleRegionChange(value)}
                 options={memoizedRegions.map((reg) => ({
                   id: reg.id.toString(), // Convert ID to string to match prop type
-                  name: reg.name,
+      name: reg.name.split(' ').pop() || reg.name,
+
                 }))}
                 includeAllOption={false}
                 
@@ -582,7 +583,7 @@ console.log(memoizedRegions);
     <div className="p-4 border-t">
       {shifts.length > 0 ? (
         <div className="overflow-x-auto">
-          <table className="w-full border-collapse">
+<table className="w-full border-collapse rounded-md overflow-hidden shadow-sm border-1">
             <thead>
               <tr className="bg-[#0b431b] dark:bg-gray-800">
                 <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Name</th>
@@ -592,7 +593,7 @@ console.log(memoizedRegions);
             </thead>
             <tbody>
               {shifts.map((shift) => (
-                <tr key={shift.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                <tr key={shift.id} className="hover:bg-primary/10  dark:hover:bg-gray-700">
                   <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{shift.name}</td>
                   <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{shift.building_name}</td>
                   <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{shift.building_type?.name}</td>
@@ -628,7 +629,7 @@ console.log(memoizedRegions);
     <div className="p-4 border-t">
       {blocks.length > 0 ? (
         <div className="overflow-x-auto">
-          <table className="w-full border-collapse">
+<table className="w-full border-collapse rounded-md overflow-hidden shadow-sm border-1">
             <thead>
               <tr className="bg-[#0b431b] dark:bg-gray-800">
                 <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Name</th>
@@ -637,7 +638,7 @@ console.log(memoizedRegions);
             </thead>
             <tbody>
               {blocks.map((block) => (
-                <tr key={block.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                <tr key={block.id} className="hover:bg-primary/10  dark:hover:bg-gray-700">
                   <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{block.name}</td>
                   <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{block.area}</td>
                 </tr>
@@ -672,7 +673,7 @@ console.log(memoizedRegions);
     <div className="p-4 border-t">
       {rooms.length > 0 ? (
         <div className="overflow-x-auto">
-          <table className="w-full border-collapse">
+<table className="w-full border-collapse rounded-md overflow-hidden shadow-sm border-1">
             <thead>
               <tr className="bg-[#0b431b] dark:bg-gray-800">
                 <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Name</th>
@@ -682,7 +683,7 @@ console.log(memoizedRegions);
             </thead>
             <tbody>
               {rooms.map((room) => (
-                <tr key={room.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                <tr key={room.id} className="hover:bg-primary/10  dark:hover:bg-gray-700">
                   <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{room.name}</td>
                   <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{room.area}</td>
                   <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{room.block?.name}</td>
@@ -718,7 +719,7 @@ console.log(memoizedRegions);
     <div className="p-4 border-t">
       {instituteAssets.length > 0 ? (
         <div className="overflow-x-auto">
-          <table className="w-full border-collapse">
+<table className="w-full border-collapse rounded-md overflow-hidden shadow-sm border-1">
             <thead>
               <tr className="bg-[#0b431b] dark:bg-gray-800">
                 <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Asset Name</th>
@@ -730,7 +731,7 @@ console.log(memoizedRegions);
             </thead>
             <tbody>
               {instituteAssets.map((asset) => (
-                <tr key={asset.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                <tr key={asset.id} className="hover:bg-primary/10  dark:hover:bg-gray-700">
                   <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{asset.asset.name}</td>
                   <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{asset.details}</td>
                   <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{asset.current_qty}</td>
@@ -768,7 +769,7 @@ console.log(memoizedRegions);
     <div className="p-4 border-t">
       {upgradations.length > 0 ? (
         <div className="overflow-x-auto">
-          <table className="w-full border-collapse">
+<table className="w-full border-collapse rounded-md overflow-hidden shadow-sm border-1">
             <thead>
               <tr className="bg-[#0b431b] dark:bg-gray-800">
                 <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Details</th>
@@ -781,7 +782,7 @@ console.log(memoizedRegions);
             </thead>
             <tbody>
               {upgradations.map((up) => (
-                <tr key={up.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                <tr key={up.id} className="hover:bg-primary/10  dark:hover:bg-gray-700">
                   <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{up.details}</td>
                   <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{up.from}</td>
                   <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{up.to}</td>
@@ -819,7 +820,7 @@ console.log(memoizedRegions);
     <div className="p-4 border-t">
       {projects.length > 0 ? (
         <div className="overflow-x-auto">
-          <table className="w-full border-collapse">
+<table className="w-full border-collapse rounded-md overflow-hidden shadow-sm border-1">
             <thead>
               <tr className="bg-[#0b431b] dark:bg-gray-800">
                 <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Project Type</th>
@@ -831,7 +832,7 @@ console.log(memoizedRegions);
             </thead>
             <tbody>
               {projects.map((p) => (
-                <tr className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                <tr className="hover:bg-primary/10  dark:hover:bg-gray-700">
                   <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{p.name}</td>
                   <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{p.completed}</td>
                                  <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{p.inprogress}</td>

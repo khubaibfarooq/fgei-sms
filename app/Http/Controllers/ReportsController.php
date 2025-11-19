@@ -1145,52 +1145,77 @@ $fundheads=FundHead::select('id','name')->get();
         ]);
     }
 
-      public function getFunds(Request $request)
-    {
-        $hrInstituteId = session('inst_id');
-        $regionid      = session('region_id');
-        $type          = session('type');
 
-        $query = FundHeld::query()->with(['institute', 'fundHead']);
+public function getFunds(Request $request)
+{
+    $hrInstituteId = session('inst_id');
+    $regionid      = session('region_id');
+    $type          = session('type');
 
-        
+    $query = FundHeld::query()
+        ->select([
+            'fund_head_id',
 
-        // -----------------------------------------------------------------
-        // Institute filter
-        // -----------------------------------------------------------------
-        if ($request->filled('institute_id') && is_numeric($request->institute_id) && $request->institute_id > 0) {
-            $query->where('institute_id', $request->institute_id);
-        }
+            DB::raw('SUM(balance) as balance'),           // Sum all balances
+         
+        ])
+        ->with([
+            'institute',     // Load institute + its region
+            'fundHead'              // Load fund head name
+        ]);
 
-        // -----------------------------------------------------------------
-        // Region filter (only for non-Regional users)
-        // -----------------------------------------------------------------
-        if ($request->filled('region_id') && $request->region_id !== '0' && is_numeric($request->region_id)) {
-            $query->whereHas('institute', fn($q) => $q->where('region_id', $request->region_id));
-        }
-        // Regional Office user – restrict to own region automatically
-        elseif ($type === 'Regional Office') {
-            $query->whereHas('institute', fn($q) => $q->where('region_id', $regionid));
-        }
-
-        // -----------------------------------------------------------------
-        // fund head filter
-        // -----------------------------------------------------------------
-        if ($request->filled('fund_head_id') && $request->fund_head_id !== '0' && is_numeric($request->fund_head_id)) {
-            $query->where('fund_head_id', $request->fund_head_id);
-        }
-
-        // -----------------------------------------------------------------
-        // Pagination
-        // -----------------------------------------------------------------
-        $funds = $query->paginate(10)->withQueryString();
-
-        // Attach region name for the front-end (if not already eager-loaded)
-        $funds->getCollection()->transform(function ($fund) {
-            $fund->region = $fund->institute?->region;
-            return $fund;
-        });
-
-        return response()->json($funds);
+    // -----------------------------------------------------------------
+    // Institute filter
+    // -----------------------------------------------------------------
+    if ($request->filled('institute_id') && is_numeric($request->institute_id) && $request->institute_id > 0) {
+        $query->where('institute_id', $request->institute_id);
     }
+
+    // -----------------------------------------------------------------
+    // Region filter (manual from frontend)
+    // -----------------------------------------------------------------
+    if ($request->filled('region_id') && $request->region_id !== '0' && is_numeric($request->region_id)) {
+        $query->whereHas('institute', fn($q) => $q->where('region_id', $request->region_id));
+    }
+    // Regional Office user – auto-restrict to their region
+    elseif ($type === 'Regional Office' && $regionid != 0) {
+        $query->whereHas('institute', fn($q) => $q->where('region_id', $regionid));
+    }
+
+    // -----------------------------------------------------------------
+    // Fund Head filter
+    // -----------------------------------------------------------------
+    if ($request->filled('fund_head_id') && $request->fund_head_id !== '0' && is_numeric($request->fund_head_id)) {
+        $query->where('fund_head_id', $request->fund_head_id);
+    }
+
+    // -----------------------------------------------------------------
+    // Search filter (optional - search by institute or fund head name)
+    // -----------------------------------------------------------------
+    if ($request->filled('search')) {
+        $search = $request->search;
+        $query->whereHas('fundHead', fn($q) => $q->where('name', 'like', "%{$search}%"))
+              ->orWhereHas('institute', fn($q) => $q->where('name', 'like', "%{$search}%"));
+    }
+
+    // -----------------------------------------------------------------
+    // Group by fund_head_id + institute_id (to avoid duplicate rows per institute)
+    // -----------------------------------------------------------------
+    $query->groupBy('fund_head_id');
+
+    // -----------------------------------------------------------------
+    // Paginate correctly (now counts grouped rows!)
+    // -----------------------------------------------------------------
+    $funds = $query->paginate(10)->withQueryString();
+
+    // -----------------------------------------------------------------
+    // Attach region from institute (clean & safe)
+    // -----------------------------------------------------------------
+    $funds->getCollection()->transform(function ($fund) {
+        $fund->region = $fund->institute?->region;
+        return $fund;
+    });
+
+    return response()->json($funds);
+}
 }

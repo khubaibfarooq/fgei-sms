@@ -287,7 +287,7 @@ export default function Upgradations({ upgradations: upgradationProp, institutes
                       onChange={(value) => handleRegionChange(value)}
                       options={memoizedRegions.map((reg) => ({
                         id: reg.id.toString(), // Convert ID to string to match prop type
-                        name: reg.name,
+                        name:  reg.name.split(' ').pop() || reg.name,
                       }))}
                       includeAllOption={false}
 
@@ -351,7 +351,7 @@ export default function Upgradations({ upgradations: upgradationProp, institutes
                 <Separator />
                 <CardContent className="pt-6 space-y-6">
                   <div className="space-y-3">
-                    <table className="w-full border-collapse">
+                    <table className="w-full border-collapse border-1 rounded-md overflow-hidden shadow-sm">
                       <thead>
                         <tr className="bg-primary dark:bg-gray-800 text-center">
                           <th className="border p-2 text-sm font-medium text-white dark:text-gray-200">Details</th>
@@ -373,17 +373,17 @@ export default function Upgradations({ upgradations: upgradationProp, institutes
                           </tr>
                         ) : (
                           upgradations.data.map((upgradation) => (
-                            <tr key={upgradation.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 text-center">
-                              <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">
+                            <tr key={upgradation.id} className="hover:bg-primary/10 dark:hover:bg-gray-700 text-center">
+                              <td className="border p-2 text-sm md:text-md lg:text-lg border-r-1 font-bold text-gray-900 dark:text-gray-100">
                                 {upgradation.details}
                               </td>
-                              <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">
+                              <td className="border p-2 text-sm md:text-md lg:text-lg border-r-1  text-gray-900 dark:text-gray-100">
                                 {formatDate(upgradation.from)}
                               </td>
-                              <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">
+                              <td className="border p-2 text-sm md:text-md lg:text-lg border-r-1  text-gray-900 dark:text-gray-100">
                                 {formatDate(upgradation.to)}
                               </td>
-                              <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">
+                              <td className="border p-2 text-sm md:text-md lg:text-lg border-r-1  text-gray-900 dark:text-gray-100">
                                 {upgradation.levelfrom}
                               </td>
                               <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">
@@ -392,7 +392,7 @@ export default function Upgradations({ upgradations: upgradationProp, institutes
                               <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">
                                 {upgradation.status}
                               </td>
-                              <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">
+                              <td className="border p-2 text-sm md:text-md lg:text-lg border-r-1  text-gray-900 dark:text-gray-100">
                                 {upgradation.institute?.name || 'N/A'}
                               </td>
                             

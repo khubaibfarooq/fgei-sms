@@ -269,7 +269,7 @@ export default function Projects({ projects: initialProjects, institutes, region
                                                       onChange={(value) => handleRegionChange(value)}
                                                       options={memoizedRegions.map((reg) => ({
                                                         id: reg.id.toString(), // Convert ID to string to match prop type
-                                                        name: reg.name,
+                                                        name:  reg.name.split(' ').pop() || reg.name,
                                                       }))}
                                                       includeAllOption={false}
                                                       
@@ -339,7 +339,7 @@ export default function Projects({ projects: initialProjects, institutes, region
                 <Separator />
                 <CardContent className="pt-6 space-y-6">
                   <div className="overflow-x-auto">
-                    <table className="w-full border-collapse text-sm">
+                    <table className="w-full border-collapse border-1 rounded-md overflow-hidden shadow-sm  text-sm md:text-md lg:text-lg">
                       <thead>
                         <tr className="bg-primary text-white text-center">
                           <th className="border p-2 font-medium">Name</th>
@@ -359,9 +359,9 @@ export default function Projects({ projects: initialProjects, institutes, region
                           </tr>
                         ) : (
                           projects.data.map((project) => (
-                            <tr key={project.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 text-center">
-                              <td className="border p-2">{project.name}</td>
-                              <td className="border p-2">{project.cost}</td>
+                            <tr key={project.id} className="hover:bg-primary/10 dark:hover:bg-gray-700">
+                              <td className="border p-2  font-bold text-left">{project.name}</td>
+                              <td className="border p-2 text-right">{project.cost}</td>
                               <td className="border p-2">
                                 <span className={`px-2 py-1 rounded text-xs font-medium ${
                                   project.status === 'completed' ? 'bg-green-100 text-green-800' :

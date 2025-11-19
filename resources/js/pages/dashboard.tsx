@@ -10,6 +10,7 @@ import {
 } from 'recharts';
 import axios from 'axios';
 import { iconMapper } from '@/lib/iconMapper';
+import * as LucideIcons from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { router } from '@inertiajs/react';
 // Define interface for card data from props.cards
@@ -105,7 +106,7 @@ const formatCellValue = (value: any, columnName?: string): string => {
     if (isCurrencyColumn) {
       const num = parseFloat(value);
       if (!isNaN(num)) {
-        return `$${num.toLocaleString()}`;
+        return `${num.toLocaleString()}`;
       }
     }
         return value;
@@ -123,6 +124,8 @@ export default function Dashboard() {
   const cards = props.cards || [];
   const [summaryData, setSummaryData] = useState<SummaryItem[]>(fallbackSummaryData);
   const [loading, setLoading] = useState(false);
+  const [expandedTables, setExpandedTables] = useState<Record<number, boolean>>({});
+  const [visibleRows, setVisibleRows] = useState<Record<number, number>>({ 0: 5, 1: 5, 2: 5 }); // { changed code }
 
   // Prepare table data from props
   const tableData: TableData[] = [
@@ -171,17 +174,33 @@ export default function Dashboard() {
     fetchCounts();
   }, [cards]);
 
+  // Toggle show more rows
+  const handleShowMore = (tableIndex: number) => {
+    setVisibleRows((prev) => ({
+      ...prev,
+      [tableIndex]: (prev[tableIndex] || 5) + 5,
+    }));
+  };
+
+  // Toggle show less rows
+  const handleShowLess = (tableIndex: number) => {
+    setVisibleRows((prev) => ({
+      ...prev,
+      [tableIndex]: Math.max(5, (prev[tableIndex] || 5) - 5),
+    }));
+  };
+
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Dashboard" />
-      <div className="flex flex-col gap-6  p-5">
+      <div className="flex flex-col gap-6 p-5">
         {/* Hero Section */}
         
 
           <div className="relative px-8 py-6 text-center">
-            <Card className="inline-block bg-primary/95 backdrop-blur-sm shadow-2xl border-0 max-w-3xl mx-auto mb-2"     style={{ borderBottom: `6px solid rgba(0,0,255,0.7)`}}>
-              <CardContent className="p-4 px-10" >
-                <h1 className="text-2xl md:text-3xl font-bold text-white">
+            <Card className="inline-block bg-primary/95 backdrop-blur-sm shadow-2xl border-0 max-w-3xl mx-auto mb-2 p-5"     style={{ borderBottom: `6px solid rgba(0,0,255,0.7)`}}>
+              <CardContent className="pt-5 px-10" >
+                <h1 className="text-2xl md:text-4xl font-bold text-white">
                   School Management System
                 </h1>
              
@@ -193,94 +212,113 @@ export default function Dashboard() {
         
         {/* Summary Cards */}
       {/* Summary Cards */}
-<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-  {(loading ? fallbackSummaryData : summaryData).map((item, index) => (
-    <Card 
-      key={index}
-      redirectLink={item.redirectlink}
-      className="shadow-lg rounded-xl border-0 overflow-hidden transition-all duration-300 hover:shadow-xl hover:scale-105 h-full"
-      style={{ 
-        background: `linear-gradient(135deg, ${item.color}20, ${item.color}40)`,
-        borderLeft: `4px solid ${item.color}`
-      }}
-    >
-      <CardHeader className="px-6 py-4 pb-2">
-        <CardTitle className="text-lg font-semibold text-gray-700 dark:text-white text-center">
-          {item.label}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="px-6 py-4 pt-2">
-        <div className="text-3xl font-bold text-blue-700 dark:text-gray-100 text-center">
-          {loading ? '...' : item.value}
-        </div>
-      </CardContent>
-    </Card>
-  ))}
-</div>
-
-        {/* Dynamic Table Cards */}
-       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-  {tableData.map((table, index) => {
-    const theme = tableThemes[index % tableThemes.length];
+{/* Summary Cards */}
+  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+  {(loading ? fallbackSummaryData : summaryData).map((item, index) => {
+    const iconNames = ['Users', 'HardDrive', 'LogIcon'] as (keyof typeof LucideIcons)[];
     
     return (
       <Card 
         key={index}
+        redirectLink={item.redirectlink}
+        number={loading ? '...' : item.value}
+        title={item.label}
+        icon={iconNames[index % iconNames.length]}
+        iconBgColor={item.color}
+        changeColorOnHover={true}
+        className="shadow-lg p-5 hover:scale-110 hover:-translate-y-2 transition-all duration-300 ease-in-out active:scale-95"
+      
+      />
+    );
+  })}
+ </div>
+
+
+        {/* Dynamic Table Cards */}
+       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  {tableData.map((table, index) => {
+     const theme = tableThemes[index % tableThemes.length];
+     
+     return (
+       <Card 
+         key={index}
         className={`bg-gradient-to-br ${theme.bg} ${theme.border} shadow-lg rounded-xl overflow-hidden dark:bg-gray-800 dark:border-gray-700`}
-      >
-        <CardHeader className={`${theme.header} text-white px-6 py-4 dark:bg-gray-700`}>
-          <CardTitle className="text-lg font-semibold flex items-center">
-            <span className="w-3 h-3 bg-white rounded-full mr-2"></span>
-            {table.title}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
+       >
+         <CardHeader className={`${theme.header} text-white px-6 py-4 dark:bg-gray-700`}>
+           <CardTitle className="text-lg font-semibold flex items-center">
+             <span className="w-3 h-3 bg-white rounded-full mr-2"></span>
+             {table.title}
+           </CardTitle>
+         </CardHeader>
+         <CardContent className="p-0">
           {table.data.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className={`${theme.accent} dark:bg-gray-600`}>
-                  <tr>
-                    {table.columns.map((column, colIndex) => (
-                      <th 
-                        key={colIndex} 
-                        className="text-left py-3 px-4 text-sm font-medium dark:text-gray-200"
-                        style={{ 
-                          color: theme.header.replace('bg-', 'text-') + '900',
-                        }}
-                      >
-                        {formatColumnName(column)}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {table.data.map((row, rowIndex) => (
-                    <tr 
-                      key={rowIndex} 
-                      className={`border-b ${theme.border}/30 hover:${theme.bg.replace('from-', 'bg-').split(' ')[0]}/50 transition-colors dark:border-gray-600 dark:hover:bg-gray-700/50`}
-                    >
+            <div className="overflow-x-auto px-4 py-3">
+              <div className="shadow-sm rounded-md overflow-hidden">
+                <table className="w-full table-fixed">
+                  <thead className={`${theme.accent} dark:bg-gray-600`}>
+                    <tr>
                       {table.columns.map((column, colIndex) => (
-                        <td 
+                        <th 
                           key={colIndex} 
-                          className={`py-3 px-4 text-sm md:text-lg ${theme.text} dark:white`}
+                          className="text-left py-3 px-4 text-sm font-medium dark:text-gray-200"
+                          style={{ color: theme.header.replace('bg-', 'text-') + '900' }}
                         >
-                          {formatCellValue(row[column])}
-                        </td>
+                          {formatColumnName(column)}
+                        </th>
                       ))}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {table.data.slice(0, visibleRows[index] || 5).map((row, rowIndex) => (
+                        <tr
+                          key={rowIndex}
+                          className={`border-b ${theme.border}/30 transition-colors hover:opacity-95
+                                     ${rowIndex % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-700'}`}
+                        >
+                          {table.columns.map((column, colIndex) => (
+                            <td key={colIndex} className={`py-3 px-4 text-sm md:text-lg ${theme.text}`}>
+                              {formatCellValue(row[column], column)}
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Show More / Show Less Buttons */}
+              {table.data.length > 5 && (
+                <div className="p-4 text-center border-t border-gray-200 bg-gray-50 flex gap-2 justify-center">
+                  {(visibleRows[index] || 5) < table.data.length && (
+                    <button
+                      type="button"
+                      onClick={() => handleShowMore(index)}
+                      className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-md border border-transparent bg-blue-500 text-white shadow-sm hover:bg-blue-600 focus:outline-none transition-colors"
+                    >
+                      Show More ({table.data.length - (visibleRows[index] || 5)} remaining)
+                    </button>
+                  )}
+                  {(visibleRows[index] || 5) > 5 && (
+                    <button
+                      type="button"
+                      onClick={() => handleShowLess(index)}
+                      className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-md border border-transparent bg-gray-400 text-white shadow-sm hover:bg-gray-500 focus:outline-none transition-colors"
+                    >
+                      Show Less
+                    </button>
+                  )}
+                </div>
+               )}
             </div>
           ) : (
             <div className="py-8 text-center text-gray-500 dark:text-gray-400">
               No data available
             </div>
           )}
-        </CardContent>
-      </Card>
-    );
-  })}
+         </CardContent>
+       </Card>
+     );
+   })}
 </div>
 
         {/* Optional: Display raw data for debugging */}

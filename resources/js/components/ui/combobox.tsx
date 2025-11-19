@@ -88,17 +88,17 @@ export default function Combobox({
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-full p-0 max-h-60 overflow-y-auto">
+      <PopoverContent className="w-full ps-2 max-h-60 overflow-y-auto">
        <CommandPrimitive filter={filterOptions} className="w-full">
           <CommandInput
             placeholder={searchPlaceholder}
             className="w-full h-10 px-3 text-sm border-b"
           />
-          <CommandList>
+          <CommandList >
             <CommandEmpty>{notFoundMsg}</CommandEmpty>
             <CommandGroup>
               {includeAllOption && (
-                <CommandItem
+                <CommandItem className="hover:bg-gray-200"
                   value="0"
                   onSelect={() => {
                     onChange("0");
@@ -115,21 +115,16 @@ export default function Combobox({
                 </CommandItem>
               )}
               {options.map((item) => (
-                <CommandItem
+                <CommandItem  className="hover:bg-primary/80 hover:text-white  my-1 flex flex-row"
                   key={item.id}
-                  value={item.name} // Use name for search, id for selection
+                  value={item.name}
                   onSelect={() => {
                     onChange(item.id);
                     setOpen(false);
                   }}
                 >
-                  <Check
-                    className={cn(
-                      "mr-2 h-4 w-4",
-                      value === item.id ? "opacity-100" : "opacity-0"
-                    )}
-                  />
-                  {item.name}
+                  <Check className={cn("mr-2 mt-1 h-4 w-4", value === item.id ? "opacity-100" : "opacity-0")} /> {item.name}
+
                 </CommandItem>
               ))}
             </CommandGroup>
