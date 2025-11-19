@@ -19,7 +19,7 @@ export default function AppLogo() {
         <img
           src={`/assets/${logo}`}
           alt="Logo"
-          className="h-10 w-10 rounded-md object-contain"
+          className="h-12 w-12 rounded-md object-contain"
         />
       ) : (
         <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-md">

@@ -1,7 +1,10 @@
+"use client";
+
 import { Slot } from '@radix-ui/react-slot';
 import { VariantProps, cva } from 'class-variance-authority';
-import { PanelLeft } from 'lucide-react';
+import { PanelLeft, ChevronDown } from 'lucide-react';
 import * as React from 'react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -195,7 +198,7 @@ const Sidebar = React.forwardRef<
                     'group-data-[collapsible=offcanvas]:w-0',
                     'group-data-[side=right]:rotate-180',
                     variant === 'floating' || variant === 'inset'
-                        ? 'group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4)))]'
+                        ? 'group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+1rem)]'
                         : 'group-data-[collapsible=icon]:w-(--sidebar-width-icon)',
                 )}
             />
@@ -207,7 +210,7 @@ const Sidebar = React.forwardRef<
                         : 'right-0 group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)]',
                     // Adjust the padding for floating and inset variants.
                     variant === 'floating' || variant === 'inset'
-                        ? ' group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4))+2px)]'
+                        ? ' group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+1rem+2px)]'
                         : 'group-data-[collapsible=icon]:w-(--sidebar-width-icon) group-data-[side=left]:border-r group-data-[side=right]:border-l',
                     className,
                 )}
@@ -581,6 +584,51 @@ const SidebarMenuSubButton = React.forwardRef<
 });
 SidebarMenuSubButton.displayName = 'SidebarMenuSubButton';
 
+// NEW: Collapsible Menu Item - All open by default, independent toggles
+const SidebarMenuItemCollapsible = React.forwardRef<
+    HTMLLIElement,
+    React.ComponentProps<'li'> & {
+        defaultOpen?: boolean;
+        title: string;
+        icon?: React.ReactNode;
+        children?: React.ReactNode;
+    }
+>(({ className, title, icon, children, defaultOpen = true, ...props }, ref) => {
+    const [open, setOpen] = React.useState(defaultOpen);
+    const { state } = useSidebar();
+
+    return (
+        <li ref={ref} className={cn('group/menu-item relative', className)} {...props}>
+            <Collapsible open={open} onOpenChange={setOpen}>
+                <CollapsibleTrigger asChild>
+                    <SidebarMenuButton
+                        tooltip={title}
+                        className="w-full justify-between pr-8"
+                        size="lg" // Makes it taller for better UX
+                    >
+                        <div className="flex items-center gap-2">
+                            {icon}
+                            <span className="truncate">{title}</span>
+                        </div>
+                        <ChevronDown
+                            className={cn(
+                                "size-4 shrink-0 transition-transform duration-200 ease-in-out",
+                                open && "rotate-180"
+                            )}
+                        />
+                    </SidebarMenuButton>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="overflow-hidden data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:slide-out-to-top-[4px] data-[state=open]:slide-in-from-top-[4px] data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 duration-200 ease-in-out">
+                    <SidebarMenuSub className="mt-1">
+                        {children}
+                    </SidebarMenuSub>
+                </CollapsibleContent>
+            </Collapsible>
+        </li>
+    );
+});
+SidebarMenuItemCollapsible.displayName = 'SidebarMenuItemCollapsible';
+
 export {
     Sidebar,
     SidebarContent,
@@ -601,6 +649,7 @@ export {
     SidebarMenuSub,
     SidebarMenuSubButton,
     SidebarMenuSubItem,
+    SidebarMenuItemCollapsible, // NEW EXPORT
     SidebarProvider,
     SidebarRail,
     SidebarSeparator,

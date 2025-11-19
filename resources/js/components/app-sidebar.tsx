@@ -1,24 +1,21 @@
+// app-sidebar.tsx
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
+  SidebarMenuItemCollapsible,
 } from '@/components/ui/sidebar';
-
+import { cn } from '@/lib/utils';
 import { usePage, Link } from '@inertiajs/react';
 import AppLogo from './app-logo';
-import { NavFooter } from '@/components/nav-footer';
-import { NavUser } from '@/components/nav-user';
 import { iconMapper } from '@/lib/iconMapper';
 import type { LucideIcon } from 'lucide-react';
-import { ChevronDown, ChevronRight } from 'lucide-react';
-import { useEffect } from 'react';
-import { cn } from '@/lib/utils';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 interface MenuItem {
   id: number;
@@ -26,15 +23,6 @@ interface MenuItem {
   route: string | null;
   icon: string;
   children?: MenuItem[];
-}
-
-function isMenuActive(menu: MenuItem, currentUrl: string): boolean {
-  const selfActive = !!(menu.route && currentUrl.startsWith(menu.route));
-  const children = Array.isArray(menu.children) ? menu.children.filter(Boolean) : [];
-  return (
-    selfActive ||
-    children.some((child) => isMenuActive(child, currentUrl))
-  );
 }
 
 function RenderMenu({ items, level = 0 }: { items: MenuItem[]; level?: number }) {
@@ -46,58 +34,68 @@ function RenderMenu({ items, level = 0 }: { items: MenuItem[]; level?: number })
     <>
       {items.map((menu) => {
         if (!menu) return null;
+
         const Icon = iconMapper(menu.icon || 'Folder') as LucideIcon;
         const children = Array.isArray(menu.children) ? menu.children.filter(Boolean) : [];
         const hasChildren = children.length > 0;
-        const isActive = !!(menu.route && currentUrl.startsWith(menu.route));
-        const indentClass = level > 0 ? `pl-${4 + level * 3}` : '';
 
-        const activeClass = isActive
-          ? 'bg-primary/90 dark:bg-transparent text-white hover:bg-primary/90 hover:text-white   '
-          : 'text-black dark:text-white hover:bg-accent hover:text-accent-foreground';
+        const isActive = menu.route ? currentUrl.startsWith(menu.route) : false;
 
         if (!menu.route && !hasChildren) return null;
 
         return (
           <SidebarMenuItem key={menu.id}>
             {hasChildren ? (
-              <Collapsible defaultOpen={isMenuActive(menu, currentUrl)} className="group">
-                <CollapsibleTrigger asChild>
-                  <SidebarMenuButton
-                    className={cn(
-                      `group flex items-center justify-between rounded-md transition-colors ${indentClass}`,
-                      activeClass,
-                      level === 0 ? 'py-3 px-4 my-1' : 'py-2 px-3'
-                    )}
-                  >
-                    <div className="flex items-center">
-                      <Icon className="size-4 mr-3 opacity-80 group-hover:opacity-100" />
-                      <span className='text-lg font-semibold'>{menu.title}</span>
-                    </div>
-                    <ChevronDown className="size-4 opacity-50 group-hover:opacity-70 transition-transform group-data-[state=open]:rotate-180" />
-                  </SidebarMenuButton>
-                </CollapsibleTrigger>
-                <CollapsibleContent asChild>
-                  <SidebarMenuSub>
-                    <RenderMenu items={children} level={level + 1} />
-                  </SidebarMenuSub>
-                </CollapsibleContent>
-              </Collapsible>
+              <SidebarMenuItemCollapsible
+                title={menu.title}
+                icon={<Icon className={cn('size-5', isActive && 'text-white')} />}
+                defaultOpen={true}
+                className={cn(
+                  'w-full  rounded-lg transition-all duration-200 font-bold ',
+                  isActive
+                    ? 'bg-primary/80 text-lg text-white shadow-sm'
+                    : 'text-foreground text-lg hover:bg-muted/60'
+                )}
+              >
+                {children.map((child) => {
+                  if (!child?.route) return null;
+                  const ChildIcon = iconMapper(child.icon || 'Circle') as LucideIcon;
+                  const childActive = currentUrl.startsWith(child.route);
+
+                  return (
+                    <SidebarMenuSubItem key={child.id}>
+                      <SidebarMenuSubButton asChild>
+                        <Link
+                          href={child.route}
+                          className={cn(
+                            'flex w-full items-center gap-3 rounded-lg px-4 py-3 text-lg font-bold transition-all duration-200',
+                            childActive
+                              ? 'bg-primary/80 text-white shadow-sm'
+                              : 'text-black hover:bg-primary/10'
+                          )}
+                        >
+                          <ChildIcon className={cn('size-5', childActive && 'text-white')} />
+                          <span>{child.title}</span>
+                        </Link>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                  );
+                })}
+              </SidebarMenuItemCollapsible>
             ) : (
+              /* Fixed: Menu item WITHOUT children → now properly styled when active */
               <SidebarMenuButton
                 asChild
                 className={cn(
-                  `group flex items-center rounded-md transition-colors ${indentClass}`,
-                  activeClass,
-                  level === 0 ? 'py-3 px-4 my-1' : 'py-2 px-3'
+                  'w-full justify-start rounded-lg px-4 py-3 text-lg font-bold transition-all duration-200',
+                  isActive
+                    ? 'bg-primary/80 text-white shadow-sm'
+                    : 'text-black hover:bg-primary/10'
                 )}
               >
                 <Link href={menu.route || '#'}>
-                  <Icon className="size-4 mr-3 opacity-80 group-hover:opacity-100" />
-                  <span className='text-lg font-semibold'>{menu.title}</span>
-                  {level > 0 && (
-                    <ChevronRight className="ml-auto size-4 opacity-0 group-hover:opacity-50" />
-                  )}
+                  <Icon className={cn('mr-3 size-5', isActive && 'text-white')} />
+                  <span>{menu.title}</span>
                 </Link>
               </SidebarMenuButton>
             )}
@@ -107,34 +105,16 @@ function RenderMenu({ items, level = 0 }: { items: MenuItem[]; level?: number })
     </>
   );
 }
-
 export function AppSidebar() {
   const { menus = [] } = usePage().props as { menus?: MenuItem[] };
 
-  const footerNavItems = [
-    {
-      title: 'Star this Repo',
-      url: 'https://github.com/yogijowo/laravel12-react-starterkit',
-      icon: iconMapper('Star') as LucideIcon,
-    },
-    {
-      title: 'Donate via Saweria',
-      url: 'https://saweria.co/yogijowo',
-      icon: iconMapper('Heart') as LucideIcon,
-    },
-    {
-      title: 'Donate via Ko-fi',
-      url: 'https://ko-fi.com/yogijowo',
-      icon: iconMapper('Heart') as LucideIcon,
-    },
-  ];
-
   return (
-    <Sidebar collapsible="icon" variant="inset" className="border-r bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <SidebarHeader className="bg-primary dark:bg-transparent  px-4 py-3 border-b">
+    <Sidebar collapsible="icon" variant="inset" className="border-r">
+      {/* Logo Header */}
+      <SidebarHeader className="bg-primary px-6 py-5 border-b">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" asChild className="hover:bg-transparent">
+            <SidebarMenuButton size="lg" asChild className="hover:bg-primary/90 h-8">
               <Link href="/dashboard" prefetch>
                 <AppLogo />
               </Link>
@@ -143,12 +123,12 @@ export function AppSidebar() {
         </SidebarMenu>
       </SidebarHeader>
 
-      <SidebarContent className="px-2 py-4">
-        <SidebarMenu>
+      {/* Main Navigation */}
+      <SidebarContent className="px-3 py-4">
+        <SidebarMenu className="gap-2">
           <RenderMenu items={menus} />
         </SidebarMenu>
       </SidebarContent>
-     
     </Sidebar>
   );
 }
