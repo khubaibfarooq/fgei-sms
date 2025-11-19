@@ -246,10 +246,15 @@ else if($role_type=='Directorate' || $role_type=='Director HRM'){
     $title1 = "Total Funds";
   $title2 = "Projects";
   $title3 = "Institutions";
-    $tab1 = DB::table('fund_helds')
-     ->select( 'fund_heads.name as Head','fund_helds.balance',)
-            ->join('fund_heads', 'fund_heads.id', '=', 'fund_helds.fund_head_id')
-            ->get();
+$tab1 = DB::table('fund_helds')
+    ->join('fund_heads', 'fund_heads.id', '=', 'fund_helds.fund_head_id')
+    ->groupBy('fund_heads.id', 'fund_heads.name') // Must group by actual columns
+    ->select([
+        'fund_heads.name as Head',
+        DB::raw('SUM(fund_helds.balance) as balance')
+    ])
+    ->get();
+
      $tab2 = DB::table('projects')
     ->select('projects.status')
     ->selectRaw('COUNT(*) as project_count')
