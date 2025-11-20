@@ -43,17 +43,25 @@ class RoomController extends Controller
     if ($request->block) {
         $query->where('block_id', $request->block);
     }
-    
+     if ($request->roomtype && !empty($request->roomtype) && $request->roomtype!=0) {
+   $roomtypeIds = array_filter(explode(',', $request->roomtype));
+            $query->whereHas('type', function ($q) use ($roomtypeIds) {
+        $q->whereIn('id', $roomtypeIds);
+       
+    });
+        }
     $rooms = $query->paginate(10)->withQueryString();
-
+$roomtypes=RoomType::pluck('name', 'id');
     return Inertia::render('rooms/Index', [
         'rooms' => $rooms,
         'filters' => [
             'search' => $request->search ?? '',
             'block' => $request->block ?? '',
+            'roomtype'=> $request->roomtype ?? '',
         ],
         'blocks' => $blocks,
         'permissions' => $permissions,
+        'roomtypes'=>$roomtypes,
     ]);
 }
     public function create()

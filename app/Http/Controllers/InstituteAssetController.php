@@ -33,7 +33,13 @@ class InstituteAssetController extends Controller
         if ($request->room) {
             $query->where('room_id', $request->room);
         }
-
+ if ($request->category && !empty($request->category) && $request->category!=0) {
+    $category_id=$request->category;
+            $query->whereHas('asset.category', function ($q) use ($category_id) {
+        $q->where('id', $category_id);
+       
+    });
+        }
         $instituteAssets = $query->paginate(10)->withQueryString();
 $permissions = [
             'can_add' => auth()->user()->can('inst-assets-add'),
@@ -50,10 +56,12 @@ $permissions = [
             'filters' => ['search' => $request->search ?? '',
                           'block' => $request->block ?? '',
                         'room' => $request->room ?? '',
+                        'category'=>$request->category ?? '',
                         ],
             'permissions' => $permissions,
             'rooms' => $rooms,
         'blocks'=>$blocks,
+        'categories'=>$categories,
         ]);
     }
 
