@@ -6,7 +6,7 @@ use App\Models\InstituteAsset;
 use App\Models\Asset;
 use App\Models\Room;
 use App\Models\Block;
-
+use App\Models\AssetCategory;
 use App\Models\Institute;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -53,7 +53,7 @@ $permissions = [
                         ],
             'permissions' => $permissions,
             'rooms' => $rooms,
-        
+        'blocks'=>$blocks,
         ]);
     }
 

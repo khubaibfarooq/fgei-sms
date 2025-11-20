@@ -79,7 +79,7 @@ console.log(shifts);
           <CardHeader className="pb-3 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
               <CardTitle className="text-2xl font-bold">Shifts</CardTitle>
-              <p className="text-muted-foreground text-sm">Manage  Shifts</p>
+              <p className="text-muted-foreground text-sm md:text-md lg:text-lg">Manage  Shifts</p>
             </div>
             {permissions.can_add &&  (
             <Link href="/shifts/create">
@@ -105,13 +105,13 @@ console.log(shifts);
             </div>
 
             <div className="space-y-3">  
-               <table className="w-full border-collapse">
+               <table className="w-full border-collapse  border-1 rounded-md overflow-hidden shadow-sm">
   <thead>
     <tr className="bg-primary dark:bg-gray-800 text-center" >
-      <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Shift</th>
-      <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Building</th>
-       <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Building Type</th>
-      <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Action</th>
+      <th className="border p-2  text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Shift</th>
+      <th className="border p-2  text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Building</th>
+       <th className="border p-2  text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Building Type</th>
+      <th className="border p-2  text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Action</th>
      
       
     </tr>
@@ -122,16 +122,16 @@ console.log(shifts);
               ) : (
                 shifts.data.map((shift) => (
 
-                   <tr  key={shift.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 text-center
+                   <tr  key={shift.id} className="hover:bg-primary/10 dark:hover:bg-gray-700 text-center
                     ">
-                      <td className="border  text-sm text-gray-900 dark:text-gray-100">
+                      <td className="border font-bold  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
                           {shift.name}
                          </td>
-                           <td className="border  text-sm text-gray-900 dark:text-gray-100">
+                           <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
                         {shift.building_name}
                          </td>
-                         <td className="border  text-sm text-gray-900 dark:text-gray-100">{shift.building_type?.name || 'N/A'}</td>
-                          <td className="border  text-sm text-gray-900 dark:text-gray-100">   {permissions.can_edit &&  (
+                         <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">{shift.building_type?.name || 'N/A'}</td>
+                          <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">   {permissions.can_edit &&  (
                       <Link href={`/shifts/${shift.id}/edit`}>
                         <Button variant="ghost" size="icon">
                           <Edit className="h-4 w-4" />

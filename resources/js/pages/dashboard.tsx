@@ -18,6 +18,7 @@ interface CardData {
   id: number;
   title: string;
   link: string;
+  icon:string;
     redirectlink: string;
   color: string;
   role_id: number;
@@ -215,7 +216,9 @@ export default function Dashboard() {
 {/* Summary Cards */}
   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
   {(loading ? fallbackSummaryData : summaryData).map((item, index) => {
-    const iconNames = ['Users', 'HardDrive', 'LogIcon'] as (keyof typeof LucideIcons)[];
+      const cardData = cards[index];
+            const iconName = (cardData?.icon || ['Users', 'HardDrive', 'LogIcon'][index % 3]) as keyof typeof LucideIcons;
+            
     
     return (
       <Card 
@@ -223,8 +226,8 @@ export default function Dashboard() {
         redirectLink={item.redirectlink}
         number={loading ? '...' : item.value}
         title={item.label}
-        icon={iconNames[index % iconNames.length]}
-        iconBgColor={item.color}
+      icon={iconName}        
+      iconBgColor={item.color}
         changeColorOnHover={true}
         className="shadow-lg p-5 hover:scale-110 hover:-translate-y-2 transition-all duration-300 ease-in-out active:scale-95"
       

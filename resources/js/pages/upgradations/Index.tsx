@@ -90,7 +90,7 @@ const getStatusStyles = (status: string) => {
           <CardHeader className="pb-3 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
               <CardTitle className="text-2xl font-bold">Upgradations</CardTitle>
-              <p className="text-muted-foreground text-sm">View Upgradations</p>
+              <p className="text-muted-foreground text-sm md:text-md lg:text-lg">View Upgradations</p>
             </div>
             {permissions.can_add &&(
             <Link href="/upgradations/create">
@@ -119,15 +119,15 @@ const getStatusStyles = (status: string) => {
                <table className="w-full border-collapse">
   <thead>
     <tr className="bg-primary dark:bg-gray-800 text-center" >
-      <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Details</th>
-      <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">From</th>
-            <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">To</th>
-            <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Level From</th>
-            <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Level To</th>
-            <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Status</th>
+      <th className="border p-2  text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Details</th>
+      <th className="border p-2  text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">From</th>
+            <th className="border p-2  text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">To</th>
+            <th className="border p-2  text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Level From</th>
+            <th className="border p-2  text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Level To</th>
+            <th className="border p-2  text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Status</th>
 
 
-      <th className="border p-2  text-sm font-medium text-white dark:text-gray-200"></th>
+      <th className="border p-2  text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200"></th>
      
       
     </tr>
@@ -138,29 +138,29 @@ const getStatusStyles = (status: string) => {
               ) : (
                 upgradations.data.map((upgradation) => (
 
-                   <tr  key={upgradation.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 text-center
+                   <tr  key={upgradation.id} className="hover:bg-primary/10 dark:hover:bg-gray-700 text-center
                     ">
-                      <td className="border  text-sm text-gray-900 dark:text-gray-100">
+                      <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
                         {upgradation.details}
                          </td>
-                         <td className="border  text-sm text-gray-900 dark:text-gray-100">
+                         <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
                         {formatDate(upgradation.from)}
                          </td>
-                         <td className="border  text-sm text-gray-900 dark:text-gray-100">
+                         <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
                        {formatDate(upgradation.to)}
                          </td>
-                         <td className="border  text-sm text-gray-900 dark:text-gray-100">
+                         <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
                        {upgradation.levelfrom}
                          </td>
-                         <td className="border  text-sm text-gray-900 dark:text-gray-100">
+                         <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
                         {upgradation.levelto} 
                          </td>
-                         <td className="border  text-sm text-gray-900 dark:text-gray-100"><span className={`inline-block px-2 py-1 rounded-full text-xs font-semibold ${getStatusStyles(upgradation.status)}`}>
+                         <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100"><span className={`inline-block px-2 py-1 rounded-full text-xs font-semibold ${getStatusStyles(upgradation.status)}`}>
                           {upgradation.status} 
                           </span>
                        
                          </td>
-                          <td className="border  text-sm text-gray-900 dark:text-gray-100">{permissions.can_edit &&(
+                          <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">{permissions.can_edit &&(
                       <Link href={`/upgradations/${upgradation.id}/edit`}>
                         <Button variant="ghost" size="icon">
                           <Edit className="h-4 w-4" />

@@ -102,14 +102,12 @@ export default function plantsIndex({ plants, filters,permissions }: Props) {
             </div>
 
             <div className="space-y-3">
-               <table className="w-full border-collapse">
+               <table className="w-full border-collapse border-1 rounded-md overflow-hidden shadow-sm">
   <thead>
-    <tr className="bg-primary dark:bg-gray-800 text-center" >
-      <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Plants/Tree</th>
-      <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Quantity</th>
-      
-
-      <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Action</th>
+    <tr className="bg-primary dark:bg-gray-800 text-center text-sm md:text-md lg:text-lg" >
+      <th className="border p-2   font-medium text-white dark:text-gray-200">Plants/Tree</th>
+      <th className="border p-2   font-medium text-white dark:text-gray-200">Quantity</th>
+      <th className="border p-2   font-medium text-white dark:text-gray-200">Action</th>
      
       
     </tr>
@@ -120,12 +118,12 @@ export default function plantsIndex({ plants, filters,permissions }: Props) {
               ) : (
                 plants.data.map((plant) => (
 
-                   <tr  key={plant.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 text-center
+                   <tr  key={plant.id} className="hover:bg-primary/10 text-sm md:text-md lg:text-lg dark:hover:bg-gray-700 text-center
                     ">
-                      <td className="border  text-sm text-gray-900 dark:text-gray-100">
+                      <td className="border font-bold   text-gray-900 dark:text-gray-100">
                         {plant.name}
                          </td>
-                         <td className="border  text-sm text-gray-900 dark:text-gray-100">
+                         <td className="border   text-gray-900 dark:text-gray-100">
                          {plant.qty || 0} 
                          </td>
                           <td className="border  text-sm text-gray-900 dark:text-gray-100">

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect,useState } from 'react';
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import { Button } from '@/components/ui/button';
@@ -9,35 +9,40 @@ import { Separator } from '@/components/ui/separator';
 import { Save, ArrowLeft } from 'lucide-react';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { BreadcrumbItem } from '@/types';
-
+import IconPicker from '@/components/ui/icon-picker';
+import MultiSelect from '@/components/ui/MultiSelect';
+import { toast } from 'sonner';
 interface FormProps {
   dashboardCard?: {
     id: number;
     title: string;
     link: string;
+        icon: string;
+
         color: string;
 redirectlink:string;
-    role_id: number;
+    role_id: string;
   };
   roles: Array<{ id: number; name: string }>;
 }
 
 export default function DashboardCardForm({ dashboardCard, roles }: FormProps) {
   const isEdit = !!dashboardCard;
-console.log(dashboardCard);
+  console.log(dashboardCard);
   const { data, setData, processing, errors, reset } = useForm<{
     id: number | '';
     title: string;
     link: string;
      color: string;
-    role_id: number | '';
+     icon:string | ''
+    role_id: string | '';
     redirectlink:string | '';
   }>({
     id:dashboardCard?.id ||'',
     title: dashboardCard?.title || '',
     link: dashboardCard?.link || '',
         color: dashboardCard?.color || '',
-
+      icon: dashboardCard?.icon || '',
     role_id: dashboardCard?.role_id || '',
     redirectlink:dashboardCard?.redirectlink || '',
   });
@@ -49,6 +54,7 @@ console.log(dashboardCard);
         title: dashboardCard.title ?? '',
         link: dashboardCard.link ?? '',
          color: dashboardCard.color ?? '',
+            icon: dashboardCard.icon ?? '',
         role_id: dashboardCard.role_id ?? '',
           redirectlink: dashboardCard.redirectlink ?? '',
       }));
@@ -58,6 +64,7 @@ console.log(dashboardCard);
         title: '',
         link: '',
          color: '',
+         icon:'',
         role_id: '',
               redirectlink: '',
       }));
@@ -66,14 +73,24 @@ console.log(dashboardCard);
 
 const handleSubmit = (e: React.FormEvent) => {
   e.preventDefault();
+  const submitData = {
+    id:data.id,
+         title: data.title ,
+        link: data.link ,
+         color: data.color ,
+            icon: data.icon ,
+        role_id:selectedValues.join(','),
+          redirectlink: data.redirectlink,
+  
+    };
   if (isEdit) {
-    router.put(`/dashboardcards/${dashboardCard?.id}`, data, {
+    router.put(`/dashboardcards/${dashboardCard?.id}`, submitData, {
       preserveScroll: true,
       preserveState: true,
       onError: (errors) => console.log(errors), // Log errors for debugging
     });
   } else {
-    router.post('/dashboardcards', data, {
+    router.post('/dashboardcards', submitData, {
       onSuccess: () => reset(),
       onError: (errors) => console.log(errors),
     });
@@ -84,7 +101,39 @@ const handleSubmit = (e: React.FormEvent) => {
     { title: 'Dashboard Cards', href: '/dashboardcards' },
     { title: isEdit ? 'Edit Dashboard Card' : 'Add Dashboard Card', href: '#' },
   ];
-
+  const options = React.useMemo(() => {
+    if (!roles) return [];
+    
+    if (Array.isArray(roles)) {
+      return roles.map(role => ({
+        value: role.id.toString(),
+        label: role.name
+      }));
+    }
+    
+    // Convert object { "1": "Class Room", "2": "Meeting Room" } to options array
+    return Object.entries(roles).map(([id, name]) => ({
+      value: id,
+      label: name as string
+    }));
+  }, [roles]);
+  // Initialize selected values from blockType.room_type_Ids
+    const [selectedValues, setSelectedValues] = useState<string[]>([]);
+  
+    // Parse the room_type_Ids string and set as selected values
+    useEffect(() => {
+      if (dashboardCard?.role_id) {
+        // Convert comma-separated string to array: "1,2,3" -> ["1", "2", "3"]
+        const roleIdsArray = dashboardCard.role_id
+          .split(',')
+          .map(id => id.trim())
+          .filter(id => id !== '' && id !== null && id !== undefined);
+        
+        setSelectedValues(roleIdsArray);
+      } else {
+        setSelectedValues([]);
+      }
+    }, [dashboardCard]);
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title={isEdit ? 'Edit Dashboard Card' : 'Add Dashboard Card'} />
@@ -132,10 +181,32 @@ const handleSubmit = (e: React.FormEvent) => {
 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Role */}
               <div className="space-y-2">
+                {/* Room Types MultiSelect Field */}
+                         
+                                <MultiSelect
+                                  options={options}
+                                  value={selectedValues}
+                                  onChange={setSelectedValues}
+                                  placeholder="Choose roles ..."
+                                  label="Select Roles"
+                                />
+                                <div className="text-sm text-muted-foreground">
+                                  {selectedValues.length > 0 
+                                    ? `${selectedValues.length} role  selected: ${selectedValues.map(id => {
+                                        const role = options.find(opt => opt.value === id);
+                                        return role ? role.label : id;
+                                      }).join(', ')}` 
+                                    : 'No Role  selected'
+                                  }
+                                </div>
+                                {errors.role_id && (
+                                  <p className="text-sm text-red-500">{errors.role_id}</p>
+                                )}
+{/*                               
                 <Label htmlFor="role_id">Role</Label>
                 <Select
                   value={data.role_id ? data.role_id.toString() : ''}
-                  onValueChange={(value) => setData('role_id', parseInt(value))}
+                  onValueChange={(value) => setData('role_id', value)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select role" />
@@ -147,9 +218,14 @@ const handleSubmit = (e: React.FormEvent) => {
                       </SelectItem>
                     ))}
                   </SelectContent>
-                </Select>
+                </Select> */}
                 {errors.role_id && <p className="text-red-500 text-sm">{errors.role_id}</p>}
-              </div>
+                   <div className="space-y-2">
+                                  <Label htmlFor="icon">Icon</Label>
+                                  <IconPicker value={data.icon} onChange={(val) => setData('icon', val)} />
+                                  {errors.icon && <p className="text-sm text-red-500">{errors.icon}</p>}
+                                </div>
+           </div>
  <div className="space-y-2">
                 <Label htmlFor="color">Color</Label>
                 <Input

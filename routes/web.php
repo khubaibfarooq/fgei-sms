@@ -60,6 +60,7 @@ Route::middleware(['auth', 'menu.permission'])->group(function () {
         Route::get('/api/getblocks', [DashboardController::class, 'getBlocks']);
         Route::get('/api/getplants', [DashboardController::class, 'getPlants']);
         Route::get('/api/gettransports', [DashboardController::class, 'getTransports']);
+    Route::get('/api/getprojects', [DashboardController::class, 'getProjects']);
 
     Route::get('/api/getusers', [DashboardController::class, 'getUsers']);
     Route::get('/api/getrequests', [DashboardController::class, 'getRequests']);

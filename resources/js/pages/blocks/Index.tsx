@@ -104,13 +104,13 @@ export default function BlockIndex({ blocks, filters,permissions }: Props) {
             </div>
 
             <div className="space-y-3">
-               <table className="w-full border-collapse">
+               <table className="w-full border-collapse border-1 rounded-md overflow-hidden shadow-sm">
   <thead>
-    <tr className="bg-primary dark:bg-gray-800 text-center" >
-      <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Name</th>
-      <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Area(Sq ft)</th>
-       <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Rooms</th>
-      <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Action</th>
+    <tr className="bg-primary dark:bg-gray-800 text-center " >
+      <th className="border p-2  text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Name</th>
+      <th className="border p-2  text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Area(Sq ft)</th>
+       <th className="border p-2  text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Rooms</th>
+      <th className="border p-2  text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Action</th>
      
       
     </tr>
@@ -121,16 +121,16 @@ export default function BlockIndex({ blocks, filters,permissions }: Props) {
               ) : (
                 blocks.data.map((block) => (
 
-                   <tr  key={block.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 text-center
+                   <tr  key={block.id} className="hover:bg-primary/10 dark:hover:bg-gray-700 text-center
                     ">
-                      <td className="border  text-sm text-gray-900 dark:text-gray-100">
+                      <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
                        <div className='flex flex-column gap-2 align-middle'> <ImagePreview dataImg={block.img} size="h-20" />  <span className='font-bold'>{block.name}</span></div> 
                          </td>
-                           <td className="border  text-sm text-gray-900 dark:text-gray-100">
+                           <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
                         {block.area}
                          </td>
-                         <td className="border  text-sm text-gray-900 dark:text-gray-100">{block.rooms_count || 0}</td>
-                          <td className="border  text-sm text-gray-900 dark:text-gray-100"> 
+                         <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">{block.rooms_count || 0}</td>
+                          <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100"> 
                             {permissions.can_edit &&
                       <Link href={`/blocks/${block.id}/edit`}>
                         <Button variant="ghost" size="icon">

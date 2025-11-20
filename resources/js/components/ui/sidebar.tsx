@@ -383,7 +383,7 @@ const SidebarGroupAction = React.forwardRef<HTMLButtonElement, React.ComponentPr
 SidebarGroupAction.displayName = 'SidebarGroupAction';
 
 const SidebarGroupContent = React.forwardRef<HTMLDivElement, React.ComponentProps<'div'>>(({ className, ...props }, ref) => (
-    <div ref={ref} data-sidebar="group-content" className={cn('w-full text-sm', className)} {...props} />
+    <div ref={ref} data-sidebar="group-content" className={cn('w-full ', className)} {...props} />
 ));
 SidebarGroupContent.displayName = 'SidebarGroupContent';
 
@@ -608,7 +608,7 @@ const SidebarMenuItemCollapsible = React.forwardRef<
                     >
                         <div className="flex items-center gap-2">
                             {icon}
-                            <span className="truncate">{title}</span>
+                            <span className="truncate text-lg text-black">{title}</span>
                         </div>
                         <ChevronDown
                             className={cn(

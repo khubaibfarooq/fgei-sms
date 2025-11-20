@@ -37,7 +37,7 @@ import { cn } from '@/lib/utils';
   }, [isOpen]);
 
   if (!previewUrl) {
-    return <p className="text-sm text-muted-foreground">No image.</p>;
+    return <p className="text-sm text-muted-foreground"></p>;
   }
 
   // default height if not provided

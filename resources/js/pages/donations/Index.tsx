@@ -103,12 +103,12 @@ export default function DonationIndex({ donations, filters,permissions }: Props)
             </div>
 
             <div className="space-y-3">
-                <table className="w-full border-collapse">
+                <table className="w-full border-collapse border-1 rounded-md overflow-hidden shadow-sm">
   <thead>
-    <tr className="bg-primary dark:bg-gray-800 text-center">
-        <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Details</th>
-      <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Date</th>
-      <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Amount</th>
+    <tr className="bg-primary dark:bg-gray-800 text-center md:text-md lg:text-lg">
+        <th className="border p-2  font-medium text-white dark:text-gray-200">Details</th>
+      <th className="border p-2  font-medium text-white dark:text-gray-200">Date</th>
+      <th className="border p-2  font-medium text-white dark:text-gray-200">Amount</th>
      
      
       <th className="border p-2 text-sm font-medium text-white dark:text-gray-200">Actions</th>
@@ -120,18 +120,18 @@ export default function DonationIndex({ donations, filters,permissions }: Props)
               ) : (
                 donations.data.map((donation) => (
 
-                   <tr key={donation.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 text-center
+                   <tr key={donation.id} className="hover:bg-primary/10 text-sm md:text-md lg:text-lg dark:hover:bg-gray-700 text-center
                     ">
-                      <td className="border  text-sm text-gray-900 dark:text-gray-100">
+                      <td className="border   text-gray-900 dark:text-gray-100">
                          {donation.details}
                          </td>
-                         <td className="border  text-sm text-gray-900 dark:text-gray-100">
+                         <td className="border   text-gray-900 dark:text-gray-100">
                         {new Date(donation.added_date).toDateString()}
                          </td>
-<td className="border  text-sm text-gray-900 dark:text-gray-100">
+<td className="border   text-gray-900 dark:text-gray-100">
                         {donation.amount}
                          </td>
-                         <td className="border  text-sm text-gray-900 dark:text-gray-100">
+                         <td className="border   text-gray-900 dark:text-gray-100">
                          {permissions.can_edit &&
                       <Link href={`/donations/${donation.id}/edit`}>
                         <Button variant="ghost" size="icon">

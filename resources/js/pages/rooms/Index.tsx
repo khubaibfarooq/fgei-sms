@@ -118,7 +118,7 @@ export default function RoomIndex({ rooms, filters, blocks,permissions }: Props)
           <CardHeader className="pb-3 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
               <CardTitle className="text-2xl font-bold">Rooms</CardTitle>
-              <p className="text-muted-foreground text-sm">Manage institutional rooms</p>
+              <p className="text-muted-foreground text-sm md:text-md lg:text-lg">Manage institutional rooms</p>
             </div>
             {permissions.can_add &&(
             <Link href="/rooms/create">
@@ -168,15 +168,15 @@ export default function RoomIndex({ rooms, filters, blocks,permissions }: Props)
             </div>
 
             <div className="space-y-3">
-                <table className="w-full border-collapse">
+                <table className="w-full border-collapse  border-1 rounded-md overflow-hidden shadow-sm">
   <thead>
     <tr className="bg-primary dark:bg-gray-800 text-center" >
-      <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Name</th>
-      <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Area(Sq Ft)</th>
-       <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Block</th>
-              <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Room Type</th>
+      <th className="border p-2  text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Name</th>
+      <th className="border p-2  text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Area(Sq Ft)</th>
+       <th className="border p-2  text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Block</th>
+              <th className="border p-2  text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Room Type</th>
 
-      <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Action</th>
+      <th className="border p-2  text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Action</th>
      
       
     </tr>
@@ -187,19 +187,19 @@ export default function RoomIndex({ rooms, filters, blocks,permissions }: Props)
               ) : (
                 rooms.data.map((room) => (
 
-                    <tr  key={room.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 text-center
+                    <tr  key={room.id} className="hover:bg-primary/10 dark:hover:bg-gray-700 text-center
                     ">
-                      <td className="border  text-sm text-gray-900 dark:text-gray-100">
+                      <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
                    <div className='flex flex-column gap-2 align-middle'> <ImagePreview dataImg={room.img} size="h-20" />  <span className='font-bold'>{room.name}</span></div> 
                          </td>
-                         <td className="border  text-sm text-gray-900 dark:text-gray-100">
+                         <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
                          {room.area}
                          </td>
-                           <td className="border  text-sm text-gray-900 dark:text-gray-100">
+                           <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
                         {room.block.name} 
                          </td>
-                         <td className="border  text-sm text-gray-900 dark:text-gray-100">{room.type.name}</td>
-                          <td className="border  text-sm text-gray-900 dark:text-gray-100">
+                         <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">{room.type.name}</td>
+                          <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
   {permissions.can_edit &&(
                       <Link href={`/rooms/${room.id}/edit`}>
                         <Button variant="ghost" size="icon">

@@ -22,12 +22,21 @@ import {
 
 import { toast } from 'sonner';
 
+interface Block {
+  id: number;
+  name: string;
+}
+
 interface InstituteAsset {
   id: number;
   current_qty: number;
   details: string;
   added_date: string;
   institute?: {
+    id: number;
+    name?: string;
+  };
+   blocks?: {
     id: number;
     name?: string;
   };
@@ -71,9 +80,8 @@ interface Props {
     can_edit: boolean;
     can_delete: boolean;
   };
-  blocks: {
-    [key: string]: string; // Object with id as key and name as value
-  };
+  blocks: Block[]; 
+  
  
 }
 
@@ -85,21 +93,13 @@ export default function InstituteAssetIndex({ instituteAssets, filters,blocks,pe
   const [search, setSearch] = useState(filters.search || '');
   const [selectedBlock, setSelectedBlock] = useState(filters.block || '');
   const [selectedRoom, setSelectedRoom] = useState(filters.room || '');
-
   const handleDelete = (id: number) => {
     router.delete(`/institute-assets/${id}`, {
       onSuccess: () => toast.success('Institute asset deleted successfully'),
       onError: () => toast.error('Failed to delete institute asset'),
     });
   };
- const handleSearch = () => {
-    router.get('/rooms', { search, block: selectedBlock },  {
-    preserveScroll: true,
-    preserveState: true,
-    replace: true,
-    only: ['instituteAssets', 'filters'], // only reload these props
-  });
-  };
+ 
   const handleSearchKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       router.get('/institute-assets', { ...filters, search },  {
@@ -119,7 +119,7 @@ export default function InstituteAssetIndex({ instituteAssets, filters,blocks,pe
     replace: true,
     only: ['instituteAssets', 'filters'], // only reload these props
   });
-  console.log(instituteAssets.data);
+  
       };
       const handleRoomChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const roomValue = e.target.value;
@@ -144,12 +144,19 @@ export default function InstituteAssetIndex({ instituteAssets, filters,blocks,pe
     only: ['instituteAssets', 'filters'], // only reload these props
   });
     };
-  // Convert blocks object to array for mapping
-  const blockOptions = Object.entries(blocks).map(([id, name]) => ({
-    id: id,
-    name: name,
-  }));
-    
+const blockOptions = blocks && typeof blocks === 'object' && !Array.isArray(blocks)
+  ? Object.entries(blocks).map(([id, name]) => ({
+      id: String(id),
+      name: String(name),
+    }))
+  : Array.isArray(blocks)
+  ? blocks.map((b) => ({
+      id: String(b.id),
+      name: b.name,
+    }))
+  : [];
+
+
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Institute Asset Management" />
@@ -218,49 +225,49 @@ export default function InstituteAssetIndex({ instituteAssets, filters,blocks,pe
               {instituteAssets.data.length === 0 ? (
                 <p className="text-muted-foreground text-center">No institute assets found.</p>
               ) :
-              <table className="w-full border-collapse">
+              <table className="w-full border-collapse rounded-lg overflow-hidden shadow-sm">
   <thead>
     <tr className="bg-primary dark:bg-gray-800">
-      <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Asset</th>
-      <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Category</th>
-      <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Quantity</th>
-      <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Added Date</th>
-      <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Room</th>
-      <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Details</th>
-      <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Actions</th>
+      <th className="border p-2 text-left text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Asset</th>
+      <th className="border p-2 text-left text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Category</th>
+       <th className="border p-2 text-left text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Details</th>
+      <th className="border p-2 text-left text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Quantity</th>
+      <th className="border p-2 text-left text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Added Date</th>
+      <th className="border p-2 text-left text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Room</th>
+     
+      <th className="border p-2 text-left text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Actions</th>
     </tr>
   </thead>
   <tbody>
     {instituteAssets.data.map((instituteAsset) => (
-      <tr key={instituteAsset.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-        <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">
+      <tr key={instituteAsset.id} className="hover:bg-primary/10 dark:hover:bg-gray-700">
+        <td className="border p-2 text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100 font-bold">
           {instituteAsset.asset.name}
         </td>
-        <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">
+        <td className="border p-2 text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
           {instituteAsset.asset.category?.name || '—'}
         </td>
-        <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">
-          <div className="flex items-center gap-1">
-            <Package className="h-3 w-3" />
+          <td className="border p-2 text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
+          {instituteAsset.details || '—'}
+        </td>
+        <td className="border p-2 text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100 text-center font-bold">
+         
             <span>{instituteAsset.current_qty}</span>
-          </div>
+       
         </td>
-        <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">
-          <div className="flex items-center gap-1">
-            <Calendar className="h-3 w-3" />
-            <span>{new Date(instituteAsset.added_date).toDateString()}</span>
-          </div>
+        <td className="border p-1 text-sm  text-gray-900 dark:text-gray-100">
+         
+           {new Date(instituteAsset.added_date).toDateString()}
+         
         </td>
-        <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">
+        <td className="border p-2 text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
           {instituteAsset.room 
             ? `${instituteAsset.room.name}${instituteAsset.room.block ? ` (${instituteAsset.room.block.name})` : ''}` 
             : '—'
           }
         </td>
-        <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">
-          {instituteAsset.details || '—'}
-        </td>
-        <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">
+      
+        <td className="border p-2 text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
           <div className="flex items-center gap-2">
             {permissions?.can_edit && (
               <Link href={`/institute-assets/${instituteAsset.id}/edit`}>

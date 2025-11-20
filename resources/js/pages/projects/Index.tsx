@@ -77,7 +77,7 @@ export default function ProjectIndex({ projects, filters,permissions }: Props) {
           <CardHeader className="pb-3 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
               <CardTitle className="text-2xl font-bold">Projects</CardTitle>
-              <p className="text-muted-foreground text-sm">Manage institutional projects</p>
+              <p className="text-muted-foreground text-sm md:text-md lg:text-lg">Manage institutional projects</p>
             </div>
             {permissions.can_add &&
             <Link href="/projects/create">
@@ -103,15 +103,15 @@ export default function ProjectIndex({ projects, filters,permissions }: Props) {
             </div>
 
             <div className="space-y-3">
-               <table className="w-full border-collapse">
+               <table className="w-full border-collapse  border-1 rounded-md overflow-hidden shadow-sm">
   <thead>
     <tr className="bg-primary dark:bg-gray-800 text-center" >
-      <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Name</th>
-      <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Cost</th>
-            <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Status</th>
+      <th className="border p-2  text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Name</th>
+      <th className="border p-2  text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Cost</th>
+            <th className="border p-2  text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Status</th>
 
 
-      <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Action</th>
+      <th className="border p-2  text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Action</th>
      
       
     </tr>
@@ -121,19 +121,19 @@ export default function ProjectIndex({ projects, filters,permissions }: Props) {
                 <p className="text-muted-foreground text-center">No projects found.</p>
               ) : (
                 projects.data.map((project) => (
-                   <tr  key={project.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 text-center
+                   <tr  key={project.id} className="hover:bg-primary/10 dark:hover:bg-gray-700 text-center
                     ">
                      
-                         <td className="border  text-sm text-gray-900 dark:text-gray-100">
+                         <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
                           {project.name}
                          </td>
-                          <td className="border  text-sm text-gray-900 dark:text-gray-100">
+                          <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
                  {project.cost}
                          </td>
-                           <td className="border  text-sm text-gray-900 dark:text-gray-100">
+                           <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
                    {project.status}
                          </td>
-                          <td className="border  text-sm text-gray-900 dark:text-gray-100">  {permissions.can_edit &&
+                          <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">  {permissions.can_edit &&
                       <Link href={`/projects/${project.id}/edit`}>
                         <Button variant="ghost" size="icon">
                           <Edit className="h-4 w-4" />

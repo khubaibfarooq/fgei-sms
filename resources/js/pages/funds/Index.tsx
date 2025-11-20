@@ -137,12 +137,12 @@ export default function FundIndex({ funds, filters, permissions }: Props) {
             </div>
 
             <div className="space-y-3">
-              <table className="w-full border-collapse">
+              <table className="w-full border-collapse border-1 rounded-md overflow-hidden shadow-sm">
                 <thead>
-                  <tr className="bg-primary dark:bg-gray-800 text-center">
-                    <th className="border p-2 text-sm font-medium text-white dark:text-gray-200">Fund Head</th>
-                    <th className="border p-2 text-sm font-medium text-white dark:text-gray-200">Balance</th>
-                    <th className="border p-2 text-sm font-medium text-white dark:text-gray-200">Action</th>
+                  <tr className="bg-primary dark:bg-gray-800 text-center text-sm md:text-md lg:text-lg ">
+                    <th className="border p-2  font-medium text-white dark:text-gray-200">Fund Head</th>
+                    <th className="border p-2  font-medium text-white dark:text-gray-200">Balance</th>
+                    <th className="border p-2  font-medium text-white dark:text-gray-200">Action</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -154,14 +154,14 @@ export default function FundIndex({ funds, filters, permissions }: Props) {
                     </tr>
                   ) : (
                     funds.data.map((fund) => (
-                      <tr key={fund.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 text-center">
-                        <td className="border p-3 text-sm text-gray-900 dark:text-gray-100">
+                      <tr key={fund.id} className="hover:bg-primary/10 text-sm md:text-md lg:text-lg  dark:hover:bg-gray-700 text-center">
+                        <td className="border p-3 font-bold  text-gray-900 dark:text-gray-100">
                           {fund.fund_head.name}
                         </td>
-                        <td className="border p-3 text-sm text-gray-900 dark:text-gray-100">
+                        <td className="border p-3  text-gray-900 dark:text-gray-100">
                           {fund.balance.toLocaleString()}
                         </td>
-                        <td className="border p-3 text-sm text-gray-900 dark:text-gray-100">
+                        <td className="border p-3  text-gray-900 dark:text-gray-100">
                           <div className="flex justify-center items-center gap-1">
                             <Link href={`/fund-trans/${fund.id}`}>  
                             <Button 

@@ -50,11 +50,11 @@ function RenderMenu({ items, level = 0 }: { items: MenuItem[]; level?: number })
                 title={menu.title}
                 icon={<Icon className={cn('size-5', isActive && 'text-white')} />}
                 defaultOpen={true}
-                className={cn(
-                  'w-full  rounded-lg transition-all duration-200 font-bold ',
+                className={cn( 
+                  'w-full  rounded-lg transition-all text-lg  duration-200 font-bold ',
                   isActive
-                    ? 'bg-primary/80 text-lg text-white shadow-sm'
-                    : 'text-foreground text-lg hover:bg-muted/60'
+                    ? 'bg-primary/80  text-white shadow-sm'
+                    : 'text-foreground hover:bg-muted/60'
                 )}
               >
                 {children.map((child) => {
@@ -64,17 +64,17 @@ function RenderMenu({ items, level = 0 }: { items: MenuItem[]; level?: number })
 
                   return (
                     <SidebarMenuSubItem key={child.id}>
-                      <SidebarMenuSubButton asChild>
+                      <SidebarMenuSubButton asChild className='text-lg text-black font-bold '>
                         <Link
                           href={child.route}
                           className={cn(
-                            'flex w-full items-center gap-3 rounded-lg px-4 py-3 text-lg font-bold transition-all duration-200',
+                            'flex w-full items-center gap-3 rounded-lg px-4 py-3  transition-all duration-200',
                             childActive
-                              ? 'bg-primary/80 text-white shadow-sm'
+                              ? 'bg-primary/80 text-white'
                               : 'text-black hover:bg-primary/10'
                           )}
                         >
-                          <ChildIcon className={cn('size-5', childActive && 'text-white')} />
+                          <ChildIcon className={cn('size-5', childActive ? 'text-white':'text-black')} />
                           <span>{child.title}</span>
                         </Link>
                       </SidebarMenuSubButton>

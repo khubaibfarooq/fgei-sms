@@ -98,34 +98,61 @@ private function hasRoomsInBlocks($instituteId)
     
     return Room::whereIn('block_id', $blockIds)->exists();
 }
-     public function getRooms(Request $request)
-    {
-     
-        $sms_inst_id = session('sms_inst_id');
-
-        $blocks = DB::table('blocks')->where('institute_id',$sms_inst_id);
-// getrooms with all blocks
-$role_type = session('type');
-$regionId = session('region_id');
-
-if ($role_type === 'Regional Office') {
-    $count = DB::table('blocks')
-        ->join('rooms', 'blocks.id', '=', 'rooms.block_id')
-        ->where('blocks.region_id', $regionId)
-        ->count();
-} elseif ($role_type === 'School' || $role_type === 'College') {
-    $count = DB::table('blocks')
-        ->join('rooms', 'blocks.id', '=', 'rooms.block_id')
-        ->where('blocks.institute_id', $sms_inst_id)
-        ->count();
-} else {
-    $count = DB::table('blocks')
-        ->join('rooms', 'blocks.id', '=', 'rooms.block_id')
-        ->count();
+ public function getRooms(Request $request)
+{
+    $sms_inst_id = session('sms_inst_id');
+    $roomtype = $request->query('id');  // Get array of IDs
+    $role_type = session('type');
+    $regionId = session('region_id');
+if (is_null($roomtype)) {
+        $roomtypeArray = [];
+    } elseif (is_array($request->query('id'))) {
+        $roomtypeArray = array_map('intval', $request->query('id'));
+    } else {
+        $roomtypeArray = [intval($roomtype)]; // fallback for single value
+    }
+    $query = DB::table('blocks')
+        ->join('rooms', 'blocks.id', '=', 'rooms.block_id');
+    if ($role_type === 'Regional Office') {
+      
+             $query ->join('institutes', 'blocks.institute_id', '=', 'institutes.id')
+            ->where('institutes.region_id', $regionId);
+            
+    } elseif ($role_type === 'School' || $role_type === 'College') {
+     $query ->where('blocks.institute_id', $sms_inst_id);
+           
+    } 
+    if (!empty($roomtypeArray)) {
+        $query->whereIn('rooms.room_type_id', $roomtypeArray);
+    }
+$count = $query->count();
+    return response()->json(['count' => $count]);
 }
 
-return response()->json(['count' => $count]); // Keep 'count' key for frontend compatibility
+ public function getProjects(Request $request)
+{
+    $sms_inst_id = session('sms_inst_id');
+    $status = $request->query('s');  // Get array of IDs
+    $role_type = session('type');
+    $regionId = session('region_id');
+
+    $query = DB::table('projects');
+    if ($role_type === 'Regional Office') {
+      
+             $query ->join('institutes', 'projects.institute_id', '=', 'institutes.id')
+            ->where('institutes.region_id', $regionId);
+            
+    } elseif ($role_type === 'School' || $role_type === 'College') {
+     $query ->where('projects.institute_id', $sms_inst_id);
+           
+    } 
+    if (!empty($status)) {
+        $query->where('projects.status', $status);
+    }
+$count = $query->count();
+    return response()->json(['count' => $count]);
 }
+
  public function getBlocks(Request $request)
     {
      
@@ -279,10 +306,7 @@ $tab1 = DB::table('fund_helds')
         $roleIds = collect(array_filter([$fallbackRoleId]));
     }
 
-    $cards = collect();
-    if (($roleIds?->count() ?? 0) > 0) {
-        $cards = DashboardCard::whereIn('role_id', $roleIds)->get();
-    }
+  $cards = DashboardCard::visibleTo(auth()->user())->get();
 
 
         
@@ -298,4 +322,6 @@ $tab1 = DB::table('fund_helds')
             'title3' => $title3,
         ]);
     }
+
+
 }

@@ -223,13 +223,13 @@ export default function HelpDeskIndex({ helpDesk, filters, institutes, auth }: P
             </div>
 
             <div className="space-y-3">
-              <table className="w-full border-collapse">
+              <table className="w-full border-collapse  border-1 rounded-md overflow-hidden shadow-sm">
   <thead>
-    <tr className="bg-primary dark:bg-gray-800 text-center" >
-      <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Token</th>
-      <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Title</th>
-       <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Descriptions</th>
-      <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Status</th>
+    <tr className="bg-primary dark:bg-gray-800 text-center text-sm md:text-md lg:text-lg" >
+      <th className="border p-2   font-medium text-white dark:text-gray-200">Token</th>
+      <th className="border p-2   font-medium text-white dark:text-gray-200">Title</th>
+       <th className="border p-2   font-medium text-white dark:text-gray-200">Descriptions</th>
+      <th className="border p-2   font-medium text-white dark:text-gray-200">Status</th>
      
       
     </tr>
@@ -239,16 +239,16 @@ export default function HelpDeskIndex({ helpDesk, filters, institutes, auth }: P
                 <p className="text-muted-foreground text-center">No Request found.</p>
               ) : (
                 helpDesk.data.map((req) => (
- <tr  onClick={() => openViewModal(req)}  key={req.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 text-center
+ <tr  onClick={() => openViewModal(req)}  key={req.id} className=" p-1 hover:bg-primary/10 text-sm md:text-md lg:text-lg dark:hover:bg-gray-700 text-center
                     ">
-                      <td className="border  text-sm text-gray-900 dark:text-gray-100">
+                      <td className="border   text-gray-900 dark:text-gray-100">
                          #{req.token}
                          </td>
-                           <td className="border  text-sm text-gray-900 dark:text-gray-100">
+                           <td className="border font-bold   text-gray-900 dark:text-gray-100">
                          {req.title}
                          </td>
-                         <td className="border  text-sm text-gray-900 dark:text-gray-100">{req.description} </td>
-                          <td className="border  text-sm text-gray-900 dark:text-gray-100">  <span className={`inline-block px-2 py-1 rounded-full text-xs font-semibold ${getStatusStyles(req.status)}`}>
+                         <td className="border   text-gray-900 dark:text-gray-100">{req.description} </td>
+                          <td className="border   text-gray-900 dark:text-gray-100">  <span className={`inline-block px-2 py-1 rounded-full  font-semibold ${getStatusStyles(req.status)}`}>
                             {req.status}
                           </span> </td>
                      

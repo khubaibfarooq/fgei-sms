@@ -116,31 +116,20 @@ export default function InstituteForm({ institute }: InstituteFormProps) {
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title={isEdit ? 'Update Institute' : 'Add Institute'} />
 
-      <div className="flex-1 p-4 md:p-6 w-[70vw] mx-auto">
+      <div className="flex-1 p-4 md:p-6 w-full mx-auto">
         <Card>
           <CardHeader>
-            <CardTitle className="text-2xl font-bold">
-              {isEdit ? 'Update Institute' : 'Add Institute'}
+            <CardTitle className="text-2xl font-bold text-center">
+              {data.name}
             </CardTitle>
-            <p className="text-sm text-muted-foreground">
-              {isEdit ? 'Update institute details' : 'Create a new institute'}
-            </p>
+         
           </CardHeader>
 
           <Separator />
 
           <CardContent className="pt-6">
             <form onSubmit={handleSubmit} className="space-y-6" encType='multipart/form-data'>
-           <div className="space-y-2">
-                <Label htmlFor="established_date">Name</Label>
-                <Input
-                  id="name"
-                 readOnly
-                  type="text"
-                  value={data.name}
-                  onChange={(e) => setData('name', e.target.value)}
-                />
-              </div>
+          
                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
              
 
@@ -175,42 +164,7 @@ export default function InstituteForm({ institute }: InstituteFormProps) {
                 />
               </div>
 </div>
-  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-     {/* File Uploads */}
-              <div className="space-y-2">
-                <Label htmlFor="img_layout">Layout Image</Label>
-                <Input
-                  id="img_layout"
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => setData('img_layout', e.target.files?.[0] || null)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="img_3d">3D Image</Label>
-                <Input
-                  id="img_3d"
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => setData('img_3d', e.target.files?.[0] || null)}
-                />
-              </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="video">Video</Label>
-                <Input
-                  id="video"
-                  type="file"
-                  accept="video/*"
-                  onChange={(e) => setData('video', e.target.files?.[0] || null)}
-                />
-              </div>
-
-          
-
-              {/* Action Buttons */}
-             
-              </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       {/* Layout image view */}
               <div className="space-y-2">
@@ -224,6 +178,12 @@ export default function InstituteForm({ institute }: InstituteFormProps) {
                 ) : (
                   <p className="text-sm text-muted-foreground">No layout image uploaded.</p>
                 )}
+                <Input
+                  id="img_layout"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setData('img_layout', e.target.files?.[0] || null)}
+                />
               </div>
 
               {/* 3D image view */}
@@ -238,6 +198,12 @@ export default function InstituteForm({ institute }: InstituteFormProps) {
                 ) : (
                   <p className="text-sm text-muted-foreground">No 3D image uploaded.</p>
                 )}
+                 <Input
+                  id="img_3d"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setData('img_3d', e.target.files?.[0] || null)}
+                />
               </div>
 
               {/* Video view */}
@@ -251,6 +217,12 @@ export default function InstituteForm({ institute }: InstituteFormProps) {
                 ) : (
                   <p className="text-sm text-muted-foreground">No video uploaded.</p>
                 )}
+                 <Input
+                  id="video"
+                  type="file"
+                  accept="video/*"
+                  onChange={(e) => setData('video', e.target.files?.[0] || null)}
+                />
               </div>
                 </div>   
    

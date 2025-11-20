@@ -11,23 +11,38 @@ class DashboardCardController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request)
-    {
-        $query = DashboardCard::with('role');
+   public function index(Request $request)
+{
 
-        if ($request->search) {
-            $query->where('title', 'like', '%' . $request->search . '%');
-        }
+    $query = DashboardCard::query();
 
-        $dashboardCards = $query->paginate(10)->withQueryString();
+  
 
-        return Inertia::render('dashboard_cards/Index', [
-            'dashboardCards' => $dashboardCards,
-            'filters' => [
-                'search' => $request->search ?? '',
-            ],
-        ]);
+    if ($request->filled('search')) {
+        $query->where('title', 'like', "%{$request->search}%");
     }
+
+    $dashboardCards = $query->paginate(10)->withQueryString();
+
+    // Manually attach roles to each card
+    $dashboardCards->getCollection()->transform(function ($card) {
+        $roleIdsOrNames = $card->role_id ? explode(',', $card->role_id) : [];
+
+        $card->roles = \Spatie\Permission\Models\Role::query()
+            ->when(
+                count($roleIdsOrNames) > 0 && is_numeric($roleIdsOrNames[0]),
+                fn($q) => $q->whereIn('id', $roleIdsOrNames),
+            )
+            ->get();
+
+        return $card;
+    });
+
+    return Inertia::render('dashboard_cards/Index', [
+        'dashboardCards' => $dashboardCards,
+        'filters' => $request->only('search'),
+    ]);
+}
 
     /**
      * Show the form for creating a new resource.
@@ -49,8 +64,9 @@ class DashboardCardController extends Controller
             'title'   => 'required|string|max:255',
             'link'    => 'required|string|max:255',
             'color'   => 'nullable|string|max:255',
-            'role_id' => 'required|exists:roles,id',
+            'role_id' => 'required',
             'redirectlink' => 'nullable|string',
+            'icon'  => 'nullable|string|max:255',
         ]);
 
         DashboardCard::create($data);
@@ -80,12 +96,13 @@ class DashboardCardController extends Controller
     $data = $request->validate([
         'title'   => 'required|string|max:255',
                 'color'   => 'nullable|string|max:255',
-
+'icon'  => 'nullable|string|max:255',
         'link'    => 'required|string|max:255',
-        'role_id' => 'required|exists:roles,id',
+        'role_id' => 'required',
           'redirectlink' => 'nullable|string',
     ]);
 $dashboardCard=DashboardCard::find($request->id);
+
     if ($dashboardCard->update($data)) {
         return redirect()->route('dashboardcards.index')
             ->with('success', 'Dashboard card updated successfully.');
@@ -97,11 +114,14 @@ $dashboardCard=DashboardCard::find($request->id);
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(DashboardCard $dashboardCard)
-    {
-        $dashboardCard->delete();
+  
+    public function destroy($id) // or (Request $request, $id)
+{
+    $dashboardCard = DashboardCard::findOrFail($id);
 
-        return redirect()->route('dashboardcards.index')
-            ->with('success', 'Dashboard card deleted successfully.');
-    }
+    $dashboardCard->delete();
+
+    return redirect()->back()->with('success', 'Dashboard card deleted successfully.');
+}
+    
 }
