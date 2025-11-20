@@ -7,6 +7,8 @@ import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { type BreadcrumbItem } from '@/types';
 import { Plus, Edit, Trash2 } from 'lucide-react';
+import { Label } from '@/components/ui/label';
+
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Combobox from '@/components/ui//combobox';
 
@@ -156,6 +158,8 @@ const isValidItem = (item: any): item is Item => {
 export default function InstitutionalReportIndex({ institutes: initialInstitutes = [], regions: initialRegions = [], blocks: initialBlocks = [], instituteAssets: initialAssets = [], rooms: initialRooms = [],shifts:initialShifts=[],upgradations:initialUpgradations=[],funds:initialFunds=[],projects:initialProjects=[], filters: initialFilters = { search: '', institute_id: '', region_id: '' } }: Props) {
    const [search, setSearch] = useState(initialFilters.search || '');
   const [institute, setInstitute] = useState(initialFilters.institute_id || '');
+    const [fetchedinstitute, setFetchedInstitute] = useState<Institute>();
+
   const [region, setRegion] = useState(initialFilters.region_id || '');
   const [institutes, setInstitutes] = useState<Item[]>(initialInstitutes);
   const [regions, setRegions] = useState<Item[]>(initialRegions);
@@ -186,6 +190,8 @@ console.log(memoizedRegions);
         throw new Error('Failed to fetch data');
       }
       const data = await response.json();
+       setFetchedInstitute(data.institute || []);
+       console.log(fetchedinstitute)
       setBlocks(data.blocks || []);
       setInstituteAssets(data.instituteAssets || []);
       setRooms(data.rooms || []);
@@ -561,8 +567,55 @@ console.log(memoizedRegions);
             </div>
           </CardContent>
         </Card>
+      
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {/* Layout image view */}
+              <div className="space-y-2">
+                <Label>Current Layout Image</Label>
+                {fetchedinstitute?.img_layout ? (
+                  <img
+                    src={`/assets/${fetchedinstitute.img_layout}`}
+                    alt="Layout"
+                    className="w-full h-48 object-cover rounded"
+                  />
+                ) : (
+                  <p className="text-sm text-muted-foreground">No layout image uploaded.</p>
+                )}
+               
+              </div>
+
+              {/* 3D image view */}
+              <div className="space-y-2">
+                <Label>Current 3D Image</Label>
+                {fetchedinstitute?.img_3d ? (
+                  <img
+                    src={`/assets/${fetchedinstitute.img_3d}`}
+                    alt="3D View"
+                    className="w-full h-48 object-cover rounded"
+                  />
+                ) : (
+                  <p className="text-sm text-muted-foreground">No 3D image uploaded.</p>
+                )}
+              
+              </div>
+
+              {/* Video view */}
+              <div className="space-y-2">
+                <Label>Current Video</Label>
+                {fetchedinstitute?.video ? (
+                  <video controls className="w-full h-48 rounded">
+                    <source src={`/assets/${fetchedinstitute.video}`} type="video/mp4" />
+                    Your browser does not support the video tag.
+                  </video>
+                ) : (
+                  <p className="text-sm text-muted-foreground">No video uploaded.</p>
+                )}
+                
+              </div>
+                </div>  
         {/* Shifts */}
-<div className="border rounded-lg mb-4 border-primary/95">
+
+<div className="border rounded-lg my-4 border-primary/95">
   <button
     className="w-full p-4 text-left flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-800 
 

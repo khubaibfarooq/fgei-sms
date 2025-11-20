@@ -107,7 +107,9 @@ $regions = Institute::select('region_id as id', 'name')->where('type', 'Regional
    $upgradations=[];
     $funds=[];
     $projects=[];
+    $institute=[];
     if ($request->institute_id && is_numeric($request->institute_id) && $request->institute_id > 0) {
+        $institute=Institute::find($request->institute_id);
         $shifts=Shift::where('institute_id', $request->institute_id)->with('buildingType')->get();
       $upgradations=Upgradation::where('institute_id', $request->institute_id)->get();
 
@@ -139,7 +141,7 @@ $projects = ProjectType::whereHas('projects', function($query) use ($request) {
 }
 
     return response()->json([
-
+'institute'=>$institute,
         'blocks' => $blocks,
         'rooms' => $rooms,
      
