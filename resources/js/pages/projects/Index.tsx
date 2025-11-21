@@ -41,6 +41,7 @@ interface Props {
   };
   filters: {
     search: string;
+    status:string;
   };
   permissions: {
     can_add: boolean;
@@ -55,6 +56,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 export default function ProjectIndex({ projects, filters,permissions }: Props) {
   const [search, setSearch] = useState(filters.search || '');
+  const [selectedStatus, setSelectedStatus] = useState(filters.status || '');
 
   const handleDelete = (id: number) => {
     router.delete(`/projects/${id}`, {
@@ -68,7 +70,23 @@ export default function ProjectIndex({ projects, filters,permissions }: Props) {
       router.get('/projects', { ...filters, search }, { preserveScroll: true });
     }
   };
-
+ const handleStatusChange= (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const value=  e.target.value;
+ setSelectedStatus(value); // reset room when block changes
+    updateFilters({ search: search, status: value });    
+  };  
+  const updateFilters = (newFilters: Partial<typeof filters>) => {
+      router.get(
+        '/projects',
+        { ...filters, ...newFilters },
+        {
+          preserveScroll: true,
+          preserveState: true,
+          replace: true,
+          only: ['projects', 'filters'],
+        }
+      );
+    };
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Project Management" />
@@ -100,6 +118,23 @@ export default function ProjectIndex({ projects, filters,permissions }: Props) {
                 onChange={(e) => setSearch(e.target.value)}
                 onKeyDown={handleSearchKey}
               />
+                 <select
+  value={selectedStatus}
+  onChange={handleStatusChange}
+  className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+>
+  <option value="">
+  All
+  </option>
+ <option value="inprogress">
+  InProgress
+  </option><option value="completed">
+  Completed
+  </option><option value="planned">
+  Planned
+  </option>
+  
+</select>
             </div>
 
             <div className="space-y-3">

@@ -19,11 +19,14 @@ $type=session('type');
 
         $query->where('institute_id', $inst_id);
         if ($request->search) {
-            $query->where('name', 'like', '%' . $request->search . '%')
-            ->Where('institute_id', $inst_id);
+            $query->where('name', 'like', '%' . $request->search . '%');
+         
                   
         }
-
+  if ($request->status) {
+            $query->where('status',  $request->status);
+                  
+        }
        
 
         $projects = $query->paginate(10)->withQueryString();
@@ -34,7 +37,9 @@ $permissions = [
     ];
         return Inertia::render('projects/Index', [
             'projects' => $projects,
-            'filters' => ['search' => $request->search ?? ''],
+            'filters' => ['search' => $request->search ?? '',
+        'status'=>$request->status ?? '',
+    ],
                 'permissions' => $permissions,
         ]);
     }

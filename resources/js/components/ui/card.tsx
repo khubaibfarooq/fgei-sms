@@ -79,7 +79,7 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
           <div className="flex flex-col gap-1">
             {/* Title above number */}
             {title && (
-              <div className="text-xs md:text-sm text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wide">
+              <div className="text-xs md:text-sm text-black dark:text-gray-400 font-semibold uppercase tracking-wide">
                 {title}
               </div>
             )}

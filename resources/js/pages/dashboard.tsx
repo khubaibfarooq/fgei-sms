@@ -43,6 +43,8 @@ interface TableData {
   title: string;
   data: TableRow[];
   columns: string[];
+    link: string;
+
 }
 
 // Define interface for Inertia props
@@ -55,6 +57,9 @@ interface Props extends Record<string, any> {
   title1: string;
   title2: string;
   title3: string;
+    link1: string;
+  link2: string;
+  link3: string;
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -133,17 +138,20 @@ export default function Dashboard() {
     {
       title: props.title1 || 'Funds',
       data: props.tab1 || [],
-      columns: getColumnsFromData(props.tab1 || [])
+      columns: getColumnsFromData(props.tab1 || []),
+        link: props.link1 || '',
     },
     {
       title: props.title2 || 'Tab2', 
       data: props.tab2 || [],
-      columns: getColumnsFromData(props.tab2 || [])
+      columns: getColumnsFromData(props.tab2 || []),
+           link: props.link2 || '',
     },
     {
       title: props.title3 || 'Tab3',
       data: props.tab3 || [],
-      columns: getColumnsFromData(props.tab3 || [])
+      columns: getColumnsFromData(props.tab3 || []),
+           link: props.link3 || '',
     }
   ];
 

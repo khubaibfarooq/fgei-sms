@@ -19,8 +19,7 @@ import {
   AlertDialogAction,
 } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
-
-interface InstituteAsset {
+interface DetailedAsset {
   id: number;
   current_qty: number;
   details: string;
@@ -43,14 +42,14 @@ interface InstituteAsset {
   };
 }
 
-interface Room {
-  id: number;
+// New type for summary mode
+interface SummaryAsset {
   name: string;
-  block?: {
-    id: number;
-    name: string;
-  };
+  total_qty: number;
+  locations_count?: number;
 }
+
+type InstituteAsset = DetailedAsset | SummaryAsset;
 
 interface Props {
   instituteAssets: {
@@ -62,17 +61,17 @@ interface Props {
     block: string;
     room: string;
     category: string;
+    details: boolean;
   };
   permissions?: {
     can_add: boolean;
     can_edit: boolean;
     can_delete: boolean;
   };
-  blocks: Record<string, string>;      // from pluck('name', 'id') → object
-  rooms: Room[];
-  categories: Record<string, string>;  // from pluck('name', 'id') → object
+  blocks: Record<string, string>;
+  rooms: any[];
+  categories: Record<string, string>;
 }
-
 const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Institute Assets', href: '/institute-assets' },
 ];
@@ -89,6 +88,8 @@ export default function InstituteAssetIndex({
   const [selectedBlock, setSelectedBlock] = useState(filters.block || '');
   const [selectedRoom, setSelectedRoom] = useState(filters.room || '');
   const [selectedCategory, setSelectedCategory] = useState(filters.category || '');
+    const [details, setDetails] = useState(filters.details || false);
+
 
   // Convert Laravel pluck objects → array of { id, name }
   const blockOptions = blocks
@@ -98,8 +99,8 @@ export default function InstituteAssetIndex({
   const catOptions = categories
     ? Object.entries(categories).map(([id, name]) => ({ id, name }))
     : [];
-
-  // Single unified filter handler
+const isSummaryMode = !details;  // This is the key fix!
+//   // Single unified filter handler
   const updateFilters = (newFilters: Partial<typeof filters>) => {
     router.get(
       '/institute-assets',
@@ -138,11 +139,24 @@ export default function InstituteAssetIndex({
     updateFilters({block: selectedBlock, room: selectedRoom, category: value });
   };
 
+  const handleDetailChange = (checked: boolean) => {
+  setDetails(checked);
+
+  updateFilters({
+    details: checked,
+    search,
+    block: selectedBlock,
+    room: selectedRoom,
+    category: selectedCategory,
+  });
+};
+
   const clearFilters = () => {
     setSearch('');
     setSelectedBlock('');
     setSelectedRoom('');
     setSelectedCategory('');
+      setDetails(false);
     router.get('/institute-assets', {}, {
       preserveScroll: true,
       preserveState: true,
@@ -157,7 +171,9 @@ export default function InstituteAssetIndex({
       onError: () => toast.error('Failed to delete institute asset'),
     });
   };
-
+const isDetailedAsset = (asset: InstituteAsset): asset is DetailedAsset => {
+    return 'asset' in asset && asset.asset !== undefined;
+  };
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Institute Asset Management" />
@@ -235,7 +251,17 @@ export default function InstituteAssetIndex({
       </option>
     ))}
 </select>
-
+<div className="flex items-center gap-2">
+  <Input
+    type="checkbox"
+    checked={details}
+    onChange={(e) => handleDetailChange(e.target.checked)}
+    id="details-mode"
+  />
+  <label htmlFor="details-mode" className="cursor-pointer select-none font-medium">
+    {details ? 'Detailed View' : 'Summary View'} — Show Details
+  </label>
+</div>
               {(search || selectedBlock || selectedRoom || selectedCategory) && (
                 <Button onClick={clearFilters} variant="ghost">
                   Clear Filters
@@ -243,80 +269,131 @@ export default function InstituteAssetIndex({
               )}
             </div>
 
-            {/* Table */}
+      {/* Table */}
             <div className="overflow-x-auto">
               {instituteAssets.data.length === 0 ? (
-                <p className="text-center text-muted-foreground py-10">No institute assets found.</p>
+                <p className="text-center text-muted-foreground py-10">
+                  No assets found.
+                </p>
               ) : (
                 <table className="w-full min-w-max border-collapse rounded-lg overflow-hidden shadow-sm">
-                  <thead>
-                    <tr className="bg-primary text-white">
-                      <th className="border p-3 text-left">Asset</th>
-                      <th className="border p-3 text-left">Category</th>
-                      <th className="border p-3 text-left">Details</th>
-                      <th className="border p-3 text-center">Quantity</th>
-                      <th className="border p-3 text-left">Added Date</th>
-                      <th className="border p-3 text-left">Room</th>
-                      <th className="border p-3 text-left">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {instituteAssets.data.map((asset) => (
-                      <tr key={asset.id} className="hover:bg-muted/50">
-                        <td className="border p-3 font-semibold">{asset.asset.name}</td>
-                        <td className="border p-3">{asset.asset.category?.name || '—'}</td>
-                        <td className="border p-3 text-sm">{asset.details || '—'}</td>
-                        <td className="border p-3 text-center font-bold text-lg">{asset.current_qty}</td>
-                        <td className="border p-3 text-sm">{new Date(asset.added_date).toLocaleDateString()}</td>
-                        <td className="border p-3 text-sm">
-                          {asset.room
-                            ? `${asset.room.name}${asset.room.block ? ` (${asset.room.block.name})` : ''}`
-                            : '—'}
-                        </td>
-                        <td className="border p-3">
-                          <div className="flex gap-1">
-                            {permissions?.can_edit && (
-                              <Link href={`/institute-assets/${asset.id}/edit`}>
-                                <Button variant="ghost" size="icon">
-                                  <Edit className="h-4 w-4" />
-                                </Button>
-                              </Link>
-                            )}
-                            {permissions?.can_delete && (
-                              <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="text-destructive">
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                  <AlertDialogHeader>
-                                    <AlertDialogTitle>Delete Asset?</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                      <strong>{asset.asset.name}</strong> (Qty: {asset.current_qty}) will be permanently deleted.
-                                    </AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                    <AlertDialogAction
-                                      className="bg-destructive"
-                                      onClick={() => handleDelete(asset.id)}
-                                    >
-                                      Delete
-                                    </AlertDialogAction>
-                                  </AlertDialogFooter>
-                                </AlertDialogContent>
-                              </AlertDialog>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
+               <thead>
+  <tr className="bg-primary text-white">
+    <th className="border p-3 text-left">Asset Name</th>
+
+    {!details ? (
+      // Summary Mode
+      <>
+        <th className="border p-3 text-center">Total Quantity</th>
+        <th className="border p-3 text-center">Locations</th>
+      </>
+    ) : (
+      // Detailed Mode
+      <>
+        <th className="border p-3 text-left">Category</th>
+        <th className="border p-3 text-left">Details</th>
+        <th className="border p-3 text-center">Quantity</th>
+        <th className="border p-3 text-left">Added Date</th>
+        <th className="border p-3 text-left">Room / Block</th>
+        <th className="border p-3 text-left">Actions</th>
+      </>
+    )}
+  </tr>
+</thead>
+               <tbody>
+  {instituteAssets.data.map((item: any, index) => {
+    // ───── SUMMARY MODE (details = false) ─────
+    if (!details) {
+      // We are in summary mode → item has .name, .total_qty
+      return (
+        <tr key={`${item.name}-${index}`} className="hover:bg-muted/50">
+          <td className="border p-3 font-semibold">{item.name}</td>
+          <td className="border p-3 text-center text-lg font-bold text-green-600">
+            {item.total_qty}
+          </td>
+          <td className="border p-3 text-center text-amber-600">
+            {item.locations_count}
+          </td>
+        </tr>
+      );
+    }
+
+    // ───── DETAILED MODE (details = true) ─────
+    // But during transition, item might still be summary object!
+    // So we MUST check if it has .asset before using it
+
+    // Safe guard: if item has no .asset → it's old summary data → skip or show loading
+    if (!item.asset) {
+      return (
+        <tr key={index}>
+          <td colSpan={7} className="border p-3 text-center text-muted-foreground">
+            Loading details...
+          </td>
+        </tr>
+      );
+    }
+
+    // Now it's safe — item is real DetailedAsset
+    const asset = item as DetailedAsset;
+
+    return (
+      <tr key={asset.id} className="hover:bg-muted/50">
+        <td className="border p-3 font-semibold">{asset.asset.name}</td>
+        <td className="border p-3">{asset.asset.category?.name || '—'}</td>
+        <td className="border p-3 text-sm">{asset.details || '—'}</td>
+        <td className="border p-3 text-center font-bold text-lg">{asset.current_qty}</td>
+        <td className="border p-3 text-sm">
+          {new Date(asset.added_date).toLocaleDateString()}
+        </td>
+        <td className="border p-3 text-sm">
+          {asset.room
+            ? `${asset.room.name}${asset.room.block ? ` (${asset.room.block.name})` : ''}`
+            : '—'}
+        </td>
+        <td className="border p-3">
+          <div className="flex gap-1">
+            {permissions?.can_edit && (
+              <Link href={`/institute-assets/${asset.id}/edit`}>
+                <Button variant="ghost" size="icon">
+                  <Edit className="h-4 w-4" />
+                </Button>
+              </Link>
+            )}
+            {permissions?.can_delete && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="ghost" size="icon" className="text-destructive">
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete Entry?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      <strong>{asset.asset.name}</strong> (Qty: {asset.current_qty}) will be deleted.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      className="bg-destructive"
+                      onClick={() => handleDelete(asset.id)}
+                    >
+                      Delete
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
+          </div>
+        </td>
+      </tr>
+    );
+  })}
+</tbody>
                 </table>
               )}
             </div>
-
             {/* Pagination */}
             {instituteAssets.links.length > 3 && (
               <div className="flex justify-center gap-2 flex-wrap pt-6">

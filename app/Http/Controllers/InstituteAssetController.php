@@ -11,60 +11,82 @@ use App\Models\Institute;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\DB;
 
 class InstituteAssetController extends Controller
 {
     public function index(Request $request)
-    {
-        $inst_id = session('sms_inst_id');
-        $query = InstituteAsset::with(['institute', 'asset.category', 'room.block'])
-            ->where('institute_id', $inst_id);
+{
+    $inst_id = session('sms_inst_id');
 
-        if ($request->search) {
-            $query->whereHas('asset', function ($q) use ($request) {
-                $q->where('name', 'like', '%' . $request->search . '%');
-            });
-        }
-        if ($request->block) {
-            $query->whereHas('room.block', function ($q) use ($request) {
-                $q->where('id', $request->block);
-            });
-        }
-        if ($request->room) {
-            $query->where('room_id', $request->room);
-        }
- if ($request->category && !empty($request->category) && $request->category!=0) {
-    $category_id=$request->category;
-            $query->whereHas('asset.category', function ($q) use ($category_id) {
-        $q->where('id', $category_id);
-       
-    });
-        }
-        $instituteAssets = $query->paginate(10)->withQueryString();
-$permissions = [
-            'can_add' => auth()->user()->can('inst-assets-add'),
-            'can_edit' => auth()->user()->can('inst-assets-edit'),
-            'can_delete' => auth()->user()->can('inst-assets-delete'),
-        ];
-    $blocks = Block::where('institute_id', $inst_id)->pluck('name', 'id');
-        $rooms = Room::whereHas('block', function ($query) use ($inst_id) {
-            $query->where('institute_id', $inst_id);
-        })->with(['block', 'type'])->get();
-     $categories = AssetCategory::pluck('name', 'id');
-        return Inertia::render('institute_assets/Index', [
-            'instituteAssets' => $instituteAssets,
-            'filters' => ['search' => $request->search ?? '',
-                          'block' => $request->block ?? '',
-                        'room' => $request->room ?? '',
-                        'category'=>$request->category ?? '',
-                        ],
-            'permissions' => $permissions,
-            'rooms' => $rooms,
-        'blocks'=>$blocks,
-        'categories'=>$categories,
-        ]);
+    // Start with base query
+    $query = InstituteAsset::query()
+        ->with(['institute', 'asset.category', 'room.block'])
+        ->where('institute_id', $inst_id);
+   $instituteAssets=[];
+    // Apply filters
+    if ($request->filled('search')) {
+        $query->whereHas('asset', function ($q) use ($request) {
+            $q->where('name', 'like', '%' . $request->search . '%');
+        });
     }
 
+    if ($request->filled('block')) {
+        $query->whereHas('room.block', function ($q) use ($request) {
+            $q->where('id', $request->block);
+        });
+    }
+
+    if ($request->filled('room')) {
+        $query->where('room_id', $request->room);
+    }
+
+    if ($request->filled('category') && $request->category != 0) {
+        $query->whereHas('asset.category', function ($q) use ($request) {
+            $q->where('id', $request->category);
+        });
+    }
+
+    // Handle summary/details mode
+    if (!$request->boolean('details')){
+  $query->join('assets', 'institute_assets.asset_id', '=', 'assets.id')
+              ->select([
+                  'assets.name',
+                  DB::raw('SUM(institute_assets.current_qty) as total_qty'),
+                  DB::raw('COUNT(*) as locations_count') // optional: how many places this asset exists
+              ])
+              ->groupBy('assets.id')
+              ->orderBy('assets.name');
+                 
+              
+}
+    // Paginate
+          $instituteAssets = $query->paginate(10)->withQueryString();
+
+
+    // Load additional data
+    $blocks = Block::where('institute_id', $inst_id)->pluck('name', 'id');
+    $rooms = Room::whereHas('block', function ($q) use ($inst_id) {
+        $q->where('institute_id', $inst_id);
+    })->with(['block', 'type'])->get();
+
+    $categories = AssetCategory::pluck('name', 'id');
+
+    $permissions = [
+        'can_add' => auth()->user()->can('inst-assets-add'),
+        'can_edit' => auth()->user()->can('inst-assets-edit'),
+        'can_delete' => auth()->user()->can('inst-assets-delete'),
+    ];
+
+    return Inertia::render('institute_assets/Index', [
+        'instituteAssets' => $instituteAssets,
+        'filters' => $request->only(['search', 'block', 'room', 'category', 'details']),
+        'permissions' => $permissions,
+        'rooms' => $rooms,
+        'blocks' => $blocks,
+        'categories' => $categories,
+    ]);
+}
     public function create()
     { if (!auth()->user()->can('inst-assets-add')) {
         abort(403, 'You do not have permission to add a Asset.');

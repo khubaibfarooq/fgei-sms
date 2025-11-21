@@ -119,8 +119,8 @@ Route::resource('donations', DonationController::class);
 //DashboardCardController
 
 
-Route::resource('dashboardcards', DashboardCardController::class);
-
+Route::resource('dashboardcards', DashboardCardController::class)
+     ->parameters(['dashboardcards' => 'dashboardCard']);
 // Rooms
 Route::resource('room-types', RoomTypeController::class);
 Route::resource('rooms', RoomController::class);

@@ -197,6 +197,10 @@ public function index(Request $request)
 $tab1 = [];
 $tab2 = [];
 $tab3 = [];
+$link1="";
+$link2="";
+$link3="";
+
 $title1 = "";
 $title2 = "";
 $title3 = "";
@@ -270,6 +274,9 @@ $title2 = "Tasks";
 
 }
 else if($role_type=='Directorate' || $role_type=='Director HRM'){
+   $link1="/reports/funds?fund_head_id=";
+$link2="";
+$link3="";
     $title1 = "Total Funds";
   $title2 = "Projects";
   $title3 = "Institutions";
@@ -277,6 +284,7 @@ $tab1 = DB::table('fund_helds')
     ->join('fund_heads', 'fund_heads.id', '=', 'fund_helds.fund_head_id')
     ->groupBy('fund_heads.id', 'fund_heads.name') // Must group by actual columns
     ->select([
+    
         'fund_heads.name as Head',
         DB::raw('SUM(fund_helds.balance) as balance')
     ])
@@ -320,6 +328,9 @@ $tab1 = DB::table('fund_helds')
             'title1' => $title1,
             'title2' => $title2,
             'title3' => $title3,
+             'link1' => $link1,
+            'link2' => $link2,
+            'link3' => $link3,
         ]);
     }
 

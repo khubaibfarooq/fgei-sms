@@ -115,9 +115,9 @@ $dashboardCard=DashboardCard::find($request->id);
      * Remove the specified resource from storage.
      */
   
-    public function destroy($id) // or (Request $request, $id)
+    public function destroy(DashboardCard $dashboardCard) // or (Request $request, $id)
 {
-    $dashboardCard = DashboardCard::findOrFail($id);
+   // $dashboardCard = DashboardCard::findOrFail($request->id);
 
     $dashboardCard->delete();
 
