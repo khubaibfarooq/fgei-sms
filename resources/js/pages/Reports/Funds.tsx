@@ -261,17 +261,40 @@ export default function Funds({ funds: initialFunds, institutes: initialInstitut
                   </tr>
                 </thead>
                 <tbody>
-                  {funds.data.length === 0 ? (
-                    <tr><td colSpan={4} className="p-4 text-muted-foreground">No funds found.</td></tr>
-                  ) : (
-                    funds.data.map((f: FundItem) => (
-                      <tr key={f.id}  className='border-1 hover:bg-primary/10  dark:hover:bg-gray-700'>
-                        <td className="p-2 text-left border-r-1 font-bold">{f.fund_head?.name || 'N/A'}</td>
-                        <td className="p-2 text-right">{typeof f.balance === 'number' ? f.balance.toFixed(2) : (f.balance ?? '0')}</td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
+                
+  {!funds || !funds.data ? (
+    <tr>
+      <td colSpan={4} className="p-4 text-center text-muted-foreground">
+        Loading funds...
+      </td>
+    </tr>
+  ) : funds.data.length === 0 ? (
+    <tr>
+      <td colSpan={4} className="p-4 text-center text-muted-foreground">
+        No funds found.
+      </td>
+    </tr>
+  ) : (
+    funds.data.map((f: FundItem) => (
+      <tr
+        key={f.id}
+        className="border-t hover:bg-primary/10 dark:hover:bg-gray-700 transition-colors"
+      >
+        <td className="p-3 text-left border-r font-medium">
+          {f.fund_head?.name || 'N/A'}
+        </td>
+        <td className="p-3 text-right font-mono">
+          {typeof f.balance === 'number'
+            ? f.balance.toFixed(2)
+            : f.balance != null
+            ? Number(f.balance).toFixed(2)
+            : '0.00'}
+        </td>
+      </tr>
+    ))
+  )}
+</tbody>
+             
               </table>
            
 
