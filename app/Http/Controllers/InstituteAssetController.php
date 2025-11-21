@@ -55,7 +55,7 @@ class InstituteAssetController extends Controller
                   DB::raw('SUM(institute_assets.current_qty) as total_qty'),
                   DB::raw('COUNT(*) as locations_count') // optional: how many places this asset exists
               ])
-              ->groupBy('assets.id')
+              ->groupBy('assets.id','assets.name')
               ->orderBy('assets.name');
                  
               
