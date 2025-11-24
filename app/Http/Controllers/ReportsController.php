@@ -65,8 +65,22 @@ $regions = Institute::select('region_id as id', 'name')->where('type', 'Regional
          $blocks=Block::where('institute_id', $request->institute_id);
          $blockIds= $blocks->pluck('id')->toArray();
           $rooms =Room::whereIn('block_id',   $blockIds)->get();
-         $instituteAssets= InstituteAsset::where('institute_id', $request->institute_id)->with([ 'institute', 'room', 'asset'])->get();
-   $blocks->get();
+           $instituteAssets = InstituteAsset::query()
+        ->where('institute_id', $request->institute_id)
+        ->join('assets', 'institute_assets.asset_id', '=', 'assets.id')
+        ->select([
+            'assets.id',
+            'assets.name',
+            DB::raw('SUM(institute_assets.current_qty) as total_qty'),
+            DB::raw('COUNT(DISTINCT institute_assets.room_id) as locations_count')
+        ])
+        ->with(['institute', 'room', 'asset'])
+        ->groupBy('assets.id', 'assets.name')
+        ->orderBy('assets.name')
+        ->get();
+    
+        
+    $blocks = $blocks->get();
 
     }
     if ($request->region_id && is_numeric($request->region_id) && $request->region_id > 0) {
@@ -116,10 +130,23 @@ $regions = Institute::select('region_id as id', 'name')->where('type', 'Regional
         $blocks = Block::where('institute_id', $request->institute_id)->get();
         $blockIds = $blocks->pluck('id')->toArray();
         $rooms = Room::whereIn('block_id', $blockIds)->with('block')->get();
-        $instituteAssets = InstituteAsset::where('institute_id', $request->institute_id)
-            ->with(['institute', 'room', 'asset'])
-            ->get();
-            $funds=FundHeld::where('institute_id', $request->institute_id)->with('fundHead')->get();
+        // $instituteAssets = InstituteAsset::where('institute_id', $request->institute_id)
+        //     ->with(['institute', 'room', 'asset'])
+        //     ->get();
+        //     $funds=FundHeld::where('institute_id', $request->institute_id)->with('fundHead')->get();
+              $instituteAssets = InstituteAsset::query()
+        ->where('institute_id', $request->institute_id)
+        ->join('assets', 'institute_assets.asset_id', '=', 'assets.id')
+        ->select([
+            'assets.id',
+            'assets.name',
+            DB::raw('SUM(institute_assets.current_qty) as total_qty'),
+            DB::raw('COUNT(DISTINCT institute_assets.room_id) as locations_count')
+        ])
+        ->with(['institute', 'room', 'asset'])
+        ->groupBy('assets.id', 'assets.name')
+        ->orderBy('assets.name')
+        ->get();
 $projects = ProjectType::whereHas('projects', function($query) use ($request) {
         $query->where('institute_id', $request->institute_id);
     })
@@ -656,11 +683,27 @@ $regions = Institute::select('region_id as id', 'name')->where('type', 'Regional
 
         $institutes = Institute::query();
         $regions    = [];
-
+   $projects = new LengthAwarePaginator(
+            collect([]),
+            0,
+            10,
+            1,
+            ['path' => $request->url()]
+        );
         // -----------------------------------------------------------------
         // Regional Office → only its own institutes
         // -----------------------------------------------------------------
         if ($type === 'Regional Office') {
+             if($request->status ){
+                        $query = Project::query()->with(['institute', 'projecttype']);
+            $query->where('status', $request->status)->whereHas('institute', function ($q) use ($regionid) {
+                $q->where('region_id', $regionid);
+            });
+            $projects = $query->paginate(10)->withQueryString();
+ $projects->getCollection()->transform(function ($project) {
+            $project->region = $project->institute?->region;
+            return $project;
+        });}
             $institutes = Institute::where('region_id', $regionid)
                 ->select('id', 'name')
                 ->get()
@@ -671,6 +714,16 @@ $regions = Institute::select('region_id as id', 'name')->where('type', 'Regional
         // Super-admin / HQ → all regions
         // -----------------------------------------------------------------
         else {
+            if($request->status ){
+                        $query = Project::query()->with(['institute', 'projecttype']);
+            $query->where('status', $request->status);
+            $projects = $query->paginate(10)->withQueryString();
+ $projects->getCollection()->transform(function ($project) {
+            $project->region = $project->institute?->region;
+            return $project;
+        });
+              
+            }
             $regions = Institute::select('region_id as id', \DB::raw('MAX(name) as name'))
                 ->where('type', 'Regional Office')
                 ->groupBy('region_id')
@@ -690,25 +743,19 @@ $regions = Institute::select('region_id as id', 'name')->where('type', 'Regional
         // -----------------------------------------------------------------
         // Empty paginator – Inertia will fill it via getProjects()
         // -----------------------------------------------------------------
-        $emptyPaginator = new LengthAwarePaginator(
-            collect([]),
-            0,
-            10,
-            1,
-            ['path' => $request->url()]
-        );
+     
 
         return Inertia::render('Reports/Projects', [
             'institutes'    => $institutes,
             'regions'       => $regions,
             'projectTypes'  => $projectTypes,
-            'projects'      => $emptyPaginator,
+            'projects'      =>$projects,
             'filters'       => [
                 'search'          => '',
                 'institute_id'    => '',
                 'region_id'       => '',
                 'project_type_id' => '',
-                'status'          => '',
+                'status'          => $request->status ?? '',
             ],
         ]);
     }
@@ -1119,11 +1166,41 @@ public function Funds(Request $request)
 
         $institutes = Institute::query();
         $regions    = [];
-$funds=[];
+         $funds = new LengthAwarePaginator(
+                    collect([]),
+                    0,
+                    10,
+                    1,
+                    ['path' => $request->url()]
+                );
+
         // -----------------------------------------------------------------
         // Regional Office → only its own institutes
         // -----------------------------------------------------------------
         if ($type === 'Regional Office') {
+
+                   if ($request->filled('fund_head_id') && $request->fund_head_id !== '0' && is_numeric($request->fund_head_id)) {
+                $fundhead = $request->fund_head_id;
+
+         
+
+                // Always group and aggregate
+                $funds =  FundHeld::with(['institute', 'fundHead'])->select([
+                    'fund_head_id',
+                    DB::raw('SUM(balance) as balance'),
+                ])
+        
+                ->where('fund_head_id', $fundhead)->whereHas('institute', function ($q) use ($regionid) {
+                    $q->where('region_id', $regionid);
+                })        
+                ->groupBy('fund_head_id')
+                ->paginate(10)
+                ->withQueryString();
+              $funds->getCollection()->transform(function ($fund) {
+        $fund->region = $fund->institute?->region;
+        return $fund;
+    });
+            } 
             $institutes = Institute::where('region_id', $regionid)
                 ->select('id', 'name')
                 ->get()
@@ -1134,42 +1211,28 @@ $funds=[];
         // Super-admin / HQ → all regions
         // -----------------------------------------------------------------
         else {
-            if($request->fund_head_id){
-              $fundhead = $request->fund_head_id;
+            if ($request->filled('fund_head_id') && $request->fund_head_id !== '0' && is_numeric($request->fund_head_id)) {
+                $fundhead = $request->fund_head_id;
 
-    // Base query
-    $query = FundHeld::query();
+         
 
-    if ($fundhead) {
-        $query->whereHas('fundHead', function ($q) use ($fundhead) {
-            $q->where('id', $fundhead)
-              ->orWhere('name', $fundhead);
-        });
-    }
+                // Always group and aggregate
+                $funds =  FundHeld::with(['institute', 'fundHead'])->select([
+                    'fund_head_id',
+                    DB::raw('SUM(balance) as balance'),
+                ])
+        
+                ->where('fund_head_id', $fundhead)        
+                ->groupBy('fund_head_id')
+                ->paginate(10)
+                ->withQueryString();
+              $funds->getCollection()->transform(function ($fund) {
+        $fund->region = $fund->institute?->region;
+        return $fund;
+    });
+            } 
 
-    // Always group and aggregate — even when no filter
-    $funds = $query->select([
-                'fund_head_id',
-                DB::raw('SUM(balance) as total_balance'), // renamed for clarity
-            ])
-            ->with([
-                'institute', 
-                'fundHead'
-            ])
-            ->groupBy('fund_head_id')
-            ->when($fundhead, fn($q) => $q, fn($q) => $q->whereRaw('1 = 0')) // forces empty result if no filter (optional)
-            ->paginate(10)
-            ->withQueryString();
-
-    // Optional: Return empty paginator if no results and no filter (clean UI)
-    if (!$fundhead && $funds->isEmpty()) {
-        $funds = FundHeld::query()
-            ->select(['fund_head_id', DB::raw('0 as total_balance')])
-            ->paginate(10)
-            ->withQueryString();
-    }
-            }
-            $regions = Institute::select('region_id as id', \DB::raw('MAX(name) as name'))
+            $regions = Institute::select('region_id as id', DB::raw('MAX(name) as name'))
                 ->where('type', 'Regional Office')
                 ->groupBy('region_id')
                 ->get()
@@ -1177,26 +1240,17 @@ $funds=[];
                 ->values();
         }
 
-     
-$fundheads=FundHead::select('id','name')->get();
-      
-        $emptyPaginator = new LengthAwarePaginator(
-            collect([]),
-            0,
-            10,
-            1,
-            ['path' => $request->url()]
-        );
+        $fundheads = FundHead::select('id', 'name')->get();
 
         return Inertia::render('Reports/Funds', [
             'institutes'    => $institutes,
             'regions'       => $regions,
-            'fundheads'  => $fundheads,
-            'funds'      => $funds ?? $emptyPaginator,
+            'fundheads'     => $fundheads,
+            'funds'         => $funds,
             'filters'       => [
-                'institute_id'    => '',
-                'region_id'       => '',
-                'fund_head_id' => '',
+                'institute_id'  => '',
+                'region_id'     => '',
+                'fund_head_id'  => $request->get('fund_head_id', ''),
             ],
         ]);
     }

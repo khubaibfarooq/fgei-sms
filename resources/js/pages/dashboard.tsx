@@ -269,30 +269,39 @@ export default function Dashboard() {
                   <thead className={`${theme.accent} dark:bg-gray-600`}>
                     <tr>
                       {table.columns.map((column, colIndex) => (
-                        <th 
-                          key={colIndex} 
-                          className="text-left py-3 px-4 text-sm font-medium dark:text-gray-200"
-                          style={{ color: theme.header.replace('bg-', 'text-') + '900' }}
-                        >
-                          {formatColumnName(column)}
-                        </th>
+                        column !== 'Key' && (  
+                          <th 
+                            key={colIndex} 
+                            className="text-left py-3 px-4 text-sm font-medium dark:text-gray-200"
+                            style={{ color: theme.header.replace('bg-', 'text-') + '900' }}
+                          >
+                            {formatColumnName(column)}
+                          </th>
+                        )
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {table.data.slice(0, visibleRows[index] || 5).map((row, rowIndex) => (
-                        <tr
-                          key={rowIndex}
-                          className={`border-b ${theme.border}/30 transition-colors hover:opacity-95
-                                     ${rowIndex % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-700'}`}
-                        >
-                          {table.columns.map((column, colIndex) => (
+                      <tr
+                        key={rowIndex}
+                        onClick={() => {
+                          if (row.Key && table.link) {
+                            router.visit(`${table.link}${row.Key}`);
+                          }
+                        }}
+                        className={`border-b ${table.link ? 'cursor-pointer' : ''} ${theme.border}/30 transition-all hover:opacity-95 hover:shadow-md
+                          ${rowIndex % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-700'}`}
+                      >
+                        {table.columns.map((column, colIndex) => (
+                          column !== 'Key' && ( 
                             <td key={colIndex} className={`py-3 px-4 text-sm md:text-lg ${theme.text}`}>
                               {formatCellValue(row[column], column)}
                             </td>
-                          ))}
-                        </tr>
-                      ))}
+                          )
+                        ))}
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
               </div>

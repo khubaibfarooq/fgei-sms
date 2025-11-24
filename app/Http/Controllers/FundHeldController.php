@@ -17,10 +17,11 @@ class FundHeldController extends Controller
 $inst_id = session('sms_inst_id');
 $type=session('type');
 
-        $query->where('institute_id', $inst_id);
+        $query->where('institute_id', $inst_id)->with('FundHead');
         if ($request->search) {
-            $query->where('name', 'like', '%' . $request->search . '%') ->Where('institute_id', $inst_id);
-        }
+ $query->whereHas('FundHead', function ($q) use ($request) {
+            $q->where('name', 'like', '%' . $request->search . '%');
+        });        }
 
         $funds = $query->with('FundHead')->paginate(10)->withQueryString();
 $permissions = [

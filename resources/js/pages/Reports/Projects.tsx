@@ -35,7 +35,7 @@ interface ProjectProp {
   status: string;
   institute?: { id: number; name?: string };
   region?: { id: number; name?: string };
-  project_type?: { id: number; name?: string };
+  projecttype?: { id: number; name?: string };
 }
 
 interface Item {
@@ -169,7 +169,7 @@ export default function Projects({ projects: initialProjects, institutes, region
         name: p.name,
         cost: p.cost,
         status: p.status,
-        project_type: p.project_type?.name || 'N/A',
+        project_type: p.projecttype?.name || 'N/A',
         institute: p.institute?.name || 'N/A',
         region: p.region?.name || 'N/A',
       });
@@ -191,7 +191,7 @@ export default function Projects({ projects: initialProjects, institutes, region
       p.name,
       p.cost,
       p.status,
-      p.project_type?.name || 'N/A',
+      p.projecttype?.name || 'N/A',
       p.institute?.name || 'N/A',
       p.region?.name || 'N/A',
     ]);
@@ -286,7 +286,7 @@ export default function Projects({ projects: initialProjects, institutes, region
                   />
 
                   {/* Project Type */}
-                  <Select value={projectType} onValueChange={(v) => { setProjectType(v); debouncedApplyFilters(); }}>
+                  <Select value={projectType} onValueChange={(v) =>  setProjectType(v)}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select Project Type" />
                     </SelectTrigger>
@@ -301,7 +301,7 @@ export default function Projects({ projects: initialProjects, institutes, region
                   </Select>
 
                   {/* Status */}
-                  <Select value={status} onValueChange={(v) => { setStatus(v); debouncedApplyFilters(); }}>
+                  <Select value={status} onValueChange={(v) =>setStatus(v) }>
                     <SelectTrigger>
                       <SelectValue placeholder="Select Status" />
                     </SelectTrigger>
@@ -347,7 +347,6 @@ export default function Projects({ projects: initialProjects, institutes, region
                           <th className="border p-2 font-medium">Status</th>
                           <th className="border p-2 font-medium">Project Type</th>
                           <th className="border p-2 font-medium">Institute</th>
-                          <th className="border p-2 font-medium">Region</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -371,9 +370,9 @@ export default function Projects({ projects: initialProjects, institutes, region
                                   {project.status.charAt(0).toUpperCase() + project.status.slice(1)}
                                 </span>
                               </td>
-                              <td className="border p-2">{project.project_type?.name || 'N/A'}</td>
+                              <td className="border p-2">{project.projecttype?.name || 'N/A'}</td>
                               <td className="border p-2">{project.institute?.name || 'N/A'}</td>
-                              <td className="border p-2">{project.region?.name || 'N/A'}</td>
+                              
                             </tr>
                           ))
                         )}

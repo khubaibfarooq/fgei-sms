@@ -209,14 +209,17 @@ if ($role_type === 'School' || $role_type === 'College') {
     $title1 = "Funds";
 $title2 = "Projects";
 $title3 = "Assets";
+   $link1="/fund-trans/";
+$link2="/projects?status=";
+$link3="/institute-assets?category=";
     $tab1 = DB::table('fund_helds')->where('institute_id', $sms_inst_id)
-    ->select( 'fund_heads.name as Head','fund_helds.balance',)
+    ->select( 'fund_heads.id  as Key','fund_heads.name as Head','fund_helds.balance',)
             ->join('fund_heads', 'fund_heads.id', '=', 'fund_helds.fund_head_id')
             ->get();
     
      $tab2 = DB::table('projects')
     ->where('institute_id', $sms_inst_id)
-    ->select('status')
+    ->select('status as Key','status')
     ->selectRaw('COUNT(*) as project_count')
     ->selectRaw('SUM(cost) as total_cost')
     ->groupBy('status')
@@ -224,31 +227,33 @@ $title3 = "Assets";
 
  $tab3 = DB::table('institute_assets')
     ->where('institute_id', $sms_inst_id)
-    ->select(
+    ->select( 'asset_categories.id as Key', 
         'asset_categories.name as Category', 
         DB::raw('sum(institute_assets.current_qty) as total_assets')
     )
     ->join('assets', 'assets.id', '=', 'institute_assets.asset_id')
     ->join('asset_categories', 'asset_categories.id', '=', 'assets.asset_category_id') // Fixed typo here
-    ->groupBy('asset_categories.name')
+    ->groupBy('asset_categories.name', 'asset_categories.id')
     ->get();
 }else if($role_type=='Regional Office'){
     $title1 = "Institutes";
 $title2 = "Funds";
 $title3 = "Projects";
+ $link2="/reports/funds?fund_head_id=";
+$link3="/reports/projects?status=";
     $tab1 = DB::table('institutes')->where('region_id', $regionId)->where('type','<>','Regional Office')->where('type','<>','Directorate')
-    ->select('type', DB::raw('COUNT(*) as institute_count'))
+    ->select('type as Key','type', DB::raw('COUNT(*) as institute_count'))
     ->groupBy('type')
     ->get();
     
      $tab2 = DB::table('fund_helds')->join('institutes', 'fund_helds.institute_id', '=', 'institutes.id')
      ->where('institutes.region_id', $regionId)
-    ->select( 'fund_heads.name as Head','fund_helds.balance',)
+    ->select( 'fund_heads.id as Key','fund_heads.name as Head','fund_helds.balance',)
             ->join('fund_heads', 'fund_heads.id', '=', 'fund_helds.fund_head_id')
             ->get();
         $tab3 = DB::table('projects')->join('institutes', 'projects.institute_id', '=', 'institutes.id')
     ->where('institutes.region_id', $regionId)
-    ->select('projects.status')
+    ->select('projects.status as Key','projects.status')
     ->selectRaw('COUNT(*) as project_count')
     ->selectRaw('SUM(projects.cost) as total_cost')
     ->groupBy('status')
@@ -275,7 +280,7 @@ $title2 = "Tasks";
 }
 else if($role_type=='Directorate' || $role_type=='Director HRM'){
    $link1="/reports/funds?fund_head_id=";
-$link2="";
+$link2="/reports/projects?status=";
 $link3="";
     $title1 = "Total Funds";
   $title2 = "Projects";
@@ -284,21 +289,22 @@ $tab1 = DB::table('fund_helds')
     ->join('fund_heads', 'fund_heads.id', '=', 'fund_helds.fund_head_id')
     ->groupBy('fund_heads.id', 'fund_heads.name') // Must group by actual columns
     ->select([
-    
+     'fund_heads.id as Key',
         'fund_heads.name as Head',
         DB::raw('SUM(fund_helds.balance) as balance')
     ])
     ->get();
 
      $tab2 = DB::table('projects')
-    ->select('projects.status')
+      
+    ->select('projects.status as Key','projects.status')
     ->selectRaw('COUNT(*) as project_count')
     ->selectRaw('SUM(projects.cost) as total_cost')
     ->groupBy('status')
     ->get();
    
     $tab3 = DB::table('institutes')->where('type','<>','Directorate')
-    ->select('type', DB::raw('COUNT(*) as institute_count'))
+    ->select('type as Key','type', DB::raw('COUNT(*) as institute_count'))
     ->groupBy('type')
     ->orderBy('institute_count','desc')
     ->get();

@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Combobox from '@/components/ui//combobox';
-
+import {formatDate} from '@/utils/dateFormatter';
 import {
   AlertDialog,
   AlertDialogTrigger,
@@ -87,17 +87,12 @@ interface Asset {
 
 interface InstituteAsset {
   id: number;
-  details: string;
+  name:string;
   institute_id: number;
   asset_id: number;
-  room_id: number;
-  current_qty: number;
-  added_by: number;
-  added_date: string;
-  created_at: string;
-  updated_at: string;
+  total_qty: number;
+locations_count:number;
   institute: Institute;
-  room: Room;
   asset: Asset;
 }
 interface Upgradations {
@@ -194,6 +189,7 @@ console.log(memoizedRegions);
        console.log(fetchedinstitute)
       setBlocks(data.blocks || []);
       setInstituteAssets(data.instituteAssets || []);
+      console.log(data.instituteAssets);
       setRooms(data.rooms || []);
       setShifts(data.shifts || []);
             setUpgradations(data.upgradations || []);
@@ -294,19 +290,18 @@ console.log(memoizedRegions);
     // Institute Assets Worksheet
     const assetsSheet = workbook.addWorksheet('Assets');
     assetsSheet.columns = [
-      { header: 'Details', key: 'details', width: 30 },
+            { header: 'Asset', key: 'asset', width: 20 },
       { header: 'Quantity', key: 'qty', width: 10 },
-      { header: 'Institute', key: 'institute', width: 20 },
-      { header: 'Room', key: 'room', width: 20 },
-      { header: 'Asset', key: 'asset', width: 20 },
+
+            { header: 'Locations', key: 'locations', width: 20 },
+
     ];
     instituteAssets.forEach((instAsset) => {
       assetsSheet.addRow({
-        details: instAsset.details,
-        qty: instAsset.current_qty,
-        institute: instAsset.institute?.name || 'N/A',
-        room: instAsset.room?.name || 'N/A',
-        asset: instAsset.asset?.name || 'N/A',
+                asset: instAsset.asset?.name || 'N/A',
+
+        qty: instAsset.total_qty,
+        locations: instAsset.locations_count,
       });
     });
 
@@ -436,13 +431,11 @@ console.log(memoizedRegions);
 
   // Institute Assets Section
   if (instituteAssets.length > 0) {
-    const assetsColumns = ['Asset Name', 'Details', 'Quantity', 'Room', 'Added Date'];
+    const assetsColumns = ['Asset Name',  'Quantity','Locations'];
     const assetsData = instituteAssets.map(asset => [
-      asset.asset.name,
-      asset.details,
-      asset.current_qty.toString(),
-      asset.room.name,
-      asset.added_date
+      asset.name,
+      asset.total_qty.toString(),
+      asset.locations_count.toString(),
     ]);
     addSectionToPDF('Institute Assets', assetsColumns, assetsData);
   }
@@ -614,8 +607,8 @@ console.log(memoizedRegions);
               </div>
                 </div>  
         {/* Shifts */}
-
-<div className="border rounded-lg my-4 border-primary/95">
+    <div className="grid grid-cols-1 md:grid-cols-2 my-2 gap-6">
+<div className="border rounded-lg  border-primary/95">
   <button
     className="w-full p-4 text-left flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-800 
 
@@ -661,9 +654,8 @@ console.log(memoizedRegions);
     </div>
   )}
 </div>
-
 {/* Blocks */}
-<div className="border rounded-lg mb-4 border-primary/95">
+<div className="border rounded-lg border-primary/95">
   <button
     className="w-full p-4 text-left flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-800"
     onClick={() => setBlocksOpen(!blocksOpen)}
@@ -706,8 +698,11 @@ console.log(memoizedRegions);
   )}
 </div>
 
+</div>
+   <div className="grid grid-cols-1 md:grid-cols-2 my-2  gap-6">
+
 {/* Rooms */}
-<div className="border rounded-lg mb-4 border-primary/95">
+<div className="border rounded-lg  border-primary/95">
   <button
     className="w-full p-4 text-left flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-800"
     onClick={() => setRoomsOpen(!roomsOpen)}
@@ -753,7 +748,7 @@ console.log(memoizedRegions);
 </div>
 
 {/* Institute Assets */}
-<div className="border rounded-lg mb-4 border-primary/95">
+<div className="border rounded-lg  border-primary/95">
   <button
     className="w-full p-4 text-left flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-800"
     onClick={() => setAssetsOpen(!assetsOpen)}
@@ -776,20 +771,20 @@ console.log(memoizedRegions);
             <thead>
               <tr className="bg-[#0b431b] dark:bg-gray-800">
                 <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Asset Name</th>
-                <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Details</th>
-                <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Quantity</th>
-                <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Room</th>
-                <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Added Date</th>
+          
+                <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Total Quantity</th>
+            
+                <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Locations</th>
               </tr>
             </thead>
             <tbody>
               {instituteAssets.map((asset) => (
                 <tr key={asset.id} className="hover:bg-primary/10  dark:hover:bg-gray-700">
-                  <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{asset.asset.name}</td>
-                  <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{asset.details}</td>
-                  <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{asset.current_qty}</td>
-                  <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{asset.room.name}</td>
-                  <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{asset.added_date}</td>
+                  <td className="border p-2 text-sm text-gray-900 font-bold dark:text-gray-100">{asset.name}</td>
+                 
+                  <td className="border p-2 text-sm text-green-700 font-bold dark:text-gray-100">{asset.total_qty}</td>
+             
+                  <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{asset.locations_count}</td>
                 </tr>
               ))}
             </tbody>
@@ -801,9 +796,10 @@ console.log(memoizedRegions);
     </div>
   )}
 </div>
-
+</div>
+   <div className="grid grid-cols-1 my-2  md:grid-cols-2 gap-6">
 {/* Institute Upgradations */}
-<div className="border rounded-lg mb-4 border-primary/95">
+<div className="border rounded-lg  border-primary/95">
   <button
     className="w-full p-4 text-left flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-800"
     onClick={() => setUpgradationsOpen(!upgradationsOpen)}
@@ -837,8 +833,8 @@ console.log(memoizedRegions);
               {upgradations.map((up) => (
                 <tr key={up.id} className="hover:bg-primary/10  dark:hover:bg-gray-700">
                   <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{up.details}</td>
-                  <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{up.from}</td>
-                  <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{up.to}</td>
+                  <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{formatDate(up.from)}</td>
+                  <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{formatDate(up.to)}</td>
                   <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{up.levelfrom}</td>
                   <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{up.levelto}</td>
                   <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{up.status}</td>
@@ -854,7 +850,7 @@ console.log(memoizedRegions);
   )}
 </div>
 {/* Institute Projects */}
-<div className="border rounded-lg mb-4 border-primary/95">
+<div className="border rounded-lg border-primary/95">
   <button
     className="w-full p-4 text-left flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-800"
     onClick={() => setProjectsOpen(!projectsOpen)}
@@ -901,6 +897,7 @@ console.log(memoizedRegions);
       )}
     </div>
   )}
+</div>
 </div>
       </div>
     </AppLayout>

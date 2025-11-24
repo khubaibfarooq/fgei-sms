@@ -19,7 +19,7 @@ class Project extends Model
     }
  public function projecttype()
     {
-        return $this->belongsTo(ProjectType::class);
+    return $this->belongsTo(ProjectType::class, 'project_type_id');
     }
  public function region()
 {

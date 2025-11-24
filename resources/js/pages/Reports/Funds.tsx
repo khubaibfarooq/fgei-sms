@@ -55,6 +55,7 @@ export default function Funds({ funds: initialFunds, institutes: initialInstitut
   const [funds, setFunds] = useState(initialFunds);
   const [filteredInstitutes, setFilteredInstitutes] = useState<Item[]>(initialInstitutes || []);
   const [region, setRegion] = useState(filters.region_id || '');  // Memoized dropdown options
+ // console.log('Initial Funds:', funds); // Debugging line
 
   // Validate items coming from server
   const isValidItem = (item: any): item is Item => {
