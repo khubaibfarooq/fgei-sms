@@ -1405,53 +1405,117 @@ $balances=[];
             ],
         ]);
     }
-
 public function getFunds(Request $request)
 {
     $hrInstituteId = session('inst_id');
-    $regionid      = session('region_id');
-    $type          = session('type');
+    $regionid = session('region_id');
+    $type = session('type');
 
     $fundheads = FundHead::select('id', 'name')->get();
     $balances = [];
     $funds = [];
 
-     if ($type === 'Regional Office') {
-           
-        if($request->filled('institute_id') && $request->institute_id !=='0' && is_numeric($request->institute_id)){
-              $institutes = Institute::where('institute_id', $request->institute_id)
-                ->select('id', 'name')
-                ->get()
-                ->filter(fn($i) => is_numeric($i->id) && $i->id > 0 && !empty(trim($i->name)))
-                ->values();
-        }else{
-  $institutes = Institute::where('region_id', $regionid)
-                ->select('id', 'name')
-                ->get()
-                ->filter(fn($i) => is_numeric($i->id) && $i->id > 0 && !empty(trim($i->name)))
-                ->values();
-        }
+    if ($type === 'Regional Office') {
+        $this->handleRegionalOffice($request, $regionid, $fundheads, $balances, $funds);
+    } else {
+        $this->handleSuperAdminOrHQ($request, $regionid, $type, $fundheads, $balances, $funds);
+    }
 
-                   if ($request->filled('fund_head_id') && $request->fund_head_id !== '0' && is_numeric($request->fund_head_id)) {
-                $fundhead = $request->fund_head_id;
+    return response()->json([
+        'funds' => $funds,
+        'balances' => $balances,
+    ]);
+}
 
-          $fundHeadBalances = FundHeld::query()->where('fund_head_id', $fundhead)
-            ->join('fund_heads', 'fund_helds.fund_head_id', '=', 'fund_heads.id')
-                        ->join('institutes', 'fund_helds.institute_id', '=', 'institutes.id')
+private function handleRegionalOffice($request, $regionid, $fundheads, &$balances, &$funds)
+{
+    $institutes = $this->getInstitutesForRegionalOffice($request, $regionid);
 
-             ->where('institutes.region_id', $regionid)
-            ->select([
-                'fund_heads.id',
-                'fund_heads.name',
-                DB::raw('SUM(fund_helds.balance) as balance')
-            ])
-            ->groupBy('fund_heads.id', 'fund_heads.name')
+    if ($this->isFundHeadFiltered($request)) {
+        $fundhead = $request->fund_head_id;
+        $balances = $this->getBalancesForSingleFundHead($fundhead, $regionid);
+    } else {
+        $fundHeadBalances = $this->getFundHeadBalancesByRegion($regionid);
+        $balances = $this->mapFundHeadBalances($fundheads, $fundHeadBalances);
+        $funds = $this->buildFundsForInstitutes($institutes, $fundheads, $regionid);
+    }
+}
+
+private function handleSuperAdminOrHQ($request, $regionid, $type, $fundheads, &$balances, &$funds)
+{
+    $isregionfiltered = false;
+
+    if ($this->isRegionFiltered($request)) {
+        $isregionfiltered = true;
+        $regions = $this->getFilteredRegions($request);
+        $fundBalancesByRegion = $this->getFundBalancesByFilteredRegion($request);
+        $fundHeadBalances = $this->getFundHeadBalancesByFilteredRegion($request);
+    } else {
+        $regions = $this->getAllRegions();
+        $fundBalancesByRegion = $this->getAllFundBalancesByRegion();
+        $fundHeadBalances = $this->getAllFundHeadBalances();
+    }
+
+    $funds = $this->buildFundsForRegions($regions, $fundheads, $fundBalancesByRegion, $isregionfiltered);
+
+    if ($this->isFundHeadFiltered($request)) {
+        $fundhead = $request->fund_head_id;
+        $balances = $this->getBalancesForSingleFundHeadSuperAdmin($request, $fundhead);
+    } else {
+        $balances = $this->mapFundHeadBalances($fundheads, $fundHeadBalances);
+    }
+}
+
+private function getInstitutesForRegionalOffice($request, $regionid)
+{
+    if ($request->filled('institute_id') && $request->institute_id !== '0' && is_numeric($request->institute_id)) {
+        return Institute::where('institute_id', $request->institute_id)
+            ->select('id', 'name')
             ->get()
-            ->keyBy('id');
+            ->filter(fn($i) => is_numeric($i->id) && $i->id > 0 && !empty(trim($i->name)))
+            ->values();
+    }
 
-            $balanceData = $fundHeadBalances->get($fundhead); // returns model or null
+    return Institute::where('region_id', $regionid)
+        ->select('id', 'name')
+        ->get()
+        ->filter(fn($i) => is_numeric($i->id) && $i->id > 0 && !empty(trim($i->name)))
+        ->values();
+}
 
-  $balances = collect([
+private function isFundHeadFiltered($request)
+{
+    return $request->filled('fund_head_id') 
+        && $request->fund_head_id !== '0' 
+        && is_numeric($request->fund_head_id);
+}
+
+private function isRegionFiltered($request)
+{
+    return $request->filled('region_id') 
+        && $request->region_id !== '0' 
+        && is_numeric($request->region_id);
+}
+
+private function getBalancesForSingleFundHead($fundhead, $regionid)
+{
+    $fundHeadBalances = FundHeld::query()
+        ->where('fund_head_id', $fundhead)
+        ->join('fund_heads', 'fund_helds.fund_head_id', '=', 'fund_heads.id')
+        ->join('institutes', 'fund_helds.institute_id', '=', 'institutes.id')
+        ->where('institutes.region_id', $regionid)
+        ->select([
+            'fund_heads.id',
+            'fund_heads.name',
+            DB::raw('SUM(fund_helds.balance) as balance')
+        ])
+        ->groupBy('fund_heads.id', 'fund_heads.name')
+        ->get()
+        ->keyBy('id');
+
+    $balanceData = $fundHeadBalances->get($fundhead);
+
+    return collect([
         [
             'fund_head' => [
                 'id' => $fundhead,
@@ -1460,33 +1524,40 @@ public function getFunds(Request $request)
             'balance' => $balanceData->balance ?? 0,
         ]
     ])->values();
-            } else{
-                 $fundHeadBalances = FundHeld::query()
-            ->join('fund_heads', 'fund_helds.fund_head_id', '=', 'fund_heads.id')
-                        ->join('institutes', 'fund_helds.institute_id', '=', 'institutes.id')
+}
 
-             ->where('institutes.region_id', $regionid)
-            ->select([
-                'fund_heads.id',
-                'fund_heads.name',
-                DB::raw('SUM(fund_helds.balance) as balance')
-            ])
-            ->groupBy('fund_heads.id', 'fund_heads.name')
-            ->get()
-            ->keyBy('id');
+private function getFundHeadBalancesByRegion($regionid)
+{
+    return FundHeld::query()
+        ->join('fund_heads', 'fund_helds.fund_head_id', '=', 'fund_heads.id')
+        ->join('institutes', 'fund_helds.institute_id', '=', 'institutes.id')
+        ->where('institutes.region_id', $regionid)
+        ->select([
+            'fund_heads.id',
+            'fund_heads.name',
+            DB::raw('SUM(fund_helds.balance) as balance')
+        ])
+        ->groupBy('fund_heads.id', 'fund_heads.name')
+        ->get()
+        ->keyBy('id');
+}
 
-        // Loop through all fund heads and add balance (0 if not found)
-        $balances = $fundheads->map(function ($fundHead) use ($fundHeadBalances) {
-            $balance = $fundHeadBalances->get($fundHead->id);
-            return [
-                'fund_head' => [
-                    'id' => $fundHead->id,
-                    'name' => $fundHead->name,
-                ],
-                'balance' => $balance ? $balance->balance : 0,
-            ];
-        })->values();
-               // Get fund balances per institute and fund head
+private function mapFundHeadBalances($fundheads, $fundHeadBalances)
+{
+    return $fundheads->map(function ($fundHead) use ($fundHeadBalances) {
+        $balance = $fundHeadBalances->get($fundHead->id);
+        return [
+            'fund_head' => [
+                'id' => $fundHead->id,
+                'name' => $fundHead->name,
+            ],
+            'balance' => $balance ? $balance->balance : 0,
+        ];
+    })->values();
+}
+
+private function buildFundsForInstitutes($institutes, $fundheads, $regionid)
+{
     $fundBalancesByInstitute = FundHeld::query()
         ->join('fund_heads', 'fund_helds.fund_head_id', '=', 'fund_heads.id')
         ->join('institutes', 'fund_helds.institute_id', '=', 'institutes.id')
@@ -1500,11 +1571,9 @@ public function getFunds(Request $request)
         ->groupBy('fund_helds.institute_id', 'fund_helds.fund_head_id', 'fund_heads.name')
         ->get();
 
-    // Group by institute and create fund head columns
-    $funds = $institutes->map(function ($institute) use ($fundheads, $fundBalancesByInstitute) {
+    return $institutes->map(function ($institute) use ($fundheads, $fundBalancesByInstitute) {
         $instituteBalances = $fundBalancesByInstitute->where('institute_id', $institute->id);
         
-        // Build fund head columns dynamically
         $fundHeadColumns = [];
         $totalBalance = 0;
         
@@ -1520,97 +1589,105 @@ public function getFunds(Request $request)
         return [
             'institute_id' => $institute->id,
             'institute_name' => $institute->name,
-            'fund_heads' => $fundHeadColumns, // Each fund head as a column
+            'fund_heads' => $fundHeadColumns,
             'total_balance' => $totalBalance,
         ];
-    })->values(); 
-   
-            }
-           
-        }
-        // -----------------------------------------------------------------
-        // Super-admin / HQ → all regions
-        // -----------------------------------------------------------------
-        else {
-       
-           $isregionfiltered=false;  
-
-// Get all fund balances grouped by region and fund head
-    
-if ($request->filled('region_id') && $request->region_id !== '0' && is_numeric($request->region_id)) {
-    $isregionfiltered=true;
-    $regions=Institute::where('region_id', $request->region_id)
-                ->get()
-                ->filter(fn($i) => is_numeric($i->id) && $i->id > 0 && !empty(trim($i->name)))
-                ->values();
-                 $fundBalancesByRegion = FundHeld::query()
-        ->join('fund_heads', 'fund_helds.fund_head_id', '=', 'fund_heads.id')
-        ->join('institutes', 'fund_helds.institute_id', '=', 'institutes.id')
-->where('institutes.region_id', $request->region_id)
-        ->select([
-            'institutes.region_id',
-            'fund_helds.fund_head_id',
-            'fund_heads.name as fund_head_name',
-            DB::raw('SUM(fund_helds.balance) as balance')
-        ])
-        ->groupBy('institutes.region_id', 'fund_helds.fund_head_id', 'fund_heads.name')
-        ->get();
-             $fundHeadBalances = FundHeld::query()
-            ->join('fund_heads', 'fund_helds.fund_head_id', '=', 'fund_heads.id')
-                        ->join('institutes', 'fund_helds.institute_id', '=', 'institutes.id')->where('institutes.region_id', $request->region_id)
-
-        
-            ->select([
-                'fund_heads.id',
-                'fund_heads.name',
-                DB::raw('SUM(fund_helds.balance) as balance')
-            ])
-            ->groupBy('fund_heads.id', 'fund_heads.name')
-            ->get()
-            ->keyBy('id');   
-
-}else{
-    $regions = Institute::select('region_id as id', DB::raw('MAX(name) as name'))
-    ->where('type', 'Regional Office')
-    ->groupBy('region_id')
-    ->get()
-    ->filter(fn($r) => is_numeric($r->id) && $r->id > 0 && !empty(trim($r->name)))
-    ->values();
-    $fundBalancesByRegion = FundHeld::query()
-        ->join('fund_heads', 'fund_helds.fund_head_id', '=', 'fund_heads.id')
-        ->join('institutes', 'fund_helds.institute_id', '=', 'institutes.id')
-
-        ->select([
-            'institutes.region_id',
-            'fund_helds.fund_head_id',
-            'fund_heads.name as fund_head_name',
-            DB::raw('SUM(fund_helds.balance) as balance')
-        ])
-        ->groupBy('institutes.region_id', 'fund_helds.fund_head_id', 'fund_heads.name')
-        ->get();
-         $fundHeadBalances = FundHeld::query()
-            ->join('fund_heads', 'fund_helds.fund_head_id', '=', 'fund_heads.id')
-                        ->join('institutes', 'fund_helds.institute_id', '=', 'institutes.id')
-
-        
-            ->select([
-                'fund_heads.id',
-                'fund_heads.name',
-                DB::raw('SUM(fund_helds.balance) as balance')
-            ])
-            ->groupBy('fund_heads.id', 'fund_heads.name')
-            ->get()
-            ->keyBy('id');
+    })->values();
 }
-  
-      
-    
 
-    // Build response: Group by region with fund head columns
-    $funds = $regions->map(function ($region) use ($fundheads, $fundBalancesByRegion,$isregionfiltered) {
-        $regionBalances = $fundBalancesByRegion->where('region_id', $region->id);
-        
-        // Build fund head columns dynamically
+private function getFilteredRegions($request)
+{
+    return Institute::where('region_id', $request->region_id)
+        ->get()
+        ->filter(fn($i) => is_numeric($i->id) && $i->id > 0 && !empty(trim($i->name)))
+        ->values();
+}
+
+private function getFundBalancesByFilteredRegion($request)
+{
+    return FundHeld::query()
+        ->join('fund_heads', 'fund_helds.fund_head_id', '=', 'fund_heads.id')
+        ->join('institutes', 'fund_helds.institute_id', '=', 'institutes.id')
+        ->where('institutes.region_id', $request->region_id)
+        ->select([
+            'fund_helds.institute_id',
+            'fund_helds.fund_head_id',
+            'fund_heads.name as fund_head_name',
+            DB::raw('SUM(fund_helds.balance) as balance')
+        ])
+        ->groupBy('fund_helds.institute_id', 'fund_helds.fund_head_id', 'fund_heads.name')
+        ->get();
+}
+
+private function getFundHeadBalancesByFilteredRegion($request)
+{
+    return FundHeld::query()
+        ->join('fund_heads', 'fund_helds.fund_head_id', '=', 'fund_heads.id')
+        ->join('institutes', 'fund_helds.institute_id', '=', 'institutes.id')
+        ->where('institutes.region_id', $request->region_id)
+        ->select([
+            'fund_heads.id',
+            'fund_heads.name',
+            DB::raw('SUM(fund_helds.balance) as balance')
+        ])
+        ->groupBy('fund_heads.id', 'fund_heads.name')
+        ->get()
+        ->keyBy('id');
+}
+
+private function getAllRegions()
+{
+    return Institute::select('region_id as id', DB::raw('MAX(name) as name'))
+        ->where('type', 'Regional Office')
+        ->groupBy('region_id')
+        ->get()
+        ->filter(fn($r) => is_numeric($r->id) && $r->id > 0 && !empty(trim($r->name)))
+        ->values();
+}
+
+private function getAllFundBalancesByRegion()
+{
+    return FundHeld::query()
+        ->join('fund_heads', 'fund_helds.fund_head_id', '=', 'fund_heads.id')
+        ->join('institutes', 'fund_helds.institute_id', '=', 'institutes.id')
+        ->select([
+            'institutes.region_id',
+            'fund_helds.fund_head_id',
+            'fund_heads.name as fund_head_name',
+            DB::raw('SUM(fund_helds.balance) as balance')
+        ])
+        ->groupBy('institutes.region_id', 'fund_helds.fund_head_id', 'fund_heads.name')
+        ->get();
+}
+
+private function getAllFundHeadBalances()
+{
+    return FundHeld::query()
+        ->join('fund_heads', 'fund_helds.fund_head_id', '=', 'fund_heads.id')
+        ->join('institutes', 'fund_helds.institute_id', '=', 'institutes.id')
+        ->select([
+            'fund_heads.id',
+            'fund_heads.name',
+            DB::raw('SUM(fund_helds.balance) as balance')
+        ])
+        ->groupBy('fund_heads.id', 'fund_heads.name')
+        ->get()
+        ->keyBy('id');
+}
+
+private function buildFundsForRegions($regions, $fundheads, $fundBalancesByRegion, $isregionfiltered)
+{ 
+    //  dd($fundBalancesByRegion);
+    //     print_r($regions);
+    return $regions->map(function ($region) use ($fundheads, $fundBalancesByRegion, $isregionfiltered) {
+       
+         if ($isregionfiltered) {
+        $regionBalances = $fundBalancesByRegion->where('institute_id', $region->id);
+         }
+         else{
+                    $regionBalances = $fundBalancesByRegion->where('region_id', $region->id);
+
+         }
         $fundHeadColumns = [];
         $totalBalance = 0;
         
@@ -1622,54 +1699,48 @@ if ($request->filled('region_id') && $request->region_id !== '0' && is_numeric($
             $fundHeadColumns[$fundHead->name] = $balance;
             $totalBalance += $balance;
         }
-if ($isregionfiltered) {
+
+        if ($isregionfiltered) {
+            return [
+                'institute_id' => $region->id,
+                'institute_name' => $region->name,
+                'fund_heads' => $fundHeadColumns,
+                'total_balance' => $totalBalance,
+            ];
+        }
+
         return [
-            'institute_id' => $region->id,
-            'institute_name' => $region->name,
-            'fund_heads' => $fundHeadColumns, // Each fund head as a column
-            'total_balance' => $totalBalance,
-        ];}
-        else{
-             return [
             'region_id' => $region->id,
             'region_name' => $region->name,
-            'fund_heads' => $fundHeadColumns, // Each fund head as a column
+            'fund_heads' => $fundHeadColumns,
             'total_balance' => $totalBalance,
         ];
-        }
     })->values();
+}
 
- 
-            if ($request->filled('fund_head_id') && $request->fund_head_id !== '0' && is_numeric($request->fund_head_id)) {
-                $fundhead = $request->fund_head_id;
-    // $fundHeadName = $fundheads->firstWhere('id', $fundhead)?->name;
-    
-    // // Filter funds to only show rows that have this fund head with non-zero balance
-    // $funds = $funds->filter(function($fund) use ($fundHeadName) {
-    //     return isset($fund['fund_heads'][$fundHeadName]) ;
-    // })->values();
-            $fundHeadBalances = FundHeld::query()->where('fund_head_id', $fundhead)
-            ->whereHas('institute', function ($q) use ($request, $regionid, $type) {
-                if ($request->filled('region_id') && $request->region_id !== '0' && is_numeric($request->region_id)) {
-                    $q->where('region_id', $request->region_id);
-                }
-            })
-            ->join('fund_heads', 'fund_helds.fund_head_id', '=', 'fund_heads.id')
-                        ->join('institutes', 'fund_helds.institute_id', '=', 'institutes.id')
-                        ->select([
-                'fund_heads.id',
-                'fund_heads.name',
-                DB::raw('SUM(fund_helds.balance) as balance')
-            ])
-            ->groupBy('fund_heads.id', 'fund_heads.name')
-            ->get()
-            ->keyBy('id');
+private function getBalancesForSingleFundHeadSuperAdmin($request, $fundhead)
+{
+    $fundHeadBalances = FundHeld::query()
+        ->where('fund_head_id', $fundhead)
+        ->whereHas('institute', function ($q) use ($request) {
+            if ($this->isRegionFiltered($request)) {
+                $q->where('region_id', $request->region_id);
+            }
+        })
+        ->join('fund_heads', 'fund_helds.fund_head_id', '=', 'fund_heads.id')
+        ->join('institutes', 'fund_helds.institute_id', '=', 'institutes.id')
+        ->select([
+            'fund_heads.id',
+            'fund_heads.name',
+            DB::raw('SUM(fund_helds.balance) as balance')
+        ])
+        ->groupBy('fund_heads.id', 'fund_heads.name')
+        ->get()
+        ->keyBy('id');
 
-        // Loop through all fund heads and add balance (0 if not found)
- 
-          $balanceData = $fundHeadBalances->get($fundhead); // returns model or null
+    $balanceData = $fundHeadBalances->get($fundhead);
 
-  $balances = collect([
+    return collect([
         [
             'fund_head' => [
                 'id' => $fundhead,
@@ -1678,34 +1749,7 @@ if ($isregionfiltered) {
             'balance' => $balanceData->balance ?? 0,
         ]
     ])->values();
-            
-    
-
-
-            }else{
-                  
-
-        // Loop through all fund heads and add balance (0 if not found)
-        $balances = $fundheads->map(function ($fundHead) use ($fundHeadBalances) {
-            $balance = $fundHeadBalances->get($fundHead->id);
-            return [
-                'fund_head' => [
-                    'id' => $fundHead->id,
-                    'name' => $fundHead->name,
-                ],
-                'balance' => $balance ? $balance->balance : 0,
-            ];
-        })->values();
-            }
-
-        }
-
-    return response()->json([
-        'funds' => $funds,
-        'balances' => $balances,
-    ]);
 }
-
 // public function getFunds(Request $request)
 // {
 //     $hrInstituteId = session('inst_id');

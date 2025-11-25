@@ -323,9 +323,12 @@ export default function Funds({
                         </th>
                       ))
                     )}
+                     {fundHead == '0' ? (
                     <th className="sticky right-0 z-20 bg-primary px-6 py-4 text-right font-bold">
                       Total
                     </th>
+                    ) : (''
+                    )}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
@@ -359,12 +362,12 @@ export default function Funds({
         }
       }}
     >
-      <td className="sticky left-0 z-10 bg-background px-6 py-4 font-medium border-r max-w-xs truncate">
+      <td className="sticky left-0 z-10 bg-background text-wrap px-6 py-4 font-medium border-r  ">
         <div className="flex items-center gap-2">
           {row.institute_name || (
             <>
               {/* Optional visual indicator that this is a clickable region */}
-              <span className="text-blue-600 dark:text-blue-400 font-semibold">
+              <span className="text-blue-600 dark:text-blue-400 font-semibold   ">
                 {row.region_name.split(' ').pop() || row.region_name}
               </span>
               
@@ -376,24 +379,31 @@ export default function Funds({
                   {/* Show only selected fund head or all if none selected */}
                   {fundHead && fundHead !== '0' ? (
                     // Show only the selected fund head value
-                    <td className="px-4 py-4 text-right font-mono tabular-nums">
+                    <td className="px-4 py-4 text-right font-medium tabular-nums">
                       {(() => {
                         const selectedFundHead = fundheads.find(fh => fh.id.toString() === fundHead);
                         return formatCurrency(row.fund_heads[selectedFundHead?.name || ''] || 0);
                       })()}
                     </td>
                   ) : (
-                    // Show all fund heads
-                    fundheads.map(fh => (
-                      <td key={fh.id} className="px-4 py-4 text-right font-mono tabular-nums">
-                        {formatCurrency(row.fund_heads[fh.name])}
-                      </td>
-                    ))
-                  )}
-
-      <td className="sticky right-0 z-10 bg-green-50 dark:bg-green-900/30 px-6 py-4 text-right font-bold text-green-700 dark:text-green-400 font-mono tabular-nums border-l">
-        {formatCurrency(row.total_balance)}
+  // Show all fund heads
+  <>
+    {fundheads.map(fh => (
+      <td key={fh.id} className="px-4 py-4 text-right font-medium tabular-nums">
+        {formatCurrency(row.fund_heads[fh.name])}
       </td>
+    ))}
+  </>
+)}
+
+{/* Total Balance - Outside the conditional */}
+  {fundHead == '0' ? (
+<td className="sticky right-0 z-10 bg-green-50 dark:bg-green-900/30 px-6 py-4 text-right font-bold text-green-700 dark:text-green-400  tabular-nums border-l">
+  {formatCurrency(row.total_balance)}
+</td>
+  ):(
+''
+  )}       
     </tr>
   );
 })}
@@ -423,9 +433,12 @@ export default function Funds({
                         );
                       })
                     )}
+                      { fundHead == '0' ? (
                     <td className="sticky right-0 z-10 bg-emerald-100 dark:bg-emerald-900/50 px-6 py-4 text-right font-bold text-emerald-700 dark:text-emerald-400 font-mono tabular-nums border-l">
                       {formatCurrency(totalBalance)}
                     </td>
+                    ) : (''
+                    )}
                   </tr>
                 </tfoot>
               </table>
