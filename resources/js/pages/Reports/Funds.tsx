@@ -1,20 +1,18 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Head, router } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { type BreadcrumbItem } from '@/types';
 import { toast } from 'sonner';
-import { debounce } from 'lodash';
-import { formatDate } from '@/utils/dateFormatter';
 import Combobox from '@/components/ui/combobox';
-import ExcelJS from 'exceljs'; // { changed code }
-import FileSaver from 'file-saver'; // { changed code }
-import jsPDF from 'jspdf'; // { changed code }
-import autoTable from 'jspdf-autotable'; // { changed code }
+import ExcelJS from 'exceljs';
+import FileSaver from 'file-saver';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { DollarSign } from 'lucide-react';
 
 const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Reports', href: '/reports' },
@@ -23,23 +21,24 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 interface Item { id: number; name: string; }
 interface FundItem {
-  id: number;
-  institute?: { id: number; name?: string };
-  fund_head?: { id: number; name?: string };
-  balance?: number;
-  region?: { id:number; name?:string };
+  institute_id: number;
+    region_id: number;
+  region_name: string;
+
+  institute_name: string;
+  fund_heads: { [key: string]: string | number };
+  total_balance: number | string;
+}
+interface BalanceItem {
+  fund_head?: { id: number; name: string };
+  balance?: number | string;
 }
 
 interface Props {
-  funds: {
-    data: FundItem[];
-    current_page: number;
-    last_page: number;
-    links: { url: string | null; label: string; active: boolean }[];
-  };
-  institutes: Item[] | [];
-  fundheads: Item[] | [];
-  regions: Item[] | [];
+  funds: FundItem[];
+  fundheads: Item[];
+  regions: Item[];
+  balances: BalanceItem[];
   filters: {
     institute_id?: string;
     region_id?: string;
@@ -48,279 +47,305 @@ interface Props {
   };
 }
 
-export default function Funds({ funds: initialFunds, institutes: initialInstitutes, fundheads, regions, filters }: Props) {
-  const [search, setSearch] = useState(filters.search || '');
+export default function Funds({
+  funds: initialFunds = [],
+  fundheads = [],
+  regions = [],
+  balances: initialBalances = [],
+  filters,
+}: Props) {
   const [institute, setInstitute] = useState(filters.institute_id || '');
   const [fundHead, setFundHead] = useState(filters.fund_head_id || '');
-  const [funds, setFunds] = useState(initialFunds);
-  const [filteredInstitutes, setFilteredInstitutes] = useState<Item[]>(initialInstitutes || []);
-  const [region, setRegion] = useState(filters.region_id || '');  // Memoized dropdown options
- // console.log('Initial Funds:', funds); // Debugging line
+  const [region, setRegion] = useState(filters.region_id || '');
+  const [funds, setFunds] = useState<FundItem[]>(initialFunds);
+  const [balances, setBalances] = useState<BalanceItem[]>(initialBalances);
+  const [filteredInstitutes, setFilteredInstitutes] = useState<Item[]>([]);
 
-  // Validate items coming from server
-  const isValidItem = (item: any): item is Item => {
-    return item != null && typeof item.id === 'number' && item.id > 0 && typeof item.name === 'string' && item.name.trim() !== '';
+  // Convert any string/number → number safely
+  const toNumber = (value: any): number => {
+    if (value === null || value === undefined || value === '') return 0;
+    if (typeof value === 'number') return value;
+    return parseFloat(String(value).replace(/,/g, '')) || 0;
   };
 
-  // memoized lists
-  const memoizedInstitutes = useMemo(() => {
-    return Array.isArray(filteredInstitutes) ? filteredInstitutes.filter(isValidItem) : [];
-  }, [filteredInstitutes]);
+  const formatCurrency = (amount: any): string => {
+    const num = toNumber(amount);
+    return new Intl.NumberFormat('ur-PK', {
+      style: 'currency',
+      currency: 'PKR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(num);
+  };
 
-  const memoizedRegions = useMemo(() => {
-    return Array.isArray(regions) ? regions.filter(isValidItem) : [];
-  }, [regions]);
+  const totalBalance = useMemo(() => {
+    return balances.reduce((sum, b) => sum + toNumber(b.balance), 0);
+  }, [balances]);
 
-  // sync when server provided different initial props
-  useEffect(() => {
-    setFunds(initialFunds);
-    setFilteredInstitutes(initialInstitutes || []);
-  }, [initialFunds, initialInstitutes]);
-
-  // Fetch institutes by region (same pattern as Projects.tsx)
   const fetchInstitutes = async (regionId: string) => {
-    if (!regionId || regionId === '0' || regionId === '') {
-      setFilteredInstitutes(initialInstitutes || []);
-      if (institute) setInstitute('');
+    if (!regionId || regionId === '0') {
+      setFilteredInstitutes([]);
       return;
     }
-
     try {
-      const params = new URLSearchParams({ region_id: regionId }).toString();
-      const response = await fetch(`/reports/getInstitutes?${params}`);
-      if (!response.ok) throw new Error('Failed to fetch institutes');
-      const data = await response.json();
+      const res = await fetch(`/reports/getInstitutes?region_id=${regionId}`);
+      if (!res.ok) throw new Error();
+      const data = await res.json();
       setFilteredInstitutes(data);
-      if (institute && !data.some((i: Item) => i.id.toString() === institute)) {
-        setInstitute('');
-      }
-    } catch (error) {
-      console.error('Error fetching institutes:', error);
+    } catch {
       toast.error('Failed to load institutes');
-      setFilteredInstitutes([]);
     }
   };
 
   const handleRegionChange = (value: string) => {
     setRegion(value);
     fetchInstitutes(value);
+    setInstitute('');
   };
 
   const applyFilters = async (pageUrl?: string) => {
     try {
       const params = new URLSearchParams({
-        search: search || '',
         institute_id: institute || '',
         region_id: region || '',
         fund_head_id: fundHead || '',
       });
       const url = pageUrl || `/reports/funds/getfunds?${params.toString()}`;
       const res = await fetch(url);
-      if (!res.ok) throw new Error('Failed to fetch funds');
+      if (!res.ok) throw new Error();
       const data = await res.json();
-      setFunds(data);
+console.log(data);
+      setFunds(data.funds || data || []);
+      setBalances(data.balances || []);
     } catch (e) {
       console.error(e);
-      toast.error('Failed to fetch funds');
+      toast.error('Failed to load data');
     }
   };
 
-  const debouncedApply = useMemo(() => debounce(applyFilters, 300), [search, institute, region, fundHead]);
-
-  // Export to Excel
   const exportToExcel = async () => {
     const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet('Funds');
-
-    worksheet.columns = [
-      { header: 'Fund Head', key: 'fund_head', width: 30 },
-      { header: 'Balance', key: 'balance', width: 15 },
+    const ws = workbook.addWorksheet('Funds');
+    ws.columns = [
+      { header: 'Institute', key: 'institute', width: 50 },
+      ...fundheads.map(fh => ({ header: fh.name, key: fh.name, width: 18 })),
+      { header: 'Total', key: 'total', width: 20 },
     ];
 
-    funds.data.forEach((f) => {
-      worksheet.addRow({
-        fund_head: f.fund_head?.name || 'N/A',
-        balance: typeof f.balance === 'number' ? f.balance.toFixed(2) : (f.balance ?? '0'),
-      });
+    funds.forEach(row => {
+      const rowData: any = { institute:  row.institute_name ??( row.region_name.split(' ').pop() || row.region_name)};
+      fundheads.forEach(fh => rowData[fh.name] = toNumber(row.fund_heads[fh.name]));
+      rowData.total = toNumber(row.total_balance);
+      ws.addRow(rowData);
     });
 
     const buffer = await workbook.xlsx.writeBuffer();
-    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-    FileSaver.saveAs(blob, 'Funds_Report.xlsx');
+    FileSaver.saveAs(new Blob([buffer]), 'Funds_Report.xlsx');
   };
 
-  // Export to PDF
   const exportToPDF = () => {
-    const doc = new jsPDF();
-    doc.setFontSize(16);
-    doc.text('Funds Report', 14, 15);
-
-    const headers = ['Fund Head', 'Balance'];
-    const rows = funds.data.map((f) => [
-      f.fund_head?.name || 'N/A',
-      typeof f.balance === 'number' ? f.balance.toFixed(2) : (f.balance ?? '0'),
+    const doc = new jsPDF('l', 'mm', 'a4');
+    doc.text('Institute Wise Fund Balances', 14, 15);
+    const headers = ['Institute', ...fundheads.map(fh => fh.name), 'Total'];
+    const rows = funds.map(row => [
+      row.institute_name ??( row.region_name.split(' ').pop() || row.region_name),
+      ...fundheads.map(fh => toNumber(row.fund_heads[fh.name]).toFixed(2)),
+      toNumber(row.total_balance).toFixed(2),
     ]);
-
-    autoTable(doc, {
-      head: [headers],
-      body: rows,
-      startY: 25,
-      styles: {
-        fontSize: 9,
-        cellPadding: 2,
-      },
-      headStyles: {
-        fillColor: [66, 139, 202],
-        textColor: 255,
-        fontStyle: 'bold',
-      },
-      alternateRowStyles: {
-        fillColor: [240, 240, 240],
-      },
-    });
-
+    autoTable(doc, { head: [headers], body: rows, startY: 25 });
     doc.save('Funds_Report.pdf');
   };
 
   return (
-    <AppLayout breadcrumbs={breadcrumbs}>
-      <Head title="Funds Report" />
-             <div className="flex-1 p-2 md:p-2">
-          <div className="flex flex-col md:flex-row gap-3">
-                    <div className="w-full md:w-1/3">
+  <AppLayout breadcrumbs={breadcrumbs}>
+  <Head title="Funds Report" />
 
-        <Card>
-          <CardHeader>
+  <div className="p-4 lg:p-6 max-w-full">
+    <Card className="w-full shadow-lg">
+      <CardHeader className="pb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
             <CardTitle className="text-2xl font-bold">Funds Report</CardTitle>
-            <p className="text-sm text-muted-foreground">View fund balances by institute / fund head</p>
-          </CardHeader>
+            <p className="text-sm text-muted-foreground mt-1">
+              View fund balances by institute / fund head
+            </p>
+          </div>
 
-          <Separator />
-
-  <CardContent className="space-y-4">
-              
-              <Combobox
-                entity="region"
-                value={region}
-                onChange={handleRegionChange}
-                options={memoizedRegions.map((r) => ({ id: r.id.toString(), name:  r.name.split(' ').pop() || r.name }))}
-                includeAllOption={true}
-                placeholder="Select Region"
-              />
-              <Combobox
-                entity="institute"
-                value={institute}
-                onChange={setInstitute}
-                options={memoizedInstitutes.map((i) => ({ id: i.id.toString(), name: i.name }))}
-                includeAllOption={false}
-                placeholder="Select Institute"
-              />
-              <Select value={fundHead} onValueChange={(v) =>setFundHead(v)
-
-              }>
-                <SelectTrigger><SelectValue placeholder="Select Fund Head" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="0">All Fund Heads</SelectItem>
-                  {fundheads.map((f) => <SelectItem key={f.id} value={f.id.toString()}>{f.name}</SelectItem>)}
-                </SelectContent>
-              </Select>
-
-
-            <div className="flex gap-2">
-              <Button onClick={() => applyFilters()}>Apply Filters</Button>
-              <Button onClick={() => { setSearch(''); setRegion(''); setInstitute(''); setFundHead(''); }}>Reset</Button>
-              
-            </div>
-
-          
-          </CardContent>
-        </Card>
+          {/* Export Buttons */}
+          <div className="flex gap-2">
+            <Button onClick={exportToPDF} variant="outline" size="sm">
+              PDF
+            </Button>
+            <Button onClick={exportToExcel} variant="outline" size="sm">
+              Excel
+            </Button>
+          </div>
         </div>
-           <div className="w-full md:w-2/3">
-              <Card>
-          <CardHeader>
-            <CardTitle className="text-2xl font-bold">Funds Report</CardTitle>
-            <p className="text-sm text-muted-foreground">View fund balances by institute / fund head</p>
-             <div className="flex float-end gap-2">
-             
-              <Button onClick={exportToPDF} className="w-full md:w-auto">Export PDF</Button> {/* { changed code } */}
-              <Button onClick={exportToExcel} className="w-full md:w-auto">Export Excel</Button> {/* { changed code } */}
+      </CardHeader>
+
+      <Separator />
+
+      {/* Filters */}
+      <CardContent className="pt-6 pb-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {regions.length > 0 && (
+            <Combobox
+              entity="region"
+              value={region}
+              onChange={handleRegionChange}
+              options={regions.map(r => ({ id: r.id.toString(), name: r.name }))}
+              includeAllOption={true}
+              placeholder="Select Region"
+            />
+          )}
+          <Combobox
+            entity="institute"
+            value={institute}
+            onChange={setInstitute}
+            options={filteredInstitutes.map(i => ({ id: i.id.toString(), name: i.name }))}
+            includeAllOption={false}
+            placeholder="Select Institute"
+          />
+          <Select value={fundHead} onValueChange={setFundHead}>
+            <SelectTrigger><SelectValue placeholder="Fund Head" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="0">All Fund Heads</SelectItem>
+              {fundheads.map(f => (
+                <SelectItem key={f.id} value={f.id.toString()}>{f.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <div className="flex gap-2">
+            <Button onClick={() => applyFilters()} className="flex-1">Apply</Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setRegion(''); setInstitute(''); setFundHead('');
+                applyFilters('/reports/funds');
+              }}
+              className="flex-1"
+            >
+              Reset
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+
+      <Separator />
+
+      {/* Total Balance Summary */}
+      <CardContent className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-900 py-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+          <div>
+            <p className="text-sm font-medium text-muted-foreground">Total Balance</p>
+            <p className="text-4xl font-bold text-primary mt-2">
+              {formatCurrency(totalBalance)}
+            </p>
+          </div>
+          <div className="text-right">
+            <p className="text-sm text-muted-foreground">Active Fund Heads</p>
+            <p className="text-3xl font-bold text-muted-foreground mt-1">
+              {balances.length}
+            </p>
+          </div>
+        </div>
+      </CardContent>
+
+      <Separator />
+
+      {/* Fund Head Mini Cards */}
+      {balances.length > 0 && (
+        <>
+          <CardContent className="pt-6">
+            <h3 className="text-lg font-semibold mb-4">Fund Head Balances</h3>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+              {balances.map((b, i) => (
+                <div
+                  key={i}
+                  className="bg-muted/50 dark:bg-gray-800 p-4 rounded-lg border hover:shadow-md transition-shadow"
+                >
+                  <p className="text-xs font-medium text-muted-foreground truncate">
+                    {b.fund_head?.name || 'Unknown'}
+                  </p>
+                  <p className="text-xl font-bold text-green-600 dark:text-green-400 mt-2">
+                    {formatCurrency(b.balance)}
+                  </p>
+                </div>
+              ))}
             </div>
-          </CardHeader>
-
+          </CardContent>
           <Separator />
+        </>
+      )}
 
-          <CardContent className="pt-6 space-y-6">
-         
-
-            <div>
-              <table className="w-full border-collapse border-1 rounded-md overflow-hidden shadow-sm">
+      {/* Institute Wise Table - Responsive & Scrollable */}
+      <CardContent className="p-0">
+        <div className="overflow-x-auto">
+          {/* This inner div ensures table doesn't shrink */}
+          <div className="max-w-[800px] lg:min-w-0">
+            {funds.length === 0 ? (
+              <div className="text-center py-16 text-muted-foreground">
+                No institute data found. Try adjusting filters.
+              </div>
+            ) : (
+              <table className="w-full table-auto border-collapse text-sm">
                 <thead>
-                  <tr className="bg-primary text-white ">
-                    <th className="p-2">Fund Head</th>
-                    <th className="p-2">Balance</th>
+                  <tr className="bg-primary text-white">
+                    <th className="sticky left-0 z-20 bg-primary px-6 py-4 text-left font-semibold">
+                      Institute / Region
+                    </th>
+                    {fundheads.map(fh => (
+                      <th key={fh.id} className="px-4 py-4 text-center font-medium whitespace-nowrap">
+                        {fh.name}
+                      </th>
+                    ))}
+                    <th className="sticky right-0 z-20 bg-primary px-6 py-4 text-right font-bold">
+                      Total
+                    </th>
                   </tr>
                 </thead>
-                <tbody>
-                
-  {!funds || !funds.data ? (
-    <tr>
-      <td colSpan={4} className="p-4 text-center text-muted-foreground">
-        Loading funds...
-      </td>
-    </tr>
-  ) : funds.data.length === 0 ? (
-    <tr>
-      <td colSpan={4} className="p-4 text-center text-muted-foreground">
-        No funds found.
-      </td>
-    </tr>
-  ) : (
-    funds.data.map((f: FundItem) => (
-      <tr
-        key={f.id}
-        className="border-t hover:bg-primary/10 dark:hover:bg-gray-700 transition-colors"
-      >
-        <td className="p-3 text-left border-r font-medium">
-          {f.fund_head?.name || 'N/A'}
-        </td>
-        <td className="p-3 text-right font-mono">
-          {typeof f.balance === 'number'
-            ? f.balance.toFixed(2)
-            : f.balance != null
-            ? Number(f.balance).toFixed(2)
-            : '0.00'}
-        </td>
-      </tr>
-    ))
-  )}
-</tbody>
-             
+                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                  {funds.map(row => (
+                    <tr key={row.institute_id ?? row.region_id} className="hover:bg-muted/50">
+                      <td className="sticky left-0 z-10 bg-background px-6 py-4 font-medium border-r max-w-xs truncate">
+                        {row.institute_name || row.region_name.split(' ').pop() || row.region_name}
+                      </td>
+                      {fundheads.map(fh => (
+                        <td key={fh.id} className="px-4 py-4 text-right font-mono tabular-nums">
+                          {formatCurrency(row.fund_heads[fh.name])}
+                        </td>
+                      ))}
+                      <td className="sticky right-0 z-10 bg-green-50 dark:bg-green-900/30 px-6 py-4 text-right font-bold text-green-700 dark:text-green-400 font-mono tabular-nums border-l">
+                        {formatCurrency(row.total_balance)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr className="bg-gray-100 dark:bg-gray-800 font-bold">
+                    <td className="sticky left-0 z-10 bg-gray-100 dark:bg-gray-800 px-6 py-4">
+                      Grand Total
+                    </td>
+                    {fundheads.map(fh => {
+                      const sum = funds.reduce((acc, row) => acc + toNumber(row.fund_heads[fh.name]), 0);
+                      return (
+                        <td key={fh.id} className="px-4 py-4 text-right font-mono tabular-nums">
+                          {formatCurrency(sum)}
+                        </td>
+                      );
+                    })}
+                    <td className="sticky right-0 z-10 bg-emerald-100 dark:bg-emerald-900/50 px-6 py-4 text-right font-bold text-emerald-700 dark:text-emerald-400 font-mono tabular-nums border-l">
+                      {formatCurrency(totalBalance)}
+                    </td>
+                  </tr>
+                </tfoot>
               </table>
-           
-
-            {funds.links && funds.links.length > 1 && (
-              <div className="flex justify-center pt-6 flex-wrap gap-2">
-                {funds.links.map((link: any, i: number) => (
-                  <Button
-                    key={i}
-                    disabled={!link.url}
-                    variant={link.active ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => link.url ? applyFilters(link.url) : undefined}
-                    className={link.active ? 'bg-blue-600 hover:bg-blue-700' : ''}
-                  >
-                    <span dangerouslySetInnerHTML={{ __html: link.label }} />
-                  </Button>
-                ))}
-              </div>
             )}
-             </div>
-          </CardContent>
-        </Card>
-           </div>
-      </div>
-      </div>
-    </AppLayout>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  </div>
+</AppLayout>
   );
 }
