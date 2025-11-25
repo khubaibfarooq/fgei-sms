@@ -193,7 +193,7 @@ console.log(data);
               entity="region"
               value={region}
               onChange={handleRegionChange}
-              options={regions.map(r => ({ id: r.id.toString(), name: r.name }))}
+              options={regions.map(r => ({ id: r.id.toString(), name: r.name.split(' ').pop() || r.name }))}
               includeAllOption={true}
               placeholder="Select Region"
             />
@@ -305,21 +305,55 @@ console.log(data);
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                  {funds.map(row => (
-                    <tr key={row.institute_id ?? row.region_id} className="hover:bg-muted/50">
-                      <td className="sticky left-0 z-10 bg-background px-6 py-4 font-medium border-r max-w-xs truncate">
-                        {row.institute_name || row.region_name.split(' ').pop() || row.region_name}
-                      </td>
-                      {fundheads.map(fh => (
-                        <td key={fh.id} className="px-4 py-4 text-right font-mono tabular-nums">
-                          {formatCurrency(row.fund_heads[fh.name])}
-                        </td>
-                      ))}
-                      <td className="sticky right-0 z-10 bg-green-50 dark:bg-green-900/30 px-6 py-4 text-right font-bold text-green-700 dark:text-green-400 font-mono tabular-nums border-l">
-                        {formatCurrency(row.total_balance)}
-                      </td>
-                    </tr>
-                  ))}
+                  {funds.map(row => {
+  const isRegionRow = !row.institute_name && row.region_name;
+  
+  return (
+    <tr
+      key={row.institute_id ?? row.region_id}
+      className={`hover:bg-muted/50 ${isRegionRow ? 'cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20' : ''}`}
+      onClick={() => {
+        if (isRegionRow && row.region_id) {
+          const regionId = row.region_id.toString();
+          
+          // Set region and load institutes
+          setRegion(regionId);
+          fetchInstitutes(regionId);
+          
+          // Clear institute selection and re-apply filters
+          setInstitute('');
+          applyFilters();
+          
+          // Optional: show toast feedback
+        }
+      }}
+    >
+      <td className="sticky left-0 z-10 bg-background px-6 py-4 font-medium border-r max-w-xs truncate">
+        <div className="flex items-center gap-2">
+          {row.institute_name || (
+            <>
+              {/* Optional visual indicator that this is a clickable region */}
+              <span className="text-blue-600 dark:text-blue-400 font-semibold">
+                {row.region_name.split(' ').pop() || row.region_name}
+              </span>
+              
+            </>
+          )}
+        </div>
+      </td>
+
+      {fundheads.map(fh => (
+        <td key={fh.id} className="px-4 py-4 text-right font-mono tabular-nums">
+          {formatCurrency(row.fund_heads[fh.name])}
+        </td>
+      ))}
+
+      <td className="sticky right-0 z-10 bg-green-50 dark:bg-green-900/30 px-6 py-4 text-right font-bold text-green-700 dark:text-green-400 font-mono tabular-nums border-l">
+        {formatCurrency(row.total_balance)}
+      </td>
+    </tr>
+  );
+})}
                 </tbody>
                 <tfoot>
                   <tr className="bg-gray-100 dark:bg-gray-800 font-bold">
