@@ -1642,8 +1642,18 @@ if ($isregionfiltered) {
  
             if ($request->filled('fund_head_id') && $request->fund_head_id !== '0' && is_numeric($request->fund_head_id)) {
                 $fundhead = $request->fund_head_id;
-
+    // $fundHeadName = $fundheads->firstWhere('id', $fundhead)?->name;
+    
+    // // Filter funds to only show rows that have this fund head with non-zero balance
+    // $funds = $funds->filter(function($fund) use ($fundHeadName) {
+    //     return isset($fund['fund_heads'][$fundHeadName]) ;
+    // })->values();
             $fundHeadBalances = FundHeld::query()->where('fund_head_id', $fundhead)
+            ->whereHas('institute', function ($q) use ($request, $regionid, $type) {
+                if ($request->filled('region_id') && $request->region_id !== '0' && is_numeric($request->region_id)) {
+                    $q->where('region_id', $request->region_id);
+                }
+            })
             ->join('fund_heads', 'fund_helds.fund_head_id', '=', 'fund_heads.id')
                         ->join('institutes', 'fund_helds.institute_id', '=', 'institutes.id')
                         ->select([

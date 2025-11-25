@@ -114,7 +114,6 @@ export default function Funds({
       const res = await fetch(url);
       if (!res.ok) throw new Error();
       const data = await res.json();
-console.log(data);
       setFunds(data.funds || data || []);
       setBalances(data.balances || []);
     } catch (e) {
@@ -262,6 +261,23 @@ console.log(data);
               {balances.map((b, i) => (
                 <div
                   key={i}
+         onClick={() => {
+              // Get the fund head ID from the balance object
+              const fundHeadId = b.fund_head?.id?.toString() || '';
+              
+              // Set fund head filter
+              setFundHead(fundHeadId);
+              
+              // Re-apply filters with the selected fund head
+              const params = new URLSearchParams({
+                institute_id: institute || '',
+                region_id: region || '',
+                fund_head_id: fundHeadId,
+              });
+              
+              applyFilters(`/reports/funds/getfunds?${params.toString()}`);
+              
+            }}
                   className="bg-muted/50 dark:bg-gray-800 p-4 rounded-lg border hover:shadow-md transition-shadow"
                 >
                   <p className="text-xs font-medium text-muted-foreground truncate">
@@ -281,7 +297,6 @@ console.log(data);
       {/* Institute Wise Table - Responsive & Scrollable */}
       <CardContent className="p-0">
         <div className="overflow-x-auto">
-          {/* This inner div ensures table doesn't shrink */}
           <div className="max-w-[800px] lg:min-w-0">
             {funds.length === 0 ? (
               <div className="text-center py-16 text-muted-foreground">
@@ -294,11 +309,20 @@ console.log(data);
                     <th className="sticky left-0 z-20 bg-primary px-6 py-4 text-left font-semibold">
                       Institute / Region
                     </th>
-                    {fundheads.map(fh => (
-                      <th key={fh.id} className="px-4 py-4 text-center font-medium whitespace-nowrap">
-                        {fh.name}
+                    {/* Show only selected fund head or all if none selected */}
+                    {fundHead && fundHead !== '0' ? (
+                      // Show only the selected fund head
+                      <th className="px-4 py-4 text-center font-medium whitespace-nowrap">
+                        {fundheads.find(fh => fh.id.toString() === fundHead)?.name}
                       </th>
-                    ))}
+                    ) : (
+                      // Show all fund heads
+                      fundheads.map(fh => (
+                        <th key={fh.id} className="px-4 py-4 text-center font-medium whitespace-nowrap">
+                          {fh.name}
+                        </th>
+                      ))
+                    )}
                     <th className="sticky right-0 z-20 bg-primary px-6 py-4 text-right font-bold">
                       Total
                     </th>
@@ -322,7 +346,14 @@ console.log(data);
           
           // Clear institute selection and re-apply filters
           setInstitute('');
-          applyFilters();
+      // Re-apply filters with the selected fund head
+              const params = new URLSearchParams({
+                institute_id: institute || '',
+                region_id: regionId ,
+                fund_head_id: fundHead || '',
+              });
+              
+              applyFilters(`/reports/funds/getfunds?${params.toString()}`);
           
           // Optional: show toast feedback
         }
@@ -342,11 +373,23 @@ console.log(data);
         </div>
       </td>
 
-      {fundheads.map(fh => (
-        <td key={fh.id} className="px-4 py-4 text-right font-mono tabular-nums">
-          {formatCurrency(row.fund_heads[fh.name])}
-        </td>
-      ))}
+                  {/* Show only selected fund head or all if none selected */}
+                  {fundHead && fundHead !== '0' ? (
+                    // Show only the selected fund head value
+                    <td className="px-4 py-4 text-right font-mono tabular-nums">
+                      {(() => {
+                        const selectedFundHead = fundheads.find(fh => fh.id.toString() === fundHead);
+                        return formatCurrency(row.fund_heads[selectedFundHead?.name || ''] || 0);
+                      })()}
+                    </td>
+                  ) : (
+                    // Show all fund heads
+                    fundheads.map(fh => (
+                      <td key={fh.id} className="px-4 py-4 text-right font-mono tabular-nums">
+                        {formatCurrency(row.fund_heads[fh.name])}
+                      </td>
+                    ))
+                  )}
 
       <td className="sticky right-0 z-10 bg-green-50 dark:bg-green-900/30 px-6 py-4 text-right font-bold text-green-700 dark:text-green-400 font-mono tabular-nums border-l">
         {formatCurrency(row.total_balance)}
@@ -360,14 +403,26 @@ console.log(data);
                     <td className="sticky left-0 z-10 bg-gray-100 dark:bg-gray-800 px-6 py-4">
                       Grand Total
                     </td>
-                    {fundheads.map(fh => {
-                      const sum = funds.reduce((acc, row) => acc + toNumber(row.fund_heads[fh.name]), 0);
-                      return (
-                        <td key={fh.id} className="px-4 py-4 text-right font-mono tabular-nums">
-                          {formatCurrency(sum)}
-                        </td>
-                      );
-                    })}
+                    {fundHead && fundHead !== '0' ? (
+                      // Show only the selected fund head total
+                      <td className="px-4 py-4 text-right font-mono tabular-nums">
+                        {(() => {
+                          const selectedFundHead = fundheads.find(fh => fh.id.toString() === fundHead);
+                          const sum = funds.reduce((acc, row) => acc + toNumber(row.fund_heads[selectedFundHead?.name || ''] || 0), 0);
+                          return formatCurrency(sum);
+                        })()}
+                      </td>
+                    ) : (
+                      // Show all fund head totals
+                      fundheads.map(fh => {
+                        const sum = funds.reduce((acc, row) => acc + toNumber(row.fund_heads[fh.name]), 0);
+                        return (
+                          <td key={fh.id} className="px-4 py-4 text-right font-mono tabular-nums">
+                            {formatCurrency(sum)}
+                          </td>
+                        );
+                      })
+                    )}
                     <td className="sticky right-0 z-10 bg-emerald-100 dark:bg-emerald-900/50 px-6 py-4 text-right font-bold text-emerald-700 dark:text-emerald-400 font-mono tabular-nums border-l">
                       {formatCurrency(totalBalance)}
                     </td>
