@@ -307,7 +307,7 @@ export default function Funds({
                 <thead>
                   <tr className="bg-primary text-white">
                     <th className="sticky left-0 z-20 bg-primary px-6 py-4 text-left font-semibold">
-                      Institute / Region
+                      {funds[0].institute_name ?'Institute' : 'Region'}
                     </th>
                     {/* Show only selected fund head or all if none selected */}
                     {fundHead && fundHead !== '0' ? (
@@ -323,7 +323,7 @@ export default function Funds({
                         </th>
                       ))
                     )}
-                     {fundHead == '0' ? (
+                     {fundHead == '0' ||fundHead == ''? (
                     <th className="sticky right-0 z-20 bg-primary px-6 py-4 text-right font-bold">
                       Total
                     </th>
@@ -397,7 +397,7 @@ export default function Funds({
 )}
 
 {/* Total Balance - Outside the conditional */}
-  {fundHead == '0' ? (
+  {fundHead == '0' ||fundHead == ''? (
 <td className="sticky right-0 z-10 bg-green-50 dark:bg-green-900/30 px-6 py-4 text-right font-bold text-green-700 dark:text-green-400  tabular-nums border-l">
   {formatCurrency(row.total_balance)}
 </td>
@@ -433,7 +433,7 @@ export default function Funds({
                         );
                       })
                     )}
-                      { fundHead == '0' ? (
+                      { fundHead == '0' ||fundHead == '' ? (
                     <td className="sticky right-0 z-10 bg-emerald-100 dark:bg-emerald-900/50 px-6 py-4 text-right font-bold text-emerald-700 dark:text-emerald-400 font-mono tabular-nums border-l">
                       {formatCurrency(totalBalance)}
                     </td>

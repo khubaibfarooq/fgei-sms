@@ -1434,6 +1434,8 @@ private function handleRegionalOffice($request, $regionid, $fundheads, &$balance
     if ($this->isFundHeadFiltered($request)) {
         $fundhead = $request->fund_head_id;
         $balances = $this->getBalancesForSingleFundHead($fundhead, $regionid);
+     $funds = $this->buildFundsForInstitutes($institutes, $fundheads, $regionid);
+
     } else {
         $fundHeadBalances = $this->getFundHeadBalancesByRegion($regionid);
         $balances = $this->mapFundHeadBalances($fundheads, $fundHeadBalances);
