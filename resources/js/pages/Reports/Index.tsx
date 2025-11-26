@@ -568,7 +568,7 @@ console.log(memoizedRegions);
               <div className="space-y-2">
                 <Label>Current Layout Image</Label>
                 {fetchedinstitute?.img_layout ? (
-                                    <ImagePreview dataImg={`/assets/${fetchedinstitute.img_layout}`}  className="w-full h-48 object-cover rounded"/>
+                                    <ImagePreview dataImg={`${fetchedinstitute.img_layout}`}  className="w-full h-48 object-cover rounded"/>
 
                  
                 ) : (
@@ -581,7 +581,7 @@ console.log(memoizedRegions);
               <div className="space-y-2">
                 <Label>Current 3D Image</Label>
                 {fetchedinstitute?.img_3d ? (
-                  <ImagePreview dataImg={`/assets/${fetchedinstitute.img_3d}`}  className="w-full h-48 object-cover rounded"/>
+                  <ImagePreview dataImg={`${fetchedinstitute.img_3d}`}  className="w-full h-48 object-cover rounded"/>
                  
                 ) : (
                   <p className="text-sm text-muted-foreground">No 3D image uploaded.</p>
