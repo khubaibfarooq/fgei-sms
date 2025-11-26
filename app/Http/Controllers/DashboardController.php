@@ -297,7 +297,7 @@ $tab1 = DB::table('fund_helds')
 
      $tab2 = DB::table('projects')
       
-    ->select('projects.status as Key','projects.status')
+    ->select('projects.status as Key',DB::raw('CONCAT(UPPER(LEFT(projects.status, 1)), LOWER(SUBSTRING(projects.status, 2))) as status'))
     ->selectRaw('COUNT(*) as project_count')
     ->selectRaw('SUM(projects.cost) as total_cost')
     ->groupBy('status')

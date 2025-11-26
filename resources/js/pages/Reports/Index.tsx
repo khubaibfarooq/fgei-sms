@@ -293,7 +293,7 @@ console.log(memoizedRegions);
             { header: 'Asset', key: 'asset', width: 20 },
       { header: 'Quantity', key: 'qty', width: 10 },
 
-            { header: 'Locations', key: 'locations', width: 20 },
+            { header: 'Rooms', key: 'locations', width: 20 },
 
     ];
     instituteAssets.forEach((instAsset) => {
@@ -431,7 +431,7 @@ console.log(memoizedRegions);
 
   // Institute Assets Section
   if (instituteAssets.length > 0) {
-    const assetsColumns = ['Asset Name',  'Quantity','Locations'];
+    const assetsColumns = ['Asset Name',  'Quantity','Rooms'];
     const assetsData = instituteAssets.map(asset => [
       asset.name,
       asset.total_qty.toString(),
@@ -724,17 +724,19 @@ console.log(memoizedRegions);
 <table className="w-full border-collapse rounded-md overflow-hidden shadow-sm border-1">
             <thead>
               <tr className="bg-[#0b431b] dark:bg-gray-800">
+                              <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Block</th>
                 <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Name</th>
                 <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Area (sq ft)</th>
-                <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Block</th>
+  
               </tr>
             </thead>
             <tbody>
               {rooms.map((room) => (
                 <tr key={room.id} className="hover:bg-primary/10  dark:hover:bg-gray-700">
+                                    <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{room.block?.name}</td>
+
                   <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{room.name}</td>
                   <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{room.area}</td>
-                  <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{room.block?.name}</td>
                 </tr>
               ))}
             </tbody>
@@ -774,7 +776,7 @@ console.log(memoizedRegions);
           
                 <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Total Quantity</th>
             
-                <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Locations</th>
+                <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Rooms</th>
               </tr>
             </thead>
             <tbody>

@@ -426,8 +426,10 @@ $regions = Institute::select('region_id as id', 'name')->where('type', 'Regional
               ->orderBy('assets.name');
     } else {
         // In detailed mode: select full institute_assets + relationships already loaded via with()
-        $query->select('institute_assets.*'); // Important: select from institute_assets
-        $query->orderBy('added_date', 'desc');
+        $query->join('assets', 'institute_assets.asset_id', '=', 'assets.id')
+        ->join('asset_categories','asset_categories.id','=','assets.asset_category_id')
+        ->select('institute_assets.*'); // Important: select from institute_assets
+        $query->orderBy('asset_categories.name', 'asc','assets.name','asc');
     }
 
     // Handle export (all data, no pagination)

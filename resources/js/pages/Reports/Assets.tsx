@@ -325,7 +325,7 @@ const exportToExcel = async () => {
 
     // Dynamic headers
     const headers = !details
-      ? ['Asset', 'Total Quantity', 'Locations']
+      ? ['Asset', 'Total Quantity', 'Rooms']
       : ['Details', 'Quantity', 'Block', 'Room', 'Category', 'Asset'];
 
     const headerRow = worksheet.addRow(headers);
@@ -402,7 +402,7 @@ const exportToPDF = async () => {
 
     // Dynamic columns based on current view mode
     const tableColumn = !details
-      ? ['Asset', 'Total Quantity', 'Locations']
+      ? ['Asset', 'Total Quantity', 'Rooms']
       : ['Details', 'Qty', 'Block', 'Room', 'Category', 'Asset'];
 
     // Dynamic rows — match the columns exactly
@@ -695,32 +695,34 @@ const exportToPDF = async () => {
               <table className="w-full border-collapse border-1 rounded-md overflow-hidden shadow-sm">
   <thead>
     <tr className="bg-primary dark:bg-gray-800">
-      <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">
-        Asset
-      </th>
+   
 
       {!details ? (
-        <>
+        <>   <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">
+        Asset
+      </th>
           <th className="border p-2 text-center text-sm font-medium text-white dark:text-gray-200">
             Total Quantity
           </th>
           <th className="border p-2 text-center text-sm font-medium text-white dark:text-gray-200">
-            Locations
+            Rooms
           </th>
         </>
       ) : (
         <>
+         
           <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">
-            Description
+        Category
           </th>
-          <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">
-            Room / Block
-          </th>
+           <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">
+        Asset
+      </th>
+        
           <th className="border p-2 text-center text-sm font-medium text-white dark:text-gray-200">
             Quantity
           </th>
-           <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">
-        Category
+              <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">
+            Room / Block
           </th>
           <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">
             Added Date
@@ -769,10 +771,13 @@ const exportToPDF = async () => {
         return (
           <tr key={instAsset.id} className="hover:bg-primary/10 dark:hover:bg-gray-700">
             <td className="border p-2 text-left font-bold dark:text-gray-100">
+              {instAsset.asset?.category.name}
+            </td>
+            <td className="border p-2 text-left font-bold dark:text-gray-100">
               {instAsset.asset?.name}
             </td>
-            <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">
-              {instAsset.details || 'N/A'}
+          <td className="border p-2 text-center font-bold text-lg text-green-600">
+              {instAsset.current_qty}
             </td>
             <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">
               {instAsset.room ? (
@@ -782,12 +787,8 @@ const exportToPDF = async () => {
                 </>
               ) : '—'}
             </td>
-            <td className="border p-2 text-center font-bold text-lg text-green-600">
-              {instAsset.current_qty}
-            </td>
-             <td className="border p-2 text-left font-bold dark:text-gray-100">
-              {instAsset.asset?.category.name}
-            </td>
+           
+             
             <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">
               {instAsset.added_date ? new Date(instAsset.added_date).toLocaleDateString() : '—'}
             </td>
