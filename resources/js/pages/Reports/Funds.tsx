@@ -320,6 +320,7 @@ export default function Funds({
                 <Button 
                 onClick={() => {
                   setFundHead('');
+                        setRegion('');
                   const params = new URLSearchParams({
                     institute_id: institute || '',
                     region_id: '',
