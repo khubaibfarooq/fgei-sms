@@ -256,7 +256,24 @@ export default function Funds({
       {balances.length > 0 && (
         <>
           <CardContent className="pt-6">
-            <h3 className="text-lg font-semibold mb-4">Fund Head Balances</h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">Fund Head Balances</h3>
+              <Button 
+                onClick={() => {
+                  setFundHead('');
+                  const params = new URLSearchParams({
+                    institute_id: institute || '',
+                    region_id: region || '',
+                    fund_head_id: '',
+                  });
+                  applyFilters(`/reports/funds/getfunds?${params.toString()}`);
+                }}
+                variant="outline" 
+                size="sm"
+              >
+                Show All
+              </Button>
+            </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
               {balances.map((b, i) => (
                 <div
@@ -281,7 +298,7 @@ export default function Funds({
                   className="bg-muted/50 dark:bg-gray-800 p-4 rounded-lg border hover:shadow-md transition-shadow"
                 >
                   <p className="text-xs font-medium text-muted-foreground truncate">
-                    {b.fund_head?.name || 'Unknown'}
+                  {b.fund_head?.name && b.fund_head.name !== 'N/A' ? b.fund_head.name : fundheads.find(fh => fh.id.toString() === fundHead)?.name }
                   </p>
                   <p className="text-xl font-bold text-green-600 dark:text-green-400 mt-2">
                     {formatCurrency(b.balance)}
@@ -296,8 +313,26 @@ export default function Funds({
 
       {/* Institute Wise Table - Responsive & Scrollable */}
       <CardContent className="p-0">
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto"> 
+             
           <div className="max-w-[800px] lg:min-w-0">
+              {funds[0].institute_name && regions.length > 0  ?(
+                <Button 
+                onClick={() => {
+                  setFundHead('');
+                  const params = new URLSearchParams({
+                    institute_id: institute || '',
+                    region_id: '',
+                    fund_head_id: '',
+                  });
+                  applyFilters(`/reports/funds/getfunds?${params.toString()}`);
+                }}
+                variant="outline" 
+                size="sm"
+            
+              >
+                Show All
+              </Button>):('')}
             {funds.length === 0 ? (
               <div className="text-center py-16 text-muted-foreground">
                 No institute data found. Try adjusting filters.
