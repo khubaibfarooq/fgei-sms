@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { type BreadcrumbItem } from '@/types';
 import { Plus, Edit, Trash2 } from 'lucide-react';
 import { Label } from '@/components/ui/label';
-
+import { ImagePreview } from '@/components/ui/image-preview';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Combobox from '@/components/ui//combobox';
 import {formatDate} from '@/utils/dateFormatter';
@@ -40,6 +40,7 @@ interface Block {
   institute_id: number;
   created_at: string;
   updated_at: string;
+  img:string | null
 }
 
 interface Room {
@@ -50,6 +51,7 @@ interface Room {
   block_id: number;
   created_at: string;
   updated_at: string;
+  img:string | null;
   block?: { id: number; name?: string };
 }
 
@@ -566,11 +568,9 @@ console.log(memoizedRegions);
               <div className="space-y-2">
                 <Label>Current Layout Image</Label>
                 {fetchedinstitute?.img_layout ? (
-                  <img
-                    src={`/assets/${fetchedinstitute.img_layout}`}
-                    alt="Layout"
-                    className="w-full h-48 object-cover rounded"
-                  />
+                                    <ImagePreview dataImg={`/assets/${fetchedinstitute.img_layout}`}  className="w-full h-48 object-cover rounded"/>
+
+                 
                 ) : (
                   <p className="text-sm text-muted-foreground">No layout image uploaded.</p>
                 )}
@@ -581,11 +581,8 @@ console.log(memoizedRegions);
               <div className="space-y-2">
                 <Label>Current 3D Image</Label>
                 {fetchedinstitute?.img_3d ? (
-                  <img
-                    src={`/assets/${fetchedinstitute.img_3d}`}
-                    alt="3D View"
-                    className="w-full h-48 object-cover rounded"
-                  />
+                  <ImagePreview dataImg={`/assets/${fetchedinstitute.img_3d}`}  className="w-full h-48 object-cover rounded"/>
+                 
                 ) : (
                   <p className="text-sm text-muted-foreground">No 3D image uploaded.</p>
                 )}
@@ -684,7 +681,7 @@ console.log(memoizedRegions);
             <tbody>
               {blocks.map((block) => (
                 <tr key={block.id} className="hover:bg-primary/10  dark:hover:bg-gray-700">
-                  <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{block.name}</td>
+                  <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">  <div className='flex flex-column gap-2 align-middle'> <ImagePreview dataImg={block.img} size="h-20" />  <span className='font-bold'>{block.name}</span></div> </td>
                   <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{block.area}</td>
                 </tr>
               ))}
@@ -735,7 +732,7 @@ console.log(memoizedRegions);
                 <tr key={room.id} className="hover:bg-primary/10  dark:hover:bg-gray-700">
                                     <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{room.block?.name}</td>
 
-                  <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{room.name}</td>
+                  <td className="border p-2 text-sm text-gray-900 dark:text-gray-100"><div className='flex flex-column gap-2 align-middle'> <ImagePreview dataImg={room.img} size="h-20" />  <span className='font-bold'>{room.name}</span></div></td>
                   <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{room.area}</td>
                 </tr>
               ))}
