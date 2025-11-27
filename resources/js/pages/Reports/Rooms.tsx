@@ -15,6 +15,7 @@ import FileSaver from 'file-saver';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import Combobox from '@/components/ui/combobox';
+import { ImagePreview } from '@/components/ui/image-preview';
 
 declare module 'jspdf' {
     interface jsPDF {
@@ -32,6 +33,7 @@ interface RoomProp {
     name: string;
     area: string;
     capacity: string;
+    img: string;
     block?: { id: number; name?: string; institute?: { id: number; name?: string } };
     type?: { id: number; name?: string };
 }
@@ -519,7 +521,7 @@ export default function Rooms({ rooms: roomsProp, institutes, roomtypes, regions
                                                 rooms.data?.map((room: RoomProp) => (
                                                     <tr key={room.id} className="hover:bg-primary/10 dark:hover:bg-gray-700">
                                                         <td className="border p-2 text-left font-bold dark:text-gray-100">
-                                                            {room.name}
+                                                            <div className='flex flex-column gap-2 align-middle'> <ImagePreview dataImg={room.img} size="h-20" />  <span className='font-bold'>{room.name}</span></div>
                                                         </td>
                                                         <td className="border p-2 text-left text-gray-900 dark:text-gray-100">
                                                             {room.type?.name || '—'}
