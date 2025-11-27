@@ -47,7 +47,7 @@ $type=session('type');
         })
         ->values();
     }else{
-$regions = Institute::select('region_id as id', 'name')->where('type', 'Regional Office')->get()
+$regions = Institute::select('region_id as id', 'name')->where('type', 'Regional Office')  ->orderByRaw('ISNULL(`order`) ASC, `order` ASC, id DESC')->get()
             ->filter(function ($region) {
                 return is_numeric($region->id) && 
                        $region->id > 0 && 
@@ -224,7 +224,7 @@ $type=session('type');
         })
         ->values();
     }else{
-$regions = Institute::select('region_id as id', 'name')->where('type', 'Regional Office')->get()
+$regions = Institute::select('region_id as id', 'name')->where('type', 'Regional Office')  ->orderByRaw('ISNULL(`order`) ASC, `order` ASC, id DESC')->get()
             ->filter(function ($region) {
                 return is_numeric($region->id) && 
                        $region->id > 0 && 
@@ -462,7 +462,9 @@ $type=session('type');
         })
         ->values();
     }else{
-$regions = Institute::select('region_id as id', 'name')->where('type', 'Regional Office')->get()
+$regions = Institute::select('region_id as id', 'name')->where('type', 'Regional Office')
+    ->orderByRaw('ISNULL(`order`) ASC, `order` ASC, id DESC')
+    ->get()
             ->filter(function ($region) {
                 return is_numeric($region->id) && 
                        $region->id > 0 && 
@@ -558,7 +560,8 @@ $type=session('type');
         })
         ->values();
     }else{
-$regions = Institute::select('region_id as id', 'name')->where('type', 'Regional Office')->get()
+$regions = Institute::select('region_id as id', 'name')->where('type', 'Regional Office')  
+->orderByRaw('ISNULL(`order`) ASC, `order` ASC, id DESC')->get()
             ->filter(function ($region) {
                 return is_numeric($region->id) && 
                        $region->id > 0 && 
@@ -625,7 +628,7 @@ $type=session('type');
         })
         ->values();
     }else{
-$regions = Institute::select('region_id as id', 'name')->where('type', 'Regional Office')->get()
+$regions = Institute::select('region_id as id', 'name')->where('type', 'Regional Office')  ->orderByRaw('ISNULL(`order`) ASC, `order` ASC, id DESC')->get()
             ->filter(function ($region) {
                 return is_numeric($region->id) && 
                        $region->id > 0 && 
@@ -726,9 +729,9 @@ $regions = Institute::select('region_id as id', 'name')->where('type', 'Regional
         });
               
             }
-            $regions = Institute::select('region_id as id', \DB::raw('MAX(name) as name'))
+            $regions = Institute::select('region_id as id','name')
                 ->where('type', 'Regional Office')
-                ->groupBy('region_id')
+               ->orderByRaw('ISNULL(`order`) ASC, `order` ASC, id DESC')
                 ->get()
                 ->filter(fn($r) => is_numeric($r->id) && $r->id > 0 && !empty(trim($r->name)))
                 ->values();
@@ -791,9 +794,10 @@ $regions = Institute::select('region_id as id', 'name')->where('type', 'Regional
     // Super Admin / HQ → all regions + all institutes
     else {
         // Regions: one entry per region (using Regional Office institutes)
-        $regions = Institute::select('region_id as id', \DB::raw('MAX(name) as name'))
+        $regions = Institute::select('region_id as id','name')
+             ->orderByRaw('ISNULL(`order`) ASC, `order` ASC, id DESC')
             ->where('type', 'Regional Office')
-            ->groupBy('region_id')
+         
             ->get()
             ->filter(fn($r) => is_numeric($r->id) && $r->id > 0 && trim($r->name) !== '')
             ->values();
@@ -1288,9 +1292,9 @@ $balances=[];
         // Super-admin / HQ → all regions
         // -----------------------------------------------------------------
         else {
-                        $regions = Institute::select('region_id as id', DB::raw('MAX(name) as name'))
+                        $regions = Institute::select('region_id as id', 'name')
                 ->where('type', 'Regional Office')
-                ->groupBy('region_id')
+                ->orderByRaw('ISNULL(`order`) ASC, `order` ASC, id DESC')
                 ->get()
                 ->filter(fn($r) => is_numeric($r->id) && $r->id > 0 && !empty(trim($r->name)))
                 ->values();

@@ -60,6 +60,7 @@ $permissions = [
             'img' => 'nullable|file',
             'area' => 'required|numeric',
            'block_type_id' => 'required|exists:block_types,id',
+           'establish_date' => 'nullable|date',
         ]);
         $data['institute_id'] = session('sms_inst_id');
         $resultImageName = null;
@@ -91,6 +92,7 @@ $permissions = [
             'block_type_id' => 'required|exists:block_types,id',
             // accept uploaded image files
             'img' => 'nullable|file',
+            'establish_date' => 'nullable|date',
         ]);
         $data['institute_id'] = session('sms_inst_id');
         $resultImageName = null;

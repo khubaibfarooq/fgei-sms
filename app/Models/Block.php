@@ -10,7 +10,7 @@ class Block extends Model
 {
     use HasFactory,HasRoles;
 
-    protected $fillable = ['name', 'area', 'institute_id','block_type_id','img'];
+    protected $fillable = ['name', 'area', 'institute_id','block_type_id','img','establish_date'];
 
     public function institute()
     {

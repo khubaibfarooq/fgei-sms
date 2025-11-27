@@ -18,7 +18,7 @@ interface FormProps {
     title: string;
     link: string;
         icon: string;
-
+order:string ;
         color: string;
 redirectlink:string;
     role_id: string;
@@ -37,6 +37,7 @@ export default function DashboardCardForm({ dashboardCard, roles }: FormProps) {
      icon:string | ''
     role_id: string | '';
     redirectlink:string | '';
+    order:string | ''
   }>({
     id:dashboardCard?.id ||'',
     title: dashboardCard?.title || '',
@@ -45,6 +46,7 @@ export default function DashboardCardForm({ dashboardCard, roles }: FormProps) {
       icon: dashboardCard?.icon || '',
     role_id: dashboardCard?.role_id || '',
     redirectlink:dashboardCard?.redirectlink || '',
+    order:dashboardCard?.order || '',
   });
 
   useEffect(() => {
@@ -57,6 +59,7 @@ export default function DashboardCardForm({ dashboardCard, roles }: FormProps) {
             icon: dashboardCard.icon ?? '',
         role_id: dashboardCard.role_id ?? '',
           redirectlink: dashboardCard.redirectlink ?? '',
+              order: dashboardCard.order ?? '',
       }));
     } else {
       setData((prev) => ({
@@ -67,6 +70,7 @@ export default function DashboardCardForm({ dashboardCard, roles }: FormProps) {
          icon:'',
         role_id: '',
               redirectlink: '',
+               order:'',
       }));
     }
   }, [dashboardCard, setData]);
@@ -81,6 +85,7 @@ const handleSubmit = (e: React.FormEvent) => {
             icon: data.icon ,
         role_id:selectedValues.join(','),
           redirectlink: data.redirectlink,
+               order: data.order,
   
     };
   if (isEdit) {
@@ -243,6 +248,17 @@ const handleSubmit = (e: React.FormEvent) => {
                     onChange={(e) => setData('redirectlink', e.target.value)}
                   />
                 {errors.redirectlink && <p className="text-red-500 text-sm">{errors.redirectlink}</p>}
+              </div>
+               <div className="space-y-2">
+                <Label htmlFor="color">Order No</Label>
+                <Input
+                type='number'
+                    id="order"
+                    value={data.order}
+                    onChange={(e) => setData('order', e.target.value)}
+                  />
+                {errors.order && <p className="text-red-500 text-sm">{errors.order}</p>}
+               
               </div>
               </div>
               {/* Actions */}

@@ -5,45 +5,66 @@ namespace App\Http\Controllers;
 use App\Models\DashboardCard;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Spatie\Permission\Models\Role;
 
 class DashboardCardController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-   public function index(Request $request)
+
+public function index(Request $request)
 {
+    // Extract filters properly
+    $filters = [
+        'search' => $request->input('search', ''),
+        'role'   => $request->input('role', ''), // role ID as string
+    ];
 
     $query = DashboardCard::query();
 
-  
-
-    if ($request->filled('search')) {
-        $query->where('title', 'like', "%{$request->search}%");
+    // Search by title
+    if ($filters['search']) {
+        $query->where('title', 'like', '%' . $filters['search'] . '%');
     }
+
+    // Filter by role — using FIND_IN_SET (best for comma-separated IDs)
+    if ($filters['role']) {
+        $roleId = $filters['role'];
+      //  $query->whereRaw("FIND_IN_SET(?, role_id)", [$roleId]);
+        // Alternative (less efficient but works everywhere):
+        $query->where('role_id', 'like', "%{$roleId}%");
+    }
+$query->orderByRaw('ISNULL(`order`) ASC, `order` ASC, id DESC');
+    // Optional: Order by custom order, then ID
 
     $dashboardCards = $query->paginate(10)->withQueryString();
 
-    // Manually attach roles to each card
+    // Transform each card to include full role objects (for badges)
     $dashboardCards->getCollection()->transform(function ($card) {
-        $roleIdsOrNames = $card->role_id ? explode(',', $card->role_id) : [];
+        $roleIds = $card->role_id ? array_filter(explode(',', $card->role_id)) : [];
 
-        $card->roles = \Spatie\Permission\Models\Role::query()
-            ->when(
-                count($roleIdsOrNames) > 0 && is_numeric($roleIdsOrNames[0]),
-                fn($q) => $q->whereIn('id', $roleIdsOrNames),
-            )
-            ->get();
+        $card->roles = collect();
+
+        if (!empty($roleIds)) {
+            // Only fetch if there are IDs and they are numeric
+            if (is_numeric($roleIds[0])) {
+                $card->roles = Role::whereIn('id', $roleIds)->get();
+            }
+        }
 
         return $card;
     });
 
+    // Get all roles for the filter dropdown
+    $allRoles = Role::orderBy('name')->get(['id', 'name']);
+
     return Inertia::render('dashboard_cards/Index', [
         'dashboardCards' => $dashboardCards,
-        'filters' => $request->only('search'),
+        'filters'        => $filters, // send both search & role back
+        'roles'          => $allRoles,
     ]);
 }
-
     /**
      * Show the form for creating a new resource.
      */
@@ -67,6 +88,7 @@ class DashboardCardController extends Controller
             'role_id' => 'required',
             'redirectlink' => 'nullable|string',
             'icon'  => 'nullable|string|max:255',
+            'order'=>'nullable|numeric',
         ]);
 
         DashboardCard::create($data);
@@ -100,6 +122,7 @@ class DashboardCardController extends Controller
         'link'    => 'required|string|max:255',
         'role_id' => 'required',
           'redirectlink' => 'nullable|string',
+              'order'=>'nullable|numeric',
     ]);
 $dashboardCard=DashboardCard::find($request->id);
 

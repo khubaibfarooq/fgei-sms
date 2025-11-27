@@ -24,6 +24,7 @@ interface BlockFormProps {
     img:string | null;
     institute_id: number;
     block_type_id?: number;
+    establish_date?: string;
   };
   blockTypes: Record<string, string>; // Changed from Array to Record (object)
 }
@@ -55,12 +56,14 @@ export default function BlockForm({ block, blockTypes }: BlockFormProps) {
     institute_id: number;
     block_type_id: number;
     img:string |File | null;
+    establish_date?: string;
   }>({
     name: block?.name || '',
     area: block?.area || 0,
     institute_id: block?.institute_id || 0,
     block_type_id: block?.block_type_id || 0,
     img: block?.img || null,
+    establish_date: block?.establish_date || '',
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -168,6 +171,16 @@ export default function BlockForm({ block, blockTypes }: BlockFormProps) {
                     </SelectContent>
                   </Select>
                 </div>
+                <div className="space-y-2">
+                  <Label htmlFor="establish_date">Establish Date</Label>
+                  <Input
+                    id="establish_date"
+                    type="date"
+                    value={data.establish_date || ''}
+                    onChange={(e) => setData('establish_date', e.target.value)}
+                    placeholder="Select establish date"
+                  />
+                </div>
                   <div className="space-y-2">
             
                                     <Label htmlFor="img">Image</Label>
@@ -178,9 +191,12 @@ export default function BlockForm({ block, blockTypes }: BlockFormProps) {
                                       onChange={(e) => setData('img', e.target.files?.[0] || null)}
                                     />
                                   
-                                <Label>Image</Label>
-                                <ImagePreview dataImg={data.img} />
+                               
                               </div>
+                              <div className="space-y-2">
+                                    <Label>Image Preview</Label>
+                                    <ImagePreview dataImg={data.img} /> 
+                                    </div>
               </div>
 
              

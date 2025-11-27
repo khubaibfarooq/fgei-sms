@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Traits\HasRoles;
+use Illuminate\Database\Eloquent\Builder; // Make sure this is imported
 
 class DashboardCard extends Model
 {
@@ -20,6 +21,7 @@ class DashboardCard extends Model
         'role_id',        // now stores: "1,3,5" or "admin,teacher"
         'icon',
         'redirectlink',
+        'order',
     ];
 
     // Cast role_id as array automatically
@@ -62,4 +64,10 @@ public function scopeVisibleTo($query, $user)
         }
     });
 }
+ public function scopeOrdered(Builder $query): Builder
+    {
+        return $query->orderByRaw('ISNULL(`order`) ASC')
+                     ->orderBy('order', 'ASC')
+                     ->orderBy('id', 'ASC');
+    }
 }

@@ -320,8 +320,9 @@ $tab1 = DB::table('fund_helds')
         $roleIds = collect(array_filter([$fallbackRoleId]));
     }
 
-  $cards = DashboardCard::visibleTo(auth()->user())->get();
-
+$cards = DashboardCard::visibleTo(auth()->user())
+    ->ordered()
+    ->get();
 
         
     

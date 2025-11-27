@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState,useEffect ,useMemo} from 'react';
 import { Head, router, Link } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import { Button } from '@/components/ui/button';
@@ -7,6 +7,8 @@ import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { type BreadcrumbItem } from '@/types';
 import { Plus, Edit, Trash2 } from 'lucide-react';
+import Combobox from '@/components/ui/combobox';
+
 import {
   AlertDialog,
   AlertDialogTrigger,
@@ -28,7 +30,8 @@ interface DashboardCard {
   link: string;
   redirectlink: string;
   role_id: string; // e.g., "admin,teacher,principal" or "1,3,7"
-  roles: Array<{ id: number; name: string }>; // Pre-loaded roles (from backend)
+  roles: Array<{ id: number; name: string }>;
+    order: number | null; // Pre-loaded roles (from backend)
 }
 
 interface PageProps {
@@ -38,16 +41,45 @@ interface PageProps {
   };
   filters: {
     search: string;
+    role: string;
   };
+    roles: Array<{ id: number; name: string }>;
+
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Dashboard Cards', href: '/dashboardcards' },
 ];
 
-export default function DashboardCards({ dashboardCards, filters }: PageProps) {
+export default function DashboardCards({ dashboardCards,roles, filters }: PageProps) {
   const [search, setSearch] = useState(filters.search || '');
+    const [role, setRole] = useState(filters.role || '');
+  useEffect(() => {
+  const timer = setTimeout(() => {
+    router.get('/dashboardcards', { search, role }, {
+      preserveState: true,
+      preserveScroll: true,
+      replace: true,
+    });
+  }, 300);
 
+  return () => clearTimeout(timer);
+}, [search, role]);
+
+// 2. Replace your options memo
+const roleOptions = useMemo(() => {
+  const opts = roles.map(r => ({
+    id: r.id.toString(),     // <-- id (string or number)
+    name: r.name,            // <-- name (string)
+  }));
+
+  // Add "All Roles" option at the top
+  return [
+    { id: '', name: 'All Roles' },
+    ...opts
+  ];
+}, [roles]);
+ 
   const handleSearchKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       router.get('/dashboardcards', { search }, { preserveState: true, preserveScroll: true });
@@ -60,6 +92,7 @@ export default function DashboardCards({ dashboardCards, filters }: PageProps) {
       onError: () => toast.error('Failed to delete Dashboard Card'),
     });
   };
+  
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
@@ -84,14 +117,25 @@ export default function DashboardCards({ dashboardCards, filters }: PageProps) {
 
           <CardContent className="pt-6 space-y-6">
             {/* Search */}
+                        <div className="flex flex-col md:flex-row md:items-center gap-4">
+
             <Input
               type="text"
               placeholder="Search cards by title... (press Enter)"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               onKeyDown={handleSearchKey}
-              className="max-w-sm"
+            
             />
+               
+  <Combobox
+      entity="roles"
+    placeholder="Filter by role..."
+    value={role}
+    onChange={(value) => setRole(value)} // '' means "All"
+    options={roleOptions}
+  />
+  </div>
 
             {/* Table */}
             <div className="overflow-x-auto">
@@ -102,6 +146,8 @@ export default function DashboardCards({ dashboardCards, filters }: PageProps) {
                     <th className="border p-3 text-left font-medium">Visible to Roles</th>
                     <th className="border p-3 text-left font-medium">Link</th>
                     <th className="border p-3 text-left font-medium">Redirect Link</th>
+                                        <th className="border p-3 text-left font-medium">order</th>
+
                     <th className="border p-3 text-left font-medium">Actions</th>
                   </tr>
                 </thead>
@@ -138,7 +184,9 @@ export default function DashboardCards({ dashboardCards, filters }: PageProps) {
                         <td className="border p-3">
                           <code className="text-xs bg-muted px-2 py-1 rounded">{card.redirectlink}</code>
                         </td>
-
+   <td className="border p-3">
+                         {card.order}
+                        </td>
                         <td className="border p-3">
                           <div className="flex gap-1">
                             <Link href={`/dashboardcards/${card.id}/edit`}>
