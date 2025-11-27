@@ -20,19 +20,19 @@ interface InstituteFormProps {
   institute?: {
     id: number;
     name: string;
-    established_date: string ;
-    total_area:number;
-    convered_area:number;
-    img_layout:string | null;
-    img_3d:string | null;
-    video:string | null;
-    gender:string ;
-     address:string | null;
- phone:string | null;
-  email:string | null;
+    established_date: string;
+    total_area: number;
+    convered_area: number;
+    img_layout: string | null;
+    img_3d: string | null;
+    video: string | null;
+    gender: string;
+    address: string | null;
+    phone: string | null;
+    email: string | null;
 
   };
-  
+
 }
 
 export default function InstituteForm({ institute }: InstituteFormProps) {
@@ -52,7 +52,7 @@ export default function InstituteForm({ institute }: InstituteFormProps) {
     email: string;
   }>({
     name: institute?.name || '',
-    established_date: institute?.established_date || new Date().toISOString().split('T')[0],
+    established_date: institute?.established_date || '',
     total_area: institute?.total_area || 0,
     convered_area: institute?.convered_area || 0,
     img_layout: institute?.img_layout || '',
@@ -66,7 +66,7 @@ export default function InstituteForm({ institute }: InstituteFormProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const formData = new FormData();
     (Object.keys(data) as Array<keyof typeof data>).forEach(key => {
       // Skip null or empty values
@@ -122,113 +122,117 @@ export default function InstituteForm({ institute }: InstituteFormProps) {
             <CardTitle className="text-2xl font-bold text-center">
               {data.name}
             </CardTitle>
-         
+
           </CardHeader>
 
           <Separator />
 
           <CardContent className="pt-6">
             <form onSubmit={handleSubmit} className="space-y-6" encType='multipart/form-data'>
-          
-               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-             
 
-              {/* Establishment Date */}
-              <div className="space-y-2">
-                <Label htmlFor="established_date">Established Date</Label>
-                <Input
-                  id="established_date"
-                  type="date"
-                  value={data.established_date}
-                  onChange={(e) => setData('established_date', e.target.value)}
-                />
-              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
-              {/* Area */}
-              <div className="space-y-2">
-                <Label htmlFor="total_area">Total Area (sq ft)</Label>
-                <Input
-                  id="total_area"
-                  type="number"
-                  value={data.total_area}
-                  onChange={(e) => setData('total_area', Number(e.target.value))}
-                />
-              </div>
+
+                {/* Establishment Date */}
                 <div className="space-y-2">
-                <Label htmlFor="convered_area">Covered Area (sq ft)</Label>
-                <Input
-                  id="convered_area"
-                  type="number"
-                  value={data.convered_area}
-                  onChange={(e) => setData('convered_area', Number(e.target.value))}
-                />
-              </div>
-</div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-      {/* Layout image view */}
-              <div className="space-y-2">
-                <Label>Current Layout Image</Label>
-                {institute?.img_layout ? (
-                  <img
-                    src={`/assets/${institute.img_layout}`}
-                    alt="Layout"
-                    className="w-full h-48 object-cover rounded"
+                  <Label htmlFor="established_date">Established Date</Label>
+                  <Input
+                    id="established_date"
+                    type="date"
+                    value={data.established_date}
+                    onChange={(e) => setData('established_date', e.target.value)}
+                    required
                   />
-                ) : (
-                  <p className="text-sm text-muted-foreground">No layout image uploaded.</p>
-                )}
-                <Input
-                  id="img_layout"
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => setData('img_layout', e.target.files?.[0] || null)}
-                />
-              </div>
+                  {errors.established_date && (
+                    <p className="text-red-500 text-sm">{errors.established_date}</p>
+                  )}
+                </div>
 
-              {/* 3D image view */}
-              <div className="space-y-2">
-                <Label>Current 3D Image</Label>
-                {institute?.img_3d ? (
-                  <img
-                    src={`/assets/${institute.img_3d}`}
-                    alt="3D View"
-                    className="w-full h-48 object-cover rounded"
+                {/* Area */}
+                <div className="space-y-2">
+                  <Label htmlFor="total_area">Total Area (sq ft)</Label>
+                  <Input
+                    id="total_area"
+                    type="number"
+                    value={data.total_area}
+                    onChange={(e) => setData('total_area', Number(e.target.value))}
                   />
-                ) : (
-                  <p className="text-sm text-muted-foreground">No 3D image uploaded.</p>
-                )}
-                 <Input
-                  id="img_3d"
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => setData('img_3d', e.target.files?.[0] || null)}
-                />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="convered_area">Covered Area (sq ft)</Label>
+                  <Input
+                    id="convered_area"
+                    type="number"
+                    value={data.convered_area}
+                    onChange={(e) => setData('convered_area', Number(e.target.value))}
+                  />
+                </div>
               </div>
 
-              {/* Video view */}
-              <div className="space-y-2">
-                <Label>Current Video</Label>
-                {institute?.video ? (
-                  <video controls className="w-full h-48 rounded">
-                    <source src={`/assets/${institute.video}`} type="video/mp4" />
-                    Your browser does not support the video tag.
-                  </video>
-                ) : (
-                  <p className="text-sm text-muted-foreground">No video uploaded.</p>
-                )}
-                 <Input
-                  id="video"
-                  type="file"
-                  accept="video/*"
-                  onChange={(e) => setData('video', e.target.files?.[0] || null)}
-                />
-              </div>
-                </div>   
-   
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Layout image view */}
+                <div className="space-y-2">
+                  <Label>Current Layout Image</Label>
+                  {institute?.img_layout ? (
+                    <img
+                      src={`/assets/${institute.img_layout}`}
+                      alt="Layout"
+                      className="w-full h-48 object-cover rounded"
+                    />
+                  ) : (
+                    <p className="text-sm text-muted-foreground">No layout image uploaded.</p>
+                  )}
+                  <Input
+                    id="img_layout"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setData('img_layout', e.target.files?.[0] || null)}
+                  />
+                </div>
 
-                <div className="flex items-center justify-between pt-2">
-                
+                {/* 3D image view */}
+                <div className="space-y-2">
+                  <Label>Current 3D Image</Label>
+                  {institute?.img_3d ? (
+                    <img
+                      src={`/assets/${institute.img_3d}`}
+                      alt="3D View"
+                      className="w-full h-48 object-cover rounded"
+                    />
+                  ) : (
+                    <p className="text-sm text-muted-foreground">No 3D image uploaded.</p>
+                  )}
+                  <Input
+                    id="img_3d"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setData('img_3d', e.target.files?.[0] || null)}
+                  />
+                </div>
+
+                {/* Video view */}
+                <div className="space-y-2">
+                  <Label>Current Video</Label>
+                  {institute?.video ? (
+                    <video controls className="w-full h-48 rounded">
+                      <source src={`/assets/${institute.video}`} type="video/mp4" />
+                      Your browser does not support the video tag.
+                    </video>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">No video uploaded.</p>
+                  )}
+                  <Input
+                    id="video"
+                    type="file"
+                    accept="video/*"
+                    onChange={(e) => setData('video', e.target.files?.[0] || null)}
+                  />
+                </div>
+              </div>
+
+
+              <div className="flex items-center justify-between pt-2">
+
                 <Button type="submit" disabled={processing}>
                   <Save className="mr-2 h-4 w-4" />
                   {processing
@@ -236,8 +240,8 @@ export default function InstituteForm({ institute }: InstituteFormProps) {
                       ? 'Saving...'
                       : 'Adding...'
                     : isEdit
-                    ? 'Save Changes'
-                    : 'Save Institute'}
+                      ? 'Save Changes'
+                      : 'Save Institute'}
                 </Button>
               </div>
             </form>
