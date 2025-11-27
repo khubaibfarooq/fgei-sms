@@ -18,7 +18,7 @@ class Block extends Model
     }
  public function blocktype()
     {
-        return $this->belongsTo(BlockType::class);
+        return $this->belongsTo(BlockType::class,'block_type_id','id');
     }
     public function rooms()
     {

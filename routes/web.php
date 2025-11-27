@@ -159,8 +159,12 @@ Route::get('/reports/institutes', [ReportsController::class, 'index'])->name('re
 Route::get('/reports/institutes/getData', [ReportsController::class, 'getAllData'])->name('reports.getData');
 
 Route::get('/reports/assets', [ReportsController::class, 'assets'])->name('reports.assets');
-Route::get('/reports/blocks', [ReportsController::class, 'getBlocks'])->name('reports.blocks');
-Route::get('/reports/rooms', [ReportsController::class, 'getRooms'])->name('reports.rooms');
+Route::get('/reports/blocks', [ReportsController::class, 'blocks'])->name('reports.blocks');
+
+Route::get('/reports/blocks/getBlocks', [ReportsController::class, 'getBlocks'])->name('reports.getBlocks');
+Route::get('/reports/rooms', [ReportsController::class, 'rooms'])->name('reports.rooms');
+Route::get('/reports/rooms/getRoomsReport', [ReportsController::class, 'getRoomsReport'])->name('reports.getRoomsReport');
+Route::get('/reports/rooms/getInstituteBlocks', [ReportsController::class, 'getInstituteBlocks'])->name('reports.getInstituteBlocks');
 Route::get('/reports/assets/list', [ReportsController::class, 'getAssets'])->name('reports.assets.list');
 Route::get('/reports/assets/institute-assets', [ReportsController::class, 'getInstituteAssets'])->name('reports.getInstituteAssets');
 Route::get('/reports/transports', [ReportsController::class, 'transports'])->name('reports.transports');Route::get('/reports/transports/getTransports', [ReportsController::class, 'getTransports'])->name('reports.getTransports');

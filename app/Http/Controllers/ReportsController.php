@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 use App\Models\Block;
+use App\Models\BlockType;
+use App\Models\RoomType;
 use App\Models\Shift;
 
 use Illuminate\Http\Request;
@@ -183,24 +185,121 @@ $projects = ProjectType::whereHas('projects', function($query) use ($request) {
 
     public function blocks(Request $request)
     {
-        $id = $request->id;
-        $query = Block::where('institute_id', $id);
-
-        if ($request->search) {
-            $query->where('name', 'like', '%' . $request->search . '%');
+        $hrInstituteId = session('inst_id');
+        $regionid = session('region_id');
+        $type = session('type');
+        $institutes = Institute::query();
+        
+        $regions = [];
+        if($type == 'Regional Office'){
+            // Fetch and filter institutes
+            $institutes = Institute::where('region_id', $regionid)
+                ->select('id', 'name')
+                ->get()
+                ->filter(function ($institute) {
+                    return is_numeric($institute->id) && $institute->id > 0 && !empty(trim($institute->name));
+                })
+                ->values();
+        } else {
+            $regions = Institute::select('region_id as id', 'name')
+                ->where('type', 'Regional Office')
+                ->orderByRaw('ISNULL(`order`) ASC, `order` ASC, id DESC')
+                ->get()
+                ->filter(function ($region) {
+                    return is_numeric($region->id) && 
+                           $region->id > 0 && 
+                           !empty(trim($region->id));
+                })
+                ->values();
         }
-
-        $blocks = $query->paginate(10)->withQueryString();
-        $permissions = [
-            'can_add'    => auth()->user()->can('block-add'),
-            'can_edit'   => auth()->user()->can('block-edit'),
-            'can_delete' => auth()->user()->can('block-delete'),
-        ];
-
-        return Inertia::render('Blocks/Index', [
+        
+        // Initialize empty blocks
+        $blocks = new LengthAwarePaginator(
+            collect([]), // Empty collection for items
+            0,           // Total items
+            10,          // Per page
+            1,           // Current page
+            ['path' => request()->url()] // Preserve query string
+        );
+        $blocktypes=BlockType::all();
+        return Inertia::render('Reports/Blocks', [
+            'institutes' => $institutes,
             'blocks' => $blocks,
-            'filters' => ['search' => $request->search ?? ''],
-            'permissions' => $permissions,
+            'regions' => $regions,
+            'blocktypes'=>$blocktypes,
+            'filters' => [
+                'search' => '',
+                'institute_id' => '',
+                'region_id' => '',
+                'blocktype_id'=>'',
+            ],
+        ]);
+    }
+     public function rooms(Request $request)
+    {
+        $hrInstituteId = session('inst_id');
+        $regionid = session('region_id');
+        $type = session('type');
+        $institutes = Institute::query();
+         // Initialize empty rooms
+        $rooms = new LengthAwarePaginator(
+            collect([]), // Empty collection for items
+            0,           // Total items
+            10,          // Per page
+            1,           // Current page
+            ['path' => request()->url()] // Preserve query string
+        );
+     
+        $regions = [];
+        if($type == 'Regional Office'){
+            // Fetch and filter institutes
+            $institutes = Institute::where('region_id', $regionid)
+                ->select('id', 'name')
+                ->get()
+                ->filter(function ($institute) {
+                    return is_numeric($institute->id) && $institute->id > 0 && !empty(trim($institute->name));
+                })
+                ->values();
+                  if($request->roomtype_id  && !empty($request->roomtype_id) && $request->roomtype_id!=0){
+               $roomtypeIds = array_filter(explode(',', $request->roomtype_id));
+
+           $rooms=Room::query()->with(['type', 'block.institute'])->where('region_id', $regionid)->whereHas('type', function ($q) use ($roomtypeIds) {
+                $q->whereIn('id', $roomtypeIds);
+            })->paginate(10)->withQueryString();
+        }
+        } else {
+            $regions = Institute::select('region_id as id', 'name')
+                ->where('type', 'Regional Office')
+                ->orderByRaw('ISNULL(`order`) ASC, `order` ASC, id DESC')
+                ->get()
+                ->filter(function ($region) {
+                    return is_numeric($region->id) && 
+                           $region->id > 0 && 
+                           !empty(trim($region->id));
+                })
+                ->values();
+                  if($request->roomtype_id  && !empty($request->roomtype_id) && $request->roomtype_id!=0){
+               $roomtypeIds = array_filter(explode(',', $request->roomtype_id));
+
+           $rooms=Room::query()->with(['type', 'block'])->whereHas('type', function ($q) use ($roomtypeIds) {
+                $q->whereIn('id', $roomtypeIds);
+            })->paginate(10)->withQueryString();
+        }
+        }
+      
+
+        $roomtypes = RoomType::all();
+        return Inertia::render('Reports/Rooms', [
+            'institutes' => $institutes,
+            'rooms' => $rooms,
+            'regions' => $regions,
+            'roomtypes'=>$roomtypes,
+            'filters' => [
+                'search' => '',
+                'institute_id' => '',
+                'region_id' => '',
+                'roomtype_id'=>'',
+            ],
         ]);
     }
 public function assets(Request $request)
@@ -340,8 +439,37 @@ $regions = Institute::select('region_id as id', 'name')->where('type', 'Regional
 
     public function getBlocks(Request $request)
     {
-        $instituteId = $request->institute_id;
-        $blocks = Block::where('institute_id', $instituteId)->get();
+        $query = Block::query();
+
+        // Apply filters
+        if ($request->filled('search')) {
+            $query->where('name', 'like', '%' . $request->search . '%');
+        }
+
+        if ($request->filled('institute_id') && is_numeric($request->institute_id) && $request->institute_id>0) {
+            $query->where('institute_id', $request->institute_id);
+        }
+
+        if ($request->filled('blocktype_id') && is_numeric($request->blocktype_id) && $request->blocktype_id>0) {
+            $query->where('block_type_id', $request->blocktype_id);
+        }
+
+        if ($request->filled('region_id') && is_numeric($request->region_id) && $request->region_id>0) {
+            $query->whereHas('institute', function ($q) use ($request) {
+                $q->where('region_id', $request->region_id);
+            });
+        }
+
+        // Eager load relationships
+        $query->with(['institute', 'blockType']);
+
+        // Handle pagination
+        if ($request->boolean('all') || $request->get('export')) {
+            $blocks = $query->get();
+        } else {
+            $blocks = $query->paginate(15)->withQueryString();
+        }
+
         return response()->json($blocks);
     }
 
@@ -351,6 +479,54 @@ $regions = Institute::select('region_id as id', 'name')->where('type', 'Regional
         $rooms = Room::where('block_id', $blockId)->get();
         return response()->json($rooms);
     }
+   public function getInstituteBlocks(Request $request)
+    {
+        $instituteId = $request->institute_id;
+  $blocks = Block::where('institute_id', $instituteId)->get();
+          return response()->json($blocks);
+    }
+    public function getRoomsReport(Request $request)
+    {
+        $query = Room::query();
+
+        // Apply filters
+        if ($request->filled('search')) {
+            $query->where('name', 'like', '%' . $request->search . '%');
+        }
+
+        if ($request->filled('institute_id') && is_numeric($request->institute_id) && $request->institute_id > 0) {
+            $query->whereHas('block', function ($q) use ($request) {
+                $q->where('institute_id', $request->institute_id);
+            });
+        }
+
+        if ($request->filled('block_id') && is_numeric($request->block_id) && $request->block_id > 0) {
+            $query->where('block_id', $request->block_id);
+        }
+
+        if ($request->filled('roomtype_id') && is_numeric($request->roomtype_id) && $request->roomtype_id > 0) {
+            $query->where('room_type_id', $request->roomtype_id);
+        }
+
+        if ($request->filled('region_id') && is_numeric($request->region_id) && $request->region_id > 0) {
+            $query->whereHas('block.institute', function ($q) use ($request) {
+                $q->where('region_id', $request->region_id);
+            });
+        }
+
+        // Eager load relationships
+        $query->with(['block.institute', 'type']);
+
+        // Handle pagination
+        if ($request->boolean('all') || $request->get('export')) {
+            $rooms = $query->get();
+        } else {
+            $rooms = $query->paginate(15)->withQueryString();
+        }
+
+        return response()->json($rooms);
+    }
+
 
     public function getAssets(Request $request)
     {
