@@ -196,11 +196,11 @@ export default function Projects({ projects: initialProjects, institutes, region
       p.region?.name || 'N/A',
     ]);
 
-    autoTable(doc,{
+    autoTable(doc, {
       head: [headers],
       body: rows,
-     startY: 25,
-      styles: { 
+      startY: 25,
+      styles: {
         fontSize: 9,
         cellPadding: 2,
       },
@@ -259,22 +259,22 @@ export default function Projects({ projects: initialProjects, institutes, region
                   <p className="text-muted-foreground text-sm">Refine your project search</p>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                
+
 
                   {/* Region */}
-                     {memoizedRegions.length > 0 && (
+                  {memoizedRegions.length > 0 && (
                     <Combobox
-                                                      entity="region"
-                                                      value={region}
-                                                      onChange={(value) => handleRegionChange(value)}
-                                                      options={memoizedRegions.map((reg) => ({
-                                                        id: reg.id.toString(), // Convert ID to string to match prop type
-                                                        name:  reg.name.split(' ').pop() || reg.name,
-                                                      }))}
-                                                      includeAllOption={true}
-                                                      
-                                                    />
-                     )}
+                      entity="region"
+                      value={region}
+                      onChange={(value) => handleRegionChange(value)}
+                      options={memoizedRegions.map((reg) => ({
+                        id: reg.id.toString(), // Convert ID to string to match prop type
+                        name: reg.name.split(' ').pop() || reg.name,
+                      }))}
+                      includeAllOption={true}
+
+                    />
+                  )}
                   {/* Institute (Combobox) */}
                   <Combobox
                     entity="institute"
@@ -286,7 +286,7 @@ export default function Projects({ projects: initialProjects, institutes, region
                   />
 
                   {/* Project Type */}
-                  <Select value={projectType} onValueChange={(v) =>  setProjectType(v)}>
+                  <Select value={projectType} onValueChange={(v) => setProjectType(v)}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select Project Type" />
                     </SelectTrigger>
@@ -301,7 +301,7 @@ export default function Projects({ projects: initialProjects, institutes, region
                   </Select>
 
                   {/* Status */}
-                  <Select value={status} onValueChange={(v) =>setStatus(v) }>
+                  <Select value={status} onValueChange={(v) => setStatus(v)}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select Status" />
                     </SelectTrigger>
@@ -362,17 +362,16 @@ export default function Projects({ projects: initialProjects, institutes, region
                               <td className="border p-2  font-bold text-left">{project.name}</td>
                               <td className="border p-2 text-right">{project.cost}</td>
                               <td className="border p-2">
-                                <span className={`px-2 py-1 rounded text-xs font-medium ${
-                                  project.status === 'completed' ? 'bg-green-100 text-green-800' :
-                                  project.status === 'inprogress' ? 'bg-yellow-100 text-yellow-800' :
-                                  'bg-blue-100 text-blue-800'
-                                }`}>
+                                <span className={`px-2 py-1 rounded text-xs font-medium ${project.status === 'completed' ? 'bg-green-100 text-green-800' :
+                                    project.status === 'inprogress' ? 'bg-yellow-100 text-yellow-800' :
+                                      'bg-blue-100 text-blue-800'
+                                  }`}>
                                   {project.status.charAt(0).toUpperCase() + project.status.slice(1)}
                                 </span>
                               </td>
                               <td className="border p-2">{project.projecttype?.name || 'N/A'}</td>
                               <td className="border p-2">{project.institute?.name || 'N/A'}</td>
-                              
+
                             </tr>
                           ))
                         )}
@@ -389,7 +388,18 @@ export default function Projects({ projects: initialProjects, institutes, region
                           disabled={!link.url}
                           variant={link.active ? 'default' : 'outline'}
                           size="sm"
-                          onClick={() => router.visit(link.url || '', { preserveScroll: true })}
+                          onClick={() => {
+                            if (link.url) {
+                              fetch(link.url)
+                                .then((response) => response.json())
+                                .then((data) => {
+                                  setProjects(data);
+                                })
+                                .catch((error) => {
+                                  console.error('Error:', error);
+                                });
+                            }
+                          }}
                         >
                           <span dangerouslySetInnerHTML={{ __html: link.label }} />
                         </Button>

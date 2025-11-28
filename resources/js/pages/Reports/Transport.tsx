@@ -171,7 +171,7 @@ export default function Transports({ transports: transportProp, institutes, vehi
   const handleRegionChange = (value: string) => {
     setRegion(value);
     fetchInstitutes(value);
-   // debouncedApplyFilters(); // Trigger transport filter update
+    // debouncedApplyFilters(); // Trigger transport filter update
   };
 
   const debouncedApplyFilters = useMemo(
@@ -264,27 +264,27 @@ export default function Transports({ transports: transportProp, institutes, vehi
                   <p className="text-muted-foreground text-sm">Refine your Transport search</p>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                   {memoizedRegions.length > 0 && (
-                     <Combobox
-                                                                        entity="region"
-                                                                        value={region}
-                                                                        onChange={(value) => handleRegionChange(value)}
-                                                                        options={memoizedRegions.map((reg) => ({
-                                                                          id: reg.id.toString(), // Convert ID to string to match prop type
-                                                                          name:  reg.name.split(' ').pop() || reg.name,
-                                                                        }))}
-                                                                        includeAllOption={true}
-                                                                        
-                                                                      />
-                   )}
-                 <Combobox
-                                    entity="institute"
-                                    value={institute}
-                                    onChange={setInstitute}
-                                    options={memoizedInstitutes.map((i) => ({ id: i.id.toString(), name: i.name }))}
-                                    includeAllOption={false}
-                                    placeholder="Select Institute"
-                                  />
+                  {memoizedRegions.length > 0 && (
+                    <Combobox
+                      entity="region"
+                      value={region}
+                      onChange={(value) => handleRegionChange(value)}
+                      options={memoizedRegions.map((reg) => ({
+                        id: reg.id.toString(), // Convert ID to string to match prop type
+                        name: reg.name.split(' ').pop() || reg.name,
+                      }))}
+                      includeAllOption={true}
+
+                    />
+                  )}
+                  <Combobox
+                    entity="institute"
+                    value={institute}
+                    onChange={setInstitute}
+                    options={memoizedInstitutes.map((i) => ({ id: i.id.toString(), name: i.name }))}
+                    includeAllOption={false}
+                    placeholder="Select Institute"
+                  />
                   <Select value={vehicleType} onValueChange={(value) => setVehicleType(value)}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select Vehicle Type" />
@@ -351,7 +351,7 @@ export default function Transports({ transports: transportProp, institutes, vehi
                               <td className="border p-2 text-sm md:text-md lg:text-lg  text-gray-900 dark:text-gray-100">
                                 {trans.vehicle_type?.name || 'N/A'}
                               </td>
-                           
+
                             </tr>
                           ))
                         )}
@@ -366,8 +366,18 @@ export default function Transports({ transports: transportProp, institutes, vehi
                           disabled={!link.url}
                           variant={link.active ? 'default' : 'outline'}
                           size="sm"
-                          onClick={() => router.visit(link.url || '', { preserveScroll: true })}
-                          className={link.active ? 'bg-blue-600 hover:bg-blue-700' : ''}
+                          onClick={() => {
+                            if (link.url) {
+                              fetch(link.url)
+                                .then((response) => response.json())
+                                .then((data) => {
+                                  setTransport(data);
+                                })
+                                .catch((error) => {
+                                  console.error('Error:', error);
+                                });
+                            }
+                          }} className={link.active ? 'bg-blue-600 hover:bg-blue-700' : ''}
                         >
                           <span dangerouslySetInnerHTML={{ __html: link.label }} />
                         </Button>

@@ -163,7 +163,7 @@ export default function Upgradations({ upgradations: upgradationProp, institutes
   const handleRegionChange = (value: string) => {
     setRegion(value);
     fetchInstitutes(value);
-   // debouncedApplyFilters(); // Trigger upgradation filter update
+    // debouncedApplyFilters(); // Trigger upgradation filter update
   };
 
   const exportToExcel = async () => {
@@ -287,7 +287,7 @@ export default function Upgradations({ upgradations: upgradationProp, institutes
                       onChange={(value) => handleRegionChange(value)}
                       options={memoizedRegions.map((reg) => ({
                         id: reg.id.toString(), // Convert ID to string to match prop type
-                        name:  reg.name.split(' ').pop() || reg.name,
+                        name: reg.name.split(' ').pop() || reg.name,
                       }))}
                       includeAllOption={true}
 
@@ -361,7 +361,7 @@ export default function Upgradations({ upgradations: upgradationProp, institutes
                           <th className="border p-2 text-sm font-medium text-white dark:text-gray-200">Level To</th>
                           <th className="border p-2 text-sm font-medium text-white dark:text-gray-200">Status</th>
                           <th className="border p-2 text-sm font-medium text-white dark:text-gray-200">Institute</th>
-                       
+
                         </tr>
                       </thead>
                       <tbody>
@@ -395,7 +395,7 @@ export default function Upgradations({ upgradations: upgradationProp, institutes
                               <td className="border p-2 text-sm md:text-md lg:text-lg border-r-1  text-gray-900 dark:text-gray-100">
                                 {upgradation.institute?.name || 'N/A'}
                               </td>
-                            
+
                             </tr>
                           ))
                         )}
@@ -410,8 +410,18 @@ export default function Upgradations({ upgradations: upgradationProp, institutes
                           disabled={!link.url}
                           variant={link.active ? 'default' : 'outline'}
                           size="sm"
-                          onClick={() => router.visit(link.url || '', { preserveScroll: true })}
-                          className={link.active ? 'bg-blue-600 hover:bg-blue-700' : ''}
+                          onClick={() => {
+                            if (link.url) {
+                              fetch(link.url)
+                                .then((response) => response.json())
+                                .then((data) => {
+                                  setUpgradation(data);
+                                })
+                                .catch((error) => {
+                                  console.error('Error:', error);
+                                });
+                            }
+                          }} className={link.active ? 'bg-blue-600 hover:bg-blue-700' : ''}
                         >
                           <span dangerouslySetInnerHTML={{ __html: link.label }} />
                         </Button>

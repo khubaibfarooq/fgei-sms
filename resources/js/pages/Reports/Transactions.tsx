@@ -282,7 +282,7 @@ export default function Transaction({
     [search, institute, region, addedBy, approvedBy, type, status, dateFrom, dateTo]
   );
 
-  
+
 
   // Fetch transaction details for modal
   const fetchTransactionDetails = async (tid: number) => {
@@ -372,7 +372,7 @@ export default function Transaction({
                   <p className="text-muted-foreground text-sm">Refine transaction search</p>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                 
+
 
                   {user_type !== 'Regional Office' && memoizedRegions.length > 0 && (
                     <Select value={region} onValueChange={handleRegionChange}>
@@ -383,7 +383,7 @@ export default function Transaction({
                         <SelectItem value="0">All Regions</SelectItem>
                         {memoizedRegions.map((r) => (
                           <SelectItem key={r.id} value={r.id.toString()}>
-                            { r.name.split(' ').pop() || r.name}
+                            {r.name.split(' ').pop() || r.name}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -492,7 +492,7 @@ export default function Transaction({
                       <thead>
                         <tr className="bg-primary text-white text-center">
                           <th className="border p-2 font-medium">ID</th>
-                                                    <th className="border p-2 font-medium">Institute</th>
+                          <th className="border p-2 font-medium">Institute</th>
 
                           <th className="border p-2 font-medium">Amount</th>
                           <th className="border p-2 font-medium">Type</th>
@@ -514,31 +514,29 @@ export default function Transaction({
                           transactions.data.map((tx) => (
                             <tr key={tx.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 text-center">
                               <td className="border p-2">#{tx.id}</td>
-                                                            <td className="border p-2 md:text-md lg:text-lg border-r-1 ">{tx.institute?.name || 'N/A'}</td>
+                              <td className="border p-2 md:text-md lg:text-lg border-r-1 ">{tx.institute?.name || 'N/A'}</td>
 
                               <td className="border p-2 font-bold md:text-md lg:text-lg">
                                 {parseFloat(tx.total_amount.toString()).toFixed(2)}
                               </td>
                               <td className="border p-2">
                                 <span
-                                  className={`px-2 py-1 rounded text-xs font-medium ${
-                                    tx.type === 'income'
+                                  className={`px-2 py-1 rounded text-xs font-medium ${tx.type === 'income'
                                       ? 'bg-green-100 text-green-800'
                                       : 'bg-red-100 text-red-800'
-                                  }`}
+                                    }`}
                                 >
                                   {tx.type.charAt(0).toUpperCase() + tx.type.slice(1)}
                                 </span>
                               </td>
                               <td className="border p-2">
                                 <span
-                                  className={`px-2 py-1 rounded text-xs font-medium flex items-center justify-center gap-1 ${
-                                    tx.status === 'approved'
+                                  className={`px-2 py-1 rounded text-xs font-medium flex items-center justify-center gap-1 ${tx.status === 'approved'
                                       ? 'bg-green-100 text-green-800'
                                       : tx.status === 'rejected'
-                                      ? 'bg-red-100 text-red-800'
-                                      : 'bg-yellow-100 text-yellow-800'
-                                  }`}
+                                        ? 'bg-red-100 text-red-800'
+                                        : 'bg-yellow-100 text-yellow-800'
+                                    }`}
                                 >
                                   {tx.status === 'approved' && <CheckCircle className="w-3 h-3" />}
                                   {tx.status === 'rejected' && <XCircle className="w-3 h-3" />}
@@ -619,8 +617,8 @@ export default function Transaction({
                           <FileText className="w-5 h-5" />
                           Transaction #{selectedTx?.id}
                         </DialogTitle>
-           
-                  
+
+
                       </DialogHeader>
 
                       {selectedTx && (
@@ -681,8 +679,18 @@ export default function Transaction({
                           disabled={!link.url}
                           variant={link.active ? 'default' : 'outline'}
                           size="sm"
-                          onClick={() => router.visit(link.url || '', { preserveScroll: true })}
-                        >
+                          onClick={() => {
+                            if (link.url) {
+                              fetch(link.url)
+                                .then((response) => response.json())
+                                .then((data) => {
+                                  setTransactions(data);
+                                })
+                                .catch((error) => {
+                                  console.error('Error:', error);
+                                });
+                            }
+                          }}                        >
                           <span dangerouslySetInnerHTML={{ __html: link.label }} />
                         </Button>
                       ))}

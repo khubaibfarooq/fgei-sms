@@ -106,7 +106,7 @@ export default function Plants({ plants: plantProp, institutes, regions, filters
   const [region, setRegion] = useState(filters.region_id || '');
   const [plants, setPlant] = useState(plantProp);
   const [filteredInstitutes, setFilteredInstitutes] = useState<Item[]>(institutes || []);
-console.log(regions);
+  console.log(regions);
   // Memoize dropdown items to prevent unnecessary re-renders
   const memoizedInstitutes = useMemo(() => {
     if (!Array.isArray(filteredInstitutes)) {
@@ -232,7 +232,7 @@ console.log(regions);
       item.region?.name || 'N/A',
     ]);
 
-  autoTable(doc,{
+    autoTable(doc, {
       head: [tableColumn],
       body: tableRows,
       startY: 25,
@@ -257,49 +257,49 @@ console.log(regions);
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {/* Region Filter */}
-                  {memoizedRegions.length > 0 && ( 
-                         <Combobox
-                                    entity="region"
-                                    value={region}
-                                    onChange={(value) => handleRegionChange(value)}
-                                    options={memoizedRegions.map((reg) => ({
-                                      id: reg.id.toString(), // Convert ID to string to match prop type
-                                      name: reg.name.split(' ').pop() || reg.name,
-                                    }))}
-                                    includeAllOption={true}
-                                    
-                                  />
-                    
-                  //   <Select value={region} onValueChange={handleRegionChange}>
-                  //   <SelectTrigger>
-                  //     <SelectValue placeholder="Select Region" />
-                  //   </SelectTrigger>
-                  //   <SelectContent>
-                  //     <SelectItem value="0">All Regions</SelectItem>
-                  //     {memoizedRegions.length > 0 ? (
-                  //       memoizedRegions.map((reg) => (
-                  //         <SelectItem key={reg.id} value={reg.id.toString()}>
-                  //           {reg.name}
-                  //         </SelectItem>
-                  //       ))
-                  //     ) : (
-                  //       <div className="text-muted-foreground text-sm p-2">No regions available</div>
-                  //     )}
-                  //   </SelectContent>
-                  // </Select>
+                  {memoizedRegions.length > 0 && (
+                    <Combobox
+                      entity="region"
+                      value={region}
+                      onChange={(value) => handleRegionChange(value)}
+                      options={memoizedRegions.map((reg) => ({
+                        id: reg.id.toString(), // Convert ID to string to match prop type
+                        name: reg.name.split(' ').pop() || reg.name,
+                      }))}
+                      includeAllOption={true}
+
+                    />
+
+                    //   <Select value={region} onValueChange={handleRegionChange}>
+                    //   <SelectTrigger>
+                    //     <SelectValue placeholder="Select Region" />
+                    //   </SelectTrigger>
+                    //   <SelectContent>
+                    //     <SelectItem value="0">All Regions</SelectItem>
+                    //     {memoizedRegions.length > 0 ? (
+                    //       memoizedRegions.map((reg) => (
+                    //         <SelectItem key={reg.id} value={reg.id.toString()}>
+                    //           {reg.name}
+                    //         </SelectItem>
+                    //       ))
+                    //     ) : (
+                    //       <div className="text-muted-foreground text-sm p-2">No regions available</div>
+                    //     )}
+                    //   </SelectContent>
+                    // </Select>
                   )}
-                       <Combobox
-                                                    entity="institute"
-                                                    value={institute}
-                                                    onChange={(value) => setInstitute(value)}
-                                                    options={memoizedInstitutes.map((inst) => ({
-                                                      id: inst.id.toString(), // Convert ID to string to match prop type
-                                                      name: inst.name,
-                                                    }))}
-                                                    includeAllOption={true}
-                                                    
-                                                  />
-            
+                  <Combobox
+                    entity="institute"
+                    value={institute}
+                    onChange={(value) => setInstitute(value)}
+                    options={memoizedInstitutes.map((inst) => ({
+                      id: inst.id.toString(), // Convert ID to string to match prop type
+                      name: inst.name,
+                    }))}
+                    includeAllOption={true}
+
+                  />
+
 
                   <Button onClick={debouncedApplyFilters} className="w-full">
                     Apply Filters
@@ -332,7 +332,7 @@ console.log(regions);
                         <tr className="bg-primary dark:bg-gray-800 text-center">
                           <th className="border p-2 text-sm font-medium text-white dark:text-gray-200">Name</th>
                           <th className="border p-2 text-sm font-medium text-white dark:text-gray-200">Quantity</th>
-                        
+
                         </tr>
                       </thead>
                       <tbody>
@@ -351,8 +351,8 @@ console.log(regions);
                               <td className="border p-2 text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
                                 {p.qty}
                               </td>
-                             
-                           
+
+
                             </tr>
                           ))
                         )}
@@ -367,8 +367,18 @@ console.log(regions);
                           disabled={!link.url}
                           variant={link.active ? 'default' : 'outline'}
                           size="sm"
-                          onClick={() => router.visit(link.url || '', { preserveScroll: true })}
-                          className={link.active ? 'bg-blue-600 hover:bg-blue-700' : ''}
+                          onClick={() => {
+                            if (link.url) {
+                              fetch(link.url)
+                                .then((response) => response.json())
+                                .then((data) => {
+                                  setPlant(data);
+                                })
+                                .catch((error) => {
+                                  console.error('Error:', error);
+                                });
+                            }
+                          }} className={link.active ? 'bg-blue-600 hover:bg-blue-700' : ''}
                         >
                           <span dangerouslySetInnerHTML={{ __html: link.label }} />
                         </Button>
