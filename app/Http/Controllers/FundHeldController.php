@@ -53,6 +53,7 @@ public function store(Request $request)
             'balance' => 'required|numeric',
             'fund_head_id' => 'required|numeric',
              'description' => 'required|string',
+             'transaction_type' => 'required|string',
         ]);
 $balance=$data['balance'];
         // Add authenticated user ID and institute_id from session
@@ -66,7 +67,11 @@ $balance=$data['balance'];
 
         if ($fundHeld) {
             // Update existing FundHeld record
-            $data['balance'] += $fundHeld->balance;
+            if($data['transaction_type']=='in'){
+                $data['balance'] = $fundHeld->balance + $data['balance'];
+            }else{
+                $data['balance'] = $fundHeld->balance - $data['balance'];
+            }
             $fundHeld->update($data);
             
             Fund::Create(
@@ -78,7 +83,7 @@ $balance=$data['balance'];
                     'added_by' => $data['added_by'],
                     'added_date' => now(), // or use your specific date field
                     'status' => 'Approved', // set appropriate status
-                    'type' => 'in', // set appropriate type
+                    'type' => $data['transaction_type'], // set appropriate type
                     'description' => $data['description']
                 ]
             );
@@ -97,7 +102,7 @@ $balance=$data['balance'];
                     'added_by' => $data['added_by'],
                     'added_date' => now(), // or use your specific date field
                     'status' => 'Approved', // set appropriate status
-                    'type' => 'in', // set appropriate type
+                    'type' => $data['transaction_type'], // set appropriate type
                     'description' => $data['description']// optional description
                 ]
             );

@@ -84,7 +84,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 export default function FundIndex({ funds, filters, permissions }: Props) {
   const [search, setSearch] = useState(filters.search || '');
   const [selectedFund, setSelectedFund] = useState<Fund | null>(null);
-  
+
   const handleDelete = (id: number) => {
     router.delete(`/funds/${id}`, {
       onSuccess: () => toast.success('Fund deleted successfully'),
@@ -98,9 +98,9 @@ export default function FundIndex({ funds, filters, permissions }: Props) {
     }
   };
 
- 
 
-  
+
+
 
 
   return (
@@ -114,12 +114,12 @@ export default function FundIndex({ funds, filters, permissions }: Props) {
               <p className="text-muted-foreground text-sm">Manage institutional funds</p>
             </div>
             {permissions.can_add &&
-            <Link href="/funds/create">
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Fund
-              </Button>
-            </Link>
+              <Link href="/funds/create">
+                <Button>
+
+                  Fund Transaction
+                </Button>
+              </Link>
             }
           </CardHeader>
 
@@ -163,50 +163,50 @@ export default function FundIndex({ funds, filters, permissions }: Props) {
                         </td>
                         <td className="border p-3  text-gray-900 dark:text-gray-100">
                           <div className="flex justify-center items-center gap-1">
-                            <Link href={`/fund-trans/${fund.id}`}>  
-                            <Button 
-                              variant="ghost" 
-                              size="icon"
-                         
-                            
-                              title="View Fund Transactions"
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                            </Link>
-                            {permissions.can_edit &&
-                            <Link href={`/funds/${fund.id}/edit`}>
-                              <Button variant="ghost" size="icon" title="Edit Fund">
-                                <Edit className="h-4 w-4" />
+                            <Link href={`/fund-trans/${fund.id}`}>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+
+
+                                title="View Fund Transactions"
+                              >
+                                <Eye className="h-4 w-4" />
                               </Button>
                             </Link>
-                            }
-                            
-                            {permissions.can_delete &&
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button variant="ghost" size="icon" className="text-destructive hover:text-red-600" title="Delete Fund">
-                                  <Trash2 className="h-4 w-4" />
+                            {permissions.can_edit &&
+                              <Link href={`/funds/${fund.id}/edit`}>
+                                <Button variant="ghost" size="icon" title="Edit Fund">
+                                  <Edit className="h-4 w-4" />
                                 </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>Delete this fund?</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    Fund <strong>{fund.fund_head.name}</strong> will be permanently deleted.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction
-                                    className="bg-destructive hover:bg-destructive/90"
-                                    onClick={() => handleDelete(fund.id)}
-                                  >
-                                    Delete
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
+                              </Link>
+                            }
+
+                            {permissions.can_delete &&
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="text-destructive hover:text-red-600" title="Delete Fund">
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Delete this fund?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      Fund <strong>{fund.fund_head.name}</strong> will be permanently deleted.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction
+                                      className="bg-destructive hover:bg-destructive/90"
+                                      onClick={() => handleDelete(fund.id)}
+                                    >
+                                      Delete
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
                             }
                           </div>
                         </td>
@@ -236,7 +236,7 @@ export default function FundIndex({ funds, filters, permissions }: Props) {
         </Card>
       </div>
 
-    
+
     </AppLayout>
   );
 }

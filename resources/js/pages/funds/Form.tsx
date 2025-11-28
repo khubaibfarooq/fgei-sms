@@ -21,11 +21,12 @@ import { BreadcrumbItem } from '@/types';
 interface FundFormProps {
   fund?: {
     id: number;
-   
+
     balance: number;
     institute_id: number;
     fund_head_id?: number;
-        description?: string;
+    description?: string;
+    transaction_type?: string;
 
 
   };
@@ -34,18 +35,18 @@ interface FundFormProps {
 
 export default function FundForm({ fund, fundHeads }: FundFormProps) {
   const isEdit = !!fund;
-  
- 
+
+
 
   // Convert fundTypes object to array format for the Select component
   const fundHeadsArray = React.useMemo(() => {
     if (!fundHeads) return [];
-    
+
     // If fundTypes is already an array, use it directly
     if (Array.isArray(fundHeads)) {
       return fundHeads;
     }
-    
+
     // Convert object { "1": "Administration", "2": "Academic" } to array format
     return Object.entries(fundHeads).map(([id, name]) => ({
       id: parseInt(id),
@@ -53,37 +54,38 @@ export default function FundForm({ fund, fundHeads }: FundFormProps) {
     }));
   }, [fundHeads]);
 
- const { data, setData, processing, errors, reset } = useForm<{
-  balance: number;
-  institute_id: number;
-  fund_head_id: number;
-  description?: string;
-  // Allow null if the field is optional
-}>({
-  balance: fund?.balance || 0,
-  institute_id: fund?.institute_id || 0,
-  fund_head_id: fund?.fund_head_id || 0,
-  description: fund?.description || '',
+  const { data, setData, processing, errors, reset } = useForm<{
+    balance: number;
+    institute_id: number;
+    fund_head_id: number;
+    description?: string;
+    transaction_type?: string;
+    // Allow null if the field is optional
+  }>({
+    balance: fund?.balance || 0,
+    institute_id: fund?.institute_id || 0,
+    fund_head_id: fund?.fund_head_id || 0,
+    description: fund?.description || '',
+    transaction_type: fund?.transaction_type || '',
+  });
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
 
-});
-const handleSubmit = (e: React.FormEvent) => {
-  e.preventDefault();
-  
- 
-  if (isEdit) {
-    router.put(`/funds/${fund.id}`, data, {
-      preserveScroll: true,
-      preserveState: true,
-    
-    });
-  } else {
-    router.post('/funds', data, {
+
+    if (isEdit) {
+      router.put(`/funds/${fund.id}`, data, {
+        preserveScroll: true,
+        preserveState: true,
+
+      });
+    } else {
+      router.post('/funds', data, {
         onSuccess: () => {
           reset(); // Clear form data on successful POST
         },
       });
-  }
-};
+    }
+  };
   const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Funds', href: '/funds' },
     { title: isEdit ? 'Edit Fund' : 'Add Fund', href: '#' },
@@ -109,7 +111,7 @@ const handleSubmit = (e: React.FormEvent) => {
           <CardContent className="pt-6">
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-               
+
 
                 <div className="space-y-2">
                   <Label htmlFor="balance">balance</Label>
@@ -120,9 +122,9 @@ const handleSubmit = (e: React.FormEvent) => {
                     onChange={(e) => setData('balance', Number(e.target.value))}
                     placeholder="Enter balance"
                   />
-                               
+
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="fund_head_id">Fund Type</Label>
                   <Select
@@ -141,28 +143,46 @@ const handleSubmit = (e: React.FormEvent) => {
                     </SelectContent>
                   </Select>
                 </div>
-          
 
-               
 
-        
-                 
-              <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  value={data.description}
-                  onChange={(e) => setData('description', e.target.value)}
-                  placeholder="Enter description"
-                  rows={4}
-                />
-                {errors.description && (
-                  <p className="text-sm text-destructive">{errors.description}</p>
-                )}
-              </div>       
-                
+
+
+
+
+                <div className="space-y-2">
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea
+                    id="description"
+                    value={data.description}
+                    onChange={(e) => setData('description', e.target.value)}
+                    placeholder="Enter description"
+                    rows={4}
+                  />
+                  {errors.description && (
+                    <p className="text-sm text-destructive">{errors.description}</p>
+                  )}
                 </div>
-             
+
+                <div className="space-y-2">
+                  <Label htmlFor="fund_head_id">Transaction Type</Label>
+                  <Select
+                    required
+                    value={data.transaction_type || ''}
+                    onValueChange={(value) => setData('transaction_type', value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select transaction type" />
+                    </SelectTrigger>
+                    <SelectContent>
+
+                      <SelectItem value="in">Income</SelectItem>
+                      <SelectItem value="out">Expense</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+              </div>
+
 
               <div className="flex items-center justify-between pt-6">
                 <Link href="/funds">
@@ -178,8 +198,8 @@ const handleSubmit = (e: React.FormEvent) => {
                       ? 'Saving...'
                       : 'Adding...'
                     : isEdit
-                    ? 'Save Changes'
-                    : 'Add Fund'}
+                      ? 'Save Changes'
+                      : 'Add Fund'}
                 </Button>
               </div>
             </form>

@@ -82,7 +82,7 @@ else{
         }
     }
     
-    return response()->json(['count' => $percentage]);
+    return response()->json(['count' => $percentage.'%']);
 }
 
 /**
