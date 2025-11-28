@@ -447,6 +447,9 @@ export default function Blocks({ blocks: blocksProp, institutes, blocktypes, reg
                         <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">
                           Establish Date
                         </th>
+                        <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">
+                          Institute
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
@@ -470,6 +473,9 @@ export default function Blocks({ blocks: blocksProp, institutes, blocktypes, reg
                             </td>
                             <td className="border p-2 text-left text-gray-900 dark:text-gray-100">
                               {block.establish_date || '—'}
+                            </td>
+                            <td className="border p-2 text-left text-gray-900 dark:text-gray-100">
+                              {block.institute?.name || '—'}
                             </td>
                           </tr>
                         ))

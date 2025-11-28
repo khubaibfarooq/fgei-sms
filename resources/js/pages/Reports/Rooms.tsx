@@ -507,7 +507,10 @@ export default function Rooms({ rooms: roomsProp, institutes, roomtypes, regions
                                                 </th>
                                                 <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">
                                                     Area
+                                                </th>  <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">
+                                                    Institute
                                                 </th>
+
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -532,7 +535,9 @@ export default function Rooms({ rooms: roomsProp, institutes, roomtypes, regions
                                                         <td className="border p-2 text-left text-gray-900 dark:text-gray-100">
                                                             {room.area || '—'}
                                                         </td>
-
+                                                        <td className="border p-2 text-left text-gray-900 dark:text-gray-100">
+                                                            {room.block?.institute?.name || '—'}
+                                                        </td>
                                                     </tr>
                                                 ))
                                             )}

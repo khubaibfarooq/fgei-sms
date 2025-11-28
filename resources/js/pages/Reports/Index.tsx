@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { ImagePreview } from '@/components/ui/image-preview';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Combobox from '@/components/ui//combobox';
-import {formatDate} from '@/utils/dateFormatter';
+import { formatDate } from '@/utils/dateFormatter';
 import {
   AlertDialog,
   AlertDialogTrigger,
@@ -27,7 +27,7 @@ import ExcelJS from 'exceljs';
 import FileSaver from 'file-saver';
 import { toast } from 'sonner';
 import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable'; 
+import autoTable from 'jspdf-autotable';
 import FundsTran from '../funds/FundsTran';
 interface Item {
   id: number;
@@ -40,7 +40,7 @@ interface Block {
   institute_id: number;
   created_at: string;
   updated_at: string;
-  img:string | null
+  img: string | null
   establish_date?: string;
 
 }
@@ -53,7 +53,7 @@ interface Room {
   block_id: number;
   created_at: string;
   updated_at: string;
-  img:string | null;
+  img: string | null;
   block?: { id: number; name?: string };
 }
 
@@ -78,7 +78,7 @@ interface Project {
   completed: string;
   inprogress: string;
   planned: string;
-name:string;
+  name: string;
 }
 interface Asset {
   id: number;
@@ -91,41 +91,42 @@ interface Asset {
 
 interface InstituteAsset {
   id: number;
-  name:string;
+  name: string;
   institute_id: number;
   asset_id: number;
   total_qty: number;
-locations_count:number;
+  locations_count: number;
   institute: Institute;
   asset: Asset;
 }
 interface Upgradations {
   id: number;
   details: string;
-  from:string;
-   to: string;
-    levelfrom: string;
-     levelto: string;
-    status: string;
-  }
-  interface Funds {
-    id: number;
-fund_head: { id: number; name?: string };
-balance: number;
-  }
-  interface Shifts {
+  from: string;
+  to: string;
+  levelfrom: string;
+  levelto: string;
+  status: string;
+}
+interface Funds {
+  id: number;
+  fund_head: { id: number; name?: string };
+  balance: number;
+}
+interface Shifts {
   id: number;
   name: string;
-  building_name:string;
-  building_type?: { id: number; name?: string };}
+  building_name: string;
+  building_type?: { id: number; name?: string };
+}
 interface Props {
   institutes?: Item[];
   regions?: Item[];
   blocks?: Block[];
-  shifts?:Shifts[];
-  upgradations?:Upgradations[];
-  funds?:Funds[];
-    projects?:Project[];
+  shifts?: Shifts[];
+  upgradations?: Upgradations[];
+  funds?: Funds[];
+  projects?: Project[];
 
   instituteAssets?: InstituteAsset[];
   rooms?: Room[];
@@ -154,10 +155,10 @@ const isValidItem = (item: any): item is Item => {
   return isValid;
 };
 
-export default function InstitutionalReportIndex({ institutes: initialInstitutes = [], regions: initialRegions = [], blocks: initialBlocks = [], instituteAssets: initialAssets = [], rooms: initialRooms = [],shifts:initialShifts=[],upgradations:initialUpgradations=[],funds:initialFunds=[],projects:initialProjects=[], filters: initialFilters = { search: '', institute_id: '', region_id: '' } }: Props) {
-   const [search, setSearch] = useState(initialFilters.search || '');
+export default function InstitutionalReportIndex({ institutes: initialInstitutes = [], regions: initialRegions = [], blocks: initialBlocks = [], instituteAssets: initialAssets = [], rooms: initialRooms = [], shifts: initialShifts = [], upgradations: initialUpgradations = [], funds: initialFunds = [], projects: initialProjects = [], filters: initialFilters = { search: '', institute_id: '', region_id: '' } }: Props) {
+  const [search, setSearch] = useState(initialFilters.search || '');
   const [institute, setInstitute] = useState(initialFilters.institute_id || '');
-    const [fetchedinstitute, setFetchedInstitute] = useState<Institute>();
+  const [fetchedinstitute, setFetchedInstitute] = useState<Institute>();
 
   const [region, setRegion] = useState(initialFilters.region_id || '');
   const [institutes, setInstitutes] = useState<Item[]>(initialInstitutes);
@@ -167,20 +168,20 @@ export default function InstitutionalReportIndex({ institutes: initialInstitutes
   const [rooms, setRooms] = useState<Room[]>(initialRooms);
   const [shifts, setShifts] = useState<Shifts[]>(initialShifts);
   const [upgradations, setUpgradations] = useState<Upgradations[]>(initialUpgradations);
-const [shiftsOpen, setShiftsOpen] = useState(false);
-const [blocksOpen, setBlocksOpen] = useState(false);
-const [roomsOpen, setRoomsOpen] = useState(false);
-const [assetsOpen, setAssetsOpen] = useState(false);
-const [upgradationsOpen, setUpgradationsOpen] = useState(false);
-const [fundsOpen, setFundsOpen] = useState(false);
+  const [shiftsOpen, setShiftsOpen] = useState(false);
+  const [blocksOpen, setBlocksOpen] = useState(false);
+  const [roomsOpen, setRoomsOpen] = useState(false);
+  const [assetsOpen, setAssetsOpen] = useState(false);
+  const [upgradationsOpen, setUpgradationsOpen] = useState(false);
+  const [fundsOpen, setFundsOpen] = useState(false);
   const [funds, setFunds] = useState<Funds[]>(initialFunds);
   const [projects, setProjects] = useState<Project[]>(initialProjects);
-const [projectsOpen, setProjectsOpen] = useState(false);
+  const [projectsOpen, setProjectsOpen] = useState(false);
 
 
   const memoizedInstitutes = useMemo(() => institutes.filter(isValidItem), [institutes]);
   const memoizedRegions = useMemo(() => regions.filter(isValidItem), [regions]);
-console.log(memoizedRegions);
+  console.log(memoizedRegions);
   const fetchData = async (params: { search?: string; institute_id?: string; region_id?: string }) => {
     try {
       const query = new URLSearchParams(params).toString();
@@ -189,17 +190,17 @@ console.log(memoizedRegions);
         throw new Error('Failed to fetch data');
       }
       const data = await response.json();
-       setFetchedInstitute(data.institute || []);
-       console.log(fetchedinstitute)
+      setFetchedInstitute(data.institute || []);
+      console.log(fetchedinstitute)
       setBlocks(data.blocks || []);
       setInstituteAssets(data.instituteAssets || []);
       console.log(data.instituteAssets);
       setRooms(data.rooms || []);
       setShifts(data.shifts || []);
-            setUpgradations(data.upgradations || []);
-  setFunds(data.funds || []);
-  console.log(data.projects);
-    setProjects(data.projects || []);
+      setUpgradations(data.upgradations || []);
+      setFunds(data.funds || []);
+      console.log(data.projects);
+      setProjects(data.projects || []);
 
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -239,9 +240,9 @@ console.log(memoizedRegions);
       setInstitutes([]);
     }
   };
-  const  handleRegionChange = async(value: string) => {
+  const handleRegionChange = async (value: string) => {
     setRegion(value);
-   fetchInstitutes(value);
+    fetchInstitutes(value);
   };
 
 
@@ -294,15 +295,15 @@ console.log(memoizedRegions);
     // Institute Assets Worksheet
     const assetsSheet = workbook.addWorksheet('Assets');
     assetsSheet.columns = [
-            { header: 'Asset', key: 'asset', width: 20 },
+      { header: 'Asset', key: 'asset', width: 20 },
       { header: 'Quantity', key: 'qty', width: 10 },
 
-            { header: 'Rooms', key: 'locations', width: 20 },
+      { header: 'Rooms', key: 'locations', width: 20 },
 
     ];
     instituteAssets.forEach((instAsset) => {
       assetsSheet.addRow({
-                asset: instAsset.asset?.name || 'N/A',
+        asset: instAsset.asset?.name || 'N/A',
 
         qty: instAsset.total_qty,
         locations: instAsset.locations_count,
@@ -314,13 +315,13 @@ console.log(memoizedRegions);
     fundsSheet.columns = [
       { header: 'Fund Head', key: 'Fundhead', width: 30 },
       { header: 'Balance', key: 'balance', width: 15 },
-     
+
     ];
     funds.forEach((f) => {
       fundsSheet.addRow({
         Fundhead: f.fund_head?.name,
         balance: f.balance,
- 
+
       });
     });
     // Upgradations Worksheet
@@ -343,14 +344,14 @@ console.log(memoizedRegions);
         status: up.status,
       });
     });
- // Projectd Worksheet
+    // Projectd Worksheet
     const projectsSheet = workbook.addWorksheet('Projects');
     projectsSheet.columns = [
       { header: 'Project Type', key: 'projecttype', width: 30 },
       { header: 'Completed', key: 'completed', width: 15 },
       { header: 'In  Progress', key: 'inprogress', width: 15 },
       { header: 'Planned', key: 'planned', width: 15 },
-     
+
     ];
     projects.forEach((p) => {
       projectsSheet.addRow({
@@ -358,7 +359,7 @@ console.log(memoizedRegions);
         completed: p.completed,
         inprogress: p.inprogress,
         planned: p.planned,
-       
+
       });
     });
     const buffer = await workbook.xlsx.writeBuffer();
@@ -367,117 +368,264 @@ console.log(memoizedRegions);
     });
     FileSaver.saveAs(blob, 'Institutional_Report.xlsx');
   };
-  const exportToPDF = () => {
-  const doc = new jsPDF();
-  let startY = 20; // Initial Y position
+  const exportToPDF = async () => {
+    const doc = new jsPDF();
+    let startY = 20; // Initial Y position
 
-  // Helper function to add a section to PDF
-  const addSectionToPDF = (title: string, columns: string[], data: any[]) => {
-    // Add section title
-    doc.setFontSize(14);
-    doc.text(title, 14, startY);
-    
-    // Add table
-    autoTable(doc, {
-      head: [columns],
-      body: data,
-      startY: startY +3,
-      styles: { fontSize: 10 },
-      headStyles: { fillColor: [11, 67, 27] }, // Dark green header
-    });
+    // Helper function to add a section to PDF
+    const addSectionToPDF = (title: string, columns: string[], data: any[]) => {
+      // Add section title
+      doc.setFontSize(14);
+      doc.text(title, 14, startY);
 
-    // Update startY for next section
-    startY = (doc as any).lastAutoTable.finalY + 8;
+      // Add table
+      autoTable(doc, {
+        head: [columns],
+        body: data,
+        startY: startY + 3,
+        styles: { fontSize: 10 },
+        headStyles: { fillColor: [11, 67, 27] }, // Dark green header
+      });
 
-    // Add new page if needed for next section
-    if (startY > doc.internal.pageSize.height - 50) {
-      doc.addPage();
-      startY = 20;
+      // Update startY for next section
+      startY = (doc as any).lastAutoTable.finalY + 8;
+
+      // Add new page if needed for next section
+      if (startY > doc.internal.pageSize.height - 50) {
+        doc.addPage();
+        startY = 20;
+      }
+    };
+
+    // Helper function to load image
+    const loadImage = (url: string): Promise<string> => {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = 'Anonymous';
+        img.src = url;
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(img, 0, 0);
+            resolve(canvas.toDataURL('image/jpeg'));
+          } else {
+            reject(new Error('Canvas context not available'));
+          }
+        };
+        img.onerror = (e) => reject(e);
+      });
+    };
+
+    // Helper to add a single full-width image
+    const addSingleImage = async (title: string, imgUrl: string) => {
+      try {
+        if (startY > doc.internal.pageSize.height - 60) {
+          doc.addPage();
+          startY = 20;
+        }
+
+        doc.setFontSize(16);
+        doc.text(title, 14, startY);
+        startY += 10;
+
+        const imgData = await loadImage(`/assets/${imgUrl}`);
+        const imgProps = doc.getImageProperties(imgData);
+        const pdfWidth = doc.internal.pageSize.getWidth() - 28;
+        const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+        if (startY + pdfHeight > doc.internal.pageSize.height - 20) {
+          doc.addPage();
+          startY = 20;
+          doc.setFontSize(16);
+          doc.text(title, 14, startY);
+          startY += 10;
+        }
+
+        doc.addImage(imgData, 'JPEG', 14, startY, pdfWidth, pdfHeight);
+        startY += pdfHeight + 10;
+      } catch (error) {
+        console.error(`Failed to load image for ${title}:`, error);
+      }
+    };
+
+    // Helper to add grid of images
+    const addGridSection = async (title: string, items: any[]) => {
+      // Filter items that have images
+      const itemsWithImages = items.filter(item => item.img);
+
+      if (itemsWithImages.length === 0) return;
+
+      // Add section title
+      if (startY > doc.internal.pageSize.height - 40) {
+        doc.addPage();
+        startY = 20;
+      }
+      doc.setFontSize(16);
+      doc.text(title, 14, startY);
+      startY += 10;
+
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const margin = 14;
+      const gap = 5;
+      const colWidth = (pageWidth - (margin * 2) - (gap * 2)) / 3;
+
+      for (let i = 0; i < itemsWithImages.length; i += 3) {
+        const rowItems = itemsWithImages.slice(i, i + 3);
+        let maxRowHeight = 0;
+        const rowData: { imgData: string | null, height: number, name: string }[] = [];
+
+        // Pre-load images and calculate heights for the row
+        for (const item of rowItems) {
+          let imgData = null;
+          let imgHeight = 0;
+
+          try {
+            imgData = await loadImage(`/assets/${item.img}`);
+            const imgProps = doc.getImageProperties(imgData);
+            imgHeight = (imgProps.height * colWidth) / imgProps.width;
+          } catch (error) {
+            console.error(`Failed to load image for ${item.name}:`, error);
+          }
+
+          // Add space for text
+          const textHeight = 10;
+          const totalHeight = imgHeight + textHeight;
+          if (totalHeight > maxRowHeight) maxRowHeight = totalHeight;
+
+          rowData.push({ imgData, height: imgHeight, name: item.name });
+        }
+
+        // Check page break
+        if (startY + maxRowHeight > doc.internal.pageSize.height - 20) {
+          doc.addPage();
+          startY = 20;
+        }
+
+        // Render row
+        rowData.forEach((data, index) => {
+          const xPos = margin + (index * (colWidth + gap));
+
+          // Render Name
+          doc.setFontSize(10);
+          // Split text to fit column width
+          const splitTitle = doc.splitTextToSize(data.name, colWidth);
+          doc.text(splitTitle, xPos, startY + 5);
+
+          // Render Image
+          if (data.imgData) {
+            doc.addImage(data.imgData, 'JPEG', xPos, startY + 10, colWidth, data.height);
+          }
+        });
+
+        startY += maxRowHeight + 10;
+      }
+      // Add extra spacing after section
+      startY += 10;
+    };
+
+
+    // Start with main title
+    doc.setFontSize(16);
+    doc.text('Institutional Report', 14, 15);
+    startY = 25; // Set initial position after title
+
+    // Shifts Section
+    if (shifts.length > 0) {
+      const shiftsColumns = ['Name', 'Building Name', 'Building Type'];
+      const shiftsData = shifts.map(shift => [
+        shift.name,
+        shift.building_name,
+        shift.building_type?.name || 'N/A'
+      ]);
+      addSectionToPDF('Shifts', shiftsColumns, shiftsData);
     }
+
+    // Blocks Section
+    if (blocks.length > 0) {
+      const blocksColumns = ['Name', 'Area (sq ft)'];
+      const blocksData = blocks.map(block => [
+        block.name,
+        block.area
+      ]);
+      addSectionToPDF('Blocks', blocksColumns, blocksData);
+    }
+
+    // Rooms Section
+    if (rooms.length > 0) {
+      const roomsColumns = ['Name', 'Area (sq ft)', 'Block'];
+      const roomsData = rooms.map(room => [
+        room.name,
+        room.area,
+        room.block?.name || 'N/A'
+      ]);
+      addSectionToPDF('Rooms', roomsColumns, roomsData);
+    }
+
+    // Institute Assets Section
+    if (instituteAssets.length > 0) {
+      const assetsColumns = ['Asset Name', 'Quantity', 'Rooms'];
+      const assetsData = instituteAssets.map(asset => [
+        asset.name,
+        asset.total_qty.toString(),
+        asset.locations_count.toString(),
+      ]);
+      addSectionToPDF('Institute Assets', assetsColumns, assetsData);
+    }
+    // Funds Section
+    if (funds.length > 0) {
+      const fundsColumns = ['Fund Head', 'Balance'];
+      const fundsData = funds.map(f => [
+        f.fund_head?.name,
+        f.balance,
+
+      ]); addSectionToPDF('Institute Funds', fundsColumns, fundsData);
+    }
+    // Upgradations Section
+    if (upgradations.length > 0) {
+      const upgradationsColumns = ['Details', 'Date From', 'Date To', 'Level From', 'Level To', 'Status'];
+      const upgradationsData = upgradations.map(up => [
+        up.details,
+        up.from,
+        up.to,
+        up.levelfrom,
+        up.levelto,
+        up.status
+      ]);
+      addSectionToPDF('Institute Upgradations', upgradationsColumns, upgradationsData);
+    }
+    // Projects Section
+    if (projects.length > 0) {
+      const projectsColumns = ['Project Type', 'Completed', 'In Progress', 'Planned'];
+      const projectsData = projects.map(p => [
+        p.name,
+        p.completed,
+        p.inprogress,
+        p.planned
+
+      ]); addSectionToPDF('Institute Projects', projectsColumns, projectsData);
+    }
+
+    // Institute Layout Image
+    if (fetchedinstitute?.img_layout) {
+      await addSingleImage('Institute Layout', fetchedinstitute.img_layout);
+    }
+
+    // Institute 3D Image
+    if (fetchedinstitute?.img_3d) {
+      await addSingleImage('Institute 3D View', fetchedinstitute.img_3d);
+    }
+
+    // Blocks Images Section
+    await addGridSection('Blocks Images', blocks);
+
+    // Rooms Images Section
+    await addGridSection('Rooms Images', rooms);
+
+    doc.save('Institutional_Report.pdf');
   };
-
-  // Start with main title
-  doc.setFontSize(16);
-  doc.text('Institutional Report', 14, 15);
-  startY = 25; // Set initial position after title
-
-  // Shifts Section
-  if (shifts.length > 0) {
-    const shiftsColumns = ['Name', 'Building Name', 'Building Type'];
-    const shiftsData = shifts.map(shift => [
-      shift.name,
-      shift.building_name,
-      shift.building_type?.name || 'N/A'
-    ]);
-    addSectionToPDF('Shifts', shiftsColumns, shiftsData);
-  }
-
-  // Blocks Section
-  if (blocks.length > 0) {
-    const blocksColumns = ['Name', 'Area (sq ft)'];
-    const blocksData = blocks.map(block => [
-      block.name,
-      block.area
-    ]);
-    addSectionToPDF('Blocks', blocksColumns, blocksData);
-  }
-
-  // Rooms Section
-  if (rooms.length > 0) {
-    const roomsColumns = ['Name', 'Area (sq ft)', 'Block'];
-    const roomsData = rooms.map(room => [
-      room.name,
-      room.area,
-      room.block?.name || 'N/A'
-    ]);
-    addSectionToPDF('Rooms', roomsColumns, roomsData);
-  }
-
-  // Institute Assets Section
-  if (instituteAssets.length > 0) {
-    const assetsColumns = ['Asset Name',  'Quantity','Rooms'];
-    const assetsData = instituteAssets.map(asset => [
-      asset.name,
-      asset.total_qty.toString(),
-      asset.locations_count.toString(),
-    ]);
-    addSectionToPDF('Institute Assets', assetsColumns, assetsData);
-  }
-  // Funds Section
-  if (funds.length > 0) {
-    const fundsColumns = ['Fund Head', 'Balance'];
-    const fundsData = funds.map(f => [
-      f.fund_head?.name,
-      f.balance,
-    
-    ]);    addSectionToPDF('Institute Funds', fundsColumns, fundsData);
-}
-  // Upgradations Section
-  if (upgradations.length > 0) {
-    const upgradationsColumns = ['Details', 'Date From', 'Date To', 'Level From', 'Level To', 'Status'];
-    const upgradationsData = upgradations.map(up => [
-      up.details,
-      up.from,
-      up.to,
-      up.levelfrom,
-      up.levelto,
-      up.status
-    ]);
-    addSectionToPDF('Institute Upgradations', upgradationsColumns, upgradationsData);
-  }
-// Projects Section
-  if (projects.length > 0) {
-    const projectsColumns = ['Project Type', 'Completed','In Progress','Planned'];
-    const projectsData = projects.map(p => [
-   p.name,
-     p.completed,
-      p.inprogress,
-      p.planned
-    
-    ]);    addSectionToPDF('Institute Projects', projectsColumns, projectsData);
-}
-  doc.save('Institutional_Report.pdf');
-};
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Institutional Report" />
@@ -485,35 +633,35 @@ console.log(memoizedRegions);
         <Card >
           <CardHeader className="pb-3 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>          <CardTitle>Institutional Report</CardTitle></div>
-  
-        
-             <div className="flex gap-2">
-                                <Button onClick={exportToPDF} className="w-full md:w-auto">
-                                  Export PDF
-                                </Button>
-                                <Button onClick={exportToExcel} className="w-full md:w-auto">
-                                  Export Excel
-                                </Button>
-                              </div>
+
+
+            <div className="flex gap-2">
+              <Button onClick={exportToPDF} className="w-full md:w-auto">
+                Export PDF
+              </Button>
+              <Button onClick={exportToExcel} className="w-full md:w-auto">
+                Export Excel
+              </Button>
+            </div>
           </CardHeader>
           <Separator />
           <CardContent className="py-3 space-y-2">
-           
+
             <div className="flex flex-col md:flex-row md:items-center gap-4">
               {memoizedRegions.length > 0 && (
 
-                  <Combobox
-                entity="region"
-                value={region}
-                onChange={(value) => handleRegionChange(value)}
-                options={memoizedRegions.map((reg) => ({
-                  id: reg.id.toString(), // Convert ID to string to match prop type
-      name: reg.name.split(' ').pop() || reg.name,
+                <Combobox
+                  entity="region"
+                  value={region}
+                  onChange={(value) => handleRegionChange(value)}
+                  options={memoizedRegions.map((reg) => ({
+                    id: reg.id.toString(), // Convert ID to string to match prop type
+                    name: reg.name.split(' ').pop() || reg.name,
 
-                }))}
-                includeAllOption={true}
-                
-              />
+                  }))}
+                  includeAllOption={true}
+
+                />
 
                 // <Select value={region} onValueChange={handleRegionChange}>
                 //   <SelectTrigger>
@@ -542,7 +690,7 @@ console.log(memoizedRegions);
                   name: inst.name,
                 }))}
                 includeAllOption={true}
-                
+
               />
               {/* <Select value={institute} onValueChange={handleInstituteChange}>
                 <SelectTrigger>
@@ -564,346 +712,346 @@ console.log(memoizedRegions);
             </div>
           </CardContent>
         </Card>
-      
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-      {/* Layout image view */}
-              <div className="space-y-2">
-                <Label>Current Layout Image</Label>
-                {fetchedinstitute?.img_layout ? (
-                                    <ImagePreview dataImg={`${fetchedinstitute.img_layout}`}  className="w-full h-48 object-cover rounded"/>
 
-                 
-                ) : (
-                  <p className="text-sm text-muted-foreground">No layout image uploaded.</p>
-                )}
-               
-              </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Layout image view */}
+          <div className="space-y-2">
+            <Label>Current Layout Image</Label>
+            {fetchedinstitute?.img_layout ? (
+              <ImagePreview dataImg={`${fetchedinstitute.img_layout}`} className="w-full h-48 object-cover rounded" />
 
-              {/* 3D image view */}
-              <div className="space-y-2">
-                <Label>Current 3D Image</Label>
-                {fetchedinstitute?.img_3d ? (
-                  <ImagePreview dataImg={`${fetchedinstitute.img_3d}`}  className="w-full h-48 object-cover rounded"/>
-                 
-                ) : (
-                  <p className="text-sm text-muted-foreground">No 3D image uploaded.</p>
-                )}
-              
-              </div>
 
-              {/* Video view */}
-              <div className="space-y-2">
-                <Label>Current Video</Label>
-                {fetchedinstitute?.video ? (
-                  <video controls className="w-full h-48 rounded">
-                    <source src={`/assets/${fetchedinstitute.video}`} type="video/mp4" />
-                    Your browser does not support the video tag.
-                  </video>
-                ) : (
-                  <p className="text-sm text-muted-foreground">No video uploaded.</p>
-                )}
-                
-              </div>
-                </div>  
+            ) : (
+              <p className="text-sm text-muted-foreground">No layout image uploaded.</p>
+            )}
+
+          </div>
+
+          {/* 3D image view */}
+          <div className="space-y-2">
+            <Label>Current 3D Image</Label>
+            {fetchedinstitute?.img_3d ? (
+              <ImagePreview dataImg={`${fetchedinstitute.img_3d}`} className="w-full h-48 object-cover rounded" />
+
+            ) : (
+              <p className="text-sm text-muted-foreground">No 3D image uploaded.</p>
+            )}
+
+          </div>
+
+          {/* Video view */}
+          <div className="space-y-2">
+            <Label>Current Video</Label>
+            {fetchedinstitute?.video ? (
+              <video controls className="w-full h-48 rounded">
+                <source src={`/assets/${fetchedinstitute.video}`} type="video/mp4" />
+                Your browser does not support the video tag.
+              </video>
+            ) : (
+              <p className="text-sm text-muted-foreground">No video uploaded.</p>
+            )}
+
+          </div>
+        </div>
         {/* Shifts */}
-    <div className="grid grid-cols-1 md:grid-cols-2 my-2 gap-6">
-<div className="border rounded-lg  border-primary/95">
-  <button
-    className="w-full p-4 text-left flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-800 
+        <div className="grid grid-cols-1 md:grid-cols-2 my-2 gap-6">
+          <div className="border rounded-lg  border-primary/95">
+            <button
+              className="w-full p-4 text-left flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-800 
 
   "
-    onClick={() => setShiftsOpen(!shiftsOpen)}
-  >
-    <h3 className="text-lg font-semibold">Shifts({shifts.length})</h3>
-    <svg
-      className={`w-5 h-5 transform transition-transform ${shiftsOpen ? 'rotate-180' : ''}`}
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-    >
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-    </svg>
-  </button>
-  {shiftsOpen && (
-    <div className="p-4 border-t">
-      {shifts.length > 0 ? (
-        <div className="overflow-x-auto">
-<table className="w-full border-collapse rounded-md overflow-hidden shadow-sm border-1">
-            <thead>
-              <tr className="bg-[#0b431b] dark:bg-gray-800">
-                <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Name</th>
-                <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Building Name</th>
-                <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Building Type</th>
-              </tr>
-            </thead>
-            <tbody>
-              {shifts.map((shift) => (
-                <tr key={shift.id} className="hover:bg-primary/10  dark:hover:bg-gray-700">
-                  <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{shift.name}</td>
-                  <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{shift.building_name}</td>
-                  <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{shift.building_type?.name}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+              onClick={() => setShiftsOpen(!shiftsOpen)}
+            >
+              <h3 className="text-lg font-semibold">Shifts({shifts.length})</h3>
+              <svg
+                className={`w-5 h-5 transform transition-transform ${shiftsOpen ? 'rotate-180' : ''}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            {shiftsOpen && (
+              <div className="p-4 border-t">
+                {shifts.length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <table className="w-full border-collapse rounded-md overflow-hidden shadow-sm border-1">
+                      <thead>
+                        <tr className="bg-[#0b431b] dark:bg-gray-800">
+                          <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Name</th>
+                          <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Building Name</th>
+                          <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Building Type</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {shifts.map((shift) => (
+                          <tr key={shift.id} className="hover:bg-primary/10  dark:hover:bg-gray-700">
+                            <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{shift.name}</td>
+                            <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{shift.building_name}</td>
+                            <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{shift.building_type?.name}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="text-gray-500 dark:text-gray-400 text-sm">No shifts available</div>
+                )}
+              </div>
+            )}
+          </div>
+          {/* Blocks */}
+          <div className="border rounded-lg border-primary/95">
+            <button
+              className="w-full p-4 text-left flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-800"
+              onClick={() => setBlocksOpen(!blocksOpen)}
+            >
+              <h3 className="text-lg font-semibold">Blocks({blocks.length})</h3>
+              <svg
+                className={`w-5 h-5 transform transition-transform ${blocksOpen ? 'rotate-180' : ''}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            {blocksOpen && (
+              <div className="p-4 border-t">
+                {blocks.length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <table className="w-full border-collapse rounded-md overflow-hidden shadow-sm border-1">
+                      <thead>
+                        <tr className="bg-[#0b431b] dark:bg-gray-800">
+                          <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Name</th>
+                          <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Area (sq ft)</th>
+                          <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Establish Date</th>
+
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {blocks.map((block) => (
+                          <tr key={block.id} className="hover:bg-primary/10  dark:hover:bg-gray-700">
+                            <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">  <div className='flex flex-column gap-2 align-middle'> <ImagePreview dataImg={block.img} size="h-20" />  <span className='font-bold'>{block.name}</span></div> </td>
+                            <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{block.area}</td>
+                            <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{formatDate(block.establish_date)}</td>
+
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="text-gray-500 dark:text-gray-400 text-sm">No blocks available</div>
+                )}
+              </div>
+            )}
+          </div>
+
         </div>
-      ) : (
-        <div className="text-gray-500 dark:text-gray-400 text-sm">No shifts available</div>
-      )}
-    </div>
-  )}
-</div>
-{/* Blocks */}
-<div className="border rounded-lg border-primary/95">
-  <button
-    className="w-full p-4 text-left flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-800"
-    onClick={() => setBlocksOpen(!blocksOpen)}
-  >
-    <h3 className="text-lg font-semibold">Blocks({blocks.length})</h3>
-    <svg
-      className={`w-5 h-5 transform transition-transform ${blocksOpen ? 'rotate-180' : ''}`}
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-    >
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-    </svg>
-  </button>
-  {blocksOpen && (
-    <div className="p-4 border-t">
-      {blocks.length > 0 ? (
-        <div className="overflow-x-auto">
-<table className="w-full border-collapse rounded-md overflow-hidden shadow-sm border-1">
-            <thead>
-              <tr className="bg-[#0b431b] dark:bg-gray-800">
-                <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Name</th>
-                <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Area (sq ft)</th>
-                                <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Establish Date</th>
+        <div className="grid grid-cols-1 md:grid-cols-2 my-2  gap-6">
 
-              </tr>
-            </thead>
-            <tbody>
-              {blocks.map((block) => (
-                <tr key={block.id} className="hover:bg-primary/10  dark:hover:bg-gray-700">
-                  <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">  <div className='flex flex-column gap-2 align-middle'> <ImagePreview dataImg={block.img} size="h-20" />  <span className='font-bold'>{block.name}</span></div> </td>
-                  <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{block.area}</td>
-                                    <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{formatDate(block.establish_date)}</td>
+          {/* Rooms */}
+          <div className="border rounded-lg  border-primary/95">
+            <button
+              className="w-full p-4 text-left flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-800"
+              onClick={() => setRoomsOpen(!roomsOpen)}
+            >
+              <h3 className="text-lg font-semibold">Rooms({rooms.length})</h3>
+              <svg
+                className={`w-5 h-5 transform transition-transform ${roomsOpen ? 'rotate-180' : ''}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            {roomsOpen && (
+              <div className="p-4 border-t">
+                {rooms.length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <table className="w-full border-collapse rounded-md overflow-hidden shadow-sm border-1">
+                      <thead>
+                        <tr className="bg-[#0b431b] dark:bg-gray-800">
+                          <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Block</th>
+                          <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Name</th>
+                          <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Area (sq ft)</th>
 
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {rooms.map((room) => (
+                          <tr key={room.id} className="hover:bg-primary/10  dark:hover:bg-gray-700">
+                            <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{room.block?.name}</td>
+
+                            <td className="border p-2 text-sm text-gray-900 dark:text-gray-100"><div className='flex flex-column gap-2 align-middle'> <ImagePreview dataImg={room.img} size="h-20" />  <span className='font-bold'>{room.name}</span></div></td>
+                            <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{room.area}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="text-gray-500 dark:text-gray-400 text-sm">No rooms available</div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Institute Assets */}
+          <div className="border rounded-lg  border-primary/95">
+            <button
+              className="w-full p-4 text-left flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-800"
+              onClick={() => setAssetsOpen(!assetsOpen)}
+            >
+              <h3 className="text-lg font-semibold">Institute Assets({instituteAssets.length})</h3>
+              <svg
+                className={`w-5 h-5 transform transition-transform ${assetsOpen ? 'rotate-180' : ''}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            {assetsOpen && (
+              <div className="p-4 border-t">
+                {instituteAssets.length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <table className="w-full border-collapse rounded-md overflow-hidden shadow-sm border-1">
+                      <thead>
+                        <tr className="bg-[#0b431b] dark:bg-gray-800">
+                          <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Asset Name</th>
+
+                          <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Total Quantity</th>
+
+                          <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Rooms</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {instituteAssets.map((asset) => (
+                          <tr key={asset.id} className="hover:bg-primary/10  dark:hover:bg-gray-700">
+                            <td className="border p-2 text-sm text-gray-900 font-bold dark:text-gray-100">{asset.name}</td>
+
+                            <td className="border p-2 text-sm text-green-700 font-bold dark:text-gray-100">{asset.total_qty}</td>
+
+                            <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{asset.locations_count}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="text-gray-500 dark:text-gray-400 text-sm">No assets available</div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
-      ) : (
-        <div className="text-gray-500 dark:text-gray-400 text-sm">No blocks available</div>
-      )}
-    </div>
-  )}
-</div>
+        <div className="grid grid-cols-1 my-2  md:grid-cols-2 gap-6">
+          {/* Institute Upgradations */}
+          <div className="border rounded-lg  border-primary/95">
+            <button
+              className="w-full p-4 text-left flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-800"
+              onClick={() => setUpgradationsOpen(!upgradationsOpen)}
+            >
+              <h3 className="text-lg font-semibold">Institute Upgradations({upgradations.length})</h3>
+              <svg
+                className={`w-5 h-5 transform transition-transform ${upgradationsOpen ? 'rotate-180' : ''}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            {upgradationsOpen && (
+              <div className="p-4 border-t">
+                {upgradations.length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <table className="w-full border-collapse rounded-md overflow-hidden shadow-sm border-1">
+                      <thead>
+                        <tr className="bg-[#0b431b] dark:bg-gray-800">
+                          <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Details</th>
+                          <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Date from</th>
+                          <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Date to</th>
+                          <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Level From</th>
+                          <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Level To</th>
+                          <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {upgradations.map((up) => (
+                          <tr key={up.id} className="hover:bg-primary/10  dark:hover:bg-gray-700">
+                            <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{up.details}</td>
+                            <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{formatDate(up.from)}</td>
+                            <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{formatDate(up.to)}</td>
+                            <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{up.levelfrom}</td>
+                            <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{up.levelto}</td>
+                            <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{up.status}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="text-gray-500 dark:text-gray-400 text-sm">No upgradations available</div>
+                )}
+              </div>
+            )}
+          </div>
+          {/* Institute Projects */}
+          <div className="border rounded-lg border-primary/95">
+            <button
+              className="w-full p-4 text-left flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-800"
+              onClick={() => setProjectsOpen(!projectsOpen)}
+            >
+              <h3 className="text-lg font-semibold">Institute Projects({projects.length})</h3>
+              <svg
+                className={`w-5 h-5 transform transition-transform ${projectsOpen ? 'rotate-180' : ''}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            {projectsOpen && (
+              <div className="p-4 border-t">
+                {projects.length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <table className="w-full border-collapse rounded-md overflow-hidden shadow-sm border-1">
+                      <thead>
+                        <tr className="bg-[#0b431b] dark:bg-gray-800">
+                          <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Project Type</th>
+                          <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Completed</th>
+                          <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">In Progress</th>
+                          <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Planned</th>
 
-</div>
-   <div className="grid grid-cols-1 md:grid-cols-2 my-2  gap-6">
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {projects.map((p) => (
+                          <tr className="hover:bg-primary/10  dark:hover:bg-gray-700">
+                            <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{p.name}</td>
+                            <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{p.completed}</td>
+                            <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{p.inprogress}</td>
+                            <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{p.planned}</td>
 
-{/* Rooms */}
-<div className="border rounded-lg  border-primary/95">
-  <button
-    className="w-full p-4 text-left flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-800"
-    onClick={() => setRoomsOpen(!roomsOpen)}
-  >
-    <h3 className="text-lg font-semibold">Rooms({rooms.length})</h3>
-    <svg
-      className={`w-5 h-5 transform transition-transform ${roomsOpen ? 'rotate-180' : ''}`}
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-    >
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-    </svg>
-  </button>
-  {roomsOpen && (
-    <div className="p-4 border-t">
-      {rooms.length > 0 ? (
-        <div className="overflow-x-auto">
-<table className="w-full border-collapse rounded-md overflow-hidden shadow-sm border-1">
-            <thead>
-              <tr className="bg-[#0b431b] dark:bg-gray-800">
-                              <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Block</th>
-                <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Name</th>
-                <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Area (sq ft)</th>
-  
-              </tr>
-            </thead>
-            <tbody>
-              {rooms.map((room) => (
-                <tr key={room.id} className="hover:bg-primary/10  dark:hover:bg-gray-700">
-                                    <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{room.block?.name}</td>
-
-                  <td className="border p-2 text-sm text-gray-900 dark:text-gray-100"><div className='flex flex-column gap-2 align-middle'> <ImagePreview dataImg={room.img} size="h-20" />  <span className='font-bold'>{room.name}</span></div></td>
-                  <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{room.area}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="text-gray-500 dark:text-gray-400 text-sm">No Fund available</div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
-      ) : (
-        <div className="text-gray-500 dark:text-gray-400 text-sm">No rooms available</div>
-      )}
-    </div>
-  )}
-</div>
-
-{/* Institute Assets */}
-<div className="border rounded-lg  border-primary/95">
-  <button
-    className="w-full p-4 text-left flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-800"
-    onClick={() => setAssetsOpen(!assetsOpen)}
-  >
-    <h3 className="text-lg font-semibold">Institute Assets({instituteAssets.length})</h3>
-    <svg
-      className={`w-5 h-5 transform transition-transform ${assetsOpen ? 'rotate-180' : ''}`}
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-    >
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-    </svg>
-  </button>
-  {assetsOpen && (
-    <div className="p-4 border-t">
-      {instituteAssets.length > 0 ? (
-        <div className="overflow-x-auto">
-<table className="w-full border-collapse rounded-md overflow-hidden shadow-sm border-1">
-            <thead>
-              <tr className="bg-[#0b431b] dark:bg-gray-800">
-                <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Asset Name</th>
-          
-                <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Total Quantity</th>
-            
-                <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Rooms</th>
-              </tr>
-            </thead>
-            <tbody>
-              {instituteAssets.map((asset) => (
-                <tr key={asset.id} className="hover:bg-primary/10  dark:hover:bg-gray-700">
-                  <td className="border p-2 text-sm text-gray-900 font-bold dark:text-gray-100">{asset.name}</td>
-                 
-                  <td className="border p-2 text-sm text-green-700 font-bold dark:text-gray-100">{asset.total_qty}</td>
-             
-                  <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{asset.locations_count}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : (
-        <div className="text-gray-500 dark:text-gray-400 text-sm">No assets available</div>
-      )}
-    </div>
-  )}
-</div>
-</div>
-   <div className="grid grid-cols-1 my-2  md:grid-cols-2 gap-6">
-{/* Institute Upgradations */}
-<div className="border rounded-lg  border-primary/95">
-  <button
-    className="w-full p-4 text-left flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-800"
-    onClick={() => setUpgradationsOpen(!upgradationsOpen)}
-  >
-    <h3 className="text-lg font-semibold">Institute Upgradations({upgradations.length})</h3>
-    <svg
-      className={`w-5 h-5 transform transition-transform ${upgradationsOpen ? 'rotate-180' : ''}`}
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-    >
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-    </svg>
-  </button>
-  {upgradationsOpen && (
-    <div className="p-4 border-t">
-      {upgradations.length > 0 ? (
-        <div className="overflow-x-auto">
-<table className="w-full border-collapse rounded-md overflow-hidden shadow-sm border-1">
-            <thead>
-              <tr className="bg-[#0b431b] dark:bg-gray-800">
-                <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Details</th>
-                <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Date from</th>
-                <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Date to</th>
-                <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Level From</th>
-                <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Level To</th>
-                <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {upgradations.map((up) => (
-                <tr key={up.id} className="hover:bg-primary/10  dark:hover:bg-gray-700">
-                  <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{up.details}</td>
-                  <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{formatDate(up.from)}</td>
-                  <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{formatDate(up.to)}</td>
-                  <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{up.levelfrom}</td>
-                  <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{up.levelto}</td>
-                  <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{up.status}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : (
-        <div className="text-gray-500 dark:text-gray-400 text-sm">No upgradations available</div>
-      )}
-    </div>
-  )}
-</div>
-{/* Institute Projects */}
-<div className="border rounded-lg border-primary/95">
-  <button
-    className="w-full p-4 text-left flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-800"
-    onClick={() => setProjectsOpen(!projectsOpen)}
-  >
-    <h3 className="text-lg font-semibold">Institute Projects({projects.length})</h3>
-    <svg
-      className={`w-5 h-5 transform transition-transform ${projectsOpen ? 'rotate-180' : ''}`}
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-    >
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-    </svg>
-  </button>
-  {projectsOpen && (
-    <div className="p-4 border-t">
-      {projects.length > 0 ? (
-        <div className="overflow-x-auto">
-<table className="w-full border-collapse rounded-md overflow-hidden shadow-sm border-1">
-            <thead>
-              <tr className="bg-[#0b431b] dark:bg-gray-800">
-                <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Project Type</th>
-                <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Completed</th>
-                <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">In Progress</th>
-                <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Planned</th>
-
-              </tr>
-            </thead>
-            <tbody>
-              {projects.map((p) => (
-                <tr className="hover:bg-primary/10  dark:hover:bg-gray-700">
-                  <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{p.name}</td>
-                  <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{p.completed}</td>
-                                 <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{p.inprogress}</td>
-                  <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{p.planned}</td>
-
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : (
-        <div className="text-gray-500 dark:text-gray-400 text-sm">No Fund available</div>
-      )}
-    </div>
-  )}
-</div>
-</div>
       </div>
     </AppLayout>
   );
