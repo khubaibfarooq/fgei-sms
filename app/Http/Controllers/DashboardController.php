@@ -38,7 +38,12 @@ else{
 
         return response()->json(['count' => $count]);
     }
-    
+    public function getRegions(Request $request)
+    { //Pending,Waiting,Resolved,Rejected
+        $count =  DB::table('institutes')->where('type','Regional Office')->count();
+
+        return response()->json(['count' => $count]);
+    }
    public function getFunds(Request $request)
     {
         $regionId = session('region_id');

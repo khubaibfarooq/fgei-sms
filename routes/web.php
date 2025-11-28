@@ -53,6 +53,7 @@ Route::middleware(['auth', 'menu.permission'])->group(function () {
   // API routes for counts
 //Dashboard API routes
     Route::get('/api/getcompeletion', [DashboardController::class, 'getProfilePercentage']);
+    Route::get('/api/getregions', [DashboardController::class, 'getRegions']);
 
     Route::get('/api/getinstitutes', [DashboardController::class, 'getInstitutes']);
     Route::get('/api/getfunds', [DashboardController::class, 'getFunds']);
