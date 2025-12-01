@@ -345,7 +345,12 @@ $regions = Institute::select('region_id as id', 'name')->where('type', 'Regional
         })
         ->values();
 
-    $assets = [];
+    $assets = Asset::select('id', 'name')->orderBy('name', 'asc')
+        ->get()
+        ->filter(function ($asset) {
+            return is_numeric($asset->id) && $asset->id > 0 && !empty(trim($asset->name));
+        })
+        ->values();
 
 
 
@@ -531,8 +536,13 @@ $regions = Institute::select('region_id as id', 'name')->where('type', 'Regional
     public function getAssets(Request $request)
     {
         $assetCategoryId = $request->asset_category_id;
-        $assets = Asset::where('asset_category_id', $assetCategoryId)->get();
+        if($assetCategoryId!=0){
+        $assets = Asset::where('asset_category_id', $assetCategoryId)->orderBy('name', 'asc')->get();
         return response()->json($assets);
+        }
+                $assets = Asset::orderBy('name', 'asc')->get();
+
+        return response()->json($assets);        
     }
    public function getInstitutes(Request $request)
 {
@@ -569,21 +579,27 @@ $regions = Institute::select('region_id as id', 'name')->where('type', 'Regional
         $query->where('details', 'like', '%' . $request->search . '%')
               ->orWhereHas('asset', fn($q) => $q->where('name', 'like', '%' . $request->search . '%'));
     }
-    if ($request->filled('institute_id') && is_numeric($request->institute_id)) {
+        if ($request->filled('region_id') && is_numeric($request->region_id) && $request->region_id!=0) {
+        $query->whereHas('institute', function ($q) use ($request) {
+            $q->where('region_id', $request->region_id);
+        });
+    }
+    if ($request->filled('institute_id') && is_numeric($request->institute_id) && $request->institute_id!=0) {
         $query->where('institute_id', $request->institute_id);
     }
-    if ($request->filled('block_id') && is_numeric($request->block_id)) {
+
+    if ($request->filled('block_id') && is_numeric($request->block_id) && $request->block_id!=0) {
         $roomIds = Room::where('block_id', $request->block_id)->pluck('id');
         $query->whereIn('room_id', $roomIds);
     }
-    if ($request->filled('room_id') && is_numeric($request->room_id)) {
+    if ($request->filled('room_id') && is_numeric($request->room_id) && $request->room_id!=0) {
         $query->where('room_id', $request->room_id);
     }
-    if ($request->filled('asset_category_id') && is_numeric($request->asset_category_id)) {
+    if ($request->filled('asset_category_id') && is_numeric($request->asset_category_id) && $request->asset_category_id!=0) {
         $assetIds = Asset::where('asset_category_id', $request->asset_category_id)->pluck('id');
         $query->whereIn('asset_id', $assetIds);
     }
-    if ($request->filled('asset_id') && is_numeric($request->asset_id)) {
+    if ($request->filled('asset_id') && is_numeric($request->asset_id) && $request->asset_id!=0) {
         $query->where('asset_id', $request->asset_id);
     }
 
@@ -594,6 +610,7 @@ $regions = Institute::select('region_id as id', 'name')->where('type', 'Regional
     if (!$request->boolean('details')) {
         $query->join('assets', 'institute_assets.asset_id', '=', 'assets.id')
               ->select([
+                  'assets.id',
                   'assets.name',
                   DB::raw('SUM(institute_assets.current_qty) as total_qty'),
                   DB::raw('COUNT(DISTINCT institute_assets.room_id) as locations_count')

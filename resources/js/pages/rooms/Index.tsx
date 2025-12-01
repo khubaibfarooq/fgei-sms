@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { type BreadcrumbItem } from '@/types';
-import { Plus, Edit, Trash2 } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye } from 'lucide-react';
 import { ImagePreview } from '@/components/ui/image-preview';
 import {
   AlertDialog,
@@ -206,6 +206,14 @@ export default function RoomIndex({ rooms, filters, blocks, roomtypes, permissio
                         <td className="border p-3">{room.type.name}</td>
                         <td className="border p-3">
                           <div className="flex justify-center gap-2">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => window.open(`/institute-assets?room=${room.id}`, '_blank')}
+                              title="View Assets"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
                             {permissions.can_edit && (
                               <Link href={`/rooms/${room.id}/edit`}>
                                 <Button variant="ghost" size="icon">

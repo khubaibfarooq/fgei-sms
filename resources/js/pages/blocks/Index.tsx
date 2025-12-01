@@ -26,8 +26,8 @@ interface Block {
   name: string;
   area: number;
   institute_id: number;
-  img:string | null;
-establish_date?: string;
+  img: string | null;
+  establish_date?: string;
   institute: {
     name: string;
   };
@@ -55,7 +55,7 @@ const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Blocks', href: '/blocks' },
 ];
 
-export default function BlockIndex({ blocks, filters,permissions }: Props) {
+export default function BlockIndex({ blocks, filters, permissions }: Props) {
   const [search, setSearch] = useState(filters.search || '');
 
   const handleDelete = (id: number) => {
@@ -82,12 +82,12 @@ export default function BlockIndex({ blocks, filters,permissions }: Props) {
               <p className="text-muted-foreground text-sm">Manage institutional blocks</p>
             </div>
             {permissions.can_add &&
-            <Link href="/blocks/create">
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Block
-              </Button>
-            </Link>
+              <Link href="/blocks/create">
+                <Button>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Block
+                </Button>
+              </Link>
             }
           </CardHeader>
 
@@ -105,76 +105,87 @@ export default function BlockIndex({ blocks, filters,permissions }: Props) {
             </div>
 
             <div className="space-y-3">
-               <table className="w-full border-collapse border-1 rounded-md overflow-hidden shadow-sm">
-  <thead>
-    <tr className="bg-primary dark:bg-gray-800 text-center " >
-      <th className="border p-2  text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Name</th>
-            <th className="border p-2  text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Establish Date</th>
+              <table className="w-full border-collapse border-1 rounded-md overflow-hidden shadow-sm">
+                <thead>
+                  <tr className="bg-primary dark:bg-gray-800 text-center " >
+                    <th className="border p-2  text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Name</th>
+                    <th className="border p-2  text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Establish Date</th>
 
-      <th className="border p-2  text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Area(Sq ft)</th>
-       <th className="border p-2  text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Rooms</th>
-      <th className="border p-2  text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Action</th>
-     
-      
-    </tr>
-  </thead>
-  <tbody>
-              {blocks.data.length === 0 ? (
-                <p className="text-muted-foreground text-center">No blocks found.</p>
-              ) : (
-                blocks.data.map((block) => (
+                    <th className="border p-2  text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Area(Sq ft)</th>
+                    <th className="border p-2  text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Rooms</th>
+                    <th className="border p-2  text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Action</th>
 
-                   <tr  key={block.id} className="hover:bg-primary/10 dark:hover:bg-gray-700 text-center
+
+                  </tr>
+                </thead>
+                <tbody>
+                  {blocks.data.length === 0 ? (
+                    <p className="text-muted-foreground text-center">No blocks found.</p>
+                  ) : (
+                    blocks.data.map((block) => (
+
+                      <tr key={block.id} className="hover:bg-primary/10 dark:hover:bg-gray-700 text-center
                     ">
-                      <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
-                       <div className='flex flex-column gap-2 align-middle'> <ImagePreview dataImg={block.img} size="h-20" />  <span className='font-bold'>{block.name}</span></div> 
-                         </td>
-                           <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
-                        {block.establish_date || 'N/A'}
-                         </td>
-                           <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
-                        {block.area}
-                         </td>
-                         <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">{block.rooms_count || 0}</td>
-                          <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100"> 
-                            {permissions.can_edit &&
-                      <Link href={`/blocks/${block.id}/edit`}>
-                        <Button variant="ghost" size="icon">
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                      </Link>
-                      }
-                      {permissions.can_delete &&
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="ghost" size="icon" className="text-destructive hover:text-red-600">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Delete this block?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Block <strong>{block.name}</strong> will be permanently deleted.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction
-                              className="bg-destructive hover:bg-destructive/90"
-                              onClick={() => handleDelete(block.id)}
+                        <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
+                          <div className='flex flex-column gap-2 align-middle'> <ImagePreview dataImg={block.img} size="h-20" />  <span className='font-bold'>{block.name}</span></div>
+                        </td>
+                        <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
+                          {block.establish_date || 'N/A'}
+                        </td>
+                        <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
+                          {block.area}
+                        </td>
+                        <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
+                          {block.rooms_count && block.rooms_count > 0 ? (
+                            <span
+                              onClick={() => window.open(`/rooms?block=${block.id}`, '_blank')}
+                              className="cursor-pointer text-blue-500 hover:text-primary hover:underline font-semibold"
                             >
-                              Delete
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                      } </td>
-                            </tr>
-                
-                ))
-              )}
-              </tbody></table>
+                              {block.rooms_count}
+                            </span>
+                          ) : (
+                            0
+                          )}
+                        </td>
+                        <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
+                          {permissions.can_edit &&
+                            <Link href={`/blocks/${block.id}/edit`}>
+                              <Button variant="ghost" size="icon">
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                            </Link>
+                          }
+                          {permissions.can_delete &&
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="icon" className="text-destructive hover:text-red-600">
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete this block?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Block <strong>{block.name}</strong> will be permanently deleted.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    className="bg-destructive hover:bg-destructive/90"
+                                    onClick={() => handleDelete(block.id)}
+                                  >
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          } </td>
+                      </tr>
+
+                    ))
+                  )}
+                </tbody></table>
             </div>
 
             {blocks.links.length > 1 && (

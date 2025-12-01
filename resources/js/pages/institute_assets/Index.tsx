@@ -44,6 +44,7 @@ interface DetailedAsset {
 
 // New type for summary mode
 interface SummaryAsset {
+  asset_id: number;
   name: string;
   total_qty: number;
   locations_count?: number;
@@ -62,6 +63,7 @@ interface Props {
     room: string;
     category: string;
     details: boolean;
+    asset: string;
   };
   permissions?: {
     can_add: boolean;
@@ -71,6 +73,7 @@ interface Props {
   blocks: Record<string, string>;
   rooms: any[];
   categories: Record<string, string>;
+  assets: Record<string, string>;
 }
 const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Institute Assets', href: '/institute-assets' },
@@ -83,13 +86,14 @@ export default function InstituteAssetIndex({
   rooms,
   categories,
   permissions,
+  assets,
 }: Props) {
   const [search, setSearch] = useState(filters.search || '');
   const [selectedBlock, setSelectedBlock] = useState(filters.block || '');
   const [selectedRoom, setSelectedRoom] = useState(filters.room || '');
   const [selectedCategory, setSelectedCategory] = useState(filters.category || '');
-    const [details, setDetails] = useState(filters.details || false);
-
+  const [details, setDetails] = useState(filters.details || false);
+  const [selectedAsset, setSelectedAsset] = useState(filters.asset || '');
 
   // Convert Laravel pluck objects → array of { id, name }
   const blockOptions = blocks
@@ -99,8 +103,12 @@ export default function InstituteAssetIndex({
   const catOptions = categories
     ? Object.entries(categories).map(([id, name]) => ({ id, name }))
     : [];
-const isSummaryMode = !details;  // This is the key fix!
-//   // Single unified filter handler
+
+  const assetOptions = assets
+    ? Object.entries(assets).map(([id, name]) => ({ id, name }))
+    : [];
+  const isSummaryMode = !details;  // This is the key fix!
+  //   // Single unified filter handler
   const updateFilters = (newFilters: Partial<typeof filters>) => {
     router.get(
       '/institute-assets',
@@ -109,14 +117,14 @@ const isSummaryMode = !details;  // This is the key fix!
         preserveScroll: true,
         preserveState: true,
         replace: true,
-        only: ['instituteAssets', 'filters'],
+        only: ['instituteAssets', 'filters', 'assets'],
       }
     );
   };
 
   const handleSearchKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
-      updateFilters({ search,category:selectedCategory  });
+      updateFilters({ search, category: selectedCategory });
     }
   };
 
@@ -124,44 +132,52 @@ const isSummaryMode = !details;  // This is the key fix!
     const value = e.target.value;
     setSelectedBlock(value);
     setSelectedRoom(''); // reset room when block changes
-    updateFilters({ block: value, room: '',category:selectedCategory });
+    updateFilters({ block: value, room: '', category: selectedCategory });
   };
 
   const handleRoomChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
     setSelectedRoom(value);
-    updateFilters({ room: value,category:selectedCategory  });
+    updateFilters({ room: value, category: selectedCategory });
   };
 
   const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
     setSelectedCategory(value);
-    updateFilters({block: selectedBlock, room: selectedRoom, category: value });
+    setSelectedAsset(''); // reset asset when category changes
+    updateFilters({ block: selectedBlock, room: selectedRoom, category: value, asset: '' });
   };
 
   const handleDetailChange = (checked: boolean) => {
-  setDetails(checked);
+    setDetails(checked);
 
-  updateFilters({
-    details: checked,
-    search,
-    block: selectedBlock,
-    room: selectedRoom,
-    category: selectedCategory,
-  });
-};
+    updateFilters({
+      details: checked,
+      search,
+      block: selectedBlock,
+      room: selectedRoom,
+      category: selectedCategory,
+    });
+  };
+
+  const handleAssetChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
+    setSelectedAsset(value);
+    updateFilters({ asset: value });
+  };
 
   const clearFilters = () => {
     setSearch('');
     setSelectedBlock('');
     setSelectedRoom('');
     setSelectedCategory('');
-      setDetails(false);
+    setSelectedAsset('');
+    setDetails(false);
     router.get('/institute-assets', {}, {
       preserveScroll: true,
       preserveState: true,
       replace: true,
-      only: ['instituteAssets', 'filters'],
+      only: ['instituteAssets', 'filters', 'assets'],
     });
   };
 
@@ -171,7 +187,7 @@ const isSummaryMode = !details;  // This is the key fix!
       onError: () => toast.error('Failed to delete institute asset'),
     });
   };
-const isDetailedAsset = (asset: InstituteAsset): asset is DetailedAsset => {
+  const isDetailedAsset = (asset: InstituteAsset): asset is DetailedAsset => {
     return 'asset' in asset && asset.asset !== undefined;
   };
   return (
@@ -220,7 +236,18 @@ const isDetailedAsset = (asset: InstituteAsset): asset is DetailedAsset => {
                   </option>
                 ))}
               </select>
-
+              <select
+                value={selectedAsset}
+                onChange={handleAssetChange}
+                className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">All Assets</option>
+                {assetOptions.map((asset) => (
+                  <option key={asset.id} value={asset.id}>
+                    {asset.name}
+                  </option>
+                ))}
+              </select>
               <select
                 value={selectedBlock}
                 onChange={handleBlockChange}
@@ -235,41 +262,41 @@ const isDetailedAsset = (asset: InstituteAsset): asset is DetailedAsset => {
               </select>
 
               <select
-  value={selectedRoom}
-  onChange={handleRoomChange}
-  className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
->
-  <option value="">
-    {selectedBlock ? 'All Rooms in This Block' : 'All Rooms'}
-  </option>
-  {rooms
-    .filter((room) => !selectedBlock || room.block?.id === Number(selectedBlock))
-    .map((room) => (
-      <option key={room.id} value={room.id}>
-        {room.name}
-        {room.block && ` (${room.block.name})`}
-      </option>
-    ))}
-</select>
-<div className="flex items-center gap-2">
-  <Input
-    type="checkbox"
-    checked={details}
-    onChange={(e) => handleDetailChange(e.target.checked)}
-    id="details-mode"
-  />
-  <label htmlFor="details-mode" className="cursor-pointer select-none font-medium">
-    {details ? 'Detailed View' : 'Summary View'} — Show Details
-  </label>
-</div>
-              {(search || selectedBlock || selectedRoom || selectedCategory) && (
+                value={selectedRoom}
+                onChange={handleRoomChange}
+                className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">
+                  {selectedBlock ? 'All Rooms in This Block' : 'All Rooms'}
+                </option>
+                {rooms
+                  .filter((room) => !selectedBlock || room.block?.id === Number(selectedBlock))
+                  .map((room) => (
+                    <option key={room.id} value={room.id}>
+                      {room.name}
+                      {room.block && ` (${room.block.name})`}
+                    </option>
+                  ))}
+              </select>
+              <div className="flex items-center gap-2">
+                <Input
+                  type="checkbox"
+                  checked={details}
+                  onChange={(e) => handleDetailChange(e.target.checked)}
+                  id="details-mode"
+                />
+                <label htmlFor="details-mode" className="cursor-pointer select-none font-medium">
+                  {details ? 'Detailed View' : 'Summary View'} — Show Details
+                </label>
+              </div>
+              {(search || selectedBlock || selectedRoom || selectedCategory || selectedAsset) && (
                 <Button onClick={clearFilters} variant="ghost">
                   Clear Filters
                 </Button>
               )}
             </div>
 
-      {/* Table */}
+            {/* Table */}
             <div className="overflow-x-auto">
               {instituteAssets.data.length === 0 ? (
                 <p className="text-center text-muted-foreground py-10">
@@ -277,120 +304,136 @@ const isDetailedAsset = (asset: InstituteAsset): asset is DetailedAsset => {
                 </p>
               ) : (
                 <table className="w-full min-w-max border-collapse rounded-lg overflow-hidden shadow-sm">
-               <thead>
-  <tr className="bg-primary text-white">
-    <th className="border p-3 text-left">Asset Name</th>
+                  <thead>
+                    <tr className="bg-primary text-white">
+                      <th className="border p-3 text-left">Asset Name</th>
 
-    {!details ? (
-      // Summary Mode
-      <>
-        <th className="border p-3 text-center">Total Quantity</th>
-        <th className="border p-3 text-center">Locations</th>
-      </>
-    ) : (
-      // Detailed Mode
-      <>
-        <th className="border p-3 text-left">Category</th>
-        <th className="border p-3 text-left">Details</th>
-        <th className="border p-3 text-center">Quantity</th>
-        <th className="border p-3 text-left">Added Date</th>
-        <th className="border p-3 text-left">Room / Block</th>
-        <th className="border p-3 text-left">Actions</th>
-      </>
-    )}
-  </tr>
-</thead>
-               <tbody>
-  {instituteAssets.data.map((item: any, index) => {
-    // ───── SUMMARY MODE (details = false) ─────
-    if (!details) {
-      // We are in summary mode → item has .name, .total_qty
-      return (
-        <tr key={`${item.name}-${index}`} className="hover:bg-muted/50">
-          <td className="border p-3 font-semibold">{item.name}</td>
-          <td className="border p-3 text-center text-lg font-bold text-green-600">
-            {item.total_qty}
-          </td>
-          <td className="border p-3 text-center text-amber-600">
-            {item.locations_count}
-          </td>
-        </tr>
-      );
-    }
+                      {!details ? (
+                        // Summary Mode
+                        <>
+                          <th className="border p-3 text-center">Total Quantity</th>
+                          <th className="border p-3 text-center">Rooms</th>
+                        </>
+                      ) : (
+                        // Detailed Mode
+                        <>
+                          <th className="border p-3 text-left">Category</th>
+                          <th className="border p-3 text-left">Details</th>
+                          <th className="border p-3 text-center">Quantity</th>
+                          <th className="border p-3 text-left">Added Date</th>
+                          <th className="border p-3 text-left">Room / Block</th>
+                          <th className="border p-3 text-left">Actions</th>
+                        </>
+                      )}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {instituteAssets.data.map((item: any, index) => {
+                      // ───── SUMMARY MODE (details = false) ─────
+                      if (!details) {
+                        // We are in summary mode → item has .name, .total_qty
+                        return (
+                          <tr key={`${item.name}-${index}`} className="hover:bg-muted/50">
+                            <td className="border p-3 font-semibold">{item.name}</td>
+                            <td className="border p-3 text-center text-lg font-bold text-green-600">
+                              {item.total_qty}
+                            </td>
+                            <td className="border p-3 text-center text-amber-600">
+                              {item.locations_count > 0 ? (
+                                <a
+                                  className="hover:underline cursor-pointer font-semibold"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    router.get('/institute-assets', {
+                                      details: true,
+                                      asset: item.asset_id,
+                                    });
+                                  }}
+                                >
+                                  {item.locations_count}
+                                </a>
 
-    // ───── DETAILED MODE (details = true) ─────
-    // But during transition, item might still be summary object!
-    // So we MUST check if it has .asset before using it
+                              ) : (
+                                item.locations_count
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      }
 
-    // Safe guard: if item has no .asset → it's old summary data → skip or show loading
-    if (!item.asset) {
-      return (
-        <tr key={index}>
-          <td colSpan={7} className="border p-3 text-center text-muted-foreground">
-            Loading details...
-          </td>
-        </tr>
-      );
-    }
+                      // ───── DETAILED MODE (details = true) ─────
+                      // But during transition, item might still be summary object!
+                      // So we MUST check if it has .asset before using it
 
-    // Now it's safe — item is real DetailedAsset
-    const asset = item as DetailedAsset;
+                      // Safe guard: if item has no .asset → it's old summary data → skip or show loading
+                      if (!item.asset) {
+                        return (
+                          <tr key={index}>
+                            <td colSpan={7} className="border p-3 text-center text-muted-foreground">
+                              Loading details...
+                            </td>
+                          </tr>
+                        );
+                      }
 
-    return (
-      <tr key={asset.id} className="hover:bg-muted/50">
-        <td className="border p-3 font-semibold">{asset.asset.name}</td>
-        <td className="border p-3">{asset.asset.category?.name || '—'}</td>
-        <td className="border p-3 text-sm">{asset.details || '—'}</td>
-        <td className="border p-3 text-center font-bold text-lg">{asset.current_qty}</td>
-        <td className="border p-3 text-sm">
-          {new Date(asset.added_date).toLocaleDateString()}
-        </td>
-        <td className="border p-3 text-sm">
-          {asset.room
-            ? `${asset.room.name}${asset.room.block ? ` (${asset.room.block.name})` : ''}`
-            : '—'}
-        </td>
-        <td className="border p-3">
-          <div className="flex gap-1">
-            {permissions?.can_edit && (
-              <Link href={`/institute-assets/${asset.id}/edit`}>
-                <Button variant="ghost" size="icon">
-                  <Edit className="h-4 w-4" />
-                </Button>
-              </Link>
-            )}
-            {permissions?.can_delete && (
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button variant="ghost" size="icon" className="text-destructive">
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Delete Entry?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      <strong>{asset.asset.name}</strong> (Qty: {asset.current_qty}) will be deleted.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction
-                      className="bg-destructive"
-                      onClick={() => handleDelete(asset.id)}
-                    >
-                      Delete
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            )}
-          </div>
-        </td>
-      </tr>
-    );
-  })}
-</tbody>
+                      // Now it's safe — item is real DetailedAsset
+                      const asset = item as DetailedAsset;
+
+                      return (
+                        <tr key={asset.id} className="hover:bg-muted/50">
+                          <td className="border p-3 font-semibold">{asset.asset.name}</td>
+                          <td className="border p-3">{asset.asset.category?.name || '—'}</td>
+                          <td className="border p-3 text-sm">{asset.details || '—'}</td>
+                          <td className="border p-3 text-center font-bold text-lg">{asset.current_qty}</td>
+                          <td className="border p-3 text-sm">
+                            {new Date(asset.added_date).toLocaleDateString()}
+                          </td>
+                          <td className="border p-3 text-sm">
+                            {asset.room
+                              ? `${asset.room.name}${asset.room.block ? ` (${asset.room.block.name})` : ''}`
+                              : '—'}
+                          </td>
+                          <td className="border p-3">
+                            <div className="flex gap-1">
+                              {permissions?.can_edit && (
+                                <Link href={`/institute-assets/${asset.id}/edit`}>
+                                  <Button variant="ghost" size="icon">
+                                    <Edit className="h-4 w-4" />
+                                  </Button>
+                                </Link>
+                              )}
+                              {permissions?.can_delete && (
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="text-destructive">
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Delete Entry?</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        <strong>{asset.asset.name}</strong> (Qty: {asset.current_qty}) will be deleted.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogAction
+                                        className="bg-destructive"
+                                        onClick={() => handleDelete(asset.id)}
+                                      >
+                                        Delete
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
                 </table>
               )}
             </div>

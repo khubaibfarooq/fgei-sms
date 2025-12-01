@@ -35,7 +35,7 @@ interface instituteAssetsProp {
   block?: { id: number; name?: string };
   room?: { id: number; name?: string };
   assetCategory?: { id: number; name?: string };
-  asset?: { id: number; name?: string };
+  assets?: { id: number; name?: string };
   region?: { id: number; name?: string };
 }
 
@@ -128,61 +128,62 @@ export default function Assets({ instituteAssets: instituteAssetsProp, institute
   const [instituteAssets, setInstituteAssets] = useState(instituteAssetsProp);
   const [filteredInstitutes, setFilteredInstitutes] = useState<Item[]>(institutes || []);
   const [allAssetsForExport, setAllAssetsForExport] = useState<instituteAssetsProp[]>([]);
-const [details, setDetails] = useState(false); // Add this line
+  const [details, setDetails] = useState(false); // Add this line
+  console.log('assets', assets);
   // Fetch institutes based on region selection
   const fetchInstitutes = async (regionId: string) => {
-  try {
-    const params = new URLSearchParams({ region_id: regionId || '' }).toString();
-    const response = await fetch(`/reports/getInstitutes?${params}`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch institutes');
+    try {
+      const params = new URLSearchParams({ region_id: regionId || '' }).toString();
+      const response = await fetch(`/reports/getInstitutes?${params}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch institutes');
+      }
+      const data: Item[] = await response.json(); // Fixed: response.json() not Response.json()
+      console.log('Fetched institutes:', data);
+      setFilteredInstitutes(data);
+      // Reset institute if the selected institute is not in the new list
+      if (institute && regionId !== '0' && !data.some((inst: Item) => inst.id.toString() === institute)) {
+        setInstitute('');
+      }
+    } catch (error) {
+      console.error('Error fetching institutes:', error);
+      toast.error('Failed to load institutes');
+      setFilteredInstitutes([]);
     }
-    const data: Item[] = await response.json(); // Fixed: response.json() not Response.json()
-    console.log('Fetched institutes:', data);
-    setFilteredInstitutes(data);
-    // Reset institute if the selected institute is not in the new list
-    if (institute && regionId !== '0' && !data.some((inst: Item) => inst.id.toString() === institute)) {
-      setInstitute('');
-    }
-  } catch (error) {
-    console.error('Error fetching institutes:', error);
-    toast.error('Failed to load institutes');
-    setFilteredInstitutes([]);
-  }
-};
+  };
 
   const handleRegionChange = (value: string) => {
     setRegion(value);
     fetchInstitutes(value);
   };
-// Fetch all assets for export (without pagination)
-const fetchAllAssetsForExport = async (): Promise<instituteAssetsProp[]> => {
-  try {
-    const params = new URLSearchParams({
-      search: search || '',
-      institute_id: institute || '',
-      block_id: block || '',
-      room_id: room || '',
-      asset_category_id: assetCategory || '',
-      asset_id: asset || '',
-      region_id: region || '',
-      details: details ? 'true' : 'false',
-      all: 'true' // Add parameter to indicate we want all data
-    });
+  // Fetch all assets for export (without pagination)
+  const fetchAllAssetsForExport = async (): Promise<instituteAssetsProp[]> => {
+    try {
+      const params = new URLSearchParams({
+        search: search || '',
+        institute_id: institute || '',
+        block_id: block || '',
+        room_id: room || '',
+        asset_category_id: assetCategory || '',
+        asset_id: asset || '',
+        region_id: region || '',
+        details: details ? 'true' : 'false',
+        all: 'true' // Add parameter to indicate we want all data
+      });
 
-    const response = await fetch(`/reports/assets/institute-assets?${params.toString()}`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch all assets for export');
+      const response = await fetch(`/reports/assets/institute-assets?${params.toString()}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch all assets for export');
+      }
+      const data: instituteAssetsProp[] = await response.json();
+      setAllAssetsForExport(data);
+      return data;
+    } catch (error) {
+      console.error('Error fetching all assets for export:', error);
+      toast.error('Failed to fetch assets for export');
+      return [];
     }
-    const data: instituteAssetsProp[] = await response.json();
-    setAllAssetsForExport(data);
-    return data;
-  } catch (error) {
-    console.error('Error fetching all assets for export:', error);
-    toast.error('Failed to fetch assets for export');
-    return [];
-  }
-};
+  };
   // Log initial props for debugging
   useEffect(() => {
     const invalidItems = {
@@ -292,178 +293,230 @@ const fetchAllAssetsForExport = async (): Promise<instituteAssetsProp[]> => {
         .finally(() => setIsLoadingAssets(false));
       setAsset('');
     } else {
-      setAssets([]);
+      // Reset to initial assets when no category is selected
+      setAssets(initialAssets.filter(isValidItem));
       setAsset('');
     }
   }, [assetCategory]);
-const exportToExcel = async () => {
-  try {
-    const allAssets = await fetchAllAssetsForExport();
 
-    const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet('Assets');
-
-    const instituteName =
-      allAssets.length > 0 && allAssets[0].institute?.name
-        ? allAssets[0].institute.name
-        : 'All Institutes';
-
-    // Header
-    worksheet.mergeCells('A1:F1');
-    const instituteCell = worksheet.getCell('A1');
-    instituteCell.value = `Institute: ${instituteName}`;
-    instituteCell.font = { size: 16, bold: true };
-    instituteCell.alignment = { horizontal: 'center' };
-
-    worksheet.mergeCells('A2:F2');
-    const titleCell = worksheet.getCell('A2');
-    titleCell.value = 'Assets Report';
-    titleCell.font = { size: 14, bold: true };
-    titleCell.alignment = { horizontal: 'center' };
-
-    worksheet.addRow([]); // spacing
-
-    // Dynamic headers
-    const headers = !details
-      ? ['Asset', 'Total Quantity', 'Rooms']
-      : ['Details', 'Quantity', 'Block', 'Room', 'Category', 'Asset'];
-
-    const headerRow = worksheet.addRow(headers);
-    headerRow.font = { bold: true };
-    headerRow.fill = {
-      type: 'pattern',
-      pattern: 'solid',
-      fgColor: { argb: 'FF428BCA' },
-    };
-    headerRow.alignment = { horizontal: 'center' };
-
-    // Dynamic data
-    allAssets.forEach((instAsset: any) => {
-      if (!details) {
-        worksheet.addRow([
-          instAsset.name || '—',
-          instAsset.total_qty || 0,
-          instAsset.locations_count || 0,
-        ]);
-      } else {
-        worksheet.addRow([
-          instAsset.details || 'N/A',
-          instAsset.current_qty || 0,
-          instAsset.room.block?.name || 'N/A',
-          instAsset.room?.name || 'N/A',
-          instAsset.asset.category?.name || 'N/A',
-          instAsset.asset?.name || 'N/A',
-        ]);
-      }
+  // Auto-fetch data when details checkbox changes
+  useEffect(() => {
+    const params = new URLSearchParams({
+      search: search || '',
+      institute_id: institute || '',
+      block_id: block || '',
+      room_id: room || '',
+      asset_category_id: assetCategory || '',
+      asset_id: asset || '',
+      region_id: region || '',
+      details: details ? 'true' : 'false',
     });
 
-    // Auto-fit columns
-    worksheet.columns.forEach((column) => {
-      let maxLength = 0;
-      column.eachCell?.({ includeEmpty: true }, (cell) => {
-        const length = cell.value ? cell.value.toString().length : 10;
-        if (length > maxLength) maxLength = length;
+    fetch(`/reports/assets/institute-assets?${params.toString()}`)
+      .then((response) => response.json())
+      .then((data) => {
+        console.log('Fetched institute assets after details toggle:', data);
+        setInstituteAssets(data);
+      })
+      .catch((error) => {
+        console.error('Error fetching assets after details toggle:', error);
+        toast.error('Failed to fetch assets');
       });
-      column.width = Math.min(maxLength + 2, 50);
-    });
+  }, [details]);
+  const exportToExcel = async () => {
+    try {
+      const allAssets = await fetchAllAssetsForExport();
 
-    const buffer = await workbook.xlsx.writeBuffer();
-    const blob = new Blob([buffer], {
-      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    });
-    FileSaver.saveAs(blob, 'Assets_Report.xlsx');
-    toast.success('Excel exported successfully');
-  } catch (error) {
-    console.error('Error exporting to Excel:', error);
-    toast.error('Failed to export Excel');
-  }
-};
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet('Assets');
 
-const exportToPDF = async () => {
-  try {
-    // Fetch all data for export (already includes 'details' param)
-    const allAssets = await fetchAllAssetsForExport();
+      const instituteName =
+        allAssets.length > 0 && allAssets[0].institute?.name
+          ? allAssets[0].institute.name
+          : 'All Institutes';
 
-    const doc = new jsPDF();
+      // Header
+      worksheet.mergeCells('A1:F1');
+      const instituteCell = worksheet.getCell('A1');
+      instituteCell.value = `Institute: ${instituteName}`;
+      instituteCell.font = { size: 16, bold: true };
+      instituteCell.alignment = { horizontal: 'center' };
 
-    // Get institute name from first asset (if available) or use default
-    const instituteName =
-      allAssets.length > 0 && allAssets[0].institute?.name
-        ? allAssets[0].institute.name
-        : 'All Institutes';
+      worksheet.mergeCells('A2:F2');
+      const titleCell = worksheet.getCell('A2');
+      titleCell.value = 'Assets Report';
+      titleCell.font = { size: 14, bold: true };
+      titleCell.alignment = { horizontal: 'center' };
 
-    // Header
-    doc.setFontSize(16);
-    doc.setFont('helvetica', 'bold');
-    doc.text(`Institute: ${instituteName}`, 14, 15);
+      worksheet.addRow([]); // spacing
 
-    doc.setFontSize(14);
-    doc.text('Assets Report', 14, 25);
+      // Dynamic headers
+      const headers = !details
+        ? ['Asset', 'Total Quantity', 'Rooms']
+        : ['Details', 'Quantity', 'Block', 'Room', 'Category', 'Asset'];
 
-    // Dynamic columns based on current view mode
-    const tableColumn = !details
-      ? ['Asset', 'Total Quantity', 'Rooms']
-      : ['Details', 'Qty', 'Block', 'Room', 'Category', 'Asset'];
+      const headerRow = worksheet.addRow(headers);
+      headerRow.font = { bold: true };
+      headerRow.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FF428BCA' },
+      };
+      headerRow.alignment = { horizontal: 'center' };
 
-    // Dynamic rows — match the columns exactly
-    const tableRows = allAssets.map((instAsset: any) => {
-      if (!details) {
-        // Summary Mode
+      // Dynamic data
+      allAssets.forEach((instAsset: any) => {
+        if (!details) {
+          worksheet.addRow([
+            instAsset.name || '—',
+            instAsset.total_qty || 0,
+            instAsset.locations_count || 0,
+          ]);
+        } else {
+          worksheet.addRow([
+            instAsset.details || 'N/A',
+            instAsset.current_qty || 0,
+            instAsset.room.block?.name || 'N/A',
+            instAsset.room?.name || 'N/A',
+            instAsset.asset.category?.name || 'N/A',
+            instAsset.asset?.name || 'N/A',
+          ]);
+        }
+      });
+
+      // Auto-fit columns
+      worksheet.columns.forEach((column) => {
+        let maxLength = 0;
+        column.eachCell?.({ includeEmpty: true }, (cell) => {
+          const length = cell.value ? cell.value.toString().length : 10;
+          if (length > maxLength) maxLength = length;
+        });
+        column.width = Math.min(maxLength + 2, 50);
+      });
+
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      });
+      FileSaver.saveAs(blob, 'Assets_Report.xlsx');
+      toast.success('Excel exported successfully');
+    } catch (error) {
+      console.error('Error exporting to Excel:', error);
+      toast.error('Failed to export Excel');
+    }
+  };
+
+  const exportToPDF = async () => {
+    try {
+      // Fetch all data for export (already includes 'details' param)
+      const allAssets = await fetchAllAssetsForExport();
+
+      const doc = new jsPDF();
+
+      // Get institute name from first asset (if available) or use default
+      const instituteName =
+        allAssets.length > 0 && allAssets[0].institute?.name
+          ? allAssets[0].institute.name
+          : 'All Institutes';
+
+      // Header
+      doc.setFontSize(16);
+      doc.setFont('helvetica', 'bold');
+      doc.text(`Institute: ${instituteName}`, 14, 15);
+
+      doc.setFontSize(14);
+      doc.text('Assets Report', 14, 25);
+
+      // Dynamic columns based on current view mode
+      const tableColumn = !details
+        ? ['Asset', 'Total Quantity', 'Rooms']
+        : ['Details', 'Qty', 'Block', 'Room', 'Category', 'Asset'];
+
+      // Dynamic rows — match the columns exactly
+      const tableRows = allAssets.map((instAsset: any) => {
+        if (!details) {
+          // Summary Mode
+          return [
+            instAsset.name || '—',
+            (instAsset.total_qty || 0).toString(),
+            (instAsset.locations_count || 0).toString(),
+          ];
+        }
+
+        // Detailed Mode
         return [
-          instAsset.name || '—',
-          (instAsset.total_qty || 0).toString(),
-          (instAsset.locations_count || 0).toString(),
+          instAsset.details || 'N/A',
+          instAsset.current_qty?.toString() || '0',
+          instAsset.room?.block.name || 'N/A',
+          instAsset.room?.name || 'N/A',
+          instAsset.asset?.category?.name || 'N/A',
+          instAsset.asset?.name || 'N/A',
         ];
-      }
+      });
 
-      // Detailed Mode
-      return [
-        instAsset.details || 'N/A',
-        instAsset.current_qty?.toString() || '0',
-        instAsset.room?.block.name || 'N/A',
-        instAsset.room?.name || 'N/A',
-        instAsset.asset?.category?.name || 'N/A',
-        instAsset.asset?.name || 'N/A',
-      ];
-    });
-
-    // Generate table
-    autoTable(doc, {
-      head: [tableColumn],
-      body: tableRows,
-      startY: 35,
-      styles: {
-        fontSize: 9,
-        cellPadding: 2,
-      },
-      headStyles: {
-        fillColor: [66, 139, 202],
-        textColor: 255,
-        fontStyle: 'bold',
-      },
-      alternateRowStyles: {
-        fillColor: [240, 240, 240],
-      },
-      columnStyles: !details
-        ? {
+      // Generate table
+      autoTable(doc, {
+        head: [tableColumn],
+        body: tableRows,
+        startY: 35,
+        styles: {
+          fontSize: 9,
+          cellPadding: 2,
+        },
+        headStyles: {
+          fillColor: [66, 139, 202],
+          textColor: 255,
+          fontStyle: 'bold',
+        },
+        alternateRowStyles: {
+          fillColor: [240, 240, 240],
+        },
+        columnStyles: !details
+          ? {
             0: { cellWidth: 80 }, // Asset name wider
             1: { halign: 'center' },
             2: { halign: 'center' },
           }
-        : {
+          : {
             0: { cellWidth: 50 }, // Details
             1: { halign: 'center', cellWidth: 20 }, // Qty
             5: { cellWidth: 50 }, // Asset name
           },
+      });
+
+      doc.save('Assets_Report.pdf');
+      toast.success('PDF exported successfully');
+    } catch (error) {
+      console.error('Error exporting to PDF:', error);
+      toast.error('Failed to export PDF');
+    }
+  };
+
+  // Direct apply filters function (no debounce) for immediate execution
+  const applyFilters = () => {
+    const params = new URLSearchParams({
+      search: search || '',
+      institute_id: institute || '',
+      block_id: block || '',
+      room_id: room || '',
+      asset_category_id: assetCategory || '',
+      asset_id: asset || '',
+      region_id: region || '',
+      details: details ? 'true' : 'false',
     });
 
-    doc.save('Assets_Report.pdf');
-    toast.success('PDF exported successfully');
-  } catch (error) {
-    console.error('Error exporting to PDF:', error);
-    toast.error('Failed to export PDF');
-  }
-};
+    fetch(`/reports/assets/institute-assets?${params.toString()}`)
+      .then((response) => response.json())
+      .then((data) => {
+        console.log('Fetched filtered institute assets:', data);
+        setInstituteAssets(data);
+      })
+      .catch((error) => {
+        console.error('Error fetching filtered assets:', error);
+        toast.error('Failed to fetch filtered assets');
+      });
+  };
+
   const debouncedApplyFilters = useMemo(
     () =>
       debounce(() => {
@@ -489,7 +542,7 @@ const exportToPDF = async () => {
             toast.error('Failed to fetch filtered assets');
           });
       }, 300),
-    [search, institute, block, room, assetCategory, asset, region,details]
+    [search, institute, block, room, assetCategory, asset, region, details]
   );
 
   // Memoize dropdown items to prevent unnecessary re-renders
@@ -522,35 +575,35 @@ const exportToPDF = async () => {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {/* Region Filter - Added based on Transport.tsx */}
-                  {memoizedRegions.length > 0 && ( 
-                     <Combobox
-                entity="region"
-                value={region}
-                onChange={(value) => handleRegionChange(value)}
-                options={memoizedRegions.map((reg) => ({
-                  id: reg.id.toString(), // Convert ID to string to match prop type
-                  name: reg.name.split(' ').pop() || reg.name,
-                }))}
-                includeAllOption={true}
-                
-              />
-                    
-                    
-                    
-                 
+                  {memoizedRegions.length > 0 && (
+                    <Combobox
+                      entity="region"
+                      value={region}
+                      onChange={(value) => handleRegionChange(value)}
+                      options={memoizedRegions.map((reg) => ({
+                        id: reg.id.toString(), // Convert ID to string to match prop type
+                        name: reg.name.split(' ').pop() || reg.name,
+                      }))}
+                      includeAllOption={true}
+
+                    />
+
+
+
+
                   )}
 
-                       <Combobox
-                                  entity="institute"
-                                  value={institute}
-                                  onChange={(value) => setInstitute(value)}
-                                  options={memoizedInstitutes.map((inst) => ({
-                                    id: inst.id.toString(), // Convert ID to string to match prop type
-                                    name: inst.name,
-                                  }))}
-                                  includeAllOption={true}
-                                  
-                                />
+                  <Combobox
+                    entity="institute"
+                    value={institute}
+                    onChange={(value) => setInstitute(value)}
+                    options={memoizedInstitutes.map((inst) => ({
+                      id: inst.id.toString(), // Convert ID to string to match prop type
+                      name: inst.name,
+                    }))}
+                    includeAllOption={true}
+
+                  />
                   {/* <Select value={institute} onValueChange={(value) => { setInstitute(value); }}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select Institute" />
@@ -605,7 +658,7 @@ const exportToPDF = async () => {
                         memoizedRooms.map((r) => {
                           return (
                             <SelectItem key={r.id} value={r.id.toString()}>
-                              { r.name.split(' ').pop() || r.name}
+                              {r.name.split(' ').pop() || r.name}
                             </SelectItem>
                           );
                         })
@@ -635,15 +688,13 @@ const exportToPDF = async () => {
                     </SelectContent>
                   </Select>
 
-                  <Select value={asset} onValueChange={(value) => { setAsset(value); }} disabled={isLoadingAssets}>
+                  <Select value={asset} onValueChange={(value) => { setAsset(value); }}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select Asset" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="0">All Assets</SelectItem>
-                      {isLoadingAssets ? (
-                        <div className="text-muted-foreground text-sm p-2">Loading assets...</div>
-                      ) : memoizedAssets.length > 0 ? (
+                      {memoizedAssets.length > 0 ? (
                         memoizedAssets.map((a) => {
                           return (
                             <SelectItem key={a.id} value={a.id.toString()}>
@@ -656,17 +707,17 @@ const exportToPDF = async () => {
                       )}
                     </SelectContent>
                   </Select>
-<div className="flex items-center gap-3 py-2">
-  <Input
-    type="checkbox"
-    id="details-mode"
-    checked={details}
-    onChange={(e) => setDetails(e.target.checked)}
-  />
-  <label htmlFor="details-mode" className="cursor-pointer select-none font-medium text-sm">
-    {details ? 'Detailed View' : 'Summary View'} — Show individual entries
-  </label>
-</div>
+                  <div className="flex items-center gap-3 py-2">
+                    <Input
+                      type="checkbox"
+                      id="details-mode"
+                      checked={details}
+                      onChange={(e) => setDetails(e.target.checked)}
+                    />
+                    <label htmlFor="details-mode" className="cursor-pointer select-none font-medium text-sm">
+                      {details ? 'Detailed View' : 'Summary View'} — Show individual entries
+                    </label>
+                  </div>
                   <Button onClick={debouncedApplyFilters} className="w-full">
                     Apply Filters
                   </Button>
@@ -692,112 +743,147 @@ const exportToPDF = async () => {
                 </CardHeader>
                 <Separator />
                 <CardContent className="pt-6 space-y-6">
-              <table className="w-full border-collapse border-1 rounded-md overflow-hidden shadow-sm">
-  <thead>
-    <tr className="bg-primary dark:bg-gray-800">
-   
+                  <table className="w-full border-collapse border-1 rounded-md overflow-hidden shadow-sm">
+                    <thead>
+                      <tr className="bg-primary dark:bg-gray-800" >
 
-      {!details ? (
-        <>   <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">
-        Asset
-      </th>
-          <th className="border p-2 text-center text-sm font-medium text-white dark:text-gray-200">
-            Total Quantity
-          </th>
-          <th className="border p-2 text-center text-sm font-medium text-white dark:text-gray-200">
-            Rooms
-          </th>
-        </>
-      ) : (
-        <>
-         
-          <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">
-        Category
-          </th>
-           <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">
-        Asset
-      </th>
-        
-          <th className="border p-2 text-center text-sm font-medium text-white dark:text-gray-200">
-            Quantity
-          </th>
-              <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">
-            Room / Block
-          </th>
-          <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">
-            Added Date
-          </th>
-        </>
-      )}
-    </tr>
-  </thead>
-  <tbody>
-    {instituteAssets.data?.length === 0 ? (
-      <tr>
-        <td colSpan={details ? 5 : 3} className="border p-2 text-center text-sm text-gray-900 dark:text-gray-100">
-          No assets found.
-        </td>
-      </tr>
-    ) : (
-      instituteAssets.data?.map((instAsset: any, index) => {
-        // Summary Mode
-        if (!details) {
-          return (
-            <tr key={`${instAsset.name}-${index}`} className="hover:bg-primary/10 dark:hover:bg-gray-700">
-              <td className="border p-2 text-left font-bold dark:text-gray-100">
-                {instAsset.name}
-              </td>
-              <td className="border p-2 text-center text-lg font-bold text-green-600">
-                {instAsset.total_qty}
-              </td>
-              <td className="border p-2 text-center text-amber-600">
-                {instAsset.locations_count || '-'}
-              </td>
-            </tr>
-          );
-        }
 
-        // Detailed Mode — safe fallback
-        if (!instAsset.asset) {
-          return (
-            <tr key={index}>
-              <td colSpan={5} className="text-center text-muted-foreground py-4">
-                Loading details...
-              </td>
-            </tr>
-          );
-        }
+                        {!details ? (
+                          <>   <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">
+                            Asset
+                          </th>
+                            <th className="border p-2 text-center text-sm font-medium text-white dark:text-gray-200">
+                              Total Quantity
+                            </th>
+                            <th className="border p-2 text-center text-sm font-medium text-white dark:text-gray-200">
+                              Rooms
+                            </th>
+                          </>
+                        ) : (
+                          <>
 
-        return (
-          <tr key={instAsset.id} className="hover:bg-primary/10 dark:hover:bg-gray-700">
-            <td className="border p-2 text-left font-bold dark:text-gray-100">
-              {instAsset.asset?.category.name}
-            </td>
-            <td className="border p-2 text-left font-bold dark:text-gray-100">
-              {instAsset.asset?.name}
-            </td>
-          <td className="border p-2 text-center font-bold text-lg text-green-600">
-              {instAsset.current_qty}
-            </td>
-            <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">
-              {instAsset.room ? (
-                <>
-                  {instAsset.room.name}
-                  {instAsset.room.block && <span className="text-muted-foreground"> ({instAsset.room.block.name})</span>}
-                </>
-              ) : '—'}
-            </td>
-           
-             
-            <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">
-              {instAsset.added_date ? new Date(instAsset.added_date).toLocaleDateString() : '—'}
-            </td>
-          </tr>
-        );
-      })
-    )}
-  </tbody>
-</table>
+                            <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">
+                              Category
+                            </th>
+                            <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">
+                              Asset
+                            </th>
+
+                            <th className="border p-2 text-center text-sm font-medium text-white dark:text-gray-200">
+                              Quantity
+                            </th>
+                            <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">
+                              Room / Block
+                            </th>
+                            <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">
+                              Added Date
+                            </th>
+                          </>
+                        )}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {instituteAssets.data?.length === 0 ? (
+                        <tr>
+                          <td colSpan={details ? 5 : 3} className="border p-2 text-center text-sm text-gray-900 dark:text-gray-100">
+                            No assets found.
+                          </td>
+                        </tr>
+                      ) : (
+                        instituteAssets.data?.map((instAsset: any, index) => {
+                          // Summary Mode
+                          if (!details) {
+                            const handleRowClick = (assetId: number) => {
+                              // Update state first
+                              setDetails(true);
+                              setAsset(assetId.toString());
+
+                              // Use setTimeout to ensure state updates are processed
+                              setTimeout(() => {
+                                const params = new URLSearchParams({
+                                  search: search || '',
+                                  institute_id: institute || '',
+                                  block_id: block || '',
+                                  room_id: room || '',
+                                  asset_category_id: assetCategory || '',
+                                  asset_id: assetId.toString(),
+                                  region_id: region || '',
+                                  details: 'true',
+                                });
+
+                                fetch(`/reports/assets/institute-assets?${params.toString()}`)
+                                  .then((response) => response.json())
+                                  .then((data) => {
+                                    console.log('Fetched asset details:', data);
+                                    setInstituteAssets(data);
+                                  })
+                                  .catch((error) => {
+                                    console.error('Error fetching asset details:', error);
+                                    toast.error('Failed to fetch asset details');
+                                  });
+                              }, 0);
+                            };
+
+                            return (
+                              <tr
+                                key={`${instAsset.name}-${index}`}
+                                className="hover:bg-primary/10 dark:hover:bg-gray-700 cursor-pointer"
+                                onClick={() => handleRowClick(instAsset.id)}
+                              >
+                                <td className="border p-2 text-left font-bold dark:text-gray-100">
+                                  {instAsset.name}
+                                </td>
+                                <td className="border p-2 text-center text-lg font-bold text-green-600">
+                                  {instAsset.total_qty}
+                                </td>
+                                <td className="border p-2 text-center text-amber-600">
+                                  {instAsset.locations_count || '-'}
+                                </td>
+                              </tr>
+                            );
+                          }
+
+                          // Detailed Mode — safe fallback
+                          if (!instAsset.asset) {
+                            return (
+                              <tr key={index}>
+                                <td colSpan={5} className="text-center text-muted-foreground py-4">
+                                  Loading details...
+                                </td>
+                              </tr>
+                            );
+                          }
+
+                          return (
+                            <tr key={instAsset.id} className="hover:bg-primary/10 dark:hover:bg-gray-700">
+                              <td className="border p-2 text-left font-bold dark:text-gray-100">
+                                {instAsset.asset?.category.name}
+                              </td>
+                              <td className="border p-2 text-left font-bold dark:text-gray-100">
+                                {instAsset.asset?.name}
+                              </td>
+                              <td className="border p-2 text-center font-bold text-lg text-green-600">
+                                {instAsset.current_qty}
+                              </td>
+                              <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">
+                                {instAsset.room ? (
+                                  <>
+                                    {instAsset.room.name}
+                                    {instAsset.room.block && <span className="text-muted-foreground"> ({instAsset.room.block.name})</span>}
+                                  </>
+                                ) : '—'}
+                              </td>
+
+
+                              <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">
+                                {instAsset.added_date ? new Date(instAsset.added_date).toLocaleDateString() : '—'}
+                              </td>
+                            </tr>
+                          );
+                        })
+                      )}
+                    </tbody>
+                  </table>
 
                   {/* Pagination */}
                   {instituteAssets.links?.length > 1 && (

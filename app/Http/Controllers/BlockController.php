@@ -5,6 +5,7 @@ use App\Models\Block;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Models\BlockType;
+use Intervention\Image\Laravel\Facades\Image;
 
 
 class BlockController extends Controller
@@ -67,7 +68,16 @@ $permissions = [
         if ($request->hasFile('img')) {
             $resultImage = $request->file('img');
             $resultImageName = time() . '-' . uniqid() . '.' . $resultImage->getClientOriginalExtension();
-            $resultImage->move('assets/block_img', $resultImageName);
+            
+            $destinationPath = public_path('assets/block_img');
+            if (!file_exists($destinationPath)) {
+                mkdir($destinationPath, 0755, true);
+            }
+
+            Image::read($resultImage->getPathname())
+                ->scale(width: 1280)
+                ->save($destinationPath . '/' . $resultImageName, quality: 60);
+
             $data['img'] = 'block_img/' . $resultImageName;
         } else {
             unset($data['img']);
@@ -99,7 +109,16 @@ $permissions = [
         if ($request->hasFile('img')) {
             $resultImage = $request->file('img');
             $resultImageName = time() . '-' . uniqid() . '.' . $resultImage->getClientOriginalExtension();
-            $resultImage->move('assets/block_img', $resultImageName);
+            
+            $destinationPath = public_path('assets/block_img');
+            if (!file_exists($destinationPath)) {
+                mkdir($destinationPath, 0755, true);
+            }
+
+            Image::read($resultImage->getPathname())
+                ->scale(width: 1280)
+                ->save($destinationPath . '/' . $resultImageName, quality: 60);
+
             $data['img'] = 'block_img/' . $resultImageName;
         } else {
             unset($data['img']);

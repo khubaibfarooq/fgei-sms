@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\Institute;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Intervention\Image\Laravel\Facades\Image;
 
 class InstituteController extends Controller
 {
@@ -88,8 +89,16 @@ class InstituteController extends Controller
             if ($request->hasFile('img_layout')) {
                 $resultImage = $request->file('img_layout');
                 $resultImageName = time() . '-' . uniqid() . '.' . $resultImage->getClientOriginalExtension();
-                // $resultImage->move(public_path('Assets/Uploads/ACR/acr17to18/results'), $resultImageName);
-                $resultImage->move('assets/img_layout', $resultImageName);
+                
+                $destinationPath = public_path('assets/img_layout');
+                if (!file_exists($destinationPath)) {
+                    mkdir($destinationPath, 0755, true);
+                }
+
+                Image::read($resultImage->getPathname())
+                    ->scale(width: 1280)
+                    ->save($destinationPath . '/' . $resultImageName, quality: 60);
+
                  $data['img_layout']='img_layout/'.$resultImageName;
             }  else{
                  unset($data['img_layout']);
@@ -101,10 +110,18 @@ class InstituteController extends Controller
 //         }  
 $resultImageName = null;
         if ($request->hasFile('img_3d')) {
-$resultImage = $request->file('img_3d');
-                $resultImageName = time() . '-' . uniqid() . '.' . $resultImage->getClientOriginalExtension();
-                // $resultImage->move(public_path('Assets/Uploads/ACR/acr17to18/results'), $resultImageName);
-                $resultImage->move('assets/img_3d', $resultImageName);
+            $resultImage = $request->file('img_3d');
+            $resultImageName = time() . '-' . uniqid() . '.' . $resultImage->getClientOriginalExtension();
+            
+            $destinationPath = public_path('assets/img_3d');
+            if (!file_exists($destinationPath)) {
+                mkdir($destinationPath, 0755, true);
+            }
+
+            Image::read($resultImage->getPathname())
+                ->scale(width: 1280)
+                ->save($destinationPath . '/' . $resultImageName, quality: 60);
+
                  $data['img_3d']='img_3d/'.$resultImageName;        } 
                  else {
             unset($data['img_3d']);
@@ -156,16 +173,24 @@ $data['type'] = $type;
             'total_area' => 'required|numeric',
             'convered_area' => 'required|numeric',
             'video' => 'nullable|file',
-            'img_layout' => 'nullable|file|max:1024',
-            'img_3d' => 'nullable|file|max:1024',
+            'img_layout' => 'nullable|file',
+            'img_3d' => 'nullable|file',
         ]);
 
         $resultImageName = null;
             if ($request->hasFile('img_layout')) {
                 $resultImage = $request->file('img_layout');
                 $resultImageName = time() . '-' . uniqid() . '.' . $resultImage->getClientOriginalExtension();
-                // $resultImage->move(public_path('Assets/Uploads/ACR/acr17to18/results'), $resultImageName);
-                $resultImage->move('assets/img_layout', $resultImageName);
+
+                $destinationPath = public_path('assets/img_layout');
+                if (!file_exists($destinationPath)) {
+                    mkdir($destinationPath, 0755, true);
+                }
+
+                Image::read($resultImage->getPathname())
+                    ->scale(width: 1280)
+                    ->save($destinationPath . '/' . $resultImageName, quality: 60);
+
                  $data['img_layout']='img_layout/'.$resultImageName;
             }  else{
                  unset($data['img_layout']);
@@ -177,10 +202,18 @@ $data['type'] = $type;
 //         }  
 $resultImageName = null;
         if ($request->hasFile('img_3d')) {
-$resultImage = $request->file('img_3d');
-                $resultImageName = time() . '-' . uniqid() . '.' . $resultImage->getClientOriginalExtension();
-                // $resultImage->move(public_path('Assets/Uploads/ACR/acr17to18/results'), $resultImageName);
-                $resultImage->move('assets/img_3d', $resultImageName);
+            $resultImage = $request->file('img_3d');
+            $resultImageName = time() . '-' . uniqid() . '.' . $resultImage->getClientOriginalExtension();
+
+            $destinationPath = public_path('assets/img_3d');
+            if (!file_exists($destinationPath)) {
+                mkdir($destinationPath, 0755, true);
+            }
+
+            Image::read($resultImage->getPathname())
+                ->scale(width: 1280)
+                ->save($destinationPath . '/' . $resultImageName, quality: 60);
+
                  $data['img_3d']='img_3d/'.$resultImageName;        } 
                  else {
             unset($data['img_3d']);

@@ -8,6 +8,7 @@ use App\Models\Block;
 
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Intervention\Image\Laravel\Facades\Image;
 
 class RoomController extends Controller
 {
@@ -94,7 +95,16 @@ $roomtypes=RoomType::pluck('name', 'id');
         if ($request->hasFile('img')) {
             $resultImage = $request->file('img');
             $resultImageName = time() . '-' . uniqid() . '.' . $resultImage->getClientOriginalExtension();
-            $resultImage->move('assets/room_img', $resultImageName);
+            
+            $destinationPath = public_path('assets/room_img');
+            if (!file_exists($destinationPath)) {
+                mkdir($destinationPath, 0755, true);
+            }
+
+            Image::read($resultImage->getPathname())
+                ->scale(width: 1280)
+                ->save($destinationPath . '/' . $resultImageName, quality: 60);
+
             $data['img'] = 'room_img/' . $resultImageName;
         } else {
             unset($data['img']);
@@ -135,7 +145,16 @@ $data['institute_id'] = session('sms_inst_id');
         if ($request->hasFile('img')) {
             $resultImage = $request->file('img');
             $resultImageName = time() . '-' . uniqid() . '.' . $resultImage->getClientOriginalExtension();
-            $resultImage->move('assets/room_img', $resultImageName);
+            
+            $destinationPath = public_path('assets/room_img');
+            if (!file_exists($destinationPath)) {
+                mkdir($destinationPath, 0755, true);
+            }
+
+            Image::read($resultImage->getPathname())
+                ->scale(width: 1280)
+                ->save($destinationPath . '/' . $resultImageName, quality: 60);
+
             $data['img'] = 'room_img/' . $resultImageName;
         } else {
             unset($data['img']);

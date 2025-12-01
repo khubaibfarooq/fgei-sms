@@ -18,6 +18,7 @@ class InstituteAssetController extends Controller
     public function index(Request $request)
 {
     $inst_id = session('sms_inst_id');
+$assets=Asset::pluck('name', 'id');
 
     // Start with base query
     $query = InstituteAsset::query()
@@ -45,12 +46,14 @@ class InstituteAssetController extends Controller
         $query->whereHas('asset.category', function ($q) use ($request) {
             $q->where('id', $request->category);
         });
+        $assets=Asset::where('asset_category_id', $request->category)->pluck('name', 'id');
     }
 
     // Handle summary/details mode
     if (!$request->boolean('details')){
   $query->join('assets', 'institute_assets.asset_id', '=', 'assets.id')
               ->select([
+                  'assets.id as asset_id',
                   'assets.name',
                   DB::raw('SUM(institute_assets.current_qty) as total_qty'),
                   DB::raw('COUNT(*) as locations_count') // optional: how many places this asset exists
@@ -59,6 +62,9 @@ class InstituteAssetController extends Controller
               ->orderBy('assets.name');
                  
               
+}
+if($request->filled('asset')){
+    $query->where('asset_id', $request->asset);
 }
     // Paginate
           $instituteAssets = $query->paginate(10)->withQueryString();
@@ -77,14 +83,14 @@ class InstituteAssetController extends Controller
         'can_edit' => auth()->user()->can('inst-assets-edit'),
         'can_delete' => auth()->user()->can('inst-assets-delete'),
     ];
-
     return Inertia::render('institute_assets/Index', [
         'instituteAssets' => $instituteAssets,
-        'filters' => $request->only(['search', 'block', 'room', 'category', 'details']),
+        'filters' => $request->only(['search', 'block', 'room', 'category', 'details','asset']),
         'permissions' => $permissions,
         'rooms' => $rooms,
         'blocks' => $blocks,
         'categories' => $categories,
+        'assets'=>$assets,
     ]);
 }
     public function create()
