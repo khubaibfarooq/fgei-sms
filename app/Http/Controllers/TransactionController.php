@@ -51,7 +51,7 @@ class TransactionController extends Controller
         }
 
         $query = Transaction::where('institute_id', $instituteId)
-            ->with(['institute', 'addedBy', 'approvedBy'])
+            ->with(['institute', 'addedBy', 'approvedBy', 'Type', 'subType'])
             ->select('transactions.*');
 
         // Search
@@ -105,7 +105,7 @@ class TransactionController extends Controller
 
         $transaction = Transaction::where('id', $id)
             ->where('institute_id', $instituteId)
-            ->with(['institute', 'addedBy', 'approvedBy'])
+            ->with(['institute', 'addedBy', 'approvedBy', 'Type', 'subType'])
             ->first();
 
         if (!$transaction) {

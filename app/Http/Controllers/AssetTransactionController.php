@@ -8,8 +8,10 @@ use App\Models\FundHead;
 use App\Models\FundHeld;
 use App\Models\Asset;
 use App\Models\Block;
+use App\Models\Fund;
 use App\Models\Room;
 use App\Models\AssetCategory;
+use App\Models\Type;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
        use Illuminate\Support\Facades\DB;
@@ -32,14 +34,16 @@ class AssetTransactionController extends Controller
         ]);
     }
   public function Transaction(Request $request)
-    {$fundheads=FundHead::get();
+    {$fundheads=FundHead::where('type','institutional')->get();
         $assetCategory=AssetCategory::get();
         $instituteId = session('sms_inst_id');
             $blocks = Block::where('institute_id', $instituteId)->get();
+            $types=Type::where('module', 'Trans')->get();
         return Inertia::render('asset_transactions/AssetTransaction', [
             'fundHeads' => $fundheads,
             'assetCategories' => $assetCategory,
             'blocks' => $blocks,
+            'types' => $types,
         ]);
     }
     public function FundBalance(Request $request){
@@ -104,22 +108,54 @@ public function GetAssets(Request $request)
     public function store(Request $request)
 {
     // -----------------------------------------------------------------
-    // 1. Validation
+    // 1. Get Type Configuration
     // -----------------------------------------------------------------
-    $request->validate([
-        'total_amount' => 'required|numeric|min:0.01',
-        'items'        => 'required|array|min:1',
-        'items.*.fund_head_id' => 'required|exists:fund_heads,id',
-        'items.*.block_id'     => 'required|exists:blocks,id',
-        'items.*.room_id'      => 'required|exists:rooms,id',
-        'items.*.asset_id'     => 'required|exists:assets,id',
-        'items.*.purchase_qty' => 'required|integer|min:1',
-        'items.*.amount'       => 'required|numeric|min:0.01',
-        'bill_img'             => 'nullable|file|max:2048', // 2MB
-    ]);
+    $typeId = $request->sub_type ?? $request->type;
+    $typeConfig = Type::find($typeId);
+    
+    if (!$typeConfig) {
+        return back()->withErrors(['type' => 'Invalid type selected']);
+    }
 
     // -----------------------------------------------------------------
-    // 2. DB Transaction
+    // 2. Build Validation Rules
+    // -----------------------------------------------------------------
+    $rules = [
+        'total_amount' => 'required|numeric|min:0.01',
+        'type'         => 'required|exists:types,id',
+        'sub_type'     => 'nullable',
+        'description'  => 'nullable|string|max:1000',
+        'items'        => 'required|array|min:1',
+        'items.*.fund_head_id' => 'required|exists:fund_heads,id',
+        'items.*.amount'       => 'required|numeric|min:0.01',
+        'bill_img'             => 'nullable|file|max:2048', // 2MB
+    ];
+
+    // Conditionally add validation rules based on type configuration
+    if ($typeConfig->isblock) {
+        $rules['items.*.block_id'] = 'required|exists:blocks,id';
+    } else {
+        $rules['items.*.block_id'] = 'nullable|exists:blocks,id';
+    }
+
+    if ($typeConfig->isroom) {
+        $rules['items.*.room_id'] = 'required|exists:rooms,id';
+    } else {
+        $rules['items.*.room_id'] = 'nullable|exists:rooms,id';
+    }
+
+    if ($typeConfig->isasset) {
+        $rules['items.*.asset_id'] = 'required|exists:assets,id';
+        $rules['items.*.purchase_qty'] = 'required|integer|min:1';
+    } else {
+        $rules['items.*.asset_id'] = 'nullable|exists:assets,id';
+        $rules['items.*.purchase_qty'] = 'nullable|integer|min:0';
+    }
+
+    $request->validate($rules);
+
+    // -----------------------------------------------------------------
+    // 3. DB Transaction
     // -----------------------------------------------------------------
     return DB::transaction(function () use ($request) {
         // --- Upload Bill Image ---
@@ -138,6 +174,8 @@ public function GetAssets(Request $request)
             'added_by'     => auth()->id(),
             'total_amount' => $request->total_amount,
             'type'         => $request->type,
+            'sub_type'     => $request->sub_type,
+            'description'  => $request->description,
             'status'       => 'pending',
             'bill_img'     => $billImgPath,
         ]);
@@ -147,17 +185,17 @@ public function GetAssets(Request $request)
             return [
                 'tid'          => $transaction->id,
                 'fund_head_id' => $item['fund_head_id'],
-                'asset_id'     => $item['asset_id'],
-                'room_id'      => $item['room_id'],
+                'asset_id'     => $item['asset_id'] ?? null,
+                'room_id'      => $item['room_id'] ?? null,
                 'amount'       => $item['amount'],
-                'qty'          => $item['purchase_qty'],
+                'qty'          => $item['purchase_qty'] ?? null,
                 'created_at'   => now(),
                 'updated_at'   => now(),
             ];
         })->toArray();
 
         TransactionDetail::insert($details);
-
+$this->ApproveTransaction($transaction->id);
         // --- Flash Success ---
         return redirect()
             ->back()
@@ -190,4 +228,125 @@ public function GetAssets(Request $request)
         $assetTransaction->delete();
         return redirect()->back()->with('success', 'Asset transaction deleted successfully.');
     }
+    public function ApproveTransaction($tid)
+{
+   
+
+    return DB::transaction(function () use ($tid) {
+        $transaction = Transaction::with(['Type', 'subType'])->find($tid);
+
+        if (!$transaction) {
+            throw new \Exception('Transaction not found.');
+        }
+
+        $transdetails = TransactionDetail::where('tid', $tid)->get();
+
+        foreach ($transdetails as $detail) {
+            $asset = $detail->asset_id;
+            $assetname = $asset ? Asset::find($asset)->name : null;
+            $quantity = $detail->qty;
+            $institute_id = $transaction->institute_id;
+            $room = $detail->room_id;
+            $fundhead = $detail->fund_head_id;
+            $type = $transaction->Type?->name;
+            $subType = $transaction->subType?->name;
+
+            // Update InstituteAsset stock
+            if ($type == 'purchase') {
+                $instituteAsset = InstituteAsset::where('institute_id', $institute_id)
+                    ->where('asset_id', $asset)
+                    ->where('room_id', $room)
+                    ->first();
+
+                if ($instituteAsset) {
+                    // Asset exists in the room, update quantity
+                    $instituteAsset->current_qty += $quantity;
+                    $instituteAsset->save();
+                } else {
+                    // Asset does not exist in the room, create new record
+                    InstituteAsset::create([
+                        'institute_id' => $institute_id,
+                        'asset_id'     => $asset,
+                        'room_id'      => $room,
+                        'current_qty'  => $quantity,
+                        'added_date'   => now(),
+                        'details'      => $assetname,
+                        'added_by'=> auth()->user()->id,
+                    ]);
+                }
+
+                // Update fund held (deduct for purchase)
+                $fundHeld = FundHeld::where('institute_id', $institute_id)
+                    ->where('fund_head_id', $fundhead)
+                    ->first();
+
+                if ($fundHeld) {
+                    $fundHeld->balance -= $detail->amount;
+                    $fundHeld->save();
+                }
+            }
+            elseif ($type == 'condemned') {
+                $instituteAsset = InstituteAsset::where('institute_id', $institute_id)
+                    ->where('asset_id', $asset)
+                    ->where('room_id', $room)
+                    ->first();
+
+                if ($instituteAsset) {
+                    // Reduce quantity
+                    $instituteAsset->current_qty -= $quantity;
+                    if ($instituteAsset->current_qty < 0) {
+                        $instituteAsset->current_qty = 0; // Prevent negative stock
+                    }
+                    $instituteAsset->save();
+                }
+
+                // Update fund held (add back for condemned)
+                $fundHeld = FundHeld::where('institute_id', $institute_id)
+                    ->where('fund_head_id', $fundhead)
+                    ->first();
+
+                if ($fundHeld) {
+                    $fundHeld->balance += $detail->amount;
+                    $fundHeld->save();
+                } else {
+                    FundHeld::create([
+                        'institute_id'  => $institute_id,
+                        'fund_head_id'  => $fundhead,
+                        'balance'       => $detail->amount, // assuming 'balance' is the column
+                    ]);
+                }
+            }else if($type == 'expense'){
+                   $fundHeld = FundHeld::where('institute_id', $institute_id)
+                    ->where('fund_head_id', $fundhead)
+                    ->first();
+
+                if ($fundHeld) {
+                    $fundHeld->balance -= $detail->amount;
+                    $fundHeld->save();
+                } 
+                }
+            
+            // Record in Fund table
+            Fund::create([
+                'institute_id'  => $institute_id,
+                'fund_head_id'  => $fundhead,
+                'amount'        => $detail->amount,
+                'added_date'    => now(),
+                'description'   => 'TID ' . $tid . ' - ' . ucfirst($type) . ' of ' . $assetname .' Qty: '.$quantity .' Room: '.$room   ,
+                'type'          => in_array($type, ['purchase', 'maintenance']) ? 'out' : 'in',
+                'added_by'      => auth()->user()->id,
+                'status'        => 'Approved',
+                'tid'=>$tid,
+            ]);
+        }
+
+        // Update transaction status
+        $transaction->status = 'approved';
+        $transaction->approved_by = auth()->user()->id;
+        $transaction->save();
+
+        return response()->json(['message' => 'Transaction approved successfully.'], 200);
+    });
+
+}
 }

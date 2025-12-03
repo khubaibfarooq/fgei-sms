@@ -47,17 +47,17 @@ class FundsController extends Controller
     public function getFund(Request $request)
     {
         // ---- Find FundHeld -------------------------------------------------
-        $fundheld = FundHeld::with('institute', 'fundHead')->find($request->id);
+        $fundheld = FundHeld::with('institute', 'fundHead')->where('fund_head_id', $request->id)->first();
 
         if (!$fundheld) {
             return response()->json(['error' => 'Fund held record not found'], 404);
         }
-
+$institute_id=session('sms_inst_id');
         // ---- Build transaction query --------------------------------------
         $query = Fund::with(['institute', 'FundHead', 'user'])
-            ->where('institute_id', $fundheld->institute_id)
-            ->where('fund_head_id', $fundheld->fund_head_id);
-
+            ->where('institute_id', $institute_id)
+            ->where('fund_head_id', $request->id);
+  
         // Search
         if ($request->filled('search')) {
             $query->where('description', 'like', '%' . $request->search . '%');

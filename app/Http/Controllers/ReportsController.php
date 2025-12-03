@@ -5,6 +5,7 @@ use App\Models\Block;
 use App\Models\BlockType;
 use App\Models\RoomType;
 use App\Models\Shift;
+use App\Models\Type;
 
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -1019,10 +1020,13 @@ $regions = Institute::select('region_id as id', 'name')->where('type', 'Regional
     // -----------------------------------------------------------------
     // 3. Return to Inertia with all needed props
     // -----------------------------------------------------------------
+    $types = Type::select('id', 'name')->whereNull('parent_id')->get();
+
     return Inertia::render('Reports/Transactions', [
         'institutes' => $institutes,
         'regions'    => $regions,
         'users'      => $users,
+        'types'      => $types,
 
         'transactions' => $emptyPaginator,
 
@@ -1128,7 +1132,7 @@ public function ApproveTransaction(Request $request)
     $tid = $request->tid;
 
     return DB::transaction(function () use ($tid) {
-        $transaction = Transaction::find($tid);
+        $transaction = Transaction::with(['Type', 'subType'])->find($tid);
 
         if (!$transaction) {
             throw new \Exception('Transaction not found.');
@@ -1138,12 +1142,13 @@ public function ApproveTransaction(Request $request)
 
         foreach ($transdetails as $detail) {
             $asset = $detail->asset_id;
-            $assetname = Asset::find($asset)->name;
+            $assetname = $asset ? Asset::find($asset)->name : null;
             $quantity = $detail->qty;
             $institute_id = $transaction->institute_id;
             $room = $detail->room_id;
             $fundhead = $detail->fund_head_id;
-            $type = $transaction->type;
+            $type = $transaction->Type?->name;
+            $subType = $transaction->subType?->name;
 
             // Update InstituteAsset stock
             if ($type == 'purchase') {
@@ -1209,8 +1214,17 @@ public function ApproveTransaction(Request $request)
                         'balance'       => $detail->amount, // assuming 'balance' is the column
                     ]);
                 }
-            }
+            }else if($type == 'expense'){
+                   $fundHeld = FundHeld::where('institute_id', $institute_id)
+                    ->where('fund_head_id', $fundhead)
+                    ->first();
 
+                if ($fundHeld) {
+                    $fundHeld->balance -= $detail->amount;
+                    $fundHeld->save();
+                } 
+                }
+            
             // Record in Fund table
             Fund::create([
                 'institute_id'  => $institute_id,
@@ -1240,7 +1254,7 @@ public function getTransactions(Request $request)
     $regionId      = session('region_id');
     $userType      = session('type');
 
-    $query = Transaction::with(['institute', 'addedBy', 'approvedBy'])
+    $query = Transaction::with(['institute', 'addedBy', 'approvedBy', 'Type', 'subType'])
         ->select('transactions.*');
 
     // -----------------------------------------------------------------

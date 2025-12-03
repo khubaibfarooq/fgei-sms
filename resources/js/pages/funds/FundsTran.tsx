@@ -114,7 +114,7 @@ export default function FundsTran({ fundheld, fundtrans, filters }: Props) {
   const [search, setSearch] = useState(filters.search || '');
   const [fromDate, setFromDate] = useState(filters.from || '');
   const [toDate, setToDate] = useState(filters.to || '');
-
+  console.log(fundtrans);
   // Modal state
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedTx, setSelectedTx] = useState<FundTransaction | null>(null);

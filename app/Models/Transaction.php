@@ -16,7 +16,9 @@ class Transaction extends Model
         'added_by',
         'total_amount',
         'type',
+        'sub_type',
         'status',
+        'description',
         'bill_img',
         'approved_by',
     ];
@@ -32,6 +34,16 @@ class Transaction extends Model
     public function institute(): BelongsTo
     {
         return $this->belongsTo(Institute::class);
+    }
+    
+    public function Type(): BelongsTo
+    {
+        return $this->belongsTo(Type::class,'type','id');
+    }
+    
+    public function subType(): BelongsTo
+    {
+        return $this->belongsTo(Type::class,'sub_type','id');
     }
 
     public function addedBy(): BelongsTo

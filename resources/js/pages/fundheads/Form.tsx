@@ -20,31 +20,31 @@ interface FundHeadFormProps {
     id: number;
     name: string;
     type: string;
-    parent_id?:string;
+    parent_id?: string;
   };
-  fundHeads?:Record<string, string>;
+  fundHeads?: Record<string, string>;
 }
 
-export default function FundHeadForm({ fundHead,fundHeads }: FundHeadFormProps) {
+export default function FundHeadForm({ fundHead, fundHeads }: FundHeadFormProps) {
   const isEdit = !!fundHead;
 
   const { data, setData, processing, errors, reset } = useForm<{
     name: string;
     type: string;
-    parent_id:string;
+    parent_id: string;
   }>({
     name: fundHead?.name || '',
-      parent_id: fundHead?.parent_id || '',
+    parent_id: fundHead?.parent_id || '',
     type: fundHead?.type || 'public',
   });
- const fundHeadsArray = React.useMemo(() => {
+  const fundHeadsArray = React.useMemo(() => {
     if (!fundHeads) return [];
-    
+
     // If blockTypes is already an array, use it directly
     if (Array.isArray(fundHeads)) {
       return fundHeads;
     }
-    
+
     // Convert object { "1": "Administration", "2": "Academic" } to array format
     return Object.entries(fundHeads).map(([id, name]) => ({
       id: parseInt(id),
@@ -53,13 +53,13 @@ export default function FundHeadForm({ fundHead,fundHeads }: FundHeadFormProps) 
   }, [fundHeads]);
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (isEdit) {
       router.put(`/fund-heads/${fundHead.id}`, data, {
         preserveScroll: true,
         preserveState: true,
-          onSuccess: () => {
-        router.get('/fund-heads');
+        onSuccess: () => {
+          router.get('/fund-heads');
         },
       });
     } else {
@@ -103,23 +103,23 @@ export default function FundHeadForm({ fundHead,fundHeads }: FundHeadFormProps) 
                   onChange={(e) => setData('name', e.target.value)}
                   placeholder="Enter Fund head name"
                 />
-                 <Label htmlFor="parent_id">Parent Fund Head</Label>
-                  <Select
-                    value={data.parent_id.toString()}
-                    onValueChange={(value) => setData('parent_id', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Parent Fund Head" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {fundHeadsArray.map((head) => (
-                        <SelectItem key={head.id} value={head.id.toString()}>
-                          {head.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-          
+                <Label htmlFor="parent_id">Parent Fund Head</Label>
+                <Select
+                  value={data.parent_id.toString()}
+                  onValueChange={(value) => setData('parent_id', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Parent Fund Head" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {fundHeadsArray.map((head) => (
+                      <SelectItem key={head.id} value={head.id.toString()}>
+                        {head.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
                 <Label htmlFor="type">Type</Label>
                 <select
                   id="type"
@@ -129,7 +129,8 @@ export default function FundHeadForm({ fundHead,fundHeads }: FundHeadFormProps) 
                 >
                   <option value="public">Public</option>
                   <option value="institutional">Institutional</option>
-                                    <option value="regional">Regional</option>
+                  <option value="regional">Regional</option>
+                  <option value="dte">Dte</option>
 
                 </select>
               </div>
@@ -147,8 +148,8 @@ export default function FundHeadForm({ fundHead,fundHeads }: FundHeadFormProps) 
                       ? 'Saving...'
                       : 'Adding...'
                     : isEdit
-                    ? 'Save Changes'
-                    : 'Add Fund Head'}
+                      ? 'Save Changes'
+                      : 'Add Fund Head'}
                 </Button>
               </div>
             </form>

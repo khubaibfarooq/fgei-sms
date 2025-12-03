@@ -39,6 +39,8 @@ use App\Http\Controllers\FundHeldController;
 use App\Http\Controllers\ProjectTypeController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\DonationTypeController;
+use App\Http\Controllers\TypeController;
+
 use App\Http\Controllers\DonationController;
 use App\Http\Controllers\HelpDeskController;
 Route::get('/', function () {
@@ -93,6 +95,7 @@ Route::middleware(['auth', 'menu.permission'])->group(function () {
     Route::post('/files', [UserFileController::class, 'store'])->name('files.store');
     Route::delete('/files/{id}', [UserFileController::class, 'destroy'])->name('files.destroy');
     Route::resource('media', MediaFolderController::class);
+    Route::resource('types', TypeController::class);
 
 
     Route::resource('institutes', InstituteController::class);

@@ -33,7 +33,9 @@ const breadcrumbs: BreadcrumbItem[] = [
 interface TransactionProp {
   id: number;
   total_amount: number;
-  type: 'income' | 'expense';
+  type?: { id: number; name?: string };
+  sub_type?: { id: number; name?: string };
+  description?: string;
   status: 'pending' | 'approved' | 'rejected';
   bill_img?: string;
   created_at: string;
@@ -97,7 +99,7 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boole
 
 export default function Transaction({
   transactions: initialTransactions,
-  
+
   filters,
 }: Props) {
   const [search, setSearch] = useState(filters.search || '');
@@ -119,7 +121,7 @@ export default function Transaction({
   // Memoized options
 
 
-  
+
 
 
   // Export to Excel
@@ -130,7 +132,9 @@ export default function Transaction({
     worksheet.columns = [
       { header: 'ID', key: 'id', width: 10 },
       { header: 'Amount', key: 'amount', width: 15 },
-      { header: 'Type', key: 'type', width: 12 },
+      { header: 'Type', key: 'type', width: 20 },
+      { header: 'Sub Type', key: 'sub_type', width: 20 },
+      { header: 'Description', key: 'description', width: 30 },
       { header: 'Status', key: 'status', width: 12 },
       { header: 'Institute', key: 'institute', width: 30 },
       { header: 'Added By', key: 'added_by', width: 25 },
@@ -142,7 +146,9 @@ export default function Transaction({
       worksheet.addRow({
         id: t.id,
         amount: `${parseFloat(t.total_amount.toString()).toFixed(2)}`,
-        type: t.type.charAt(0).toUpperCase() + t.type.slice(1),
+        type: t.type?.name ? t.type.name.charAt(0).toUpperCase() + t.type.name.slice(1) : 'N/A',
+        sub_type: t.sub_type?.name ? t.sub_type.name.charAt(0).toUpperCase() + t.sub_type.name.slice(1) : 'N/A',
+        description: t.description || 'N/A',
         status: t.status.charAt(0).toUpperCase() + t.status.slice(1),
         institute: t.institute?.name || 'N/A',
         added_by: t.added_by?.name || 'N/A',
@@ -162,11 +168,13 @@ export default function Transaction({
     doc.setFontSize(16);
     doc.text('Transactions Report', 14, 15);
 
-    const headers = ['ID', 'Amount', 'Type', 'Status', 'Institute', 'Added By', 'Approved By', 'Date'];
+    const headers = ['ID', 'Amount', 'Type', 'Sub Type', 'Description', 'Status', 'Institute', 'Added By', 'Approved By', 'Date'];
     const rows = transactions.data.map((t) => [
       t.id.toString(),
       `${parseFloat(t.total_amount.toString()).toFixed(2)}`,
-      t.type.charAt(0).toUpperCase() + t.type.slice(1),
+      t.type?.name ? t.type.name.charAt(0).toUpperCase() + t.type.name.slice(1) : 'N/A',
+      t.sub_type?.name ? t.sub_type.name.charAt(0).toUpperCase() + t.sub_type.name.slice(1) : 'N/A',
+      t.description || 'N/A',
       t.status.charAt(0).toUpperCase() + t.status.slice(1),
       t.institute?.name || 'N/A',
       t.added_by?.name || 'N/A',
@@ -192,19 +200,19 @@ export default function Transaction({
       debounce(() => {
         const params = new URLSearchParams({
           search: search.trim(),
-     
+
           type: type || '',
           status: status || '',
           date_from: dateFrom || '',
           date_to: dateTo || '',
         });
 
-  fetch(`/transactions/gettransactions?${params.toString()}`, {
-  headers: {
-    'X-Requested-With': 'XMLHttpRequest',
-    'Accept': 'application/json',
-  }
-})
+        fetch(`/transactions/gettransactions?${params.toString()}`, {
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json',
+          }
+        })
           .then((res) => {
             if (!res.ok) throw new Error('Network error');
             return res.json();
@@ -220,13 +228,13 @@ export default function Transaction({
     [search, , type, status, dateFrom, dateTo]
   );
 
-  
+
 
   // Fetch transaction details for modal
   const fetchTransactionDetails = async (tid: number) => {
     setModalLoading(true);
     try {
-const res = await fetch(`/transactions/getbytid?tid=${tid}`);
+      const res = await fetch(`/transactions/getbytid?tid=${tid}`);
       if (!res.ok) throw new Error('Failed to load details');
       const { transaction, transdetails } = await res.json();
 
@@ -249,10 +257,12 @@ const res = await fetch(`/transactions/getbytid?tid=${tid}`);
     doc.text(`Transaction #${tx.id}`, 14, 15);
 
     const basicRows = [
-            ['Institute', tx.institute?.name || 'N/A'],
+      ['Institute', tx.institute?.name || 'N/A'],
 
       ['Amount', `RS ${parseFloat(tx.total_amount.toString()).toFixed(2)}`],
-      ['Type', tx.type.charAt(0).toUpperCase() + tx.type.slice(1)],
+      ['Type', tx.type?.name ? tx.type.name.charAt(0).toUpperCase() + tx.type.name.slice(1) : 'N/A'],
+      ['Sub Type', tx.sub_type?.name ? tx.sub_type.name.charAt(0).toUpperCase() + tx.sub_type.name.slice(1) : 'N/A'],
+      ['Description', tx.description || 'N/A'],
       ['Status', tx.status.charAt(0).toUpperCase() + tx.status.slice(1)],
       ['Added By', tx.added_by?.name || 'N/A'],
       ['Approved By', tx.approved_by?.name || 'N/A'],
@@ -318,9 +328,9 @@ const res = await fetch(`/transactions/getbytid?tid=${tid}`);
                     onChange={(e) => setSearch(e.target.value)}
                   />
 
-               
 
-                  
+
+
 
                   <Select value={type} onValueChange={setType}>
                     <SelectTrigger>
@@ -396,16 +406,18 @@ const res = await fetch(`/transactions/getbytid?tid=${tid}`);
                           <th className="border p-2 font-medium">ID</th>
                           <th className="border p-2 font-medium">Amount</th>
                           <th className="border p-2 font-medium">Type</th>
+                          <th className="border p-2 font-medium">Sub Type</th>
                           <th className="border p-2 font-medium">Status</th>
                           <th className="border p-2 font-medium">Added By</th>
                           <th className="border p-2 font-medium">Approved By</th>
                           <th className="border p-2 font-medium">Date</th>
+                          <th className="border p-2 font-medium">Actions</th>
                         </tr>
                       </thead>
                       <tbody>
                         {transactions.data.length === 0 ? (
                           <tr>
-                            <td colSpan={9} className="text-center p-4 text-muted-foreground">
+                            <td colSpan={10} className="text-center p-4 text-muted-foreground">
                               No transactions found.
                             </td>
                           </tr>
@@ -418,24 +430,26 @@ const res = await fetch(`/transactions/getbytid?tid=${tid}`);
                               </td>
                               <td className="border p-2">
                                 <span
-                                  className={`px-2 py-1 rounded text-xs font-medium ${
-                                    tx.type === 'income'
-                                      ? 'bg-green-100 text-green-800'
-                                      : 'bg-red-100 text-red-800'
-                                  }`}
+                                  className="px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800"
                                 >
-                                  {tx.type.charAt(0).toUpperCase() + tx.type.slice(1)}
+                                  {tx.type?.name ? tx.type.name.charAt(0).toUpperCase() + tx.type.name.slice(1) : 'N/A'}
                                 </span>
                               </td>
                               <td className="border p-2">
                                 <span
-                                  className={`px-2 py-1 rounded text-xs font-medium flex items-center justify-center gap-1 ${
-                                    tx.status === 'approved'
-                                      ? 'bg-green-100 text-green-800'
-                                      : tx.status === 'rejected'
+                                  className="px-2 py-1 rounded text-xs font-medium bg-purple-100 text-purple-800"
+                                >
+                                  {tx.sub_type?.name ? tx.sub_type.name.charAt(0).toUpperCase() + tx.sub_type.name.slice(1) : 'N/A'}
+                                </span>
+                              </td>
+                              <td className="border p-2">
+                                <span
+                                  className={`px-2 py-1 rounded text-xs font-medium flex items-center justify-center gap-1 ${tx.status === 'approved'
+                                    ? 'bg-green-100 text-green-800'
+                                    : tx.status === 'rejected'
                                       ? 'bg-red-100 text-red-800'
                                       : 'bg-yellow-100 text-yellow-800'
-                                  }`}
+                                    }`}
                                 >
                                   {tx.status === 'approved' && <CheckCircle className="w-3 h-3" />}
                                   {tx.status === 'rejected' && <XCircle className="w-3 h-3" />}
@@ -482,20 +496,27 @@ const res = await fetch(`/transactions/getbytid?tid=${tid}`);
                           <FileText className="w-5 h-5" />
                           Transaction #{selectedTx?.id}
                         </DialogTitle>
-           
-                  
+
+
                       </DialogHeader>
 
                       {selectedTx && (
                         <div className="mt-4 space-y-6">
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                             <div><span className="font-medium">Amount:</span> RS {parseFloat(selectedTx.total_amount.toString()).toFixed(2)}</div>
-                            <div><span className="font-medium">Type:</span> {selectedTx.type.charAt(0).toUpperCase() + selectedTx.type.slice(1)}</div>
+                            <div><span className="font-medium">Type:</span> {selectedTx.type?.name ? selectedTx.type.name.charAt(0).toUpperCase() + selectedTx.type.name.slice(1) : 'N/A'}</div>
+                            <div><span className="font-medium">Sub Type:</span> {selectedTx.sub_type?.name ? selectedTx.sub_type.name.charAt(0).toUpperCase() + selectedTx.sub_type.name.slice(1) : 'N/A'}</div>
                             <div><span className="font-medium">Status:</span> {selectedTx.status.charAt(0).toUpperCase() + selectedTx.status.slice(1)}</div>
                             <div><span className="font-medium">Institute:</span> {selectedTx.institute?.name || 'N/A'}</div>
                             <div><span className="font-medium">Added By:</span> {selectedTx.added_by?.name || 'N/A'}</div>
                             <div><span className="font-medium">Approved By:</span> {selectedTx.approved_by?.name || 'N/A'}</div>
                             <div className="col-span-2"><span className="font-medium">Date:</span> {formatDate(selectedTx.created_at)}</div>
+                            {selectedTx.description && (
+                              <div className="col-span-2">
+                                <span className="font-medium">Description:</span>
+                                <p className="mt-1 text-muted-foreground">{selectedTx.description}</p>
+                              </div>
+                            )}
                           </div>
 
                           <Separator />

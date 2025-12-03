@@ -33,7 +33,8 @@ const breadcrumbs: BreadcrumbItem[] = [
 interface TransactionProp {
   id: number;
   total_amount: number;
-  type: 'income' | 'expense';
+  type?: { id: number; name: string };
+  sub_type?: { id: number; name: string };
   status: 'pending' | 'approved' | 'rejected';
   bill_img?: string;
   created_at: string;
@@ -57,6 +58,7 @@ interface Props {
   institutes: Item[];
   regions: Item[];
   users: Item[];
+  types: Item[];
   filters: {
     search: string;
     institute_id?: string;
@@ -106,6 +108,7 @@ export default function Transaction({
   institutes: initialInstitutes,
   regions,
   users,
+  types,
   filters,
   user_type,
 }: Props) {
@@ -194,7 +197,8 @@ export default function Transaction({
     worksheet.columns = [
       { header: 'ID', key: 'id', width: 10 },
       { header: 'Amount', key: 'amount', width: 15 },
-      { header: 'Type', key: 'type', width: 12 },
+      { header: 'Type', key: 'type', width: 15 },
+      { header: 'Sub Type', key: 'sub_type', width: 15 },
       { header: 'Status', key: 'status', width: 12 },
       { header: 'Institute', key: 'institute', width: 30 },
       { header: 'Added By', key: 'added_by', width: 25 },
@@ -206,7 +210,8 @@ export default function Transaction({
       worksheet.addRow({
         id: t.id,
         amount: `$${parseFloat(t.total_amount.toString()).toFixed(2)}`,
-        type: t.type.charAt(0).toUpperCase() + t.type.slice(1),
+        type: t.type?.name ? t.type.name.charAt(0).toUpperCase() + t.type.name.slice(1) : 'N/A',
+        sub_type: t.sub_type?.name ? t.sub_type.name.charAt(0).toUpperCase() + t.sub_type.name.slice(1) : 'N/A',
         status: t.status.charAt(0).toUpperCase() + t.status.slice(1),
         institute: t.institute?.name || 'N/A',
         added_by: t.added_by?.name || 'N/A',
@@ -226,11 +231,12 @@ export default function Transaction({
     doc.setFontSize(16);
     doc.text('Transactions Report', 14, 15);
 
-    const headers = ['ID', 'Amount', 'Type', 'Status', 'Institute', 'Added By', 'Approved By', 'Date'];
+    const headers = ['ID', 'Amount', 'Type', 'Sub Type', 'Status', 'Institute', 'Added By', 'Approved By', 'Date'];
     const rows = transactions.data.map((t) => [
       t.id.toString(),
       `$${parseFloat(t.total_amount.toString()).toFixed(2)}`,
-      t.type.charAt(0).toUpperCase() + t.type.slice(1),
+      t.type?.name ? t.type.name.charAt(0).toUpperCase() + t.type.name.slice(1) : 'N/A',
+      t.sub_type?.name ? t.sub_type.name.charAt(0).toUpperCase() + t.sub_type.name.slice(1) : 'N/A',
       t.status.charAt(0).toUpperCase() + t.status.slice(1),
       t.institute?.name || 'N/A',
       t.added_by?.name || 'N/A',
@@ -311,7 +317,8 @@ export default function Transaction({
 
     const basicRows = [
       ['Amount', `RS ${parseFloat(tx.total_amount.toString()).toFixed(2)}`],
-      ['Type', tx.type.charAt(0).toUpperCase() + tx.type.slice(1)],
+      ['Type', tx.type?.name ? tx.type.name.charAt(0).toUpperCase() + tx.type.name.slice(1) : 'N/A'],
+      ['Sub Type', tx.sub_type?.name ? tx.sub_type.name.charAt(0).toUpperCase() + tx.sub_type.name.slice(1) : 'N/A'],
       ['Status', tx.status.charAt(0).toUpperCase() + tx.status.slice(1)],
       ['Institute', tx.institute?.name || 'N/A'],
       ['Added By', tx.added_by?.name || 'N/A'],
@@ -426,9 +433,11 @@ export default function Transaction({
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="0">All Types</SelectItem>
-                      <SelectItem value="purchase">Purchase</SelectItem>
-                      <SelectItem value="maintenance">Maintenance</SelectItem>
-                      <SelectItem value="condemned">Condemned</SelectItem>
+                      {types.map((t) => (
+                        <SelectItem key={t.id} value={t.id.toString()}>
+                          {t.name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
 
@@ -496,6 +505,7 @@ export default function Transaction({
 
                           <th className="border p-2 font-medium">Amount</th>
                           <th className="border p-2 font-medium">Type</th>
+                          <th className="border p-2 font-medium">Sub Type</th>
                           <th className="border p-2 font-medium">Status</th>
                           <th className="border p-2 font-medium">Added By</th>
                           <th className="border p-2 font-medium">Approved By</th>
@@ -520,22 +530,22 @@ export default function Transaction({
                                 {parseFloat(tx.total_amount.toString()).toFixed(2)}
                               </td>
                               <td className="border p-2">
-                                <span
-                                  className={`px-2 py-1 rounded text-xs font-medium ${tx.type === 'income'
-                                      ? 'bg-green-100 text-green-800'
-                                      : 'bg-red-100 text-red-800'
-                                    }`}
-                                >
-                                  {tx.type.charAt(0).toUpperCase() + tx.type.slice(1)}
+                                <span className="px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                                  {tx.type?.name ? tx.type.name.charAt(0).toUpperCase() + tx.type.name.slice(1) : 'N/A'}
+                                </span>
+                              </td>
+                              <td className="border p-2">
+                                <span className="px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-800">
+                                  {tx.sub_type?.name ? tx.sub_type.name.charAt(0).toUpperCase() + tx.sub_type.name.slice(1) : 'N/A'}
                                 </span>
                               </td>
                               <td className="border p-2">
                                 <span
                                   className={`px-2 py-1 rounded text-xs font-medium flex items-center justify-center gap-1 ${tx.status === 'approved'
-                                      ? 'bg-green-100 text-green-800'
-                                      : tx.status === 'rejected'
-                                        ? 'bg-red-100 text-red-800'
-                                        : 'bg-yellow-100 text-yellow-800'
+                                    ? 'bg-green-100 text-green-800'
+                                    : tx.status === 'rejected'
+                                      ? 'bg-red-100 text-red-800'
+                                      : 'bg-yellow-100 text-yellow-800'
                                     }`}
                                 >
                                   {tx.status === 'approved' && <CheckCircle className="w-3 h-3" />}
@@ -625,7 +635,8 @@ export default function Transaction({
                         <div className="mt-4 space-y-6">
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                             <div><span className="font-medium">Amount:</span> RS {parseFloat(selectedTx.total_amount.toString()).toFixed(2)}</div>
-                            <div><span className="font-medium">Type:</span> {selectedTx.type.charAt(0).toUpperCase() + selectedTx.type.slice(1)}</div>
+                            <div><span className="font-medium">Type:</span> {selectedTx.type?.name ? selectedTx.type.name.charAt(0).toUpperCase() + selectedTx.type.name.slice(1) : 'N/A'}</div>
+                            <div><span className="font-medium">Sub Type:</span> {selectedTx.sub_type?.name ? selectedTx.sub_type.name.charAt(0).toUpperCase() + selectedTx.sub_type.name.slice(1) : 'N/A'}</div>
                             <div><span className="font-medium">Status:</span> {selectedTx.status.charAt(0).toUpperCase() + selectedTx.status.slice(1)}</div>
                             <div><span className="font-medium">Institute:</span> {selectedTx.institute?.name || 'N/A'}</div>
                             <div><span className="font-medium">Added By:</span> {selectedTx.added_by?.name || 'N/A'}</div>
