@@ -203,6 +203,7 @@ Route::get('/reports/funds', [ReportsController::class, 'Funds'])->name('reports
 //helpdesk
 Route::put('/helpdesk/{helpDesk}', [HelpDeskController::class, 'update'])->name('helpdesk.update');
 Route::get('/helpdesk', [HelpDeskController::class, 'index'])->name('helpdesk.index');
+Route::get('/reports/fundstrans', [ReportsController::class, 'getFund'])->name('reports.fundstrans');
 Route::post('/helpdesk', [HelpDeskController::class, 'store'])->name('helpdesk.store');
 
 });

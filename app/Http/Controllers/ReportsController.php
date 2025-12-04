@@ -1965,6 +1965,49 @@ private function getBalancesForSingleFundHeadSuperAdmin($request, $fundhead)
         ]
     ])->values();
 }
+public function getFund(Request $request)
+    {  if(!auth()->user()->can('reports-fundstrans')){
+            abort(403);
+        }
+        $fundheadid =$request->fund_head_id;
+        $hrInstituteId = $request->institute_id;
+        // ---- Find FundHeld -------------------------------------------------
+        $fundheld = FundHeld::with('institute', 'fundHead')->where('fund_head_id', $fundheadid)->first();
+
+        if (!$fundheld) {
+            return response()->json(['error' => 'Fund held record not found'], 404);
+        }
+
+        // ---- Build transaction query --------------------------------------
+        $query = Fund::with(['institute', 'FundHead', 'user'])
+            ->where('institute_id', $hrInstituteId)
+            ->where('fund_head_id', $fundheadid);
+  
+        // Search
+        if ($request->filled('search')) {
+            $query->where('description', 'like', '%' . $request->search . '%');
+        }
+
+        // Date range: from / to (ISO date strings from <input type="date">)
+        if ($request->filled('from')) {
+            $query->whereDate('added_date', '>=', $request->from);
+        }
+        if ($request->filled('to')) {
+            $query->whereDate('added_date', '<=', $request->to);
+        }
+
+        // Order + pagination
+        $fundtrans = $query->orderBy('added_date', 'desc')
+            ->paginate(10)
+            ->withQueryString();
+
+        // ---- Return Inertia page -------------------------------------------
+        return Inertia::render('Reports/FundsTran', [
+            'fundheld'  => $fundheld,
+            'fundtrans' => $fundtrans,
+            'filters'   => $request->only(['search', 'from', 'to','fund_head_id','institute_id']),
+        ]);
+    } 
 // public function getFunds(Request $request)
 // {
 //     $hrInstituteId = session('inst_id');
