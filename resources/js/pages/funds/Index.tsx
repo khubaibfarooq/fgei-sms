@@ -163,7 +163,7 @@ export default function FundIndex({ funds, filters, permissions }: Props) {
                         </td>
                         <td className="border p-3  text-gray-900 dark:text-gray-100">
                           <div className="flex justify-center items-center gap-1">
-                            <Link href={`/fund-trans/${fund.id}`}>
+                            <Link href={`/fund-trans/${fund.fund_head.id}`}>
                               <Button
                                 variant="ghost"
                                 size="icon"
