@@ -192,7 +192,7 @@ export default function InstituteForm({ institute }: InstituteFormProps) {
 
                 {/* 3D image view */}
                 <div className="space-y-2">
-                  <Label>Current 3D Image</Label>
+                  <Label>Current Front View Image</Label>
                   {institute?.img_3d ? (
                     <img
                       src={`/assets/${institute.img_3d}`}

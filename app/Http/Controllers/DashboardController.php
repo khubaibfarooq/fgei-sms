@@ -69,25 +69,68 @@ else{
     
     // Define completion criteria with their percentage weights
     $criteria = [
-        'institute' => ['weight' => 10, 'check' => fn() => DB::table('institutes')->where('id', $sms_inst_id)->exists()],
-        'funds' => ['weight' => 10, 'check' => fn() => DB::table('fund_helds')->where('institute_id', $sms_inst_id)->exists()],
-        'blocks' => ['weight' => 10, 'check' => fn() => Block::where('institute_id', $sms_inst_id)->exists()],
-        'rooms' => ['weight' => 10, 'check' => fn() => $this->hasRoomsInBlocks($sms_inst_id)],
-        'shifts' => ['weight' => 10, 'check' => fn() => Shift::where('institute_id', $sms_inst_id)->exists()],
-        'upgradations' => ['weight' => 10, 'check' => fn() => Upgradation::where('institute_id', $sms_inst_id)->exists()],
-        'plants' => ['weight' => 10, 'check' => fn() => Plant::where('institute_id', $sms_inst_id)->exists()],
-        'transports' => ['weight' => 10, 'check' => fn() => Transport::where('institute_id', $sms_inst_id)->exists()],
-        'assets' => ['weight' => 20, 'check' => fn() => InstituteAsset::where('institute_id', $sms_inst_id)->count() > 50],
+        'institute' => [
+            'weight' => 10, 
+            'check' => fn() => DB::table('institutes')->where('id', $sms_inst_id)->exists(),
+            'instruction' => 'Complete Institute Profile'
+        ],
+        'funds' => [
+            'weight' => 10, 
+            'check' => fn() => DB::table('fund_helds')->where('institute_id', $sms_inst_id)->exists(),
+            'instruction' => 'Add Funds Information'
+        ],
+        'blocks' => [
+            'weight' => 10, 
+            'check' => fn() => Block::where('institute_id', $sms_inst_id)->exists(),
+            'instruction' => 'Add Blocks Information'
+        ],
+        'rooms' => [
+            'weight' => 10, 
+            'check' => fn() => $this->hasRoomsInBlocks($sms_inst_id),
+            'instruction' => 'Add Rooms to Blocks'
+        ],
+        'shifts' => [
+            'weight' => 10, 
+            'check' => fn() => Shift::where('institute_id', $sms_inst_id)->exists(),
+            'instruction' => 'Add Shifts Information'
+        ],
+        'upgradations' => [
+            'weight' => 10, 
+            'check' => fn() => Upgradation::where('institute_id', $sms_inst_id)->exists(),
+            'instruction' => 'Add Upgradation Information'
+        ],
+        'plants' => [
+            'weight' => 10, 
+            'check' => fn() => Plant::where('institute_id', $sms_inst_id)->exists(),
+            'instruction' => 'Add Plants Information'
+        ],
+        'transports' => [
+            'weight' => 10, 
+            'check' => fn() => Transport::where('institute_id', $sms_inst_id)->exists(),
+            'instruction' => 'Add Transport Information'
+        ],
+        'assets' => [
+            'weight' => 20, 
+            'check' => fn() => InstituteAsset::where('institute_id', $sms_inst_id)->count() > 50,
+            'instruction' => 'Add at least 50 Assets'
+        ],
     ];
     
+    $instructions = [];
+    
     // Calculate percentage based on completed criteria
-    foreach ($criteria as $criterion) {
+    foreach ($criteria as $key => $criterion) {
         if ($criterion['check']()) {
             $percentage += $criterion['weight'];
+        } else {
+            $instructions[] = $criterion['instruction'];
         }
     }
     
-    return response()->json(['count' => $percentage.'%']);
+    return response()->json([
+        'count' => $percentage.'%',
+        'instructions' => $instructions
+    ]);
 }
 
 /**
