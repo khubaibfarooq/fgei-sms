@@ -423,7 +423,7 @@ export default function Funds({
                                   if (!isRegionRow) {
                                     return (
                                       <Link
-                                        href={`/reports/fundstrans?institute_id=${row.institute_id}&fund_head_id=${selectedFundHead?.id}`}
+                                        href={`/reports/fundstrans?institute_id=${row.institute_id}&fund_head_id=${selectedFundHead?.id}&region_id=${region}`}
                                         className="text-blue-600 hover:underline"
                                         onClick={(e) => e.stopPropagation()}
                                       >
@@ -441,7 +441,7 @@ export default function Funds({
                                   <td key={fh.id} className="px-4 py-4 text-right font-medium tabular-nums">
                                     {!isRegionRow ? (
                                       <Link
-                                        href={`/reports/fundstrans?institute_id=${row.institute_id}&fund_head_id=${fh.id}`}
+                                        href={`/reports/fundstrans?institute_id=${row.institute_id}&fund_head_id=${fh.id}&region_id=${region}`}
                                         className="text-blue-600 hover:underline"
                                         onClick={(e) => e.stopPropagation()}
                                       >

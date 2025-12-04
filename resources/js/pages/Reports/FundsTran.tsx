@@ -104,6 +104,7 @@ interface Props {
     to?: string;
     fund_head_id?: string;
     institute_id?: string;
+    region_id?: string;
   };
 }
 
@@ -116,6 +117,7 @@ export default function FundsTran({ fundheld, fundtrans, filters }: Props) {
   const [search, setSearch] = useState(filters.search || '');
   const [fromDate, setFromDate] = useState(filters.from || '');
   const [toDate, setToDate] = useState(filters.to || '');
+  const [region, setRegion] = useState(filters.region_id || '');
   console.log(fundtrans);
   // Modal state
   const [modalOpen, setModalOpen] = useState(false);
@@ -133,6 +135,7 @@ export default function FundsTran({ fundheld, fundtrans, filters }: Props) {
         to: toDate || undefined,
         fund_head_id: filters.fund_head_id || undefined,
         institute_id: filters.institute_id || undefined,
+        region_id: region || undefined,
       },
       { preserveState: true, preserveScroll: true }
     );
@@ -210,7 +213,7 @@ export default function FundsTran({ fundheld, fundtrans, filters }: Props) {
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <Link href="/funds">
+                <Link href="/reports/funds">
                   <Button variant="outline" size="icon">
                     <ArrowLeft className="h-4 w-4" />
                   </Button>

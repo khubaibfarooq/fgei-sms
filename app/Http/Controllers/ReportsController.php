@@ -2005,7 +2005,7 @@ public function getFund(Request $request)
         return Inertia::render('Reports/FundsTran', [
             'fundheld'  => $fundheld,
             'fundtrans' => $fundtrans,
-            'filters'   => $request->only(['search', 'from', 'to','fund_head_id','institute_id']),
+            'filters'   => $request->only(['search', 'from', 'to','fund_head_id','institute_id','region_id']),
         ]);
     } 
 // public function getFunds(Request $request)
