@@ -7,6 +7,7 @@ import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { type BreadcrumbItem } from '@/types';
 import { Plus, Building } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   AlertDialog,
   AlertDialogTrigger,
@@ -50,6 +51,7 @@ interface Props {
   };
   filters: {
     search: string;
+    status: string;
   };
   institutes: { id: number; name: string }[];
   auth: { user: { id: number; name: string } };
@@ -82,6 +84,7 @@ export default function HelpDeskIndex({ helpDesk, filters, institutes, auth }: P
 
 
   const [search, setSearch] = useState(filters.search || '');
+  const [status, setStatus] = useState(filters.status || '');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [selectedHelpDesk, setSelectedHelpDesk] = useState<HelpDesk | null>(null);
@@ -99,8 +102,13 @@ export default function HelpDeskIndex({ helpDesk, filters, institutes, auth }: P
 
   const handleSearchKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
-      router.get('/helpdesk', { ...filters, search }, { preserveScroll: true });
+      router.get('/helpdesk', { ...filters, search, status }, { preserveScroll: true });
     }
+  };
+
+  const handleStatusChange = (value: string) => {
+    setStatus(value);
+    router.get('/helpdesk', { ...filters, search, status: value }, { preserveScroll: true });
   };
 
   const handleCreateSubmit = (e: React.FormEvent) => {
@@ -220,45 +228,56 @@ export default function HelpDeskIndex({ helpDesk, filters, institutes, auth }: P
                 onChange={(e) => setSearch(e.target.value)}
                 onKeyDown={handleSearchKey}
               />
+              <Select value={status} onValueChange={handleStatusChange}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All</SelectItem>
+
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="waiting">Waiting</SelectItem>
+                  <SelectItem value="resolved">Resolved</SelectItem>
+                  <SelectItem value="rejected">Rejected</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-3">
               <table className="w-full border-collapse  border-1 rounded-md overflow-hidden shadow-sm">
-  <thead>
-    <tr className="bg-primary dark:bg-gray-800 text-center text-sm md:text-md lg:text-lg" >
-      <th className="border p-2   font-medium text-white dark:text-gray-200">Token</th>
-      <th className="border p-2   font-medium text-white dark:text-gray-200">Title</th>
-       <th className="border p-2   font-medium text-white dark:text-gray-200">Descriptions</th>
-      <th className="border p-2   font-medium text-white dark:text-gray-200">Status</th>
-     
-      
-    </tr>
-  </thead>
-  <tbody>
-              {!helpDesk?.data || helpDesk.data.length === 0 ? (
-                <p className="text-muted-foreground text-center">No Request found.</p>
-              ) : (
-                helpDesk.data.map((req) => (
- <tr  onClick={() => openViewModal(req)}  key={req.id} className=" p-1 hover:bg-primary/10 text-sm md:text-md lg:text-lg dark:hover:bg-gray-700 text-center
-                    ">
-                      <td className="border   text-gray-900 dark:text-gray-100">
-                         #{req.token}
-                         </td>
-                           <td className="border font-bold   text-gray-900 dark:text-gray-100">
-                         {req.title}
-                         </td>
-                         <td className="border   text-gray-900 dark:text-gray-100">{req.description} </td>
-                          <td className="border   text-gray-900 dark:text-gray-100">  <span className={`inline-block px-2 py-1 rounded-full  font-semibold ${getStatusStyles(req.status)}`}>
-                            {req.status}
-                          </span> </td>
-                     
-                       
-                         </tr>
+                <thead>
+                  <tr className="bg-primary dark:bg-gray-800 text-center text-sm md:text-md lg:text-lg" >
+                    <th className="border p-2   font-medium text-white dark:text-gray-200">Token</th>
+                    <th className="border p-2   font-medium text-white dark:text-gray-200">Title</th>
+                    <th className="border p-2   font-medium text-white dark:text-gray-200">Descriptions</th>
+                    <th className="border p-2   font-medium text-white dark:text-gray-200">Status</th>
 
-               
-                ))
-              )}
-              </tbody></table>
+
+                  </tr>
+                </thead>
+                <tbody>
+                  {!helpDesk?.data || helpDesk.data.length === 0 ? (
+                    <p className="text-muted-foreground text-center">No Request found.</p>
+                  ) : (
+                    helpDesk.data.map((req) => (
+                      <tr onClick={() => openViewModal(req)} key={req.id} className=" p-1 hover:bg-primary/10 text-sm md:text-md lg:text-lg dark:hover:bg-gray-700 text-center
+                    ">
+                        <td className="border   text-gray-900 dark:text-gray-100">
+                          #{req.token}
+                        </td>
+                        <td className="border font-bold   text-gray-900 dark:text-gray-100">
+                          {req.title}
+                        </td>
+                        <td className="border   text-gray-900 dark:text-gray-100">{req.description} </td>
+                        <td className="border   text-gray-900 dark:text-gray-100">  <span className={`inline-block px-2 py-1 rounded-full  font-semibold ${getStatusStyles(req.status)}`}>
+                          {req.status}
+                        </span> </td>
+
+
+                      </tr>
+
+
+                    ))
+                  )}
+                </tbody></table>
             </div>
 
             {helpDesk?.links && helpDesk.links.length > 1 && (

@@ -31,7 +31,9 @@ interface HelpDesk {
   institute_id: number;
   feedback_date: Date;
   institute: {
+    id: number;
     name: string;
+    type: string;
   };
   user: {
     name: string;
@@ -185,7 +187,7 @@ export default function HelpDeskIndex({ helpDesk, filters, institutes, auth }: P
 
                       <tr onClick={() => openEditModal(req)} key={req.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 text-center
                     "> <td className="border  text-sm text-gray-900 dark:text-gray-100">
-                          {req.institute.name}
+                          {req.institute.id}-{req.institute.name} ({req.institute.type})
                         </td>
                         <td className="border  text-sm text-gray-900 dark:text-gray-100">
                           #{req.token}
