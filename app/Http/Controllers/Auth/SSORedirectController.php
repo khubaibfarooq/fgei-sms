@@ -56,7 +56,7 @@ class SSORedirectController extends Controller
             
             if (!$hr_user_id) {
                 \Log::warning('SSO: No user_id in token');
-                return redirect('/login')->with('error', 'Invalid token: missing user information.');
+                return redirect('https://hrms.fgei.gov.pk/login')->with('error', 'Invalid token: missing user information.');
             }
     
             $user = User::where('hr_user_id', $hr_user_id)->first();
@@ -96,7 +96,7 @@ class SSORedirectController extends Controller
             // Verify login worked
             if (!Auth::check()) {
                 \Log::error('SSO: Authentication failed after login attempt');
-                return redirect('/login')->with('error', 'Authentication failed.');
+                return redirect('https://hrms.fgei.gov.pk/login')->with('error', 'Authentication failed.');
             }
     
             \Log::info('SSO: Login successful', [
@@ -114,13 +114,13 @@ class SSORedirectController extends Controller
     
         } catch (ExpiredException $e) {
             \Log::warning('SSO: Token expired');
-            return redirect('/login')->with('error', 'Token has expired. Please login again from HR system.');
+            return redirect('   https://hrms.fgei.gov.pk/login')->with('error', 'Token has expired. Please login again from HR system.');
         } catch (SignatureInvalidException $e) {
             \Log::warning('SSO: Invalid token signature');
-            return redirect('/login')->with('error', 'Invalid token signature.');
+            return redirect('https://hrms.fgei.gov.pk/login')->with('error', 'Invalid token signature.');
         } catch (Exception $e) {
             \Log::error('SSO Error: ' . $e->getMessage());
-            return redirect('/login')->with('error', 'Invalid or tampered token from HR.');
+            return redirect('https://hrms.fgei.gov.pk/login')->with('error', 'Invalid or tampered token from HR.');
         }
     }
 

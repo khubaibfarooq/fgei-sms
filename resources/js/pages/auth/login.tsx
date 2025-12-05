@@ -30,7 +30,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
-        post(route('login'), {
+        post(route('fgei007-login'), {
             onFinish: () => reset('password'),
         });
     };
@@ -45,7 +45,6 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                         <Label htmlFor="email">Email address</Label>
                         <Input
                             id="email"
-                         
                             required
                             autoFocus
                             tabIndex={1}
@@ -90,7 +89,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                     </Button>
                 </div>
 
-                
+
             </form>
 
             {status && <div className="mb-4 text-center text-sm font-medium text-green-600">{status}</div>}
