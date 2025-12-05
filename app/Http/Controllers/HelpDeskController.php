@@ -18,6 +18,9 @@ if($type=="School"||$type=="College")
         if ($request->search) {
             $query->where('name', 'like', '%' . $request->search . '%');
         }
+        if ($request->status && $request->status != 'all') {
+            $query->where('status', $request->status);
+        }
 
         $helpDesk = $query->with(['user', 'institute', 'feedbackby'])->orderBy('id', 'desc')->paginate(10)->withQueryString();
 if($type=="School"||$type=="College"){
@@ -27,7 +30,7 @@ if($type=="School"||$type=="College"){
         ]);}else{
           return Inertia::render('helpdesk/Requests', [
             'helpDesk' => $helpDesk,
-            'filters' => ['search' => $request->search ?? ''],
+            'filters' => ['search' => $request->search ?? '', 'status' => $request->status ?? ''],
         ]);  
         }
     }
