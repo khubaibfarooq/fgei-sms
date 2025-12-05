@@ -242,7 +242,7 @@ export default function InstituteAssetForm({ instituteAsset, assets, rooms }: In
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title={isEdit ? 'Edit Institute Asset' : 'Add Institute Asset'} />
 
-      <div className="flex-1 p-4 md:p-6 w-[90vw] mx-auto">
+      <div className="flex-1 p-4 md:p-6 w-[80vw] mx-auto">
         <Card>
           <CardHeader>
             <CardTitle className="text-2xl font-bold">
@@ -292,7 +292,7 @@ export default function InstituteAssetForm({ instituteAsset, assets, rooms }: In
                 <div>
                   <Button type="button" onClick={handleAddRow} className="w-full">
                     <Plus className="mr-2 h-4 w-4" />
-                    Add Row
+                    Add Row (Shit+ Entr)
                   </Button>
                 </div>
               </div>

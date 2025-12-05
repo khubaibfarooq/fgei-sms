@@ -89,7 +89,7 @@ export default function Combobox({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-full ps-2 max-h-60 overflow-y-auto">
-       <CommandPrimitive filter={filterOptions} className="w-full">
+        <CommandPrimitive filter={filterOptions} className="w-full">
           <CommandInput
             placeholder={searchPlaceholder}
             className="w-full h-10 px-3 text-sm border-b"
@@ -98,7 +98,7 @@ export default function Combobox({
             <CommandEmpty>{notFoundMsg}</CommandEmpty>
             <CommandGroup>
               {includeAllOption && (
-                <CommandItem className="hover:bg-gray-200"
+                <CommandItem className="hover:bg-gray-200 data-[selected=true]:bg-gray-200"
                   value="0"
                   onSelect={() => {
                     onChange("0");
@@ -115,7 +115,7 @@ export default function Combobox({
                 </CommandItem>
               )}
               {options.map((item) => (
-                <CommandItem  className="hover:bg-primary/80 hover:text-white  my-1 flex flex-row"
+                <CommandItem className="hover:bg-primary/80 hover:text-white data-[selected=true]:bg-primary/80 data-[selected=true]:text-white my-1 flex flex-row"
                   key={item.id}
                   value={item.name}
                   onSelect={() => {
