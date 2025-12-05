@@ -19,7 +19,7 @@ if($type=="School"||$type=="College")
             $query->where('name', 'like', '%' . $request->search . '%');
         }
 
-        $helpDesk = $query->with(['user', 'institute', 'feedbackby'])->paginate(10)->withQueryString();
+        $helpDesk = $query->with(['user', 'institute', 'feedbackby'])->orderBy('id', 'desc')->paginate(10)->withQueryString();
 if($type=="School"||$type=="College"){
         return Inertia::render('helpdesk/Index', [
             'helpDesk' => $helpDesk,
