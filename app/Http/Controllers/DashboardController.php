@@ -66,7 +66,7 @@ else{
 {
     $sms_inst_id = session('sms_inst_id');
     $percentage = 0;
-    
+     
     // Define completion criteria with their percentage weights
     $criteria = [
         'institute' => [

@@ -8,13 +8,13 @@ export default function Welcome() {
     <>
       <Head title="Welcome" />
       <div style={{
-  backgroundImage: 'url("/images/fgei banner.jpg")',
-  backgroundSize: 'cover',
-  backgroundPosition: 'center',
-  backgroundRepeat: 'no-repeat',
-  backgroundBlendMode: 'overlay',
-  backgroundColor: 'rgba(0, 0, 0, 0.3)', // Optional: dark overlay for readability
-}}className="relative min-h-screen flex flex-col items-center justify-center px-4 bg-gradient-to-br from-background to-gray-50 dark:to-gray-900">
+        backgroundImage: 'url("/images/fgei banner.jpg")',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        backgroundBlendMode: 'overlay',
+        backgroundColor: 'rgba(0, 0, 0, 0.3)', // Optional: dark overlay for readability
+      }} className="relative min-h-screen flex flex-col items-center justify-center px-4 bg-gradient-to-br from-background to-gray-50 dark:to-gray-900">
         {/* Decorative elements */}
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute top-0 left-1/4 w-32 h-32 rounded-full bg-primary/10 blur-3xl" />
@@ -28,7 +28,7 @@ export default function Welcome() {
               FGEI School Management System
             </h1>
             <p className="text-lg text-white max-w-2xl mx-auto">
-            The primary mandate of the FGEI (C/G) Directorate is to provide quality education to the children of Pakistan Armed Forces personnel and civilian children living in cantonments. The directorate exerts administrative, academic, technical, and financial oversight over all its affiliated educational institutions
+              The primary mandate of the FGEI (C/G) Directorate is to provide quality education to the children of Pakistan Armed Forces personnel and civilian children living in cantonments. The directorate exerts administrative, academic, technical, and financial oversight over all its affiliated educational institutions
             </p>
           </div>
 
@@ -47,17 +47,17 @@ export default function Welcome() {
             </div>
           ) : (
             <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
-              <Link
-                href="/login"
+              <a
+                href="https://hrms.fgei.gov.pk/login"
                 className="px-8 py-3 rounded-lg border border-border bg-white dark:bg-gray-800 font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-all transform hover:-translate-y-0.5 shadow-sm hover:shadow-md"
               >
                 Sign In
-              </Link>
-             
+              </a>
+
             </div>
           )}
 
-          
+
         </div>
       </div>
     </>
