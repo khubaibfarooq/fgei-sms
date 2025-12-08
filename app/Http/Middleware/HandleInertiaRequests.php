@@ -42,6 +42,7 @@ class HandleInertiaRequests extends Middleware
                 'error' => session('error'),
             ],
             'setting' => fn() => SettingApp::first(),
+            'can_view_notifications' => fn() => $request->user()?->can('notifications.view') ?? false,
         ]);
     }
 }

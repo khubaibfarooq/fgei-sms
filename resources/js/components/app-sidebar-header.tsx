@@ -6,9 +6,11 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@
 import { type BreadcrumbItem as BreadcrumbItemType } from '@/types';
 import AppearanceDropdown from '@/components/appearance-dropdown';
 import { NotificationDropdown } from './notification-dropdown';
+import { usePage } from '@inertiajs/react';
 
 export function AppSidebarHeader({ breadcrumbs = [] }: { breadcrumbs?: BreadcrumbItemType[] }) {
   const [lang, setLang] = useState('id');
+  const { can_view_notifications } = usePage<{ can_view_notifications: boolean }>().props;
 
   return (
     <header className="bg-primary dark:bg-transparent border-sidebar-border/50 flex h-18
@@ -22,7 +24,7 @@ export function AppSidebarHeader({ breadcrumbs = [] }: { breadcrumbs?: Breadcrum
       {/* Right: Language + Theme */}
       <div className="flex items-center gap-4">
 
-        <NotificationDropdown />
+        {can_view_notifications && <NotificationDropdown />}
         <AppearanceDropdown />
         <NavUser />
       </div>
