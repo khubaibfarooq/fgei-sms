@@ -66,9 +66,11 @@ else{
 {
     $sms_inst_id = session('sms_inst_id');
     $percentage = 0;
-     
-    // Define completion criteria with their percentage weights
-    $criteria = [
+     $shift=Shift::where('institute_id', $sms_inst_id)->select('building_type_id')->get();
+
+     if($shift){
+      if($shift[0]['building_type_id']==1){
+  $criteria = [
         'institute' => [
             'weight' => 20, 
             'check' => fn() => DB::table('institutes')->where('id', $sms_inst_id)->exists(),
@@ -104,17 +106,41 @@ else{
             'check' => fn() => Plant::where('institute_id', $sms_inst_id)->exists(),
             'instruction' => 'Add Plants Information'
         ],
-        'transports' => [
-            'weight' => 10, 
-            'check' => fn() => Transport::where('institute_id', $sms_inst_id)->exists(),
-            'instruction' => 'Add Transport Information'
-        ],
+        // 'transports' => [
+        //     'weight' => 10, 
+        //     'check' => fn() => Transport::where('institute_id', $sms_inst_id)->exists(),
+        //     'instruction' => 'Add Transport Information'
+        // ],
         'assets' => [
             'weight' => 20, 
             'check' => fn() => InstituteAsset::where('institute_id', $sms_inst_id)->count() > 50,
             'instruction' => 'Add at least 50 Assets'
         ],
     ];
+      }else{
+         $criteria = [
+        'institute' => [
+            'weight' => 40, 
+            'check' => fn() => DB::table('institutes')->where('id', $sms_inst_id)->exists(),
+            'instruction' => 'Complete Institute Profile'
+        ],
+        'funds' => [
+            'weight' => 40, 
+            'check' => fn() => DB::table('fund_helds')->where('institute_id', $sms_inst_id)->exists(),
+            'instruction' => 'Add Funds Information'
+        ],
+    
+        'shifts' => [
+            'weight' => 20, 
+            'check' => fn() => Shift::where('institute_id', $sms_inst_id)->exists(),
+            'instruction' => 'Add Shifts Information'
+        ],
+    
+    ];
+      }
+     }
+    // Define completion criteria with their percentage weights
+   
     
     $instructions = [];
     
