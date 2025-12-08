@@ -5,6 +5,7 @@ import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { type BreadcrumbItem as BreadcrumbItemType } from '@/types';
 import AppearanceDropdown from '@/components/appearance-dropdown';
+import { NotificationDropdown } from './notification-dropdown';
 
 export function AppSidebarHeader({ breadcrumbs = [] }: { breadcrumbs?: BreadcrumbItemType[] }) {
   const [lang, setLang] = useState('id');
@@ -20,10 +21,10 @@ export function AppSidebarHeader({ breadcrumbs = [] }: { breadcrumbs?: Breadcrum
 
       {/* Right: Language + Theme */}
       <div className="flex items-center gap-4">
-       
 
+        {/* <NotificationDropdown /> */}
         <AppearanceDropdown />
-            <NavUser  />
+        <NavUser />
       </div>
     </header>
   );

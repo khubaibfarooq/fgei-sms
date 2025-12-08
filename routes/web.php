@@ -43,6 +43,7 @@ use App\Http\Controllers\TypeController;
 
 use App\Http\Controllers\DonationController;
 use App\Http\Controllers\HelpDeskController;
+use App\Http\Controllers\NotificationController;
 Route::get('/', function () {
     return Inertia::render('welcome');
 })->name('home');
@@ -56,6 +57,13 @@ Route::middleware(['auth', 'menu.permission'])->group(function () {
 //Dashboard API routes
     Route::get('/api/getcompeletion', [DashboardController::class, 'getProfilePercentage']);
     Route::get('/api/getregions', [DashboardController::class, 'getRegions']);
+
+    // Notification routes
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('/notifications/unread', [NotificationController::class, 'unread'])->name('notifications.unread');
+    Route::post('/notifications/{notification}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
+    Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
+    Route::delete('/notifications/{notification}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
 
     Route::get('/api/getinstitutes', [DashboardController::class, 'getInstitutes']);
     Route::get('/api/getfunds', [DashboardController::class, 'getFunds']);
