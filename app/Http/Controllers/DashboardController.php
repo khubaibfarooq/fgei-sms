@@ -70,12 +70,12 @@ else{
     // Define completion criteria with their percentage weights
     $criteria = [
         'institute' => [
-            'weight' => 10, 
+            'weight' => 20, 
             'check' => fn() => DB::table('institutes')->where('id', $sms_inst_id)->exists(),
             'instruction' => 'Complete Institute Profile'
         ],
         'funds' => [
-            'weight' => 10, 
+            'weight' => 20, 
             'check' => fn() => DB::table('fund_helds')->where('institute_id', $sms_inst_id)->exists(),
             'instruction' => 'Add Funds Information'
         ],
@@ -94,11 +94,11 @@ else{
             'check' => fn() => Shift::where('institute_id', $sms_inst_id)->exists(),
             'instruction' => 'Add Shifts Information'
         ],
-        'upgradations' => [
-            'weight' => 10, 
-            'check' => fn() => Upgradation::where('institute_id', $sms_inst_id)->exists(),
-            'instruction' => 'Add Upgradation Information'
-        ],
+        // 'upgradations' => [
+        //     'weight' => 10, 
+        //     'check' => fn() => Upgradation::where('institute_id', $sms_inst_id)->exists(),
+        //     'instruction' => 'Add Upgradation Information'
+        // ],
         'plants' => [
             'weight' => 10, 
             'check' => fn() => Plant::where('institute_id', $sms_inst_id)->exists(),
