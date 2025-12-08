@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { router } from '@inertiajs/react';
+import axios from 'axios';
 
 interface Notification {
     id: number;
@@ -36,9 +37,8 @@ export function NotificationDropdown() {
 
     const fetchNotifications = async () => {
         try {
-            const response = await fetch('/notifications/unread');
-            const result = await response.json();
-            setData(result);
+            const response = await axios.get('/notifications/unread');
+            setData(response.data);
         } catch (error) {
             console.error('Failed to fetch notifications:', error);
         }
@@ -59,13 +59,7 @@ export function NotificationDropdown() {
 
     const handleMarkAsRead = async (notification: Notification) => {
         try {
-            await fetch(`/notifications/${notification.id}/read`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-                },
-            });
+            await axios.post(`/notifications/${notification.id}/read`);
 
             // Refresh notifications
             fetchNotifications();
@@ -83,13 +77,7 @@ export function NotificationDropdown() {
     const handleMarkAllAsRead = async () => {
         setLoading(true);
         try {
-            await fetch('/notifications/mark-all-read', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-                },
-            });
+            await axios.post('/notifications/mark-all-read');
             fetchNotifications();
         } catch (error) {
             console.error('Failed to mark all as read:', error);
@@ -189,17 +177,17 @@ export function NotificationDropdown() {
                             </DropdownMenuItem>
                         ))}
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                            className="justify-center text-sm text-primary cursor-pointer"
-                            onClick={() => {
-                                router.visit('/notifications');
-                                setOpen(false);
-                            }}
-                        >
-                            View all notifications
-                        </DropdownMenuItem>
+
                     </>
-                )}
+                )}   <DropdownMenuItem
+                    className="justify-center text-sm text-primary cursor-pointer"
+                    onClick={() => {
+                        router.visit('/notifications');
+                        setOpen(false);
+                    }}
+                >
+                    View all notifications
+                </DropdownMenuItem>
             </DropdownMenuContent>
         </DropdownMenu>
     );

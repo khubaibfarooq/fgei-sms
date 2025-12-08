@@ -8,7 +8,8 @@ use App\Models\Block;
 
 use Illuminate\Http\Request;
 use Inertia\Inertia;
-use Intervention\Image\Laravel\Facades\Image;
+use Intervention\Image\ImageManager;
+use Intervention\Image\Drivers\Gd\Driver;
 
 class RoomController extends Controller
 {
@@ -101,7 +102,7 @@ $roomtypes=RoomType::pluck('name', 'id');
                 mkdir($destinationPath, 0755, true);
             }
 
-            Image::read($resultImage->getPathname())
+            (new ImageManager(new Driver()))->read($resultImage->getPathname())
                 ->scale(width: 1280)
                 ->save($destinationPath . '/' . $resultImageName, quality: 60);
 
@@ -151,7 +152,7 @@ $data['institute_id'] = session('sms_inst_id');
                 mkdir($destinationPath, 0755, true);
             }
 
-            Image::read($resultImage->getPathname())
+            (new ImageManager(new Driver()))->read($resultImage->getPathname())
                 ->scale(width: 1280)
                 ->save($destinationPath . '/' . $resultImageName, quality: 60);
 

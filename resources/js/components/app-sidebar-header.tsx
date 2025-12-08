@@ -22,7 +22,7 @@ export function AppSidebarHeader({ breadcrumbs = [] }: { breadcrumbs?: Breadcrum
       {/* Right: Language + Theme */}
       <div className="flex items-center gap-4">
 
-        {/* <NotificationDropdown /> */}
+        <NotificationDropdown />
         <AppearanceDropdown />
         <NavUser />
       </div>

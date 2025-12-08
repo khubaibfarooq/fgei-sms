@@ -9,7 +9,8 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\Institute;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
-use Intervention\Image\Laravel\Facades\Image;
+use Intervention\Image\ImageManager;
+use Intervention\Image\Drivers\Gd\Driver;
 
 class InstituteController extends Controller
 {
@@ -95,7 +96,7 @@ class InstituteController extends Controller
                     mkdir($destinationPath, 0755, true);
                 }
 
-                Image::read($resultImage->getPathname())
+                (new ImageManager(new Driver()))->read($resultImage->getPathname())
                     ->scale(width: 1280)
                     ->save($destinationPath . '/' . $resultImageName, quality: 60);
 
@@ -118,7 +119,7 @@ $resultImageName = null;
                 mkdir($destinationPath, 0755, true);
             }
 
-            Image::read($resultImage->getPathname())
+            (new ImageManager(new Driver()))->read($resultImage->getPathname())
                 ->scale(width: 1280)
                 ->save($destinationPath . '/' . $resultImageName, quality: 60);
 
@@ -187,7 +188,7 @@ $data['type'] = $type;
                     mkdir($destinationPath, 0755, true);
                 }
 
-                Image::read($resultImage->getPathname())
+                (new ImageManager(new Driver()))->read($resultImage->getPathname())
                     ->scale(width: 1280)
                     ->save($destinationPath . '/' . $resultImageName, quality: 60);
 
@@ -210,7 +211,7 @@ $resultImageName = null;
                 mkdir($destinationPath, 0755, true);
             }
 
-            Image::read($resultImage->getPathname())
+            (new ImageManager(new Driver()))->read($resultImage->getPathname())
                 ->scale(width: 1280)
                 ->save($destinationPath . '/' . $resultImageName, quality: 60);
 

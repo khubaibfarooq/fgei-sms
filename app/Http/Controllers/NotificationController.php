@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Notification;
+use App\Models\NotificationRead;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -13,13 +14,84 @@ class NotificationController extends Controller
      */
     public function index()
     {
-        $notifications = Notification::where('user_id', auth()->id())
+        $userId = auth()->id();
+        
+        $notifications = Notification::with(['reads' => function ($query) use ($userId) {
+                $query->where('user_id', $userId);
+            }])
             ->orderBy('created_at', 'desc')
             ->paginate(20);
 
+        // Add is_read attribute to each notification
+        $notifications->getCollection()->transform(function ($notification) use ($userId) {
+            $notification->is_read = $notification->reads->isNotEmpty();
+            $notification->read_at = $notification->reads->first()?->read_at;
+            unset($notification->reads);
+            return $notification;
+        });
+
         return Inertia::render('notifications/Index', [
             'notifications' => $notifications,
+            'permissions' => [
+                'can_add' => auth()->user()->can('notifications.create'),
+                'can_edit' => auth()->user()->can('notifications.edit'),
+                'can_delete' => auth()->user()->can('notifications.delete'),
+            ],
         ]);
+    }
+
+    /**
+     * Show the form for creating a new notification.
+     */
+    public function create()
+    {
+        return Inertia::render('notifications/Form');
+    }
+
+    /**
+     * Store a newly created notification.
+     */
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'message' => 'required|string',
+            'type' => 'required|in:info,success,warning,error',
+            'link' => 'nullable|string|max:255',
+        ]);
+
+        Notification::create($validated);
+
+        return redirect()->route('notifications.index')
+            ->with('success', 'Notification created successfully.');
+    }
+
+    /**
+     * Show the form for editing the specified notification.
+     */
+    public function edit(Notification $notification)
+    {
+        return Inertia::render('notifications/Form', [
+            'notification' => $notification,
+        ]);
+    }
+
+    /**
+     * Update the specified notification.
+     */
+    public function update(Request $request, Notification $notification)
+    {
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'message' => 'required|string',
+            'type' => 'required|in:info,success,warning,error',
+            'link' => 'nullable|string|max:255',
+        ]);
+
+        $notification->update($validated);
+
+        return redirect()->route('notifications.index')
+            ->with('success', 'Notification updated successfully.');
     }
 
     /**
@@ -27,15 +99,18 @@ class NotificationController extends Controller
      */
     public function unread()
     {
-        $notifications = Notification::where('user_id', auth()->id())
-            ->unread()
+        $userId = auth()->id();
+        
+        $notifications = Notification::unreadByUser($userId)
             ->orderBy('created_at', 'desc')
             ->take(10)
-            ->get();
+            ->get()
+            ->map(function ($notification) {
+                $notification->is_read = false;
+                return $notification;
+            });
 
-        $unreadCount = Notification::where('user_id', auth()->id())
-            ->unread()
-            ->count();
+        $unreadCount = Notification::unreadByUser($userId)->count();
 
         return response()->json([
             'notifications' => $notifications,
@@ -44,31 +119,39 @@ class NotificationController extends Controller
     }
 
     /**
-     * Mark a notification as read.
+     * Mark a notification as read for the current user.
      */
     public function markAsRead(Notification $notification)
     {
-        // Ensure the notification belongs to the authenticated user
-        if ($notification->user_id !== auth()->id()) {
-            abort(403);
-        }
-
-        $notification->markAsRead();
+        $notification->markAsReadByUser(auth()->id());
 
         return response()->json(['success' => true]);
     }
 
     /**
-     * Mark all notifications as read.
+     * Mark all notifications as read for the current user.
      */
     public function markAllAsRead()
     {
-        Notification::where('user_id', auth()->id())
-            ->unread()
-            ->update([
-                'is_read' => true,
-                'read_at' => now(),
-            ]);
+        $userId = auth()->id();
+        
+        // Get all unread notification IDs
+        $unreadNotificationIds = Notification::unreadByUser($userId)
+            ->pluck('id');
+
+        // Insert read records for all unread notifications
+        $now = now();
+        $records = $unreadNotificationIds->map(function ($notificationId) use ($userId, $now) {
+            return [
+                'notification_id' => $notificationId,
+                'user_id' => $userId,
+                'read_at' => $now,
+            ];
+        })->toArray();
+
+        if (!empty($records)) {
+            NotificationRead::insert($records);
+        }
 
         return response()->json(['success' => true]);
     }
@@ -78,13 +161,9 @@ class NotificationController extends Controller
      */
     public function destroy(Notification $notification)
     {
-        // Ensure the notification belongs to the authenticated user
-        if ($notification->user_id !== auth()->id()) {
-            abort(403);
-        }
-
         $notification->delete();
 
-        return response()->json(['success' => true]);
+        return redirect()->route('notifications.index')
+            ->with('success', 'Notification deleted successfully.');
     }
 }

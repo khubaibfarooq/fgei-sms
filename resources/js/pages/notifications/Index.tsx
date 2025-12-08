@@ -2,9 +2,22 @@ import { Head, Link, router } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Bell, Check, Trash2, ArrowLeft } from 'lucide-react';
+import { Bell, Check, Trash2, Plus, Edit } from 'lucide-react';
 import { BreadcrumbItem } from '@/types';
 import { cn } from '@/lib/utils';
+import axios from 'axios';
+import {
+    AlertDialog,
+    AlertDialogTrigger,
+    AlertDialogContent,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogCancel,
+    AlertDialogAction,
+} from '@/components/ui/alert-dialog';
+import { toast } from 'sonner';
 
 interface Notification {
     id: number;
@@ -24,45 +37,42 @@ interface Props {
         per_page: number;
         total: number;
     };
+    permissions: {
+        can_add: boolean;
+        can_edit: boolean;
+        can_delete: boolean;
+    };
 }
 
-export default function NotificationsIndex({ notifications }: Props) {
+export default function NotificationsIndex({ notifications, permissions }: Props) {
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Dashboard', href: '/dashboard' },
         { title: 'Notifications', href: '/notifications' },
     ];
 
     const handleMarkAsRead = async (id: number) => {
-        await fetch(`/notifications/${id}/read`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-            },
-        });
-        router.reload();
+        try {
+            await axios.post(`/notifications/${id}/read`);
+            router.reload();
+        } catch (error) {
+            toast.error('Failed to mark as read');
+        }
     };
 
     const handleMarkAllAsRead = async () => {
-        await fetch('/notifications/mark-all-read', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-            },
-        });
-        router.reload();
+        try {
+            await axios.post('/notifications/mark-all-read');
+            router.reload();
+        } catch (error) {
+            toast.error('Failed to mark all as read');
+        }
     };
 
-    const handleDelete = async (id: number) => {
-        await fetch(`/notifications/${id}`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-            },
+    const handleDelete = (id: number) => {
+        router.delete(`/notifications/${id}`, {
+            onSuccess: () => toast.success('Notification deleted successfully'),
+            onError: () => toast.error('Failed to delete notification'),
         });
-        router.reload();
     };
 
     const getTypeStyles = (type: string) => {
@@ -86,7 +96,7 @@ export default function NotificationsIndex({ notifications }: Props) {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Notifications" />
 
-            <div className="flex-1 p-4 md:p-6 max-w-4xl mx-auto">
+            <div className="flex-1 p-4 md:p-6 w-full mx-auto">
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between">
                         <div className="flex items-center gap-3">
@@ -98,6 +108,14 @@ export default function NotificationsIndex({ notifications }: Props) {
                                 <Check className="h-4 w-4 mr-2" />
                                 Mark all as read
                             </Button>
+                            {permissions.can_add && (
+                                <Link href="/notifications/create">
+                                    <Button>
+                                        <Plus className="h-4 w-4 mr-2" />
+                                        Create Notification
+                                    </Button>
+                                </Link>
+                            )}
                         </div>
                     </CardHeader>
 
@@ -142,15 +160,44 @@ export default function NotificationsIndex({ notifications }: Props) {
                                                 <Check className="h-4 w-4" />
                                             </Button>
                                         )}
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            onClick={() => handleDelete(notification.id)}
-                                            className="text-destructive hover:text-destructive"
-                                            title="Delete"
-                                        >
-                                            <Trash2 className="h-4 w-4" />
-                                        </Button>
+                                        {permissions.can_edit && (
+                                            <Link href={`/notifications/${notification.id}/edit`}>
+                                                <Button variant="ghost" size="icon" title="Edit">
+                                                    <Edit className="h-4 w-4" />
+                                                </Button>
+                                            </Link>
+                                        )}
+                                        {permissions.can_delete && (
+                                            <AlertDialog>
+                                                <AlertDialogTrigger asChild>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="text-destructive hover:text-destructive"
+                                                        title="Delete"
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </Button>
+                                                </AlertDialogTrigger>
+                                                <AlertDialogContent>
+                                                    <AlertDialogHeader>
+                                                        <AlertDialogTitle>Delete this notification?</AlertDialogTitle>
+                                                        <AlertDialogDescription>
+                                                            Notification <strong>{notification.title}</strong> will be permanently deleted for all users.
+                                                        </AlertDialogDescription>
+                                                    </AlertDialogHeader>
+                                                    <AlertDialogFooter>
+                                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                        <AlertDialogAction
+                                                            className="bg-destructive hover:bg-destructive/90"
+                                                            onClick={() => handleDelete(notification.id)}
+                                                        >
+                                                            Delete
+                                                        </AlertDialogAction>
+                                                    </AlertDialogFooter>
+                                                </AlertDialogContent>
+                                            </AlertDialog>
+                                        )}
                                     </div>
                                 </div>
                             ))
