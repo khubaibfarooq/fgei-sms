@@ -45,14 +45,14 @@ class FundsController extends Controller
     // 2. SHOW FUND + TRANSACTIONS (now supports date + search filters)
     // --------------------------------------------------------------------- //
     public function getFund(Request $request)
-    {
+    {$institute_id=session('sms_inst_id');
         // ---- Find FundHeld -------------------------------------------------
         $fundheld = FundHeld::with('institute', 'fundHead')->where('institute_id', $institute_id)->where('fund_head_id', $request->id)->first();
 
         if (!$fundheld) {
             return response()->json(['error' => 'Fund held record not found'], 404);
         }
-$institute_id=session('sms_inst_id');
+
         // ---- Build transaction query --------------------------------------
         $query = Fund::with(['institute', 'FundHead', 'user'])
             ->where('institute_id', $institute_id)
