@@ -50,10 +50,10 @@ function RenderMenu({ items, level = 0 }: { items: MenuItem[]; level?: number })
                 title={menu.title}
                 icon={<Icon className={cn('size-5', isActive && 'text-white')} />}
                 defaultOpen={true}
-                className={cn( 
-                  'w-full  rounded-lg transition-all text-lg  duration-200 font-bold ',
+                className={cn(
+                  'w-full  rounded-lg transition-all text-lg   duration-200 font-bold ',
                   isActive
-                    ? 'bg-primary/80  text-white shadow-sm'
+                    ? 'bg-primary/80 text-white shadow-sm dark:bg-sidebar-accent dark:text-sidebar-accent-foreground'
                     : 'text-foreground hover:bg-muted/60'
                 )}
               >
@@ -64,17 +64,17 @@ function RenderMenu({ items, level = 0 }: { items: MenuItem[]; level?: number })
 
                   return (
                     <SidebarMenuSubItem key={child.id}>
-                      <SidebarMenuSubButton asChild className='text-lg text-black font-bold '>
+                      <SidebarMenuSubButton asChild className='text-lg text-black dark:text-white font-bold '>
                         <Link
                           href={child.route}
                           className={cn(
                             'flex w-full items-center gap-3 rounded-lg px-4 py-3  transition-all duration-200',
                             childActive
-                              ? 'bg-primary/80 text-white'
-                              : 'text-black hover:bg-primary/10'
+                              ? 'bg-primary/80 text-white dark:bg-sidebar-accent dark:text-sidebar-accent-foreground'
+                              : 'text-black dark:text-white hover:bg-primary/10 dark:hover:bg-primary/20'
                           )}
                         >
-                          <ChildIcon className={cn('size-5', childActive ? 'text-white':'text-black')} />
+                          <ChildIcon className={cn('size-5', childActive ? 'text-white' : 'text-black dark:text-white')} />
                           <span>{child.title}</span>
                         </Link>
                       </SidebarMenuSubButton>
@@ -89,8 +89,8 @@ function RenderMenu({ items, level = 0 }: { items: MenuItem[]; level?: number })
                 className={cn(
                   'w-full justify-start rounded-lg px-4 py-3 text-lg font-bold transition-all duration-200',
                   isActive
-                    ? 'bg-primary/80 text-white shadow-sm'
-                    : 'text-black hover:bg-primary/10'
+                    ? 'bg-primary/80 text-white shadow-sm dark:bg-sidebar-accent dark:text-sidebar-accent-foreground'
+                    : 'text-black dark:text-white hover:bg-primary/10 dark:hover:bg-primary/20'
                 )}
               >
                 <Link href={menu.route || '#'}>
@@ -111,12 +111,12 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon" variant="inset" className="border-r">
       {/* Logo Header */}
-      <SidebarHeader className="bg-primary px-6 py-5 border-b">
+      <SidebarHeader className="bg-primary px-6 py-5 border-b dark:bg-sidebar-accent dark:border-sidebar-border">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild className="hover:bg-primary/90 h-8">
               <Link href="/dashboard" prefetch>
-                <AppLogo />
+                <AppLogo className="dark:text-white" />
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

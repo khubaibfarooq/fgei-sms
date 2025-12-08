@@ -615,7 +615,7 @@ export default function InstitutionalReportIndex({ institutes: initialInstitutes
 
     // Institute 3D Image
     if (fetchedinstitute?.img_3d) {
-      await addSingleImage('Institute 3D View', fetchedinstitute.img_3d);
+      await addSingleImage('Institute Front View', fetchedinstitute.img_3d);
     }
 
     // Blocks Images Section
@@ -729,12 +729,12 @@ export default function InstitutionalReportIndex({ institutes: initialInstitutes
 
           {/* 3D image view */}
           <div className="space-y-2">
-            <Label>Current 3D Image</Label>
+            <Label>Current Front View Image</Label>
             {fetchedinstitute?.img_3d ? (
               <ImagePreview dataImg={`${fetchedinstitute.img_3d}`} className="w-full h-48 object-cover rounded" />
 
             ) : (
-              <p className="text-sm text-muted-foreground">No 3D image uploaded.</p>
+              <p className="text-sm text-muted-foreground">No Font View image uploaded.</p>
             )}
 
           </div>

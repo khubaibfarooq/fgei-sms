@@ -38,7 +38,7 @@ interface InstituteFormProps {
 export default function InstituteForm({ institute }: InstituteFormProps) {
   const isEdit = !!institute;
 
-  const { data, setData, processing, errors, reset } = useForm<{
+  const { data, setData, processing, errors, reset, setError } = useForm<{
     name: string;
     established_date: string;
     total_area: number;
@@ -99,10 +99,16 @@ export default function InstituteForm({ institute }: InstituteFormProps) {
         forceFormData: true,
         preserveScroll: true,
         preserveState: true,
+        onError: (errors) => {
+          setError(errors as any);
+        },
       });
     } else {
       router.post('institutes', formData, {
         forceFormData: true,
+        onError: (errors) => {
+          setError(errors as any);
+        },
       });
     }
   };
@@ -141,7 +147,7 @@ export default function InstituteForm({ institute }: InstituteFormProps) {
                     type="date"
                     value={data.established_date}
                     onChange={(e) => setData('established_date', e.target.value)}
-                    required
+
                   />
                   {errors.established_date && (
                     <p className="text-red-500 text-sm">{errors.established_date}</p>
@@ -157,6 +163,9 @@ export default function InstituteForm({ institute }: InstituteFormProps) {
                     value={data.total_area}
                     onChange={(e) => setData('total_area', Number(e.target.value))}
                   />
+                  {errors.total_area && (
+                    <p className="text-red-500 text-sm">{errors.total_area}</p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="convered_area">Covered Area (sq ft)</Label>
@@ -166,6 +175,9 @@ export default function InstituteForm({ institute }: InstituteFormProps) {
                     value={data.convered_area}
                     onChange={(e) => setData('convered_area', Number(e.target.value))}
                   />
+                  {errors.convered_area && (
+                    <p className="text-red-500 text-sm">{errors.convered_area}</p>
+                  )}
                 </div>
               </div>
 
@@ -188,6 +200,9 @@ export default function InstituteForm({ institute }: InstituteFormProps) {
                     accept="image/*"
                     onChange={(e) => setData('img_layout', e.target.files?.[0] || null)}
                   />
+                  {errors.img_layout && (
+                    <p className="text-red-500 text-sm">{errors.img_layout}</p>
+                  )}
                 </div>
 
                 {/* 3D image view */}
@@ -208,6 +223,9 @@ export default function InstituteForm({ institute }: InstituteFormProps) {
                     accept="image/*"
                     onChange={(e) => setData('img_3d', e.target.files?.[0] || null)}
                   />
+                  {errors.img_3d && (
+                    <p className="text-red-500 text-sm">{errors.img_3d}</p>
+                  )}
                 </div>
 
                 {/* Video view */}
@@ -227,6 +245,9 @@ export default function InstituteForm({ institute }: InstituteFormProps) {
                     accept="video/*"
                     onChange={(e) => setData('video', e.target.files?.[0] || null)}
                   />
+                  {errors.video && (
+                    <p className="text-red-500 text-sm">{errors.video}</p>
+                  )}
                 </div>
               </div>
 

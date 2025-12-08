@@ -76,7 +76,7 @@ class InstituteController extends Controller
     }
     public function store(Request $request)
     {
-
+try {
         $data = $request->validate([
             
             'established_date' => 'required|string|max:255',
@@ -159,6 +159,13 @@ $data['type'] = $type;
         }
 
         return redirect()->back()->with('success', 'Institute saved successfully.');
+         } catch (\Illuminate\Validation\ValidationException $e) {
+        // Return validation errors to the frontend
+        return back()->withErrors($e->validator->errors())->withInput();
+    } catch (\Exception $e) {
+        // Handle any unexpected errors
+        return back()->with('error', 'An error occurred while saveing the Institute: ' . $e->getMessage());
+    }
     }
     public function edit(Institute $institute)
     {
@@ -167,7 +174,7 @@ $data['type'] = $type;
         ]);
     } 
     public function update(Request $request, Institute $institute)
-    {
+    { try {
           $data = $request->validate([
             
             'established_date' => 'required|string|max:255',
@@ -238,6 +245,13 @@ $institute = Institute::where('hr_id', $hrInstituteId)->first();
             $institute->update($data);
         
         return redirect()->back()->with('success', 'Institute updated successfully.');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+        // Return validation errors to the frontend
+        return back()->withErrors($e->validator->errors())->withInput();
+    } catch (\Exception $e) {
+        // Handle any unexpected errors
+        return back()->with('error', 'An error occurred while updating the Institute: ' . $e->getMessage());
+    }
     }
     public function destroy(Institute $institute)
     {

@@ -119,7 +119,7 @@ export function NotificationDropdown() {
     return (
         <DropdownMenu open={open} onOpenChange={setOpen}>
             <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="relative h-9 w-9 group cursor-pointer">
+                <Button variant="ghost" size="icon" className="relative h-9 w-9 group cursor-pointer text-white hover:text-black dark:border-white dark:hover:text-white ">
                     <Bell className="!size-5 opacity-80 group-hover:opacity-100" />
                     {data.unread_count > 0 && (
                         <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
@@ -146,8 +146,8 @@ export function NotificationDropdown() {
                 </div>
 
                 {data.notifications.length === 0 ? (
-                    <div className="py-8 text-center text-sm text-muted-foreground">
-                        <Bell className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                    <div className="py-8 text-center text-sm text-muted-foreground ">
+                        <Bell className="  h-8 w-8 mx-auto mb-2 opacity-50" />
                         <p>No new notifications</p>
                     </div>
                 ) : (
