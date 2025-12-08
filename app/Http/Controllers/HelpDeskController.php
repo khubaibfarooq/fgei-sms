@@ -26,7 +26,7 @@ if($type=="School"||$type=="College")
 if($type=="School"||$type=="College"){
         return Inertia::render('helpdesk/Index', [
             'helpDesk' => $helpDesk,
-            'filters' => ['search' => $request->search ?? ''],
+            'filters' => ['search' => $request->search ?? '', 'status' => $request->status ?? ''],
         ]);}else{
           return Inertia::render('helpdesk/Requests', [
             'helpDesk' => $helpDesk,
@@ -78,7 +78,7 @@ if($type=="School"||$type=="College"){
             'feedback' => 'required|string',
         ]);
 
-        $data['feedback_date'] = date('Y-m-d');
+        $data['feedback_date'] = date('Y-m-d H:i:s');
         $data['feedback_by'] = auth()->id();
 
 

@@ -19,6 +19,7 @@ import {
   AlertDialogAction,
 } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
+import { formatDateTime } from '@/utils/dateFormatter';
 
 interface HelpDesk {
   id: number;
@@ -29,7 +30,9 @@ interface HelpDesk {
   status: string;
   title: string;
   institute_id: number;
-  feedback_date: Date;
+  feedback_date: string | null;
+  created_at: string;
+  updated_at: string;
   institute: {
     id: number;
     name: string;
@@ -172,6 +175,11 @@ export default function HelpDeskIndex({ helpDesk, filters, institutes, auth }: P
                   <tr className="bg-primary dark:bg-gray-800 text-center" >
                     <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Institute</th>
                     <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Token</th>
+                    <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Created At</th>
+                    <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Feedback</th>
+                    <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Feedback At</th>
+
+
                     <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Title</th>
                     <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Descriptions</th>
                     <th className="border p-2  text-sm font-medium text-white dark:text-gray-200">Status</th>
@@ -185,12 +193,21 @@ export default function HelpDeskIndex({ helpDesk, filters, institutes, auth }: P
                   ) : (
                     helpDesk.data.map((req) => (
 
-                      <tr onClick={() => openEditModal(req)} key={req.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 text-center
-                    "> <td className="border  text-sm text-gray-900 dark:text-gray-100">
+                      <tr onClick={() => openEditModal(req)} key={req.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 text-center">
+                        <td className="border text-sm text-gray-900 dark:text-gray-100">
                           {req.institute.id}-{req.institute.name} ({req.institute.type})
                         </td>
                         <td className="border  text-sm text-gray-900 dark:text-gray-100">
                           #{req.token}
+                        </td>
+                        <td className="border  text-sm text-gray-900 dark:text-gray-100">
+                          {req.created_at ? formatDateTime(new Date(req.created_at)) : ""}
+                        </td>
+                        <td className="border  text-sm text-gray-900 dark:text-gray-100">
+                          {req.feedback}
+                        </td>
+                        <td className="border  text-sm text-gray-900 dark:text-gray-100">
+                          {req.feedback_date ? formatDateTime(new Date(req.feedback_date)) : ""}
                         </td>
                         <td className="border  text-sm text-gray-900 dark:text-gray-100">
                           {req.title}
