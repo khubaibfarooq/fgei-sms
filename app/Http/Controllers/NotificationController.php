@@ -138,7 +138,7 @@ class NotificationController extends Controller
      * Mark all notifications as read for the current user.
      */
     public function markAllAsRead()
-    {
+    { 
         $userId = auth()->id();
         
         // Get all unread notification IDs
