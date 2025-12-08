@@ -45,6 +45,9 @@ class NotificationController extends Controller
      */
     public function create()
     {
+       if (!auth()->user()->can('notifications.create')) {
+        abort(403, 'You do not have permission to add a notification.');
+    }
         return Inertia::render('notifications/Form');
     }
 
@@ -71,6 +74,9 @@ class NotificationController extends Controller
      */
     public function edit(Notification $notification)
     {
+       if (!auth()->user()->can('notifications.edit')) {
+        abort(403, 'You do not have permission to edit a notification.');
+    }
         return Inertia::render('notifications/Form', [
             'notification' => $notification,
         ]);
@@ -161,6 +167,9 @@ class NotificationController extends Controller
      */
     public function destroy(Notification $notification)
     {
+       if (!auth()->user()->can('notifications.delete')) {
+        abort(403, 'You do not have permission to delete a notification.');
+    }
         $notification->delete();
 
         return redirect()->route('notifications.index')
