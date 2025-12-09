@@ -129,7 +129,7 @@ export default function Assets({ instituteAssets: instituteAssetsProp, institute
   const [filteredInstitutes, setFilteredInstitutes] = useState<Item[]>(institutes || []);
   const [allAssetsForExport, setAllAssetsForExport] = useState<instituteAssetsProp[]>([]);
   const [details, setDetails] = useState(false); // Add this line
-  console.log('assets', assets);
+
   // Fetch institutes based on region selection
   const fetchInstitutes = async (regionId: string) => {
     try {
@@ -139,7 +139,6 @@ export default function Assets({ instituteAssets: instituteAssetsProp, institute
         throw new Error('Failed to fetch institutes');
       }
       const data: Item[] = await response.json(); // Fixed: response.json() not Response.json()
-      console.log('Fetched institutes:', data);
       setFilteredInstitutes(data);
       // Reset institute if the selected institute is not in the new list
       if (institute && regionId !== '0' && !data.some((inst: Item) => inst.id.toString() === institute)) {
@@ -205,7 +204,6 @@ export default function Assets({ instituteAssets: instituteAssetsProp, institute
       fetch(`/reports/blocks?institute_id=${institute}`)
         .then((response) => response.json())
         .then((data) => {
-          console.log('Fetched blocks:', data);
           if (Array.isArray(data)) {
             const validBlocks = data.filter(isValidItem);
             if (validBlocks.length < data.length) {
@@ -240,7 +238,6 @@ export default function Assets({ instituteAssets: instituteAssetsProp, institute
       fetch(`/reports/rooms?block_id=${block}`)
         .then((response) => response.json())
         .then((data) => {
-          console.log('Fetched rooms:', data);
           if (Array.isArray(data)) {
             const validRooms = data.filter(isValidItem);
             if (validRooms.length < data.length) {
@@ -272,7 +269,6 @@ export default function Assets({ instituteAssets: instituteAssetsProp, institute
       fetch(`/reports/assets/list?asset_category_id=${assetCategory}`)
         .then((response) => response.json())
         .then((data) => {
-          console.log('Fetched assets:', data);
           if (Array.isArray(data)) {
             const validAssets = data.filter(isValidItem);
             if (validAssets.length < data.length) {
@@ -315,7 +311,6 @@ export default function Assets({ instituteAssets: instituteAssetsProp, institute
     fetch(`/reports/assets/institute-assets?${params.toString()}`)
       .then((response) => response.json())
       .then((data) => {
-        console.log('Fetched institute assets after details toggle:', data);
         setInstituteAssets(data);
       })
       .catch((error) => {
@@ -330,15 +325,9 @@ export default function Assets({ instituteAssets: instituteAssetsProp, institute
       const workbook = new ExcelJS.Workbook();
       const worksheet = workbook.addWorksheet('Assets');
 
-      const instituteName =
-        allAssets.length > 0 && allAssets[0].institute?.name
-          ? allAssets[0].institute.name
-          : 'All Institutes';
-
       // Header
       worksheet.mergeCells('A1:F1');
       const instituteCell = worksheet.getCell('A1');
-      instituteCell.value = `Institute: ${instituteName}`;
       instituteCell.font = { size: 16, bold: true };
       instituteCell.alignment = { horizontal: 'center' };
 
@@ -353,7 +342,7 @@ export default function Assets({ instituteAssets: instituteAssetsProp, institute
       // Dynamic headers
       const headers = !details
         ? ['Asset', 'Total Quantity', 'Rooms']
-        : ['Details', 'Quantity', 'Block', 'Room', 'Category', 'Asset'];
+        : ['Institute', 'Details', 'Quantity', 'Block', 'Room', 'Category', 'Asset'];
 
       const headerRow = worksheet.addRow(headers);
       headerRow.font = { bold: true };
@@ -374,6 +363,7 @@ export default function Assets({ instituteAssets: instituteAssetsProp, institute
           ]);
         } else {
           worksheet.addRow([
+            instAsset.institute?.name || 'N/A',
             instAsset.details || 'N/A',
             instAsset.current_qty || 0,
             instAsset.room.block?.name || 'N/A',
@@ -413,16 +403,10 @@ export default function Assets({ instituteAssets: instituteAssetsProp, institute
 
       const doc = new jsPDF();
 
-      // Get institute name from first asset (if available) or use default
-      const instituteName =
-        allAssets.length > 0 && allAssets[0].institute?.name
-          ? allAssets[0].institute.name
-          : 'All Institutes';
 
       // Header
       doc.setFontSize(16);
       doc.setFont('helvetica', 'bold');
-      doc.text(`Institute: ${instituteName}`, 14, 15);
 
       doc.setFontSize(14);
       doc.text('Assets Report', 14, 25);
@@ -430,7 +414,7 @@ export default function Assets({ instituteAssets: instituteAssetsProp, institute
       // Dynamic columns based on current view mode
       const tableColumn = !details
         ? ['Asset', 'Total Quantity', 'Rooms']
-        : ['Details', 'Qty', 'Block', 'Room', 'Category', 'Asset'];
+        : ['Institute', 'Details', 'Qty', 'Block', 'Room', 'Category', 'Asset'];
 
       // Dynamic rows — match the columns exactly
       const tableRows = allAssets.map((instAsset: any) => {
@@ -445,6 +429,7 @@ export default function Assets({ instituteAssets: instituteAssetsProp, institute
 
         // Detailed Mode
         return [
+          instAsset.institute?.name || 'N/A',
           instAsset.details || 'N/A',
           instAsset.current_qty?.toString() || '0',
           instAsset.room?.block.name || 'N/A',
@@ -508,7 +493,6 @@ export default function Assets({ instituteAssets: instituteAssetsProp, institute
     fetch(`/reports/assets/institute-assets?${params.toString()}`)
       .then((response) => response.json())
       .then((data) => {
-        console.log('Fetched filtered institute assets:', data);
         setInstituteAssets(data);
       })
       .catch((error) => {
@@ -530,11 +514,10 @@ export default function Assets({ instituteAssets: instituteAssetsProp, institute
           region_id: region || '',
           details: details ? 'true' : 'false', // This is the key
         });
-
+        console.log(params.toString());
         fetch(`/reports/assets/institute-assets?${params.toString()}`)
           .then((response) => response.json())
           .then((data) => {
-            console.log('Fetched filtered institute assets:', data);
             setInstituteAssets(data);
           })
           .catch((error) => {
@@ -542,7 +525,7 @@ export default function Assets({ instituteAssets: instituteAssetsProp, institute
             toast.error('Failed to fetch filtered assets');
           });
       }, 300),
-    [search, institute, block, room, assetCategory, asset, region, details]
+    [institute, block, room, assetCategory, asset, region, details]
   );
 
   // Memoize dropdown items to prevent unnecessary re-renders
@@ -742,6 +725,13 @@ export default function Assets({ instituteAssets: instituteAssetsProp, institute
                   </div>
                 </CardHeader>
                 <Separator />
+                <Input
+                  type="text"
+                  placeholder="Search projects... (press Enter)"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  onKeyDown={applyFilters}
+                />
                 <CardContent className="pt-6 space-y-6">
                   <table className="w-full border-collapse border-1 rounded-md overflow-hidden shadow-sm">
                     <thead>
@@ -761,7 +751,9 @@ export default function Assets({ instituteAssets: instituteAssetsProp, institute
                           </>
                         ) : (
                           <>
-
+                            <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">
+                              Institute
+                            </th>
                             <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">
                               Category
                             </th>
@@ -796,7 +788,7 @@ export default function Assets({ instituteAssets: instituteAssetsProp, institute
                             const handleRowClick = (assetId: number) => {
                               // Update state first
                               setDetails(true);
-                              setAsset(assetId.toString());
+                              //  setAsset(assetId.toString());
 
                               // Use setTimeout to ensure state updates are processed
                               setTimeout(() => {
@@ -814,7 +806,6 @@ export default function Assets({ instituteAssets: instituteAssetsProp, institute
                                 fetch(`/reports/assets/institute-assets?${params.toString()}`)
                                   .then((response) => response.json())
                                   .then((data) => {
-                                    console.log('Fetched asset details:', data);
                                     setInstituteAssets(data);
                                   })
                                   .catch((error) => {
@@ -856,6 +847,9 @@ export default function Assets({ instituteAssets: instituteAssetsProp, institute
 
                           return (
                             <tr key={instAsset.id} className="hover:bg-primary/10 dark:hover:bg-gray-700">
+                              <td className="border p-2 text-left font-bold dark:text-gray-100">
+                                {instAsset.institute?.name}
+                              </td>
                               <td className="border p-2 text-left font-bold dark:text-gray-100">
                                 {instAsset.asset?.category.name}
                               </td>

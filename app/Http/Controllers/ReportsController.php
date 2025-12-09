@@ -576,10 +576,7 @@ $regions = Institute::select('region_id as id', 'name')->where('type', 'Regional
     $query = InstituteAsset::query();
 
     // Apply filters (same as before)
-    if ($request->filled('search')) {
-        $query->where('details', 'like', '%' . $request->search . '%')
-              ->orWhereHas('asset', fn($q) => $q->where('name', 'like', '%' . $request->search . '%'));
-    }
+    
         if ($request->filled('region_id') && is_numeric($request->region_id) && $request->region_id!=0) {
         $query->whereHas('institute', function ($q) use ($request) {
             $q->where('region_id', $request->region_id);
@@ -624,6 +621,14 @@ $regions = Institute::select('region_id as id', 'name')->where('type', 'Regional
         ->join('asset_categories','asset_categories.id','=','assets.asset_category_id')
         ->select('institute_assets.*'); // Important: select from institute_assets
         $query->orderBy('asset_categories.name', 'asc','assets.name','asc');
+    }
+    if ($request->filled('search')) {
+        $query->where(function($q) use ($request) {
+            $q->orWhereHas('asset', fn($sq) => $sq->where('name', 'like', '%' . $request->search . '%'))
+              ->orWhereHas('institute', fn($sq) => $sq->where('name', 'like', '%' . $request->search . '%'))
+              ->orWhereHas('asset.category', fn($sq) => $sq->where('name', 'like', '%' . $request->search . '%'));
+
+        });
     }
 
     // Handle export (all data, no pagination)
