@@ -6,7 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { Textarea } from '@/components/ui/textarea';
+import ReactQuill from 'react-quill-new';
+import 'react-quill-new/dist/quill.snow.css';
 import { Save, ArrowLeft, Bell } from 'lucide-react';
 import { BreadcrumbItem } from '@/types';
 import {
@@ -72,7 +73,7 @@ export default function NotificationForm({ notification }: NotificationFormProps
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={isEdit ? 'Edit Notification' : 'Create Notification'} />
 
-            <div className="flex-1 p-4 md:p-6 max-w-2xl mx-auto">
+            <div className="flex-1 p-4 md:p-6 w-5xl mx-auto">
                 <Card>
                     <CardHeader>
                         <div className="flex items-center gap-3">
@@ -109,16 +110,16 @@ export default function NotificationForm({ notification }: NotificationFormProps
 
                                 <div className="space-y-2">
                                     <Label htmlFor="message">Message *</Label>
-                                    <Textarea
-                                        id="message"
-                                        value={data.message}
-                                        onChange={(e) => setData('message', e.target.value)}
-                                        placeholder="Enter notification message"
-                                        rows={4}
-                                        required
-                                    />
+                                    <div className="mb-12 h-64">
+                                        <ReactQuill
+                                            theme="snow"
+                                            value={data.message}
+                                            onChange={(value) => setData('message', value)}
+                                            className="h-56"
+                                        />
+                                    </div>
                                     {errors.message && (
-                                        <p className="text-sm text-red-600">{errors.message}</p>
+                                        <p className="text-sm text-red-600 mt-2">{errors.message}</p>
                                     )}
                                 </div>
 
@@ -182,6 +183,6 @@ export default function NotificationForm({ notification }: NotificationFormProps
                     </CardContent>
                 </Card>
             </div>
-        </AppLayout>
+        </AppLayout >
     );
 }
