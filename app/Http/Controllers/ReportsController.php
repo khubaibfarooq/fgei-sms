@@ -2085,4 +2085,127 @@ public function getFund(Request $request)
 
 //     return response()->json($funds);
 // }
+
+    public function completion(Request $request)
+    {
+        $regions = Institute::select('region_id as id', 'name')
+            ->where('type', 'Regional Office')
+            ->orderByRaw('ISNULL(`order`) ASC, `order` ASC, id DESC')
+            ->get()
+            ->filter(fn($r) => is_numeric($r->id) && $r->id > 0 && !empty(trim($r->name)))
+            ->values();
+
+        return Inertia::render('Reports/Completion', [
+            'regions' => $regions,
+            'filters' => [
+                'region_id' => '',
+                'institute_id' => '',
+                'status' => '',
+            ],
+        ]);
+    }
+
+    public function getCompletionData(Request $request)
+    {
+        $query = Institute::query()
+            ->with([
+              
+                'shifts',
+                'fundHelds',
+                'blocks.rooms',
+                'instituteAssets',
+                'institutePlants',
+                'instituteTransports',
+                'projects',
+                'upgradations'
+            ])
+            ->whereIn('type', ['School', 'College']);
+
+        if ($request->filled('region_id') && is_numeric($request->region_id) && $request->region_id > 0) {
+            $query->where('region_id', $request->region_id);
+        }
+
+        if ($request->filled('institute_id') && is_numeric($request->institute_id) && $request->institute_id > 0) {
+            $query->where('id', $request->institute_id);
+        }
+
+        $institutes = $query->get()->map(function ($institute) {
+            $shiftsCount = $institute->shifts->count();
+            $blocksCount = $institute->blocks->count();
+            $roomsCount = $institute->blocks->sum(fn($b) => $b->rooms->count());
+            $assetsCount = $institute->instituteAssets->count();
+            $plantsCount = $institute->institutePlants->count();
+            $transportsCount = $institute->instituteTransports->count();
+            $fundsCount = $institute->fundHelds->count();
+            $projectsCount = $institute->projects->count();
+            $upgradationsCount = $institute->upgradations->count();
+
+            // Percentage Calculation Logic
+            $percentage = 0;
+            $firstShift = $institute->shifts->first();
+            $buildingTypeId = $firstShift ? $firstShift->building_type_id : null;
+
+            if ($buildingTypeId == 1) { // Owned
+                $percentage += 20; // Institute Profile
+                if ($fundsCount > 0) $percentage += 20;
+                if ($blocksCount > 0) $percentage += 10;
+                if ($roomsCount > 0) $percentage += 10;
+                if ($shiftsCount > 0) $percentage += 10;
+                if ($plantsCount > 0) $percentage += 10;
+                if ($assetsCount > 50) $percentage += 20;
+            } else { // Rented / Other
+                $percentage += 40; // Institute Profile
+                if ($fundsCount > 0) $percentage += 40;
+                if ($shiftsCount > 0) $percentage += 20;
+            }
+            
+            // Cap at 100
+            $percentage = min($percentage, 100);
+
+            return [
+                'id' => $institute->id,
+                'name' => $institute->name,
+                'region_id' => $institute->region_id,
+                'region_name' => $institute->region->name ?? 'N/A',
+                'shifts' => $shiftsCount,
+                'blocks' => $blocksCount,
+                'rooms' => $roomsCount,
+                'assets' => $assetsCount,
+                'plants' => $plantsCount,
+                'transports' => $transportsCount,
+                'funds' => $fundsCount,
+                'projects' => $projectsCount,
+                'upgradations' => $upgradationsCount,
+                'percentage' => $percentage,
+            ];
+        });
+
+        // Filter by Status if requested
+        if ($request->filled('status')) {
+            $status = $request->status;
+            $institutes = $institutes->filter(function ($item) use ($status) {
+                if ($status === 'completed') return $item['percentage'] == 100;
+                if ($status === 'less_than_50') return $item['percentage'] < 50;
+                if ($status === 'zero') return $item['percentage'] == 0;
+                return true;
+            });
+        }
+
+        $institutes = $institutes->values();
+
+        // Calculate Region Summary
+        $summary = $institutes->groupBy('region_name')->map(function ($group, $regionName) {
+            return [
+                'region' => $regionName,
+                'total_institutes' => $group->count(),
+                'completed' => $group->where('percentage', 100)->count(),
+                'less_than_50' => $group->where('percentage', '<', 50)->count(),
+            ];
+        })->values();
+
+        return response()->json([
+            'summary' => $summary,
+            'details' => $institutes,
+        ]);
+    }
 }

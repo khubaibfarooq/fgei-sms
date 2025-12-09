@@ -212,6 +212,9 @@ Route::get('/reports/funds', [ReportsController::class, 'Funds'])->name('reports
          
     Route::get('/reports/transactions/getbytid', [ReportsController::class, 'getByTid'])
          ->name('reports.transactions.getbytid');
+
+    Route::get('/reports/completion', [ReportsController::class, 'completion'])->name('reports.completion');
+    Route::get('/reports/completion/getData', [ReportsController::class, 'getCompletionData'])->name('reports.completion.getData');
 //helpdesk
 Route::put('/helpdesk/{helpDesk}', [HelpDeskController::class, 'update'])->name('helpdesk.update');
 Route::get('/helpdesk', [HelpDeskController::class, 'index'])->name('helpdesk.index');

@@ -1,0 +1,389 @@
+import React, { useEffect, useState } from 'react';
+import { Head } from '@inertiajs/react';
+import AppLayout from '@/layouts/app-layout';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { type BreadcrumbItem } from '@/types';
+import { toast } from 'sonner';
+import Combobox from '@/components/ui/combobox';
+import ExcelJS from 'exceljs';
+import FileSaver from 'file-saver';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+
+const breadcrumbs: BreadcrumbItem[] = [
+    { title: 'Reports', href: '/reports' },
+    { title: 'Completion', href: '/reports/completion' },
+];
+
+interface Region { id: number; name: string; }
+interface Institute { id: number; name: string; }
+
+interface SummaryItem {
+    region: string;
+    total_institutes: number;
+    completed: number;
+    less_than_50: number;
+}
+
+interface DetailItem {
+    id: number;
+    name: string;
+    region_name: string;
+    shifts: number;
+    blocks: number;
+    rooms: number;
+    assets: number;
+    plants: number;
+    transports: number;
+    funds: number;
+    projects: number;
+    upgradations: number;
+    percentage: number;
+}
+
+interface Props {
+    regions: Region[];
+    filters: {
+        region_id?: string;
+        institute_id?: string;
+        status?: string;
+    };
+}
+
+export default function Completion({
+    regions = [],
+    filters: initialFilters,
+}: Props) {
+    const [region, setRegion] = useState(initialFilters.region_id || '');
+    const [institute, setInstitute] = useState(initialFilters.institute_id || '');
+    const [status, setStatus] = useState(initialFilters.status || '');
+
+    const [institutesList, setInstitutesList] = useState<Institute[]>([]);
+    const [summary, setSummary] = useState<SummaryItem[]>([]);
+    const [details, setDetails] = useState<DetailItem[]>([]);
+    const [loading, setLoading] = useState(false);
+
+    // Fetch institutes when region changes
+    useEffect(() => {
+        if (region && region !== '0') {
+            fetch(`/reports/getInstitutes?region_id=${region}`)
+                .then(res => res.json())
+                .then(data => setInstitutesList(data))
+                .catch(() => toast.error('Failed to load institutes'));
+        } else {
+            setInstitutesList([]);
+        }
+    }, [region]);
+
+    const fetchData = async () => {
+        setLoading(true);
+        try {
+            const params = new URLSearchParams({
+                region_id: region || '',
+                institute_id: institute || '',
+                status: status || '',
+            });
+            const res = await fetch(`/reports/completion/getData?${params.toString()}`);
+            if (!res.ok) throw new Error();
+            const data = await res.json();
+            setSummary(data.summary);
+            setDetails(data.details);
+        } catch (error) {
+            toast.error('Failed to load report data');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Initial fetch
+    useEffect(() => {
+        fetchData();
+    }, []);
+
+    const handleApply = () => {
+        fetchData();
+    };
+
+    const handleReset = () => {
+        setRegion('');
+        setInstitute('');
+        setStatus('');
+        // Trigger fetch after state update (or call fetchData with empty params directly)
+        setTimeout(() => {
+            // We can't rely on state immediately, so pass empty params
+            // But better to just reset state and let user click apply or auto-fetch
+            // For now, let's just reset state and manually fetch empty
+            const params = new URLSearchParams({
+                region_id: '',
+                institute_id: '',
+                status: '',
+            });
+            fetch(`/reports/completion/getData?${params.toString()}`)
+                .then(res => res.json())
+                .then(data => {
+                    setSummary(data.summary);
+                    setDetails(data.details);
+                });
+        }, 0);
+    };
+
+    const exportToExcel = async () => {
+        const workbook = new ExcelJS.Workbook();
+
+        // Summary Sheet
+        const wsSummary = workbook.addWorksheet('Summary');
+        wsSummary.columns = [
+            { header: 'Region', key: 'region', width: 30 },
+            { header: 'Total Institutes', key: 'total', width: 20 },
+            { header: 'Completed', key: 'completed', width: 20 },
+            { header: '< 50%', key: 'less', width: 20 },
+        ];
+        summary.forEach(item => {
+            wsSummary.addRow({
+                region: item.region,
+                total: item.total_institutes,
+                completed: item.completed,
+                less: item.less_than_50
+            });
+        });
+
+        // Details Sheet
+        const wsDetails = workbook.addWorksheet('Details');
+        wsDetails.columns = [
+            { header: 'Institute', key: 'name', width: 40 },
+            { header: 'Region', key: 'region', width: 30 },
+            { header: 'Shifts', key: 'shifts', width: 10 },
+            { header: 'Blocks', key: 'blocks', width: 10 },
+            { header: 'Rooms', key: 'rooms', width: 10 },
+            { header: 'Assets', key: 'assets', width: 10 },
+            { header: 'Plants', key: 'plants', width: 10 },
+            { header: 'Transports', key: 'transports', width: 12 },
+            { header: 'Funds', key: 'funds', width: 10 },
+            { header: 'Projects', key: 'projects', width: 10 },
+            { header: 'Upgradations', key: 'upgradations', width: 12 },
+            { header: 'Total %', key: 'percentage', width: 10 },
+        ];
+        details.forEach(item => {
+            wsDetails.addRow({
+                name: item.name,
+                region: item.region_name,
+                shifts: item.shifts,
+                blocks: item.blocks,
+                rooms: item.rooms,
+                assets: item.assets,
+                plants: item.plants,
+                transports: item.transports,
+                funds: item.funds,
+                projects: item.projects,
+                upgradations: item.upgradations,
+                percentage: item.percentage + '%'
+            });
+        });
+
+        const buffer = await workbook.xlsx.writeBuffer();
+        FileSaver.saveAs(new Blob([buffer]), 'Completion_Report.xlsx');
+    };
+
+    const exportToPDF = () => {
+        const doc = new jsPDF('l', 'mm', 'a4');
+
+        // Summary
+        doc.text('Completion Report - Summary', 14, 15);
+        autoTable(doc, {
+            head: [['Region', 'Total Institutes', 'Completed', '< 50%']],
+            body: summary.map(s => [s.region, s.total_institutes, s.completed, s.less_than_50]),
+            startY: 20,
+        });
+
+        // Details
+        doc.addPage();
+        doc.text('Completion Report - Details', 14, 15);
+        autoTable(doc, {
+            head: [['Institute', 'Region', 'Shifts', 'Blocks', 'Rooms', 'Assets', 'Plants', 'Transports', 'Funds', 'Projects', 'Upgradations', 'Total %']],
+            body: details.map(d => [
+                d.name,
+                d.region_name,
+                d.shifts,
+                d.blocks,
+                d.rooms,
+                d.assets,
+                d.plants,
+                d.transports,
+                d.funds,
+                d.projects,
+                d.upgradations,
+                d.percentage + '%'
+            ]),
+            startY: 20,
+            styles: { fontSize: 8 },
+        });
+
+        doc.save('Completion_Report.pdf');
+    };
+
+    return (
+        <AppLayout breadcrumbs={breadcrumbs}>
+            <Head title="Completion Report" />
+
+            <div className="p-4 lg:p-6 max-w-full space-y-6">
+                <Card className="w-full shadow-lg">
+                    <CardHeader className="pb-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                            <div>
+                                <CardTitle className="text-2xl font-bold">Completion Report</CardTitle>
+                                <p className="text-sm text-muted-foreground mt-1">
+                                    Institute data completion status
+                                </p>
+                            </div>
+                            <div className="flex gap-2">
+                                <Button onClick={exportToPDF} variant="outline" size="sm">PDF</Button>
+                                <Button onClick={exportToExcel} variant="outline" size="sm">Excel</Button>
+                            </div>
+                        </div>
+                    </CardHeader>
+                    <Separator />
+                    <CardContent className="pt-6 pb-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <Combobox
+                                entity="region"
+                                value={region}
+                                onChange={(val) => { setRegion(val); setInstitute(''); }}
+                                options={regions.map(r => ({ id: r.id.toString(), name: r.name.split(' ').pop() || r.name }))}
+                                includeAllOption={true}
+                                placeholder="Select Region"
+                            />
+                            <Combobox
+                                entity="institute"
+                                value={institute}
+                                onChange={setInstitute}
+                                options={institutesList.map(i => ({ id: i.id.toString(), name: i.name }))}
+                                includeAllOption={false}
+                                placeholder="Select Institute"
+                            />
+                            <Select value={status} onValueChange={setStatus}>
+                                <SelectTrigger><SelectValue placeholder="Status" /></SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">All Statuses</SelectItem>
+                                    <SelectItem value="completed">Completed (100%)</SelectItem>
+                                    <SelectItem value="less_than_50">Less than 50%</SelectItem>
+                                    <SelectItem value="zero">Zero (0%)</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <div className="flex gap-2">
+                                <Button onClick={handleApply} className="flex-1" disabled={loading}>
+                                    {loading ? 'Loading...' : 'Apply'}
+                                </Button>
+                                <Button variant="outline" onClick={handleReset} className="flex-1">Reset</Button>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Summary Table */}
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="text-lg">Region Wise Summary</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-sm text-left">
+                                <thead className="bg-muted/50 text-muted-foreground uppercase">
+                                    <tr>
+                                        <th className="px-4 py-3">Region</th>
+                                        <th className="px-4 py-3 text-center">Total Institutes</th>
+                                        <th className="px-4 py-3 text-center">Completed Data</th>
+                                        <th className="px-4 py-3 text-center">Less than 50%</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y">
+                                    {summary.length > 0 ? (
+                                        summary.map((item, idx) => (
+                                            <tr key={idx} className="hover:bg-muted/50">
+                                                <td className="px-4 py-3 font-medium">{item.region}</td>
+                                                <td className="px-4 py-3 text-center">{item.total_institutes}</td>
+                                                <td className="px-4 py-3 text-center text-green-600 font-bold">{item.completed}</td>
+                                                <td className="px-4 py-3 text-center text-red-600 font-bold">{item.less_than_50}</td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td colSpan={4} className="px-4 py-8 text-center text-muted-foreground">
+                                                No summary data available
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Details Table */}
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="text-lg">Institute Details</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-sm text-left">
+                                <thead className="bg-muted/50 text-muted-foreground uppercase">
+                                    <tr>
+                                        <th className="px-4 py-3 min-w-[200px]">Institute</th>
+                                        <th className="px-4 py-3 text-center">Shifts</th>
+                                        <th className="px-4 py-3 text-center">Blocks</th>
+                                        <th className="px-4 py-3 text-center">Rooms</th>
+                                        <th className="px-4 py-3 text-center">Assets</th>
+                                        <th className="px-4 py-3 text-center">Plants</th>
+                                        <th className="px-4 py-3 text-center">Transports</th>
+                                        <th className="px-4 py-3 text-center">Fund</th>
+                                        <th className="px-4 py-3 text-center">Projects</th>
+                                        <th className="px-4 py-3 text-center">Upgrad.</th>
+                                        <th className="px-4 py-3 text-center">Total %</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y">
+                                    {details.length > 0 ? (
+                                        details.map((item) => (
+                                            <tr key={item.id} className="hover:bg-muted/50">
+                                                <td className="px-4 py-3 font-medium">
+                                                    <div>{item.name}</div>
+                                                    <div className="text-xs text-muted-foreground">{item.region_name}</div>
+                                                </td>
+                                                <td className="px-4 py-3 text-center">{item.shifts}</td>
+                                                <td className="px-4 py-3 text-center">{item.blocks}</td>
+                                                <td className="px-4 py-3 text-center">{item.rooms}</td>
+                                                <td className="px-4 py-3 text-center">{item.assets}</td>
+                                                <td className="px-4 py-3 text-center">{item.plants}</td>
+                                                <td className="px-4 py-3 text-center">{item.transports}</td>
+                                                <td className="px-4 py-3 text-center">{item.funds}</td>
+                                                <td className="px-4 py-3 text-center">{item.projects}</td>
+                                                <td className="px-4 py-3 text-center">{item.upgradations}</td>
+                                                <td className="px-4 py-3 text-center font-bold">
+                                                    <span className={
+                                                        item.percentage === 100 ? 'text-green-600' :
+                                                            item.percentage < 50 ? 'text-red-600' : 'text-yellow-600'
+                                                    }>
+                                                        {item.percentage}%
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td colSpan={11} className="px-4 py-8 text-center text-muted-foreground">
+                                                No details available
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+        </AppLayout>
+    );
+}
