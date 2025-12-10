@@ -1383,7 +1383,7 @@ public function Funds(Request $request)
         $regionid      = session('region_id');
         $type          = session('type');
 $balances=[];
-        $institutes = Institute::query();
+        $institutes = [];
         $regions    = [];
          $funds = new LengthAwarePaginator(
                     collect([]),
@@ -1399,6 +1399,7 @@ $balances=[];
         if ($type === 'Regional Office') {
              $institutes = Institute::where('region_id', $regionid)
                 ->select('id', 'name')
+                ->orderByRaw('ISNULL(`order`) ASC, `order` ASC, id DESC')
                 ->get()
                 ->filter(fn($i) => is_numeric($i->id) && $i->id > 0 && !empty(trim($i->name)))
                 ->values();
@@ -1691,6 +1692,7 @@ private function getInstitutesForRegionalOffice($request, $regionid)
     if ($request->filled('institute_id') && $request->institute_id !== '0' && is_numeric($request->institute_id)) {
         return Institute::where('institute_id', $request->institute_id)
             ->select('id', 'name')
+            ->orderByRaw('ISNULL(`order`) ASC, `order` ASC, id DESC')
             ->get()
             ->filter(fn($i) => is_numeric($i->id) && $i->id > 0 && !empty(trim($i->name)))
             ->values();
@@ -1698,6 +1700,7 @@ private function getInstitutesForRegionalOffice($request, $regionid)
 
     return Institute::where('region_id', $regionid)
         ->select('id', 'name')
+        ->orderByRaw('ISNULL(`order`) ASC, `order` ASC, id DESC')
         ->get()
         ->filter(fn($i) => is_numeric($i->id) && $i->id > 0 && !empty(trim($i->name)))
         ->values();
@@ -1859,7 +1862,9 @@ private function getAllRegions()
 {
     return Institute::select('region_id as id', DB::raw('MAX(name) as name'))
         ->where('type', 'Regional Office')
+   
         ->groupBy('region_id')
+             ->orderByRaw('ISNULL(MAX(`order`)) ASC, MAX(`order`) ASC, id DESC')
         ->get()
         ->filter(fn($r) => is_numeric($r->id) && $r->id > 0 && !empty(trim($r->name)))
         ->values();
@@ -2013,90 +2018,33 @@ public function getFund(Request $request)
             'filters'   => $request->only(['search', 'from', 'to','fund_head_id','institute_id','region_id']),
         ]);
     } 
-// public function getFunds(Request $request)
-// {
-//     $hrInstituteId = session('inst_id');
-//     $regionid      = session('region_id');
-//     $type          = session('type');
-
-//     $query = FundHeld::query()
-//         ->select([
-//             'fund_head_id',
-
-//             DB::raw('SUM(balance) as balance'),           // Sum all balances
-         
-//         ])
-//         ->with([
-//             'institute',     // Load institute + its region
-//             'fundHead'              // Load fund head name
-//         ]);
-
-//     // -----------------------------------------------------------------
-//     // Institute filter
-//     // -----------------------------------------------------------------
-//     if ($request->filled('institute_id') && is_numeric($request->institute_id) && $request->institute_id > 0) {
-//         $query->where('institute_id', $request->institute_id);
-//     }
-
-//     // -----------------------------------------------------------------
-//     // Region filter (manual from frontend)
-//     // -----------------------------------------------------------------
-//     if ($request->filled('region_id') && $request->region_id !== '0' && is_numeric($request->region_id)) {
-//         $query->whereHas('institute', fn($q) => $q->where('region_id', $request->region_id));
-//     }
-//     // Regional Office user – auto-restrict to their region
-//     elseif ($type === 'Regional Office' && $regionid != 0) {
-//         $query->whereHas('institute', fn($q) => $q->where('region_id', $regionid));
-//     }
-
-//     // -----------------------------------------------------------------
-//     // Fund Head filter
-//     // -----------------------------------------------------------------
-//     if ($request->filled('fund_head_id') && $request->fund_head_id !== '0' && is_numeric($request->fund_head_id)) {
-//         $query->where('fund_head_id', $request->fund_head_id);
-//     }
-
-//     // -----------------------------------------------------------------
-//     // Search filter (optional - search by institute or fund head name)
-//     // -----------------------------------------------------------------
-//     if ($request->filled('search')) {
-//         $search = $request->search;
-//         $query->whereHas('fundHead', fn($q) => $q->where('name', 'like', "%{$search}%"))
-//               ->orWhereHas('institute', fn($q) => $q->where('name', 'like', "%{$search}%"));
-//     }
-
-//     // -----------------------------------------------------------------
-//     // Group by fund_head_id + institute_id (to avoid duplicate rows per institute)
-//     // -----------------------------------------------------------------
-//     $query->groupBy('fund_head_id');
-
-//     // -----------------------------------------------------------------
-//     // Paginate correctly (now counts grouped rows!)
-//     // -----------------------------------------------------------------
-//     $funds = $query->paginate(10)->withQueryString();
-
-//     // -----------------------------------------------------------------
-//     // Attach region from institute (clean & safe)
-//     // -----------------------------------------------------------------
-//     $funds->getCollection()->transform(function ($fund) {
-//         $fund->region = $fund->institute?->region;
-//         return $fund;
-//     });
-
-//     return response()->json($funds);
-// }
-
     public function completion(Request $request)
     {
-        $regions = Institute::select('region_id as id', 'name')
+       $regionid = session('region_id');
+    $type = session('type');
+    $regions=[];
+    $institutes=[];
+
+    if($type=="Regional Office"){
+  $institutes = Institute::select('id', 'name')
+            ->where('region_id', $regionid)
+            ->get()
+            ->filter(fn($r) => is_numeric($r->id) && $r->id > 0 && !empty(trim($r->name)))
+            ->values();
+    
+    }else{
+  $regions = Institute::select('region_id as id', 'name')
             ->where('type', 'Regional Office')
             ->orderByRaw('ISNULL(`order`) ASC, `order` ASC, id DESC')
             ->get()
             ->filter(fn($r) => is_numeric($r->id) && $r->id > 0 && !empty(trim($r->name)))
             ->values();
+    }
+      
 
         return Inertia::render('Reports/Completion', [
             'regions' => $regions,
+            'institutes' => $institutes,
             'filters' => [
                 'region_id' => '',
                 'institute_id' => '',
@@ -2107,6 +2055,8 @@ public function getFund(Request $request)
 
     public function getCompletionData(Request $request)
     {
+             $regionid = session('region_id');
+    $type = session('type');
         $query = Institute::query()
             ->with([
               
@@ -2118,12 +2068,21 @@ public function getFund(Request $request)
                 'instituteTransports',
                 'projects',
                 'upgradations'
-            ])
-            ->whereIn('type', ['School', 'College']);
+            ])->orderByRaw('ISNULL(`order`) ASC, `order` ASC, id DESC')
+;
+           
+            if($type=="Regional Office"){
+                $query->where('region_id', $regionid)->whereIn('type', ['School', 'College']);
 
-        if ($request->filled('region_id') && is_numeric($request->region_id) && $request->region_id > 0) {
+            } // director or dg
+            else{ 
+                
+                
+                
+                if ($request->filled('region_id') && is_numeric($request->region_id) && $request->region_id > 0) {
             $query->where('region_id', $request->region_id);
-        }
+        }}
+      
 
         if ($request->filled('institute_id') && is_numeric($request->institute_id) && $request->institute_id > 0) {
             $query->where('id', $request->institute_id);
@@ -2144,6 +2103,8 @@ public function getFund(Request $request)
             $percentage = 0;
             $firstShift = $institute->shifts->first();
             $buildingTypeId = $firstShift ? $firstShift->building_type_id : null;
+if($buildingTypeId!=null){
+   
 
             if ($buildingTypeId == 1) { // Owned
                 $percentage += 20; // Institute Profile
@@ -2158,7 +2119,7 @@ public function getFund(Request $request)
                 if ($fundsCount > 0) $percentage += 40;
                 if ($shiftsCount > 0) $percentage += 20;
             }
-            
+        }   
             // Cap at 100
             $percentage = min($percentage, 100);
 
@@ -2203,9 +2164,43 @@ public function getFund(Request $request)
             ];
         })->values();
 
+        $details = $institutes;
+
+        // If HQ/SuperAdmin and no region selected, show regions in details
+        if ($type !== 'Regional Office' && (!$request->filled('region_id') || $request->region_id == 0)) {
+             $details = $institutes->groupBy('region_id')->map(function ($group, $regionName) {
+                 $first = $group->first();
+                 $region = Institute::where('region_id', $first['region_id'])->where('type', "Regional Office")->first();
+                 return [
+                     'id' => $first['region_id'],
+                     'name' => $region->name ?? 'N/A',
+                     'is_region' => true,
+                     'total_institutes' => $group->count(),
+                     'completed' => $group->where('percentage', 100)->count(),
+                     'less_than_50' => $group->where('percentage', '<', 50)->count(),
+                     'shifts' => $group->sum('shifts'),
+                     'blocks' => $group->sum('blocks'),
+                     'rooms' => $group->sum('rooms'),
+                     'assets' => $group->sum('assets'),
+                     'plants' => $group->sum('plants'),
+                     'transports' => $group->sum('transports'),
+                     'funds' => $group->sum('funds'),
+                     'projects' => $group->sum('projects'),
+                     'upgradations' => $group->sum('upgradations'),
+                     'percentage' => 0, 
+                 ];
+             })->values();
+        }
+$institutesFilter = [];
+if($type=="Regional Office"){
+    $institutesFilter = Institute::whereIn('type', ['School', 'College'])->where('region_id', $regionid)->get();
+}else{
+    $institutesFilter = Institute::whereIn('type', ['School', 'College'])->get();
+}
         return response()->json([
             'summary' => $summary,
-            'details' => $institutes,
+            'details' => $details,
+            'institutes' => $institutesFilter,
         ]);
     }
 }

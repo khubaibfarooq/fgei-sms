@@ -14,6 +14,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { DollarSign } from 'lucide-react';
 
+
 const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Reports', href: '/reports' },
   { title: 'Funds', href: '/reports/funds' },
@@ -38,6 +39,7 @@ interface Props {
   funds: FundItem[];
   fundheads: Item[];
   regions: Item[];
+  institutes: Item[];
   balances: BalanceItem[];
   filters: {
     institute_id?: string;
@@ -51,6 +53,7 @@ export default function Funds({
   funds: initialFunds = [],
   fundheads = [],
   regions = [],
+  institutes: initialInstitutes = [],
   balances: initialBalances = [],
   filters,
 }: Props) {
@@ -59,7 +62,7 @@ export default function Funds({
   const [region, setRegion] = useState(filters.region_id || '');
   const [funds, setFunds] = useState<FundItem[]>(initialFunds);
   const [balances, setBalances] = useState<BalanceItem[]>(initialBalances);
-  const [filteredInstitutes, setFilteredInstitutes] = useState<Item[]>([]);
+  const [filteredInstitutes, setFilteredInstitutes] = useState<Item[]>(initialInstitutes);
 
   // Convert any string/number → number safely
   const toNumber = (value: any): number => {
