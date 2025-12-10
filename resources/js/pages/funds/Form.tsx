@@ -8,7 +8,6 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Save, ArrowLeft } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
-
 import {
   Select,
   SelectTrigger,
@@ -30,7 +29,7 @@ interface FundFormProps {
 
 
   };
-  fundHeads: Record<string, string>; // Changed from Array to Record (object)
+  fundHeads: Array<{ id: number, name: string, balance: number }>; // Changed from Array to Record (object)
 }
 
 export default function FundForm({ fund, fundHeads }: FundFormProps) {
@@ -48,10 +47,7 @@ export default function FundForm({ fund, fundHeads }: FundFormProps) {
     }
 
     // Convert object { "1": "Administration", "2": "Academic" } to array format
-    return Object.entries(fundHeads).map(([id, name]) => ({
-      id: parseInt(id),
-      name: name as string
-    }));
+    return fundHeads;
   }, [fundHeads]);
 
   const { data, setData, processing, errors, reset } = useForm<{
@@ -73,12 +69,20 @@ export default function FundForm({ fund, fundHeads }: FundFormProps) {
 
 
     if (isEdit) {
+
       router.put(`/funds/${fund.id}`, data, {
         preserveScroll: true,
         preserveState: true,
 
       });
     } else {
+      const fundHead = fundHeadsArray.find((head) => head.id === data.fund_head_id);
+      if (fundHead) {
+        if (data.transaction_type === 'out' && data.balance > fundHead.balance) {
+          alert('Insufficient balance');
+          return;
+        }
+      }
       router.post('/funds', data, {
         onSuccess: () => {
           reset(); // Clear form data on successful POST
@@ -137,7 +141,7 @@ export default function FundForm({ fund, fundHeads }: FundFormProps) {
                     <SelectContent>
                       {fundHeadsArray.map((head) => (
                         <SelectItem key={head.id} value={head.id.toString()}>
-                          {head.name}
+                          {head.name}({head.balance})
                         </SelectItem>
                       ))}
                     </SelectContent>

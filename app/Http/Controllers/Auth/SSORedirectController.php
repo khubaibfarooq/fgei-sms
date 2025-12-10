@@ -34,6 +34,7 @@ class SSORedirectController extends Controller
 
     public function handle(Request $request)
     {
+        dd($request->all());
         $token = $request->query('token');
     
         \Log::info('SSO Redirect initiated', ['token_present' => !empty($token)]);
@@ -41,7 +42,7 @@ class SSORedirectController extends Controller
         try {
             if (empty($token)) {
                 \Log::warning('SSO: No token provided');
-                return redirect('/login')->with('error', 'No authentication token provided.');
+                return redirect('https://hrms.fgei.gov.pk/login')->with('error', 'No authentication token provided.');
             }
     
             // Add leeway for clock skew between servers (60 seconds)

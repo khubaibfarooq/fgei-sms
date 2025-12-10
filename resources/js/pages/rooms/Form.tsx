@@ -15,15 +15,16 @@ import {
   SelectItem,
 } from '@/components/ui/select';
 import { BreadcrumbItem } from '@/types';
+import Combobox from '@/components/ui/combobox';
 
 interface RoomFormProps {
   room?: {
     id: number;
     name: string;
-    area: number;
-    room_type_id: number;
-    block_id: number;
-        img:string | null;
+    area: number | null;
+    room_type_id: number | null;
+    block_id: number | null;
+    img: string | null;
 
   };
   roomTypes: Array<{ id: number; name: string }>;
@@ -38,7 +39,7 @@ export default function RoomForm({ room, roomTypes, blocks }: RoomFormProps) {
     area: number;
     room_type_id: number;
     block_id: number;
-     img:string |File | null;
+    img: string | File | null;
   }>({
     name: room?.name || '',
     area: room?.area || 0,
@@ -49,10 +50,10 @@ export default function RoomForm({ room, roomTypes, blocks }: RoomFormProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-     const formData = new FormData();
+    const formData = new FormData();
     (Object.keys(data) as Array<keyof typeof data>).forEach(key => {
       // Skip null or empty values
-  
+
       if (data[key] === null || data[key] === '') {
         return;
       }
@@ -64,19 +65,19 @@ export default function RoomForm({ room, roomTypes, blocks }: RoomFormProps) {
         return;
       }
 
-     
+
 
       // Handle all other values
       formData.append(key, data[key] as string);
     });
     if (isEdit) {
-         formData.append('_method', 'PUT');
+      formData.append('_method', 'PUT');
       router.post(`/rooms/${room.id}`, formData, {
         preserveScroll: true,
-        preserveState: true, 
-         onSuccess: () => {
-                   router.get('/rooms'); 
-                },
+        preserveState: true,
+        onSuccess: () => {
+          router.get('/rooms');
+        },
       });
     } else {
       router.post('/rooms', formData, {
@@ -137,6 +138,18 @@ export default function RoomForm({ room, roomTypes, blocks }: RoomFormProps) {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label htmlFor="room_type_id">Room Type</Label>
+                  <Combobox
+                    entity="room_type_id"
+                    value={data.room_type_id?.toString()}
+                    onChange={(value) => {
+                      setData('room_type_id', parseInt(value));
+                    }}
+                    options={roomTypes.map(i => ({ id: i.id.toString(), name: i.name }))}
+                    includeAllOption={false}
+                    placeholder="Select Room Type"
+                  />
+                  {/*
+
                   <Select
                     value={data.room_type_id.toString()}
                     onValueChange={(value) => setData('room_type_id', parseInt(value))}
@@ -152,39 +165,36 @@ export default function RoomForm({ room, roomTypes, blocks }: RoomFormProps) {
                       ))}
                     </SelectContent>
                   </Select>
+                  */}
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="block_id">Block</Label>
-                  <Select
-                    value={data.block_id.toString()}
-                    onValueChange={(value) => setData('block_id', parseInt(value))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select block" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {blocks.map((block) => (
-                        <SelectItem key={block.id} value={block.id.toString()}>
-                          {block.name} 
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Combobox
+                    entity="block_id"
+                    value={data.block_id?.toString()}
+                    onChange={(value) => {
+                      setData('block_id', parseInt(value));
+                    }}
+                    options={blocks.map(i => ({ id: i.id.toString(), name: i.name }))}
+                    includeAllOption={false}
+                    placeholder="Select Block"
+                  />
+
                 </div>
-                  <div className="space-y-2">
-                            
-                                                    <Label htmlFor="img">Image</Label>
-                                                    <Input
-                                                      id="img"
-                                                      type="file"
-                                                      accept="image/*"
-                                                      onChange={(e) => setData('img', e.target.files?.[0] || null)}
-                                                    />
-                                                  
-                                                <Label>Image</Label>
-                                                <ImagePreview dataImg={data.img} />
-                                              </div>
+                <div className="space-y-2">
+
+                  <Label htmlFor="img">Image</Label>
+                  <Input
+                    id="img"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setData('img', e.target.files?.[0] || null)}
+                  />
+
+                  <Label>Image</Label>
+                  <ImagePreview dataImg={data.img} />
+                </div>
               </div>
 
               <div className="flex items-center justify-between pt-6">
@@ -201,8 +211,8 @@ export default function RoomForm({ room, roomTypes, blocks }: RoomFormProps) {
                       ? 'Saving...'
                       : 'Adding...'
                     : isEdit
-                    ? 'Save Changes'
-                    : 'Add Room'}
+                      ? 'Save Changes'
+                      : 'Add Room'}
                 </Button>
               </div>
             </form>
