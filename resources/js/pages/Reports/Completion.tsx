@@ -475,7 +475,7 @@ export default function Completion({
 
                                         {isRegionView ? (
                                             <>
-                                                <th className="px-4 py-3 text-center">Total Inst.</th>
+                                                {status == '' ? <th className="px-4 py-3 text-center">Total Inst.</th> : null}
                                                 {
                                                     status == 'completed' || status == '' ? <th className="px-4 py-3 text-center">Comp.</th> : null
                                                 }
@@ -516,7 +516,7 @@ export default function Completion({
 
                                                 {isRegionView ? (
                                                     <>
-                                                        <td className="px-4 py-3 text-center">{item.total_institutes}</td>
+                                                        {status == '' ? <td className="px-4 py-3 text-center">{item.total_institutes}</td> : null}
                                                         {
                                                             status == 'completed' || status == '' ? <td className="px-4 py-3 text-center text-green-600 font-bold">{item.completed}</td> : null
                                                         }
