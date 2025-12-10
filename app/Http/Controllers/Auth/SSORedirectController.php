@@ -34,7 +34,6 @@ class SSORedirectController extends Controller
 
     public function handle(Request $request)
     {
-        dd($request->all());
         $token = $request->query('token');
     
         \Log::info('SSO Redirect initiated', ['token_present' => !empty($token)]);
