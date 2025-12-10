@@ -406,7 +406,51 @@ export default function Completion({
 
                             >
                                 Show All Regions
-                            </Button>) : ('')}
+                            </Button>) : (
+                            <Button
+                                onClick={() => {
+                                    setRegion('');
+                                    setInstitute('');
+                                    fetchData({ region_id: '', institute_id: '' });
+                                }}
+                                variant="outline"
+                                size="sm"
+
+                            >
+                                Show All Institutes
+                            </Button>
+                        )}
+                        <Button
+                            onClick={() => {
+                                setStatus('');
+                                fetchData({ status: '' });
+                            }}
+                            variant="outline"
+                            size="sm"
+                            className='mr-2 text-white bg-blue-500 hover:bg-blue-600'
+                        >
+                            All Statuses
+                        </Button>  <Button
+                            onClick={() => {
+                                setStatus('completed');
+                                fetchData({ status: 'completed' });
+                            }}
+                            variant="outline"
+                            size="sm"
+                            className='mr-2 text-white bg-green-500 hover:bg-green-600'
+                        >
+                            Completed (100%)
+                        </Button>  <Button
+                            onClick={() => {
+                                setStatus('less_than_50');
+                                fetchData({ status: 'less_than_50' });
+                            }}
+                            variant="outline"
+                            size="sm"
+                            className='mr-2 text-white bg-red-500 hover:bg-red-600'
+                        >
+                            Less than 50%
+                        </Button>
                         <div className="overflow-x-auto">
 
                             <table className="w-full text-sm text-left">
