@@ -26,6 +26,7 @@ interface SummaryItem {
     total_institutes: number;
     completed: number;
     less_than_50: number;
+    zero: number;
 }
 
 
@@ -50,6 +51,7 @@ interface DetailItem {
     total_institutes?: number;
     completed?: number;
     less_than_50?: number;
+    zero?: number;
     shifts?: number;
     blocks?: number;
     rooms?: number;
@@ -362,8 +364,9 @@ export default function Completion({
                                 <thead className="bg-muted/50 text-muted-foreground uppercase">
                                     <tr>
                                         <th className="px-4 py-3 text-center">Total Institutes</th>
-                                        <th className="px-4 py-3 text-center">Completed Data</th>
-                                        <th className="px-4 py-3 text-center">Less than 50%</th>
+                                        {status == 'completed' || status == '' ? <th className="px-4 py-3 text-center">Completed Data</th> : null}
+                                        {status == 'less_than_50' || status == '' ? <th className="px-4 py-3 text-center">Less than 50%</th> : null}
+                                        {status == 'zero' || status == '' ? <th className="px-4 py-3 text-center">Zero (0%)</th> : null}
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y">
@@ -371,8 +374,9 @@ export default function Completion({
                                         summary.map((item, idx) => (
                                             <tr key={idx} className="hover:bg-muted/50">
                                                 <td className="px-4 py-3 text-center">{item.total_institutes}</td>
-                                                <td className="px-4 py-3 text-center text-green-600 font-bold">{item.completed}</td>
-                                                <td className="px-4 py-3 text-center text-red-600 font-bold">{item.less_than_50}</td>
+                                                {status == 'completed' || status == '' ? <td className="px-4 py-3 text-center text-green-600 font-bold">{item.completed}</td> : null}
+                                                {status == 'less_than_50' || status == '' ? <td className="px-4 py-3 text-center text-red-600 font-bold">{item.less_than_50}</td> : null}
+                                                {status == 'zero' || status == '' ? <td className="px-4 py-3 text-center text-red-600 font-bold">{item.zero}</td> : null}
                                             </tr>
                                         ))
                                     ) : (
@@ -451,6 +455,17 @@ export default function Completion({
                         >
                             Less than 50%
                         </Button>
+                        <Button
+                            onClick={() => {
+                                setStatus('zero');
+                                fetchData({ status: 'zero' });
+                            }}
+                            variant="outline"
+                            size="sm"
+                            className='mr-2 text-white bg-red-500 hover:bg-red-600'
+                        >
+                            Zero (0%)
+                        </Button>
                         <div className="overflow-x-auto">
 
                             <table className="w-full text-sm text-left">
@@ -461,8 +476,15 @@ export default function Completion({
                                         {isRegionView ? (
                                             <>
                                                 <th className="px-4 py-3 text-center">Total Inst.</th>
-                                                <th className="px-4 py-3 text-center">Comp.</th>
-                                                <th className="px-4 py-3 text-center">&lt; 50%</th>
+                                                {
+                                                    status == 'completed' || status == '' ? <th className="px-4 py-3 text-center">Comp.</th> : null
+                                                }
+                                                {
+                                                    status == 'less_than_50' || status == '' ? <th className="px-4 py-3 text-center">&lt; 50%</th> : null
+                                                }
+                                                {
+                                                    status == 'zero' || status == '' ? <th className="px-4 py-3 text-center">Zero (0%)</th> : null
+                                                }
                                             </>
                                         ) : (<>
                                             <th className="px-4 py-3 text-center">Shifts</th>
@@ -495,8 +517,15 @@ export default function Completion({
                                                 {isRegionView ? (
                                                     <>
                                                         <td className="px-4 py-3 text-center">{item.total_institutes}</td>
-                                                        <td className="px-4 py-3 text-center text-green-600 font-bold">{item.completed}</td>
-                                                        <td className="px-4 py-3 text-center text-red-600 font-bold">{item.less_than_50}</td>
+                                                        {
+                                                            status == 'completed' || status == '' ? <td className="px-4 py-3 text-center text-green-600 font-bold">{item.completed}</td> : null
+                                                        }
+                                                        {
+                                                            status == 'less_than_50' || status == '' ? <td className="px-4 py-3 text-center text-red-600 font-bold">{item.less_than_50}</td> : null
+                                                        }
+                                                        {
+                                                            status == 'zero' || status == '' ? <td className="px-4 py-3 text-center text-red-600 font-bold">{item.zero}</td> : null
+                                                        }
                                                     </>
                                                 ) : (
                                                     <>
