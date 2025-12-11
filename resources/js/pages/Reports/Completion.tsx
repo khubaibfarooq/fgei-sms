@@ -391,7 +391,8 @@ export default function Completion({
                                             <tr key={idx} className="hover:bg-muted/50">
                                                 <td className="px-4 py-3 text-center">{totalinstitutes}</td>
                                                 {status == 'completed' || status == '' ? <td className="px-4 py-3 text-center text-green-600 font-bold">{item.completed}</td> : null}
-                                                {status == 'greater_than_50' || status == '' ? <td className="px-4 py-3 text-center text-green-600 font-bold">{item.greater_than_50}</td> : null}
+                                                {status == 'greater_than_50' || status == '' ? <td className="px-4 py-3 text-center text-green-600 font-bold">
+                                                    {item.greater_than_50}</td> : null}
                                                 {status == 'less_than_50' || status == '' ? <td className="px-4 py-3 text-center text-red-600 font-bold">{item.less_than_50}</td> : null}
                                                 {status == 'zero' || status == '' ? <td className="px-4 py-3 text-center text-red-600 font-bold">{item.zero}</td> : null}
                                             </tr>
@@ -548,16 +549,30 @@ export default function Completion({
                                                     <>
                                                         {status == '' ? <td className="px-4 py-3 text-center">{item.total_institutes}</td> : null}
                                                         {
-                                                            status == 'completed' || status == '' ? <td className="px-4 py-3 text-center text-green-600 font-bold">{item.completed}</td> : null
+                                                            status == 'completed' || status == '' ? <td className="px-4 py-3 text-center text-green-600 font-bold" onClick={() => {
+                                                                setStatus('completed');
+
+                                                                handleRegionClick(item.id);
+                                                            }} >{item.completed}</td> : null
                                                         }
                                                         {
-                                                            status == 'greater_than_50' || status == '' ? <td className="px-4 py-3 text-center text-green-600 font-bold">{item.greater_than_50}</td> : null
+                                                            status == 'greater_than_50' || status == '' ? <td className="px-4 py-3 text-center text-green-600 font-bold" onClick={() => {
+                                                                setStatus('greater_than_50');
+                                                                handleRegionClick(item.id);
+                                                            }} >{item.greater_than_50}</td> : null
                                                         }
                                                         {
-                                                            status == 'less_than_50' || status == '' ? <td className="px-4 py-3 text-center text-red-600 font-bold">{item.less_than_50}</td> : null
+                                                            status == 'less_than_50' || status == '' ? <td className="px-4 py-3 text-center text-red-600 font-bold" onClick={() => {
+                                                                setStatus('less_than_50');
+                                                                handleRegionClick(item.id);
+                                                            }} >{item.less_than_50}</td> : null
                                                         }
                                                         {
-                                                            status == 'zero' || status == '' ? <td className="px-4 py-3 text-center text-red-600 font-bold">{item.zero}</td> : null
+                                                            status == 'zero' || status == '' ? <td className="px-4 py-3 text-center text-red-600 font-bold" onClick={() => {
+                                                                setStatus('zero');
+                                                                handleRegionClick(item.id);
+
+                                                            }} >{item.zero}</td> : null
                                                         }
                                                     </>
                                                 ) : (
