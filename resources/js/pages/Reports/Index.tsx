@@ -127,7 +127,7 @@ interface Props {
   upgradations?: Upgradations[];
   funds?: Funds[];
   projects?: Project[];
-
+  institute?: Institute | null;
   instituteAssets?: InstituteAsset[];
   rooms?: Room[];
   filters?: {
@@ -155,11 +155,11 @@ const isValidItem = (item: any): item is Item => {
   return isValid;
 };
 
-export default function InstitutionalReportIndex({ institutes: initialInstitutes = [], regions: initialRegions = [], blocks: initialBlocks = [], instituteAssets: initialAssets = [], rooms: initialRooms = [], shifts: initialShifts = [], upgradations: initialUpgradations = [], funds: initialFunds = [], projects: initialProjects = [], filters: initialFilters = { search: '', institute_id: '', region_id: '' } }: Props) {
+export default function InstitutionalReportIndex({ institute: initialInstitute = null, institutes: initialInstitutes = [], regions: initialRegions = [], blocks: initialBlocks = [], instituteAssets: initialAssets = [], rooms: initialRooms = [], shifts: initialShifts = [], upgradations: initialUpgradations = [], funds: initialFunds = [], projects: initialProjects = [], filters: initialFilters = { search: '', institute_id: '', region_id: '' } }: Props) {
   const [search, setSearch] = useState(initialFilters.search || '');
   const [institute, setInstitute] = useState(initialFilters.institute_id || '');
-  const [fetchedinstitute, setFetchedInstitute] = useState<Institute>();
-
+  const [fetchedinstitute, setFetchedInstitute] = useState<Institute | null>(initialInstitute);
+  console.log("fetchedinstitute", fetchedinstitute);
   const [region, setRegion] = useState(initialFilters.region_id || '');
   const [institutes, setInstitutes] = useState<Item[]>(initialInstitutes);
   const [regions, setRegions] = useState<Item[]>(initialRegions);

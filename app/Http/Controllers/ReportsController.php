@@ -38,6 +38,7 @@ class ReportsController extends Controller
 $type=session('type');
  $institutes = [];
  $regions=[];
+    $institute="";
     if($type=='Regional Office'){
     // Fetch and filter institutes
    
@@ -58,16 +59,20 @@ $regions = Institute::select('region_id as id', 'name')->where('type', 'Regional
             })
             ->values();
     }  
+ 
     $instituteAssets =[];
   $blocks = [];
     $rooms =  [];
-    
+    $shifts=[];
+   $upgradations=[];
+    $funds=[];
+    $projects=[];
     if ($request->institute_id && is_numeric($request->institute_id) && $request->institute_id > 0) {
 
-        
-         $blocks=Block::where('institute_id', $request->institute_id);
-         $blockIds= $blocks->pluck('id')->toArray();
-          $rooms =Room::whereIn('block_id',   $blockIds)->get();
+               $institute=Institute::find($request->institute_id);
+              $blocks = Block::where('institute_id', $request->institute_id)->get();
+        $blockIds = $blocks->pluck('id')->toArray();
+        $rooms = Room::whereIn('block_id', $blockIds)->with('block')->get();
            $instituteAssets = InstituteAsset::query()
         ->where('institute_id', $request->institute_id)
         ->join('assets', 'institute_assets.asset_id', '=', 'assets.id')
@@ -83,11 +88,31 @@ $regions = Institute::select('region_id as id', 'name')->where('type', 'Regional
         ->get();
     
         
-    $blocks = $blocks->get();
-
+ 
+       $shifts=Shift::where('institute_id', $request->institute_id)->with('buildingType')->get();
+      $upgradations=Upgradation::where('institute_id', $request->institute_id)->get();
+    $funds=FundHeld::where('institute_id', $request->institute_id)->with('fundHead')->get();
+$projects = ProjectType::whereHas('projects', function($query) use ($request) {
+        $query->where('institute_id', $request->institute_id);
+    })
+    ->withCount([
+        'projects as completed' => function($query) use ($request) {
+            $query->where('institute_id', $request->institute_id)
+                  ->where('status', 'completed');
+        },
+        'projects as inprogress' => function($query) use ($request) {
+            $query->where('institute_id', $request->institute_id)
+                  ->where('status', 'inprogress');
+        },
+        'projects as planned' => function($query) use ($request) {
+            $query->where('institute_id', $request->institute_id)
+                  ->where('status', 'planned');
+        }
+    ])
+    ->get();  
     }
     if ($request->region_id && is_numeric($request->region_id) && $request->region_id > 0) {
-       $institutes = Institute::where('region_id', $request->$region_id)
+       $institutes = Institute::where('region_id', $request->region_id)
         ->select('id', 'name')
         ->get()
         ->filter(function ($institute) {
@@ -101,9 +126,13 @@ $regions = Institute::select('region_id as id', 'name')->where('type', 'Regional
         'institutes' => $institutes,
         'blocks' => $blocks,
         'rooms' => $rooms,
-      
+      'institute'=>$institute,
       'regions' => $regions,
         'instituteAssets' => $instituteAssets,
+        'shifts' => $shifts,
+        'upgradations' => $upgradations,
+        'funds' => $funds,
+        'projects' => $projects,
         'filters' => [
             'search' => $request->search ?? '',
             'institute_id' =>$request->institute_id ?? '',
@@ -129,14 +158,14 @@ $regions = Institute::select('region_id as id', 'name')->where('type', 'Regional
         $institute=Institute::find($request->institute_id);
         $shifts=Shift::where('institute_id', $request->institute_id)->with('buildingType')->get();
       $upgradations=Upgradation::where('institute_id', $request->institute_id)->get();
-
+    $funds=FundHeld::where('institute_id', $request->institute_id)->with('fundHead')->get();
         $blocks = Block::where('institute_id', $request->institute_id)->get();
         $blockIds = $blocks->pluck('id')->toArray();
         $rooms = Room::whereIn('block_id', $blockIds)->with('block')->get();
         // $instituteAssets = InstituteAsset::where('institute_id', $request->institute_id)
         //     ->with(['institute', 'room', 'asset'])
         //     ->get();
-        //     $funds=FundHeld::where('institute_id', $request->institute_id)->with('fundHead')->get();
+       
               $instituteAssets = InstituteAsset::query()
         ->where('institute_id', $request->institute_id)
         ->join('assets', 'institute_assets.asset_id', '=', 'assets.id')
@@ -2150,6 +2179,7 @@ if($buildingTypeId!=null){
             $institutes = $institutes->filter(function ($item) use ($status) {
                 if ($status === 'completed') return $item['percentage'] == 100;
                 if ($status === 'less_than_50') return $item['percentage'] < 50;
+                if ($status === 'greater_than_50') return $item['percentage'] > 50;
                 if ($status === 'zero') return $item['percentage'] == 0;
                 return true;
             });

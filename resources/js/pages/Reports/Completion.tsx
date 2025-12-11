@@ -12,7 +12,7 @@ import ExcelJS from 'exceljs';
 import FileSaver from 'file-saver';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-
+import { router } from '@inertiajs/react';
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Reports', href: '/reports' },
     { title: 'Completion', href: '/reports/completion' },
@@ -99,7 +99,12 @@ export default function Completion({
         setInstitute('');
         fetchData({ region_id: newRegionId, institute_id: '' });
     };
-
+    const handleInstituteClick = (instituteId: number) => {
+        const newInstituteId = instituteId.toString();
+        setInstitute(newInstituteId);
+        setRegion('');
+        window.open(`/reports/institutes?region_id=${region}&institute_id=${instituteId}`, '_blank');
+    };
     const exportToExcel = async () => {
         const workbook = new ExcelJS.Workbook();
 
@@ -530,7 +535,7 @@ export default function Completion({
                                             <tr
                                                 key={item.id}
                                                 className={`hover:bg-muted/50 ${isRegionView ? 'cursor-pointer' : ''}`}
-                                                onClick={() => isRegionView && handleRegionClick(item.id)}
+                                                onClick={() => isRegionView ? handleRegionClick(item.id) : handleInstituteClick(item.id)}
                                             >
                                                 <td className={`px-4 py-3 font-medium ${isRegionView ? 'text-blue-600' : ''}`}>
                                                     {isRegionView ? item.name.split(' ').pop() || item.name : item.name}
