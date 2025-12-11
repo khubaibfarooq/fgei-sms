@@ -42,7 +42,16 @@ $permissions = [
          if(!auth()->user()->can('fund-add')){
             abort(403);
         }
-         $fundHeads = FundHead::select('fund_heads.id', 'fund_heads.name',DB::raw('COALESCE(fund_helds.balance, 0) as balance'))->leftjoin('fund_helds', 'fund_heads.id', '=', 'fund_helds.fund_head_id')->where('fund_helds.institute_id', session('sms_inst_id'))->get();
+      $fundHeads = FundHead::select(
+        'fund_heads.id',
+        'fund_heads.name',
+        DB::raw('COALESCE(fund_helds.balance, 0) as balance')
+    )
+    ->leftJoin('fund_helds', function ($join) {
+        $join->on('fund_heads.id', '=', 'fund_helds.fund_head_id')
+             ->where('fund_helds.institute_id', '=', session('sms_inst_id'));
+    })
+    ->get();
       
         return Inertia::render('funds/Form', ['fund' => null,
     'fundHeads'=>$fundHeads]);

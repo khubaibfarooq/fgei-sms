@@ -2055,6 +2055,9 @@ public function getFund(Request $request)
 
     public function getCompletionData(Request $request)
     {
+       if (!auth()->user()->can('rpt-completion')) {
+        abort(403, 'You do not have permission to add a plant.');
+    }
              $regionid = session('region_id');
     $type = session('type');
         $query = Institute::query()
@@ -2161,6 +2164,7 @@ if($buildingTypeId!=null){
                 'total_institutes' => $group->count(),
                 'completed' => $group->where('percentage', 100)->count(),
                 'less_than_50' => $group->where('percentage', '<', 50)->count(),
+                'greater_than_50' => $group->where('percentage', '>', 50)->count(),
                 'zero' => $group->where('percentage', 0)->count(),
             ];
         })->values();
@@ -2179,6 +2183,7 @@ if($buildingTypeId!=null){
                      'total_institutes' => $group->count(),
                      'completed' => $group->where('percentage', 100)->count(),
                      'less_than_50' => $group->where('percentage', '<', 50)->count(),
+                     'greater_than_50' => $group->where('percentage', '>', 50)->count(),
                      'zero' => $group->where('percentage', 0)->count(),
                      'shifts' => $group->sum('shifts'),
                      'blocks' => $group->sum('blocks'),

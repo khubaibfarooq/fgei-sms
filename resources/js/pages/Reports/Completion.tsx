@@ -26,6 +26,7 @@ interface SummaryItem {
     total_institutes: number;
     completed: number;
     less_than_50: number;
+    greater_than_50: number;
     zero: number;
 }
 
@@ -51,6 +52,7 @@ interface DetailItem {
     total_institutes?: number;
     completed?: number;
     less_than_50?: number;
+    greater_than_50?: number;
     zero?: number;
     shifts?: number;
     blocks?: number;
@@ -107,6 +109,7 @@ export default function Completion({
             { header: 'Region', key: 'region', width: 30 },
             { header: 'Total Institutes', key: 'total', width: 20 },
             { header: 'Completed', key: 'completed', width: 20 },
+            { header: '> 50%', key: 'greater', width: 20 },
             { header: '< 50%', key: 'less', width: 20 },
         ];
         summary.forEach(item => {
@@ -114,6 +117,7 @@ export default function Completion({
                 region: item.region,
                 total: item.total_institutes,
                 completed: item.completed,
+                greater: item.greater_than_50,
                 less: item.less_than_50
             });
         });
@@ -137,6 +141,7 @@ export default function Completion({
                 { header: 'Upgradations', key: 'upgradations', width: 12 },
                 { header: 'Total Institutes', key: 'total', width: 20 },
                 { header: 'Completed', key: 'completed', width: 20 },
+                { header: '> 50%', key: 'greater', width: 20 },
                 { header: '< 50%', key: 'less', width: 20 },
             ];
             details.forEach(item => {
@@ -153,6 +158,7 @@ export default function Completion({
                     upgradations: item.upgradations,
                     total: item.total_institutes,
                     completed: item.completed,
+                    greater: item.greater_than_50,
                     less: item.less_than_50
                 });
             });
@@ -199,8 +205,8 @@ export default function Completion({
         // Summary
         doc.text('Completion Report - Summary', 14, 15);
         autoTable(doc, {
-            head: [['Region', 'Total Institutes', 'Completed', '< 50%']],
-            body: summary.map(s => [s.region, s.total_institutes, s.completed, s.less_than_50]),
+            head: [['Region', 'Total Institutes', 'Completed', '> 50%', '< 50%']],
+            body: summary.map(s => [s.region, s.total_institutes, s.completed, s.greater_than_50, s.less_than_50]),
             startY: 20,
         });
 
@@ -212,7 +218,7 @@ export default function Completion({
 
         if (isRegionView) {
             autoTable(doc, {
-                head: [['Region', 'Shifts', 'Blocks', 'Rooms', 'Assets', 'Plants', 'Transports', 'Funds', 'Projects', 'Upgradations', 'Total Inst.', 'Comp.', '< 50%']],
+                head: [['Region', 'Shifts', 'Blocks', 'Rooms', 'Assets', 'Plants', 'Transports', 'Funds', 'Projects', 'Upgradations', 'Total Inst.', 'Comp.', '> 50%', '< 50%']],
                 body: details.map(d => [
                     d.name,
                     d.shifts || 0,
@@ -226,6 +232,7 @@ export default function Completion({
                     d.upgradations || 0,
                     d.total_institutes || 0,
                     d.completed || 0,
+                    d.greater_than_50 || 0,
                     d.less_than_50 || 0
                 ]),
                 startY: 20,
@@ -339,6 +346,7 @@ export default function Completion({
                                 <SelectContent>
                                     <SelectItem value="all">All Statuses</SelectItem>
                                     <SelectItem value="completed">Completed (100%)</SelectItem>
+                                    <SelectItem value="greater_than_50">Greater than 50%</SelectItem>
                                     <SelectItem value="less_than_50">Less than 50%</SelectItem>
                                     <SelectItem value="zero">Zero (0%)</SelectItem>
                                 </SelectContent>
@@ -365,6 +373,7 @@ export default function Completion({
                                     <tr>
                                         <th className="px-4 py-3 text-center">Total Institutes</th>
                                         {status == 'completed' || status == '' ? <th className="px-4 py-3 text-center">Completed Data</th> : null}
+                                        {status == 'greater_than_50' || status == '' ? <th className="px-4 py-3 text-center">Greater than 50%</th> : null}
                                         {status == 'less_than_50' || status == '' ? <th className="px-4 py-3 text-center">Less than 50%</th> : null}
                                         {status == 'zero' || status == '' ? <th className="px-4 py-3 text-center">Zero (0%)</th> : null}
                                     </tr>
@@ -375,6 +384,7 @@ export default function Completion({
                                             <tr key={idx} className="hover:bg-muted/50">
                                                 <td className="px-4 py-3 text-center">{item.total_institutes}</td>
                                                 {status == 'completed' || status == '' ? <td className="px-4 py-3 text-center text-green-600 font-bold">{item.completed}</td> : null}
+                                                {status == 'greater_than_50' || status == '' ? <td className="px-4 py-3 text-center text-green-600 font-bold">{item.greater_than_50}</td> : null}
                                                 {status == 'less_than_50' || status == '' ? <td className="px-4 py-3 text-center text-red-600 font-bold">{item.less_than_50}</td> : null}
                                                 {status == 'zero' || status == '' ? <td className="px-4 py-3 text-center text-red-600 font-bold">{item.zero}</td> : null}
                                             </tr>
@@ -444,7 +454,17 @@ export default function Completion({
                             className='mr-2 text-white bg-green-500 hover:bg-green-600'
                         >
                             Completed (100%)
-                        </Button>  <Button
+                        </Button> <Button
+                            onClick={() => {
+                                setStatus('greater_than_50');
+                                fetchData({ status: 'greater_than_50' });
+                            }}
+                            variant="outline"
+                            size="sm"
+                            className='mr-2 text-white bg-green-500 hover:bg-green-600'
+                        >
+                            Greater than 50%
+                        </Button> <Button
                             onClick={() => {
                                 setStatus('less_than_50');
                                 fetchData({ status: 'less_than_50' });
@@ -478,6 +498,9 @@ export default function Completion({
                                                 {status == '' ? <th className="px-4 py-3 text-center">Total Inst.</th> : null}
                                                 {
                                                     status == 'completed' || status == '' ? <th className="px-4 py-3 text-center">Comp.</th> : null
+                                                }
+                                                {
+                                                    status == 'greater_than_50' || status == '' ? <th className="px-4 py-3 text-center">&gt; 50%</th> : null
                                                 }
                                                 {
                                                     status == 'less_than_50' || status == '' ? <th className="px-4 py-3 text-center">&lt; 50%</th> : null
@@ -519,6 +542,9 @@ export default function Completion({
                                                         {status == '' ? <td className="px-4 py-3 text-center">{item.total_institutes}</td> : null}
                                                         {
                                                             status == 'completed' || status == '' ? <td className="px-4 py-3 text-center text-green-600 font-bold">{item.completed}</td> : null
+                                                        }
+                                                        {
+                                                            status == 'greater_than_50' || status == '' ? <td className="px-4 py-3 text-center text-green-600 font-bold">{item.greater_than_50}</td> : null
                                                         }
                                                         {
                                                             status == 'less_than_50' || status == '' ? <td className="px-4 py-3 text-center text-red-600 font-bold">{item.less_than_50}</td> : null
