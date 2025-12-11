@@ -181,6 +181,8 @@ export default function FundForm({ fund, fundHeads }: FundFormProps) {
 
                       <SelectItem value="in">Income</SelectItem>
                       <SelectItem value="out">Expense</SelectItem>
+
+
                     </SelectContent>
                   </Select>
                 </div>

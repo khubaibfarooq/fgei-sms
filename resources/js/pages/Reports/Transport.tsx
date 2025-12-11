@@ -170,6 +170,8 @@ export default function Transports({ transports: transportProp, institutes, vehi
 
   const handleRegionChange = (value: string) => {
     setRegion(value);
+    setInstitute('');
+    setVehicleType('');
     fetchInstitutes(value);
     // debouncedApplyFilters(); // Trigger transport filter update
   };
@@ -255,140 +257,127 @@ export default function Transports({ transports: transportProp, institutes, vehi
       <AppLayout breadcrumbs={breadcrumbs}>
         <Head title="Transports Report" />
         <div className="flex-1 p-2 md:p-2">
-          <div className="flex flex-col md:flex-row gap-3">
-            {/* Left Side: Search Controls */}
-            <div className="w-full md:w-1/3">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-xl font-bold">Filters</CardTitle>
-                  <p className="text-muted-foreground text-sm">Refine your Transport search</p>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {memoizedRegions.length > 0 && (
-                    <Combobox
-                      entity="region"
-                      value={region}
-                      onChange={(value) => handleRegionChange(value)}
-                      options={memoizedRegions.map((reg) => ({
-                        id: reg.id.toString(), // Convert ID to string to match prop type
-                        name: reg.name.split(' ').pop() || reg.name,
-                      }))}
-                      includeAllOption={true}
 
-                    />
-                  )}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-xl font-bold">Filters</CardTitle>
+              <p className="text-muted-foreground text-sm">Refine your Transport search</p>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex flex-row gap-2">
+                {memoizedRegions.length > 0 && (
                   <Combobox
-                    entity="institute"
-                    value={institute}
-                    onChange={setInstitute}
-                    options={memoizedInstitutes.map((i) => ({ id: i.id.toString(), name: i.name }))}
-                    includeAllOption={false}
-                    placeholder="Select Institute"
+                    entity="region"
+                    value={region}
+                    onChange={(value) => handleRegionChange(value)}
+                    options={memoizedRegions.map((reg) => ({
+                      id: reg.id.toString(), // Convert ID to string to match prop type
+                      name: reg.name.split(' ').pop() || reg.name,
+                    }))}
+                    includeAllOption={true}
+
                   />
-                  <Select value={vehicleType} onValueChange={(value) => setVehicleType(value)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Vehicle Type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="0">All Vehicle Types</SelectItem>
-                      {memoizedVehicleType.length > 0 ? (
-                        memoizedVehicleType.map((type) => (
-                          <SelectItem key={type.id} value={type.id.toString()}>
-                            {type.name}
-                          </SelectItem>
-                        ))
-                      ) : (
-                        <div className="text-muted-foreground text-sm p-2">No vehicle types available</div>
-                      )}
-                    </SelectContent>
-                  </Select>
-                  <Button onClick={debouncedApplyFilters} className="w-full">
-                    Apply Filters
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
+                )}
+                <Combobox
+                  entity="institute"
+                  value={institute}
+                  onChange={setInstitute}
+                  options={memoizedInstitutes.map((i) => ({ id: i.id.toString(), name: i.name }))}
+                  includeAllOption={false}
+                  placeholder="Select Institute"
+                />
+                <Select value={vehicleType} onValueChange={(value) => setVehicleType(value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Vehicle Type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0">All Vehicle Types</SelectItem>
+                    {memoizedVehicleType.length > 0 ? (
+                      memoizedVehicleType.map((type) => (
+                        <SelectItem key={type.id} value={type.id.toString()}>
+                          {type.name}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <div className="text-muted-foreground text-sm p-2">No vehicle types available</div>
+                    )}
+                  </SelectContent>
+                </Select>
+                <Button onClick={debouncedApplyFilters} className="w-full">
+                  Apply Filters
+                </Button>
+                <Button onClick={exportToPDF} className="w-full md:w-auto">
+                  Export PDF
+                </Button>
+                <Button onClick={exportToExcel} className="w-full md:w-auto">
+                  Export Excel
+                </Button>
+              </div>
+              <table className="w-full border-collapse border-1 rounded-md overflow-hidden shadow-sm">
+                <thead>
+                  <tr className="bg-primary dark:bg-gray-800 text-center">
+                    <th className="border p-2 text-sm font-medium text-white dark:text-gray-200">Vehicle No</th>
+                    <th className="border p-2 text-sm font-medium text-white dark:text-gray-200">Type</th>
+                    <th className="border p-2 text-sm font-medium text-white dark:text-gray-200">Institute</th>
 
-            {/* Right Side: Transports List */}
-            <div className="w-full md:w-2/3">
-              <Card>
-                <CardHeader className="pb-3 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                  <div>
-                    <CardTitle className="text-2xl font-bold">Transport Report</CardTitle>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button onClick={exportToPDF} className="w-full md:w-auto">
-                      Export PDF
-                    </Button>
-                    <Button onClick={exportToExcel} className="w-full md:w-auto">
-                      Export Excel
-                    </Button>
-                  </div>
-                </CardHeader>
-                <Separator />
-                <CardContent className="pt-6 space-y-6">
-                  <div className="space-y-3">
-                    <table className="w-full border-collapse border-1 rounded-md overflow-hidden shadow-sm">
-                      <thead>
-                        <tr className="bg-primary dark:bg-gray-800 text-center">
-                          <th className="border p-2 text-sm font-medium text-white dark:text-gray-200">Vehicle No</th>
-                          <th className="border p-2 text-sm font-medium text-white dark:text-gray-200">Type</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {transports.data.length === 0 ? (
-                          <tr>
-                            <td colSpan={3} className="text-muted-foreground text-center p-4">
-                              No Transports found.
-                            </td>
-                          </tr>
-                        ) : (
-                          transports.data.map((trans) => (
-                            <tr key={trans.id} className="hover:bg-primary/10 dark:hover:bg-gray-700 text-center">
-                              <td className="border p-2 text-sm md:text-md lg:text-lg border-r-1 font-bold text-gray-900 dark:text-gray-100">
-                                {trans.vehicle_no}
-                              </td>
-                              <td className="border p-2 text-sm md:text-md lg:text-lg  text-gray-900 dark:text-gray-100">
-                                {trans.vehicle_type?.name || 'N/A'}
-                              </td>
-
-                            </tr>
-                          ))
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                  {transports.links.length > 1 && (
-                    <div className="flex justify-center pt-6 flex-wrap gap-2">
-                      {transports.links.map((link, i) => (
-                        <Button
-                          key={i}
-                          disabled={!link.url}
-                          variant={link.active ? 'default' : 'outline'}
-                          size="sm"
-                          onClick={() => {
-                            if (link.url) {
-                              fetch(link.url)
-                                .then((response) => response.json())
-                                .then((data) => {
-                                  setTransport(data);
-                                })
-                                .catch((error) => {
-                                  console.error('Error:', error);
-                                });
-                            }
-                          }} className={link.active ? 'bg-blue-600 hover:bg-blue-700' : ''}
-                        >
-                          <span dangerouslySetInnerHTML={{ __html: link.label }} />
-                        </Button>
-                      ))}
-                    </div>
+                  </tr>
+                </thead>
+                <tbody>
+                  {transports.data.length === 0 ? (
+                    <tr>
+                      <td colSpan={3} className="text-muted-foreground text-center p-4">
+                        No Transports found.
+                      </td>
+                    </tr>
+                  ) : (
+                    transports.data.map((trans) => (
+                      <tr key={trans.id} className="hover:bg-primary/10 dark:hover:bg-gray-700 text-center">
+                        <td className="border p-2 text-sm md:text-md lg:text-lg border-r-1 font-bold text-gray-900 dark:text-gray-100">
+                          {trans.vehicle_no}
+                        </td>
+                        <td className="border p-2 text-sm md:text-md lg:text-lg  text-gray-900 dark:text-gray-100">
+                          {trans.vehicle_type?.name || 'N/A'}
+                        </td>
+                        <td className="border p-2 text-sm md:text-md lg:text-lg  text-gray-900 dark:text-gray-100">
+                          {trans.institute?.name || 'N/A'}
+                        </td>
+                      </tr>
+                    ))
                   )}
-                </CardContent>
-              </Card>
-            </div>
-          </div>
+                </tbody>
+              </table>
+
+              {transports.links.length > 1 && (
+                <div className="flex justify-center pt-6 flex-wrap gap-2">
+                  {transports.links.map((link, i) => (
+                    <Button
+                      key={i}
+                      disabled={!link.url}
+                      variant={link.active ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => {
+                        if (link.url) {
+                          fetch(link.url)
+                            .then((response) => response.json())
+                            .then((data) => {
+                              setTransport(data);
+                            })
+                            .catch((error) => {
+                              console.error('Error:', error);
+                            });
+                        }
+                      }} className={link.active ? 'bg-blue-600 hover:bg-blue-700' : ''}
+                    >
+                      <span dangerouslySetInnerHTML={{ __html: link.label }} />
+                    </Button>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
+
+
       </AppLayout>
     </ErrorBoundary>
   );

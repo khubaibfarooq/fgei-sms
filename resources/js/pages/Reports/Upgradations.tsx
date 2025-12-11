@@ -162,6 +162,7 @@ export default function Upgradations({ upgradations: upgradationProp, institutes
 
   const handleRegionChange = (value: string) => {
     setRegion(value);
+    setInstitute('');
     fetchInstitutes(value);
     // debouncedApplyFilters(); // Trigger upgradation filter update
   };
@@ -267,171 +268,132 @@ export default function Upgradations({ upgradations: upgradationProp, institutes
       <AppLayout breadcrumbs={breadcrumbs}>
         <Head title="Upgradations Report" />
         <div className="flex-1 p-1 md:p-1">
-          <div className="flex flex-col md:flex-row gap-3">
-            {/* Left Side: Search Controls */}
-            <div className="w-full md:w-1/3">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-xl font-bold">Filters</CardTitle>
-                  <p className="text-muted-foreground text-sm">Refine your Upgradation search</p>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {/* Region Filter */}
-                  {memoizedRegions.length > 0 && (
-
-
-
-                    <Combobox
-                      entity="region"
-                      value={region}
-                      onChange={(value) => handleRegionChange(value)}
-                      options={memoizedRegions.map((reg) => ({
-                        id: reg.id.toString(), // Convert ID to string to match prop type
-                        name: reg.name.split(' ').pop() || reg.name,
-                      }))}
-                      includeAllOption={true}
-
-                    />
-                  )}
+          <Card className="w-full">
+            <CardHeader className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <CardTitle className="text-2xl font-bold">Upgradation Report</CardTitle>
+            </CardHeader>
+            <Separator />
+            <CardContent className="space-y-6 pt-6">
+              {/* Filters Row */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Region Filter */}
+                {memoizedRegions.length > 0 && (
                   <Combobox
-                    entity="institute"
-                    value={institute}
-                    onChange={(value) => setInstitute(value)}
-                    options={memoizedInstitutes.map((inst) => ({
-                      id: inst.id.toString(), // Convert ID to string to match prop type
-                      name: inst.name,
+                    entity="region"
+                    value={region}
+                    onChange={(value) => handleRegionChange(value)}
+                    options={memoizedRegions.map((reg) => ({
+                      id: reg.id.toString(),
+                      name: reg.name.split(' ').pop() || reg.name,
                     }))}
-                    includeAllOption={false}
-
+                    includeAllOption={true}
                   />
+                )}
+                {/* Institute Filter */}
+                <Combobox
+                  entity="institute"
+                  value={institute}
+                  onChange={(value) => setInstitute(value)}
+                  options={memoizedInstitutes.map((inst) => ({
+                    id: inst.id.toString(),
+                    name: inst.name,
+                  }))}
+                  includeAllOption={false}
+                />
+              </div>
 
-                  {/* <Select value={institute} onValueChange={(value) => { setInstitute(value); }}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Institute" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="0">All Institutes</SelectItem>
-                      {memoizedInstitutes.length > 0 ? (
-                        memoizedInstitutes.map((inst) => {
-                          return (
-                            <SelectItem key={inst.id} value={inst.id.toString()}>
-                              {inst.name}
-                            </SelectItem>
-                          );
-                        })
-                      ) : (
-                        <div className="text-muted-foreground text-sm p-1">No institutes available</div>
-                      )}
-                    </SelectContent>
-                  </Select> */}
+              {/* Buttons Row */}
+              <div className="flex flex-col md:flex-row gap-2 justify-end">
+                <Button onClick={debouncedApplyFilters} className="w-full md:w-auto">
+                  Apply Filters
+                </Button>
+                <Button onClick={exportToPDF} className="w-full md:w-auto">
+                  Export PDF
+                </Button>
+                <Button onClick={exportToExcel} className="w-full md:w-auto">
+                  Export Excel
+                </Button>
+              </div>
 
-                  <Button onClick={debouncedApplyFilters} className="w-full">
-                    Apply Filters
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Right Side: upgradations List */}
-            <div className="w-full md:w-2/3">
-              <Card>
-                <CardHeader className="pb-3 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                  <div>
-                    <CardTitle className="text-2xl font-bold">Upgradation Report</CardTitle>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button onClick={exportToPDF} className="w-full md:w-auto">
-                      Export PDF
-                    </Button>
-                    <Button onClick={exportToExcel} className="w-full md:w-auto">
-                      Export Excel
-                    </Button>
-                  </div>
-                </CardHeader>
-                <Separator />
-                <CardContent className="pt-6 space-y-6">
-                  <div className="space-y-3">
-                    <table className="w-full border-collapse border-1 rounded-md overflow-hidden shadow-sm">
-                      <thead>
-                        <tr className="bg-primary dark:bg-gray-800 text-center">
-                          <th className="border p-2 text-sm font-medium text-white dark:text-gray-200">Details</th>
-                          <th className="border p-2 text-sm font-medium text-white dark:text-gray-200">From</th>
-                          <th className="border p-2 text-sm font-medium text-white dark:text-gray-200">To</th>
-                          <th className="border p-2 text-sm font-medium text-white dark:text-gray-200">Level From</th>
-                          <th className="border p-2 text-sm font-medium text-white dark:text-gray-200">Level To</th>
-                          <th className="border p-2 text-sm font-medium text-white dark:text-gray-200">Status</th>
-                          <th className="border p-2 text-sm font-medium text-white dark:text-gray-200">Institute</th>
-
+              {/* Table Section */}
+              <div className="space-y-3">
+                <table className="w-full border-collapse border-1 rounded-md overflow-hidden shadow-sm">
+                  <thead>
+                    <tr className="bg-primary dark:bg-gray-800 text-center">
+                      <th className="border p-2 text-sm font-medium text-white dark:text-gray-200">Details</th>
+                      <th className="border p-2 text-sm font-medium text-white dark:text-gray-200">From</th>
+                      <th className="border p-2 text-sm font-medium text-white dark:text-gray-200">To</th>
+                      <th className="border p-2 text-sm font-medium text-white dark:text-gray-200">Level From</th>
+                      <th className="border p-2 text-sm font-medium text-white dark:text-gray-200">Level To</th>
+                      <th className="border p-2 text-sm font-medium text-white dark:text-gray-200">Status</th>
+                      <th className="border p-2 text-sm font-medium text-white dark:text-gray-200">Institute</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {upgradations.data.length === 0 ? (
+                      <tr>
+                        <td colSpan={7} className="text-muted-foreground text-center p-4">
+                          No upgradations found.
+                        </td>
+                      </tr>
+                    ) : (
+                      upgradations.data.map((upgradation) => (
+                        <tr key={upgradation.id} className="hover:bg-primary/10 dark:hover:bg-gray-700 text-center">
+                          <td className="border p-2 text-sm md:text-md lg:text-lg border-r-1 font-bold text-gray-900 dark:text-gray-100">
+                            {upgradation.details}
+                          </td>
+                          <td className="border p-2 text-sm md:text-md lg:text-lg border-r-1  text-gray-900 dark:text-gray-100">
+                            {formatDate(upgradation.from)}
+                          </td>
+                          <td className="border p-2 text-sm md:text-md lg:text-lg border-r-1  text-gray-900 dark:text-gray-100">
+                            {formatDate(upgradation.to)}
+                          </td>
+                          <td className="border p-2 text-sm md:text-md lg:text-lg border-r-1  text-gray-900 dark:text-gray-100">
+                            {upgradation.levelfrom}
+                          </td>
+                          <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">
+                            {upgradation.levelto}
+                          </td>
+                          <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">
+                            {upgradation.status}
+                          </td>
+                          <td className="border p-2 text-sm md:text-md lg:text-lg border-r-1  text-gray-900 dark:text-gray-100">
+                            {upgradation.institute?.name || 'N/A'}
+                          </td>
                         </tr>
-                      </thead>
-                      <tbody>
-                        {upgradations.data.length === 0 ? (
-                          <tr>
-                            <td colSpan={8} className="text-muted-foreground text-center p-4">
-                              No upgradations found.
-                            </td>
-                          </tr>
-                        ) : (
-                          upgradations.data.map((upgradation) => (
-                            <tr key={upgradation.id} className="hover:bg-primary/10 dark:hover:bg-gray-700 text-center">
-                              <td className="border p-2 text-sm md:text-md lg:text-lg border-r-1 font-bold text-gray-900 dark:text-gray-100">
-                                {upgradation.details}
-                              </td>
-                              <td className="border p-2 text-sm md:text-md lg:text-lg border-r-1  text-gray-900 dark:text-gray-100">
-                                {formatDate(upgradation.from)}
-                              </td>
-                              <td className="border p-2 text-sm md:text-md lg:text-lg border-r-1  text-gray-900 dark:text-gray-100">
-                                {formatDate(upgradation.to)}
-                              </td>
-                              <td className="border p-2 text-sm md:text-md lg:text-lg border-r-1  text-gray-900 dark:text-gray-100">
-                                {upgradation.levelfrom}
-                              </td>
-                              <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">
-                                {upgradation.levelto}
-                              </td>
-                              <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">
-                                {upgradation.status}
-                              </td>
-                              <td className="border p-2 text-sm md:text-md lg:text-lg border-r-1  text-gray-900 dark:text-gray-100">
-                                {upgradation.institute?.name || 'N/A'}
-                              </td>
-
-                            </tr>
-                          ))
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                  {upgradations.links.length > 1 && (
-                    <div className="flex justify-center pt-6 flex-wrap gap-2">
-                      {upgradations.links.map((link, i) => (
-                        <Button
-                          key={i}
-                          disabled={!link.url}
-                          variant={link.active ? 'default' : 'outline'}
-                          size="sm"
-                          onClick={() => {
-                            if (link.url) {
-                              fetch(link.url)
-                                .then((response) => response.json())
-                                .then((data) => {
-                                  setUpgradation(data);
-                                })
-                                .catch((error) => {
-                                  console.error('Error:', error);
-                                });
-                            }
-                          }} className={link.active ? 'bg-blue-600 hover:bg-blue-700' : ''}
-                        >
-                          <span dangerouslySetInnerHTML={{ __html: link.label }} />
-                        </Button>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-          </div>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+              {upgradations.links.length > 1 && (
+                <div className="flex justify-center pt-6 flex-wrap gap-2">
+                  {upgradations.links.map((link, i) => (
+                    <Button
+                      key={i}
+                      disabled={!link.url}
+                      variant={link.active ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => {
+                        if (link.url) {
+                          fetch(link.url)
+                            .then((response) => response.json())
+                            .then((data) => {
+                              setUpgradation(data);
+                            })
+                            .catch((error) => {
+                              console.error('Error:', error);
+                            });
+                        }
+                      }} className={link.active ? 'bg-blue-600 hover:bg-blue-700' : ''}
+                    >
+                      <span dangerouslySetInnerHTML={{ __html: link.label }} />
+                    </Button>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </AppLayout>
     </ErrorBoundary>

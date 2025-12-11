@@ -124,6 +124,8 @@ export default function Assets({ instituteAssets: instituteAssetsProp, institute
   const [assets, setAssets] = useState<Item[]>(initialAssets.filter(isValidItem));
   const [isLoadingBlocks, setIsLoadingBlocks] = useState(false);
   const [isLoadingRooms, setIsLoadingRooms] = useState(false);
+  const [isRowClicked, setIsRowClicked] = useState(false);
+
   const [isLoadingAssets, setIsLoadingAssets] = useState(false);
   const [instituteAssets, setInstituteAssets] = useState(instituteAssetsProp);
   const [filteredInstitutes, setFilteredInstitutes] = useState<Item[]>(institutes || []);
@@ -297,6 +299,9 @@ export default function Assets({ instituteAssets: instituteAssetsProp, institute
 
   // Auto-fetch data when details checkbox changes
   useEffect(() => {
+    if (isRowClicked) {
+      return;
+    }
     const params = new URLSearchParams({
       search: search || '',
       institute_id: institute || '',
@@ -548,370 +553,344 @@ export default function Assets({ instituteAssets: instituteAssetsProp, institute
       <AppLayout breadcrumbs={breadcrumbs}>
         <Head title="Assets Report" />
         <div className="flex-1 p-2 md:p-2">
-          <div className="flex flex-col md:flex-row gap-3">
-            {/* Left Side: Search Controls */}
-            <div className="w-full md:w-1/3">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-xl font-bold">Filters</CardTitle>
-                  <p className="text-muted-foreground text-sm">Refine your assets search</p>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {/* Region Filter - Added based on Transport.tsx */}
-                  {memoizedRegions.length > 0 && (
-                    <Combobox
-                      entity="region"
-                      value={region}
-                      onChange={(value) => handleRegionChange(value)}
-                      options={memoizedRegions.map((reg) => ({
-                        id: reg.id.toString(), // Convert ID to string to match prop type
-                        name: reg.name.split(' ').pop() || reg.name,
-                      }))}
-                      includeAllOption={true}
 
-                    />
-
-
-
-
-                  )}
-
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-xl font-bold">Filters</CardTitle>
+              <p className="text-muted-foreground text-sm">Refine your assets search</p>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Region Filter - Added based on Transport.tsx */}
+              <div className="flex flex-row gap-2">
+                {memoizedRegions.length > 0 && (
                   <Combobox
-                    entity="institute"
-                    value={institute}
-                    onChange={(value) => setInstitute(value)}
-                    options={memoizedInstitutes.map((inst) => ({
-                      id: inst.id.toString(), // Convert ID to string to match prop type
-                      name: inst.name,
+                    entity="region"
+                    value={region}
+                    onChange={(value) => handleRegionChange(value)}
+                    options={memoizedRegions.map((reg) => ({
+                      id: reg.id.toString(), // Convert ID to string to match prop type
+                      name: reg.name.split(' ').pop() || reg.name,
                     }))}
                     includeAllOption={true}
 
                   />
-                  {/* <Select value={institute} onValueChange={(value) => { setInstitute(value); }}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Institute" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="0">All Institutes</SelectItem>
-                      {memoizedInstitutes.length > 0 ? (
-                        memoizedInstitutes.map((inst) => {
-                          return (
-                            <SelectItem key={inst.id} value={inst.id.toString()}>
-                              {inst.name}
-                            </SelectItem>
-                          );
-                        })
-                      ) : (
-                        <div className="text-muted-foreground text-sm p-2">No institutes available</div>
-                      )}
-                    </SelectContent>
-                  </Select> */}
 
-                  <Select value={block} onValueChange={(value) => { setBlock(value); }} disabled={isLoadingBlocks}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Block" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="0">All Blocks</SelectItem>
-                      {isLoadingBlocks ? (
-                        <div className="text-muted-foreground text-sm p-2">Loading blocks...</div>
-                      ) : memoizedBlocks.length > 0 ? (
-                        memoizedBlocks.map((b) => {
-                          return (
-                            <SelectItem key={b.id} value={b.id.toString()}>
-                              {b.name}
-                            </SelectItem>
-                          );
-                        })
-                      ) : (
-                        <div className="text-muted-foreground text-sm p-2">No blocks available</div>
-                      )}
-                    </SelectContent>
-                  </Select>
 
-                  <Select value={room} onValueChange={(value) => { setRoom(value); }} disabled={isLoadingRooms}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Room" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="0">All Rooms</SelectItem>
-                      {isLoadingRooms ? (
-                        <div className="text-muted-foreground text-sm p-2">Loading rooms...</div>
-                      ) : memoizedRooms.length > 0 ? (
-                        memoizedRooms.map((r) => {
-                          return (
-                            <SelectItem key={r.id} value={r.id.toString()}>
-                              {r.name.split(' ').pop() || r.name}
-                            </SelectItem>
-                          );
-                        })
-                      ) : (
-                        <div className="text-muted-foreground text-sm p-2">No rooms available</div>
-                      )}
-                    </SelectContent>
-                  </Select>
 
-                  <Select value={assetCategory} onValueChange={(value) => { setAssetCategory(value); }}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Asset Category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="0">All Asset Categories</SelectItem>
-                      {memoizedAssetCategories.length > 0 ? (
-                        memoizedAssetCategories.map((category) => {
-                          return (
-                            <SelectItem key={category.id} value={category.id.toString()}>
-                              {category.name}
-                            </SelectItem>
-                          );
-                        })
-                      ) : (
-                        <div className="text-muted-foreground text-sm p-2">No asset categories available</div>
-                      )}
-                    </SelectContent>
-                  </Select>
 
-                  <Select value={asset} onValueChange={(value) => { setAsset(value); }}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Asset" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="0">All Assets</SelectItem>
-                      {memoizedAssets.length > 0 ? (
-                        memoizedAssets.map((a) => {
-                          return (
-                            <SelectItem key={a.id} value={a.id.toString()}>
-                              {a.name}
-                            </SelectItem>
-                          );
-                        })
-                      ) : (
-                        <div className="text-muted-foreground text-sm p-2">No assets available</div>
-                      )}
-                    </SelectContent>
-                  </Select>
-                  <div className="flex items-center gap-3 py-2">
-                    <Input
-                      type="checkbox"
-                      id="details-mode"
-                      checked={details}
-                      onChange={(e) => setDetails(e.target.checked)}
-                    />
-                    <label htmlFor="details-mode" className="cursor-pointer select-none font-medium text-sm">
-                      {details ? 'Detailed View' : 'Summary View'} — Show individual entries
-                    </label>
-                  </div>
-                  <Button onClick={debouncedApplyFilters} className="w-full">
-                    Apply Filters
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
+                )}
 
-            {/* Right Side: Assets List */}
-            <div className="w-full md:w-2/3">
-              <Card>
-                <CardHeader className="pb-3 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                  <div>
-                    <CardTitle className="text-2xl font-bold">Assets Report</CardTitle>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button onClick={exportToPDF} className="w-full md:w-auto">
-                      Export PDF
-                    </Button>
-                    <Button onClick={exportToExcel} className="w-full md:w-auto">
-                      Export Excel
-                    </Button>
-                  </div>
-                </CardHeader>
-                <Separator />
-                <Input
-                  type="text"
-                  placeholder="Search projects... (press Enter)"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  onKeyDown={applyFilters}
+                <Combobox
+                  entity="institute"
+                  value={institute}
+                  onChange={(value) => setInstitute(value)}
+                  options={memoizedInstitutes.map((inst) => ({
+                    id: inst.id.toString(), // Convert ID to string to match prop type
+                    name: inst.name,
+                  }))}
+                  includeAllOption={true}
+
                 />
-                <CardContent className="pt-6 space-y-6">
-                  <table className="w-full border-collapse border-1 rounded-md overflow-hidden shadow-sm">
-                    <thead>
-                      <tr className="bg-primary dark:bg-gray-800" >
 
 
-                        {!details ? (
-                          <>   <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">
-                            Asset
-                          </th>
-                            <th className="border p-2 text-center text-sm font-medium text-white dark:text-gray-200">
-                              Total Quantity
-                            </th>
-                            <th className="border p-2 text-center text-sm font-medium text-white dark:text-gray-200">
-                              Rooms
-                            </th>
-                          </>
-                        ) : (
-                          <>
-                            <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">
-                              Institute
-                            </th>
-                            <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">
-                              Category
-                            </th>
-                            <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">
-                              Asset
-                            </th>
+                <Select value={block} onValueChange={(value) => { setBlock(value); }} disabled={isLoadingBlocks}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Block" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0">All Blocks</SelectItem>
+                    {isLoadingBlocks ? (
+                      <div className="text-muted-foreground text-sm p-2">Loading blocks...</div>
+                    ) : memoizedBlocks.length > 0 ? (
+                      memoizedBlocks.map((b) => {
+                        return (
+                          <SelectItem key={b.id} value={b.id.toString()}>
+                            {b.name}
+                          </SelectItem>
+                        );
+                      })
+                    ) : (
+                      <div className="text-muted-foreground text-sm p-2">No blocks available</div>
+                    )}
+                  </SelectContent>
+                </Select>
 
-                            <th className="border p-2 text-center text-sm font-medium text-white dark:text-gray-200">
-                              Quantity
-                            </th>
-                            <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">
-                              Room / Block
-                            </th>
-                            <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">
-                              Added Date
-                            </th>
-                          </>
-                        )}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {instituteAssets.data?.length === 0 ? (
-                        <tr>
-                          <td colSpan={details ? 5 : 3} className="border p-2 text-center text-sm text-gray-900 dark:text-gray-100">
-                            No assets found.
+                <Select value={room} onValueChange={(value) => { setRoom(value); }} disabled={isLoadingRooms}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Room" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0">All Rooms</SelectItem>
+                    {isLoadingRooms ? (
+                      <div className="text-muted-foreground text-sm p-2">Loading rooms...</div>
+                    ) : memoizedRooms.length > 0 ? (
+                      memoizedRooms.map((r) => {
+                        return (
+                          <SelectItem key={r.id} value={r.id.toString()}>
+                            {r.name.split(' ').pop() || r.name}
+                          </SelectItem>
+                        );
+                      })
+                    ) : (
+                      <div className="text-muted-foreground text-sm p-2">No rooms available</div>
+                    )}
+                  </SelectContent>
+                </Select>
+
+                <Select value={assetCategory} onValueChange={(value) => { setAssetCategory(value); }}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Asset Category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0">All Asset Categories</SelectItem>
+                    {memoizedAssetCategories.length > 0 ? (
+                      memoizedAssetCategories.map((category) => {
+                        return (
+                          <SelectItem key={category.id} value={category.id.toString()}>
+                            {category.name}
+                          </SelectItem>
+                        );
+                      })
+                    ) : (
+                      <div className="text-muted-foreground text-sm p-2">No asset categories available</div>
+                    )}
+                  </SelectContent>
+                </Select>
+
+                <Select value={asset} onValueChange={(value) => { setAsset(value); }}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Asset" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0">All Assets</SelectItem>
+                    {memoizedAssets.length > 0 ? (
+                      memoizedAssets.map((a) => {
+                        return (
+                          <SelectItem key={a.id} value={a.id.toString()}>
+                            {a.name}
+                          </SelectItem>
+                        );
+                      })
+                    ) : (
+                      <div className="text-muted-foreground text-sm p-2">No assets available</div>
+                    )}
+                  </SelectContent>
+                </Select>
+
+              </div>
+
+
+              <div className="flex gap-2">
+                <div className="flex items-center gap-3 py-2">
+                  <Input
+                    type="checkbox"
+                    id="details-mode"
+                    checked={details}
+                    onChange={(e) => { setIsRowClicked(false); setDetails(e.target.checked) }}
+                  />
+                  <label htmlFor="details-mode" className="cursor-pointer select-none font-medium text-sm">
+                    {details ? 'Detailed View' : 'Summary View'} — Show individual entries
+                  </label>
+                </div>
+                <Button onClick={debouncedApplyFilters} className="w-full md:w-auto">
+                  Apply Filters
+                </Button>
+                <Button onClick={exportToPDF} className="w-full md:w-auto">
+                  Export PDF
+                </Button>
+                <Button onClick={exportToExcel} className="w-full md:w-auto">
+                  Export Excel
+                </Button>
+              </div>
+              <Input
+                type="text"
+                placeholder="Search projects... (press Enter)"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                onKeyDown={applyFilters}
+              />
+
+              <table className="w-full border-collapse border-1 rounded-md overflow-hidden shadow-sm">
+                <thead>
+                  <tr className="bg-primary dark:bg-gray-800" >
+
+
+                    {!details ? (
+                      <>   <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">
+                        Asset
+                      </th>
+                        <th className="border p-2 text-center text-sm font-medium text-white dark:text-gray-200">
+                          Total Quantity
+                        </th>
+                        <th className="border p-2 text-center text-sm font-medium text-white dark:text-gray-200">
+                          Rooms
+                        </th>
+                      </>
+                    ) : (
+                      <>
+                        <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">
+                          Institute
+                        </th>
+                        <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">
+                          Category
+                        </th>
+                        <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">
+                          Asset
+                        </th>
+
+                        <th className="border p-2 text-center text-sm font-medium text-white dark:text-gray-200">
+                          Quantity
+                        </th>
+                        <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">
+                          Room / Block
+                        </th>
+                        <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">
+                          Added Date
+                        </th>
+                      </>
+                    )}
+                  </tr>
+                </thead>
+                <tbody>
+                  {instituteAssets.data?.length === 0 ? (
+                    <tr>
+                      <td colSpan={details ? 5 : 3} className="border p-2 text-center text-sm text-gray-900 dark:text-gray-100">
+                        No assets found.
+                      </td>
+                    </tr>
+                  ) : (
+                    instituteAssets.data?.map((instAsset: any, index) => {
+                      // Summary Mode
+                      if (!details) {
+                        const handleRowClick = (assetId: number) => {
+                          // Update state first
+                          setIsRowClicked(true);
+                          setDetails(true);
+                          //  setAsset(assetId.toString());
+
+                          // Use setTimeout to ensure state updates are processed
+                          setTimeout(() => {
+                            const params = new URLSearchParams({
+                              search: search || '',
+                              institute_id: institute || '',
+                              block_id: block || '',
+                              room_id: room || '',
+                              asset_category_id: assetCategory || '',
+                              asset_id: assetId.toString(),
+                              region_id: region || '',
+                              details: 'true',
+                            });
+
+                            fetch(`/reports/assets/institute-assets?${params.toString()}`)
+                              .then((response) => response.json())
+                              .then((data) => {
+                                setInstituteAssets(data);
+                              })
+                              .catch((error) => {
+                                console.error('Error fetching asset details:', error);
+                                toast.error('Failed to fetch asset details');
+                              });
+                          }, 0);
+                        };
+
+                        return (
+                          <tr
+                            key={`${instAsset.name}-${index}`}
+                            className="hover:bg-primary/10 dark:hover:bg-gray-700 cursor-pointer"
+                            onClick={() => handleRowClick(instAsset.id)}
+                          >
+                            <td className="border p-2 text-left font-bold dark:text-gray-100">
+                              {instAsset.name}
+                            </td>
+                            <td className="border p-2 text-center text-lg font-bold text-green-600">
+                              {instAsset.total_qty}
+                            </td>
+                            <td className="border p-2 text-center text-amber-600">
+                              {instAsset.locations_count || '-'}
+                            </td>
+                          </tr>
+                        );
+                      }
+
+                      // Detailed Mode — safe fallback
+                      if (!instAsset.asset) {
+                        return (
+                          <tr key={index}>
+                            <td colSpan={5} className="text-center text-muted-foreground py-4">
+                              Loading details...
+                            </td>
+                          </tr>
+                        );
+                      }
+
+                      return (
+                        <tr key={instAsset.id} className="hover:bg-primary/10 dark:hover:bg-gray-700">
+                          <td className="border p-2 text-left font-bold dark:text-gray-100">
+                            {instAsset.institute?.name}
+                          </td>
+                          <td className="border p-2 text-left font-bold dark:text-gray-100">
+                            {instAsset.asset?.category.name}
+                          </td>
+                          <td className="border p-2 text-left font-bold dark:text-gray-100">
+                            {instAsset.asset?.name}
+                          </td>
+                          <td className="border p-2 text-center font-bold text-lg text-green-600">
+                            {instAsset.current_qty}
+                          </td>
+                          <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">
+                            {instAsset.room ? (
+                              <>
+                                {instAsset.room.name}
+                                {instAsset.room.block && <span className="text-muted-foreground"> ({instAsset.room.block.name})</span>}
+                              </>
+                            ) : '—'}
+                          </td>
+
+
+                          <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">
+                            {instAsset.added_date ? new Date(instAsset.added_date).toLocaleDateString() : '—'}
                           </td>
                         </tr>
-                      ) : (
-                        instituteAssets.data?.map((instAsset: any, index) => {
-                          // Summary Mode
-                          if (!details) {
-                            const handleRowClick = (assetId: number) => {
-                              // Update state first
-                              setDetails(true);
-                              //  setAsset(assetId.toString());
-
-                              // Use setTimeout to ensure state updates are processed
-                              setTimeout(() => {
-                                const params = new URLSearchParams({
-                                  search: search || '',
-                                  institute_id: institute || '',
-                                  block_id: block || '',
-                                  room_id: room || '',
-                                  asset_category_id: assetCategory || '',
-                                  asset_id: assetId.toString(),
-                                  region_id: region || '',
-                                  details: 'true',
-                                });
-
-                                fetch(`/reports/assets/institute-assets?${params.toString()}`)
-                                  .then((response) => response.json())
-                                  .then((data) => {
-                                    setInstituteAssets(data);
-                                  })
-                                  .catch((error) => {
-                                    console.error('Error fetching asset details:', error);
-                                    toast.error('Failed to fetch asset details');
-                                  });
-                              }, 0);
-                            };
-
-                            return (
-                              <tr
-                                key={`${instAsset.name}-${index}`}
-                                className="hover:bg-primary/10 dark:hover:bg-gray-700 cursor-pointer"
-                                onClick={() => handleRowClick(instAsset.id)}
-                              >
-                                <td className="border p-2 text-left font-bold dark:text-gray-100">
-                                  {instAsset.name}
-                                </td>
-                                <td className="border p-2 text-center text-lg font-bold text-green-600">
-                                  {instAsset.total_qty}
-                                </td>
-                                <td className="border p-2 text-center text-amber-600">
-                                  {instAsset.locations_count || '-'}
-                                </td>
-                              </tr>
-                            );
-                          }
-
-                          // Detailed Mode — safe fallback
-                          if (!instAsset.asset) {
-                            return (
-                              <tr key={index}>
-                                <td colSpan={5} className="text-center text-muted-foreground py-4">
-                                  Loading details...
-                                </td>
-                              </tr>
-                            );
-                          }
-
-                          return (
-                            <tr key={instAsset.id} className="hover:bg-primary/10 dark:hover:bg-gray-700">
-                              <td className="border p-2 text-left font-bold dark:text-gray-100">
-                                {instAsset.institute?.name}
-                              </td>
-                              <td className="border p-2 text-left font-bold dark:text-gray-100">
-                                {instAsset.asset?.category.name}
-                              </td>
-                              <td className="border p-2 text-left font-bold dark:text-gray-100">
-                                {instAsset.asset?.name}
-                              </td>
-                              <td className="border p-2 text-center font-bold text-lg text-green-600">
-                                {instAsset.current_qty}
-                              </td>
-                              <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">
-                                {instAsset.room ? (
-                                  <>
-                                    {instAsset.room.name}
-                                    {instAsset.room.block && <span className="text-muted-foreground"> ({instAsset.room.block.name})</span>}
-                                  </>
-                                ) : '—'}
-                              </td>
-
-
-                              <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">
-                                {instAsset.added_date ? new Date(instAsset.added_date).toLocaleDateString() : '—'}
-                              </td>
-                            </tr>
-                          );
-                        })
-                      )}
-                    </tbody>
-                  </table>
-
-                  {/* Pagination */}
-                  {instituteAssets.links?.length > 1 && (
-                    <div className="flex justify-center pt-6 flex-wrap gap-2">
-                      {instituteAssets.links.map((link, i) => (
-                        <Button
-                          key={i}
-                          disabled={!link.url}
-                          variant={link.active ? 'default' : 'outline'}
-                          size="sm"
-                          onClick={() => {
-                            if (link.url) {
-                              fetch(link.url)
-                                .then((response) => response.json())
-                                .then((data) => {
-                                  setInstituteAssets(data);
-                                })
-                                .catch((error) => {
-                                  console.error('Error:', error);
-                                });
-                            }
-                          }}
-                          className={link.active ? 'bg-blue-600 hover:bg-blue-700' : ''}
-                        >
-                          <span dangerouslySetInnerHTML={{ __html: link.label }} />
-                        </Button>
-                      ))}
-                    </div>
+                      );
+                    })
                   )}
-                </CardContent>
-              </Card>
-            </div>
-          </div>
+                </tbody>
+              </table>
+
+              {/* Pagination */}
+              {instituteAssets.links?.length > 1 && (
+                <div className="flex justify-center pt-6 flex-wrap gap-2">
+                  {instituteAssets.links.map((link, i) => (
+                    <Button
+                      key={i}
+                      disabled={!link.url}
+                      variant={link.active ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => {
+                        if (link.url) {
+                          fetch(link.url)
+                            .then((response) => response.json())
+                            .then((data) => {
+                              setInstituteAssets(data);
+                            })
+                            .catch((error) => {
+                              console.error('Error:', error);
+                            });
+                        }
+                      }}
+                      className={link.active ? 'bg-blue-600 hover:bg-blue-700' : ''}
+                    >
+                      <span dangerouslySetInnerHTML={{ __html: link.label }} />
+                    </Button>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
+
+
+
       </AppLayout>
     </ErrorBoundary>
   );

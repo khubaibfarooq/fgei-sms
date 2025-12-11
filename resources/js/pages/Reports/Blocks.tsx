@@ -344,177 +344,166 @@ export default function Blocks({ blocks: blocksProp, institutes, blocktypes, reg
       <AppLayout breadcrumbs={breadcrumbs}>
         <Head title="Blocks Report" />
         <div className="flex-1 p-2 md:p-2">
-          <div className="flex flex-col md:flex-row gap-3">
-            {/* Left Side: Search Controls */}
-            <div className="w-full md:w-1/3">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-xl font-bold">Filters</CardTitle>
-                  <p className="text-muted-foreground text-sm">Refine your blocks search</p>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {/* Region Filter */}
-                  {memoizedRegions.length > 0 && (
-                    <Combobox
-                      entity="region"
-                      value={region}
-                      onChange={(value) => handleRegionChange(value)}
-                      options={memoizedRegions.map((reg) => ({
-                        id: reg.id.toString(),
-                        name: reg.name.split(' ').pop() || reg.name,
-                      }))}
-                      includeAllOption={true}
-                    />
-                  )}
-
-                  {/* Institute Filter */}
+          <Card className="w-full">
+            <CardHeader className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <CardTitle className="text-2xl font-bold">Blocks Report</CardTitle>
+            </CardHeader>
+            <Separator />
+            <CardContent className="space-y-6 pt-6">
+              {/* Filters Row */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {/* Region Filter */}
+                {memoizedRegions.length > 0 && (
                   <Combobox
-                    entity="institute"
-                    value={institute}
-                    onChange={(value) => setInstitute(value)}
-                    options={memoizedInstitutes.map((inst) => ({
-                      id: inst.id.toString(),
-                      name: inst.name,
+                    entity="region"
+                    value={region}
+                    onChange={(value) => handleRegionChange(value)}
+                    options={memoizedRegions.map((reg) => ({
+                      id: reg.id.toString(),
+                      name: reg.name.split(' ').pop() || reg.name,
                     }))}
                     includeAllOption={true}
                   />
+                )}
 
-                  {/* Block Type Filter */}
-                  <Select value={blocktype} onValueChange={(value) => { setBlocktype(value); }}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Block Type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="0">All Block Types</SelectItem>
-                      {memoizedBlocktypes.length > 0 ? (
-                        memoizedBlocktypes.map((type) => (
-                          <SelectItem key={type.id} value={type.id.toString()}>
-                            {type.name}
-                          </SelectItem>
-                        ))
-                      ) : (
-                        <div className="text-muted-foreground text-sm p-2">No block types available</div>
-                      )}
-                    </SelectContent>
-                  </Select>
+                {/* Institute Filter */}
+                <Combobox
+                  entity="institute"
+                  value={institute}
+                  onChange={(value) => setInstitute(value)}
+                  options={memoizedInstitutes.map((inst) => ({
+                    id: inst.id.toString(),
+                    name: inst.name,
+                  }))}
+                  includeAllOption={true}
+                />
 
-                  {/* Search Input */}
-                  <Input
-                    type="text"
-                    placeholder="Search blocks..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                  />
+                {/* Block Type Filter */}
+                <Select value={blocktype} onValueChange={(value) => { setBlocktype(value); }}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Block Type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0">All Block Types</SelectItem>
+                    {memoizedBlocktypes.length > 0 ? (
+                      memoizedBlocktypes.map((type) => (
+                        <SelectItem key={type.id} value={type.id.toString()}>
+                          {type.name}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <div className="text-muted-foreground text-sm p-2">No block types available</div>
+                    )}
+                  </SelectContent>
+                </Select>
 
-                  <Button onClick={debouncedApplyFilters} className="w-full">
-                    Apply Filters
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
+                {/* Search Input */}
+                <Input
+                  type="text"
+                  placeholder="Search blocks..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+              </div>
 
-            {/* Right Side: Blocks List */}
-            <div className="w-full md:w-2/3">
-              <Card>
-                <CardHeader className="pb-3 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                  <div>
-                    <CardTitle className="text-2xl font-bold">Blocks Report</CardTitle>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button onClick={exportToPDF} className="w-full md:w-auto">
-                      Export PDF
-                    </Button>
-                    <Button onClick={exportToExcel} className="w-full md:w-auto">
-                      Export Excel
-                    </Button>
-                  </div>
-                </CardHeader>
-                <Separator />
-                <CardContent className="pt-6 space-y-6">
-                  <table className="w-full border-collapse border-1 rounded-md overflow-hidden shadow-sm">
-                    <thead>
-                      <tr className="bg-primary dark:bg-gray-800">
-                        <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">
-                          Block Name
-                        </th>
-                        <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">
-                          Block Type
-                        </th>
-                        <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">
-                          Area
-                        </th>
+              {/* Buttons Row */}
+              <div className="flex flex-col md:flex-row gap-2 justify-end">
+                <Button onClick={debouncedApplyFilters} className="w-full md:w-auto">
+                  Apply Filters
+                </Button>
+                <Button onClick={exportToPDF} className="w-full md:w-auto">
+                  Export PDF
+                </Button>
+                <Button onClick={exportToExcel} className="w-full md:w-auto">
+                  Export Excel
+                </Button>
+              </div>
 
-                        <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">
-                          Establish Date
-                        </th>
-                        <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">
-                          Institute
-                        </th>
+              {/* Table Section */}
+              <div className="space-y-3">
+                <table className="w-full border-collapse border-1 rounded-md overflow-hidden shadow-sm">
+                  <thead>
+                    <tr className="bg-primary dark:bg-gray-800">
+                      <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">
+                        Block Name
+                      </th>
+                      <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">
+                        Block Type
+                      </th>
+                      <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">
+                        Area
+                      </th>
+
+                      <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">
+                        Establish Date
+                      </th>
+                      <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">
+                        Institute
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {blocks.data?.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="border p-2 text-center text-sm text-gray-900 dark:text-gray-100">
+                          No blocks found.
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody>
-                      {blocks.data?.length === 0 ? (
-                        <tr>
-                          <td colSpan={3} className="border p-2 text-center text-sm text-gray-900 dark:text-gray-100">
-                            No blocks found.
+                    ) : (
+                      blocks.data?.map((block: BlockProp) => (
+                        <tr key={block.id} className="hover:bg-primary/10 dark:hover:bg-gray-700">
+                          <td className="border p-2 text-left font-bold dark:text-gray-100">
+                            <div className='flex flex-col gap-2 align-middle'> <ImagePreview dataImg={block.img} size="h-10 w-10" />  <span className='font-bold'>{block.name}</span></div>
+                          </td>
+                          <td className="border p-2 text-left text-gray-900 dark:text-gray-100">
+                            {block.block_type?.name || '—'}
+                          </td>
+                          <td className="border p-2 text-left text-gray-900 dark:text-gray-100">
+                            {block.area || '—'}
+                          </td>
+                          <td className="border p-2 text-left text-gray-900 dark:text-gray-100">
+                            {block.establish_date || '—'}
+                          </td>
+                          <td className="border p-2 text-left text-gray-900 dark:text-gray-100">
+                            {block.institute?.name || '—'}
                           </td>
                         </tr>
-                      ) : (
-                        blocks.data?.map((block: BlockProp) => (
-                          <tr key={block.id} className="hover:bg-primary/10 dark:hover:bg-gray-700">
-                            <td className="border p-2 text-left font-bold dark:text-gray-100">
-                              <div className='flex flex-column gap-2 align-middle'> <ImagePreview dataImg={block.img} size="h-20" />  <span className='font-bold'>{block.name}</span></div>
-                            </td>
-                            <td className="border p-2 text-left text-gray-900 dark:text-gray-100">
-                              {block.block_type?.name || '—'}
-                            </td>
-                            <td className="border p-2 text-left text-gray-900 dark:text-gray-100">
-                              {block.area || '—'}
-                            </td>
-                            <td className="border p-2 text-left text-gray-900 dark:text-gray-100">
-                              {block.establish_date || '—'}
-                            </td>
-                            <td className="border p-2 text-left text-gray-900 dark:text-gray-100">
-                              {block.institute?.name || '—'}
-                            </td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
+                      ))
+                    )}
+                  </tbody>
+                </table>
 
-                  {/* Pagination */}
-                  {blocks.links?.length > 1 && (
-                    <div className="flex justify-center pt-6 flex-wrap gap-2">
-                      {blocks.links.map((link, i) => (
-                        <Button
-                          key={i}
-                          disabled={!link.url}
-                          variant={link.active ? 'default' : 'outline'}
-                          size="sm"
-                          onClick={() => {
-                            if (link.url) {
-                              fetch(link.url)
-                                .then((response) => response.json())
-                                .then((data) => {
-                                  setBlocks(data);
-                                })
-                                .catch((error) => {
-                                  console.error('Error:', error);
-                                });
-                            }
-                          }}
-                          className={link.active ? 'bg-blue-600 hover:bg-blue-700' : ''}
-                        >
-                          <span dangerouslySetInnerHTML={{ __html: link.label }} />
-                        </Button>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-          </div>
+                {/* Pagination */}
+                {blocks.links?.length > 1 && (
+                  <div className="flex justify-center pt-6 flex-wrap gap-2">
+                    {blocks.links.map((link, i) => (
+                      <Button
+                        key={i}
+                        disabled={!link.url}
+                        variant={link.active ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => {
+                          if (link.url) {
+                            fetch(link.url)
+                              .then((response) => response.json())
+                              .then((data) => {
+                                setBlocks(data);
+                              })
+                              .catch((error) => {
+                                console.error('Error:', error);
+                              });
+                          }
+                        }}
+                        className={link.active ? 'bg-blue-600 hover:bg-blue-700' : ''}
+                      >
+                        <span dangerouslySetInnerHTML={{ __html: link.label }} />
+                      </Button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </AppLayout>
     </ErrorBoundary>
