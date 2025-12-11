@@ -40,6 +40,7 @@ interface Props {
         status?: string;
     };
     institutes: Institute[];
+    totalinstitutes: number;
 }
 
 
@@ -71,6 +72,7 @@ export default function Completion({
     regions = [],
     filters: initialFilters,
     institutes: initialInstitutes = [],
+    totalinstitutes,
 }: Props) {
     const [region, setRegion] = useState(initialFilters.region_id || '');
     const [institute, setInstitute] = useState(initialFilters.institute_id || '');
@@ -387,7 +389,7 @@ export default function Completion({
                                     {summary.length > 0 ? (
                                         summary.map((item, idx) => (
                                             <tr key={idx} className="hover:bg-muted/50">
-                                                <td className="px-4 py-3 text-center">{item.total_institutes}</td>
+                                                <td className="px-4 py-3 text-center">{totalinstitutes}</td>
                                                 {status == 'completed' || status == '' ? <td className="px-4 py-3 text-center text-green-600 font-bold">{item.completed}</td> : null}
                                                 {status == 'greater_than_50' || status == '' ? <td className="px-4 py-3 text-center text-green-600 font-bold">{item.greater_than_50}</td> : null}
                                                 {status == 'less_than_50' || status == '' ? <td className="px-4 py-3 text-center text-red-600 font-bold">{item.less_than_50}</td> : null}

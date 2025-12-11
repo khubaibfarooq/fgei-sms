@@ -2069,11 +2069,12 @@ public function getFund(Request $request)
             ->filter(fn($r) => is_numeric($r->id) && $r->id > 0 && !empty(trim($r->name)))
             ->values();
     }
-      
+      $totalinstitutes = Institute::count();
 
         return Inertia::render('Reports/Completion', [
             'regions' => $regions,
             'institutes' => $institutes,
+            'totalinstitutes' => $totalinstitutes,
             'filters' => [
                 'region_id' => '',
                 'institute_id' => '',
@@ -2208,7 +2209,7 @@ if($buildingTypeId!=null){
                  $region = Institute::where('region_id', $first['region_id'])->where('type', "Regional Office")->first();
                  return [
                      'id' => $first['region_id'],
-                     'name' => $region->name ?? 'N/A',
+                     'name' => $region->name ?? 'Special Education',
                      'is_region' => true,
                      'total_institutes' => $group->count(),
                      'completed' => $group->where('percentage', 100)->count(),
@@ -2234,10 +2235,13 @@ if($type=="Regional Office"){
 }else{
     $institutesFilter = Institute::whereIn('type', ['School', 'College'])->get();
 }
+
+$totalinstitutes =Institute::count();
         return response()->json([
             'summary' => $summary,
             'details' => $details,
             'institutes' => $institutesFilter,
+            'totalinstitutes' => $totalinstitutes,
         ]);
     }
 }
