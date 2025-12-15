@@ -258,6 +258,169 @@ return response()->json(['count' => $count]); // Keep 'count' key for frontend c
 }
 
 
+    public function getInstituteCompletionDetails()
+    {
+        $instituteId = session('sms_inst_id');
+        if (!$instituteId) {
+            return response()->json(['error' => 'Institute ID is required'], 400);
+        }
+
+        $institute = Institute::with([
+            'shifts',
+            'fundHelds',
+            'blocks.rooms',
+            'instituteAssets',
+            'institutePlants',
+            'instituteTransports',
+            'projects',
+            'upgradations'
+        ])->find($instituteId);
+
+        if (!$institute) {
+            return response()->json(['error' => 'Institute not found'], 404);
+        }
+
+        $shiftsCount = $institute->shifts->count();
+        $blocksCount = $institute->blocks->count();
+        $roomsCount = $institute->blocks->sum(fn($b) => $b->rooms->count());
+        $assetsCount = $institute->instituteAssets->count();
+        $plantsCount = $institute->institutePlants->count();
+        $transportsCount = $institute->instituteTransports->count();
+        $fundsCount = $institute->fundHelds->count();
+        $projectsCount = $institute->projects->count();
+        $upgradationsCount = $institute->upgradations->count();
+
+        $percentage = 0;
+        $firstShift = $institute->shifts->first();
+        $buildingTypeId = $firstShift ? $firstShift->building_type_id : null;
+        
+        $criteria = [];
+
+        if ($buildingTypeId != null) {
+            if ($buildingTypeId == 1) { // Owned
+                
+                // Institute Profile
+                $criteria[] = [
+                    'name' => 'Complete Institute Profile',
+                    'weight' => 20,
+                    'completed' => true, 
+                    'message' => 'Profile Completed'
+                ];
+                $percentage += 20;
+
+                // Funds
+                $fundsCompleted = $fundsCount > 0;
+                $criteria[] = [
+                    'name' => 'Add Funds Information',
+                    'weight' => 20,
+                    'completed' => $fundsCompleted,
+                    'message' => $fundsCompleted ? 'Funds Added' : 'No Funds Information'
+                ];
+                if ($fundsCompleted) $percentage += 20;
+
+                // Blocks
+                $blocksCompleted = $blocksCount > 0;
+                $criteria[] = [
+                    'name' => 'Add Blocks Information',
+                    'weight' => 10,
+                    'completed' => $blocksCompleted,
+                    'message' => $blocksCompleted ? 'Blocks Added' : 'No Blocks Information'
+                ];
+                if ($blocksCompleted) $percentage += 10;
+
+                // Rooms
+                $roomsCompleted = $roomsCount > 0;
+                $criteria[] = [
+                    'name' => 'Add Rooms to Blocks',
+                    'weight' => 10,
+                    'completed' => $roomsCompleted,
+                    'message' => $roomsCompleted ? 'Rooms Added' : 'No Rooms Information'
+                ];
+                if ($roomsCompleted) $percentage += 10;
+
+                // Shifts
+                $shiftsCompleted = $shiftsCount > 0;
+                $criteria[] = [
+                    'name' => 'Add Shifts Information',
+                    'weight' => 10,
+                    'completed' => $shiftsCompleted,
+                    'message' => $shiftsCompleted ? 'Shifts Added' : 'No Shifts Information'
+                ];
+                if ($shiftsCompleted) $percentage += 10;
+
+                // Plants
+                $plantsCompleted = $plantsCount > 0;
+                $criteria[] = [
+                    'name' => 'Add Plants Information',
+                    'weight' => 10,
+                    'completed' => $plantsCompleted,
+                    'message' => $plantsCompleted ? 'Plants Added' : 'No Plants Information'
+                ];
+                if ($plantsCompleted) $percentage += 10;
+
+                // Assets
+                $assetsCompleted = $assetsCount > 50;
+                $criteria[] = [
+                    'name' => 'Add at least 50 Assets',
+                    'weight' => 20,
+                    'completed' => $assetsCompleted,
+                    'message' => $assetsCompleted ? 'Assets Added (>50)' : 'Assets Count: ' . $assetsCount
+                ];
+                if ($assetsCompleted) $percentage += 20;
+
+            } else { // Rented / Other
+                
+                // Institute Profile
+                $criteria[] = [
+                    'name' => 'Complete Institute Profile',
+                    'weight' => 40,
+                    'completed' => true,
+                    'message' => 'Profile Completed'
+                ];
+                $percentage += 40;
+
+                // Funds
+                $fundsCompleted = $fundsCount > 0;
+                $criteria[] = [
+                    'name' => 'Add Funds Information',
+                    'weight' => 40,
+                    'completed' => $fundsCompleted,
+                    'message' => $fundsCompleted ? 'Funds Added' : 'No Funds Information'
+                ];
+                if ($fundsCompleted) $percentage += 40;
+
+                // Shifts
+                $shiftsCompleted = $shiftsCount > 0;
+                $criteria[] = [
+                    'name' => 'Add Shifts Information',
+                    'weight' => 20,
+                    'completed' => $shiftsCompleted,
+                    'message' => $shiftsCompleted ? 'Shifts Added' : 'No Shifts Information'
+                ];
+                if ($shiftsCompleted) $percentage += 20;
+            }
+        } else {
+             // Fallback if no shift/building type defined - assume default generic checks or fail everything?
+             // Since buildingTypeId is null, original logic implies percentage 0.
+             // We can check if they populated anything at all?
+             // But following original logic: if buildingTypeId is null, they get nothing calculated in the main loop.
+             // We should prompt them to add shifts first.
+             $criteria[] = [
+                 'name' => 'Add Shifts Information (Required)',
+                 'weight' => 100,
+                 'completed' => false,
+                 'message' => 'Please add shifts to determine building type'
+             ];
+        }
+
+        $percentage = min($percentage, 100);
+
+        return response()->json([
+            'institute' => $institute->name,
+            'percentage' => $percentage,
+            'criteria' => $criteria
+        ]);
+    }
 public function index(Request $request)
 {
    

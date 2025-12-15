@@ -82,6 +82,8 @@ Route::middleware(['auth', 'menu.permission'])->group(function () {
 
 //end Dashboard API routes
       Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+      Route::get('/dashboard/completion', [DashboardController::class, 'getInstituteCompletionDetails'])->name('dashboard.completion');
+
       //all institute routes for region and dactotrate
     Route::get('/all-institutes', [InstituteController::class, 'institutes'])->name('all-institutes');
 
@@ -215,6 +217,7 @@ Route::get('/reports/funds', [ReportsController::class, 'Funds'])->name('reports
 
     Route::get('/reports/completion', [ReportsController::class, 'completion'])->name('reports.completion');
     Route::get('/reports/completion/getData', [ReportsController::class, 'getCompletionData'])->name('reports.completion.getData');
+    Route::get('/reports/completion/getDetails', [ReportsController::class, 'getInstituteCompletionDetails'])->name('reports.completion.getDetails');
 //helpdesk
 Route::put('/helpdesk/{helpDesk}', [HelpDeskController::class, 'update'])->name('helpdesk.update');
 Route::get('/helpdesk', [HelpDeskController::class, 'index'])->name('helpdesk.index');

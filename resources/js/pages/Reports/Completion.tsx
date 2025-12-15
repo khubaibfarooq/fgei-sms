@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { CheckCircle2, XCircle } from 'lucide-react';
 import { type BreadcrumbItem } from '@/types';
 import { toast } from 'sonner';
 import Combobox from '@/components/ui/combobox';
@@ -67,6 +69,19 @@ interface DetailItem {
     percentage: number;
 }
 
+interface DetailCriteria {
+    name: string;
+    weight: number;
+    completed: boolean;
+    message: string;
+}
+
+interface InstituteCompletionDetails {
+    institute: string;
+    percentage: number;
+    criteria: DetailCriteria[];
+}
+
 
 export default function Completion({
     regions = [],
@@ -82,6 +97,27 @@ export default function Completion({
     const [summary, setSummary] = useState<SummaryItem[]>([]);
     const [details, setDetails] = useState<DetailItem[]>([]);
     const [loading, setLoading] = useState(false);
+
+    const [modalOpen, setModalOpen] = useState(false);
+    const [selectedDetails, setSelectedDetails] = useState<InstituteCompletionDetails | null>(null);
+    const [detailsLoading, setDetailsLoading] = useState(false);
+
+    const handleShowDetails = async (instituteId: number) => {
+        setDetailsLoading(true);
+        setModalOpen(true);
+        setSelectedDetails(null);
+        try {
+            const res = await fetch(`/reports/completion/getDetails?institute_id=${instituteId}`);
+            if (!res.ok) throw new Error();
+            const data = await res.json();
+            setSelectedDetails(data);
+        } catch (error) {
+            toast.error('Failed to load details');
+            setModalOpen(false);
+        } finally {
+            setDetailsLoading(false);
+        }
+    };
 
     // Fetch institutes when region changes
     useEffect(() => {
@@ -590,7 +626,14 @@ export default function Completion({
                                                             <span className={
                                                                 item.percentage === 100 ? 'text-green-600' :
                                                                     item.percentage < 50 ? 'text-red-600' : 'text-yellow-600'
-                                                            }>
+                                                            }
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleShowDetails(item.id);
+                                                                }}
+                                                                style={{ cursor: 'pointer', textDecoration: 'underline' }}
+                                                                title="Click to see breakdown"
+                                                            >
                                                                 {item.percentage}%
                                                             </span>
                                                         </td>
@@ -609,7 +652,73 @@ export default function Completion({
                             </table>
                         </div>
                     </CardContent>
-                </Card >
+                </Card>
+
+                <Dialog open={modalOpen} onOpenChange={setModalOpen}>
+                    <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+                        <DialogHeader>
+                            <DialogTitle className="text-xl">Completion Details: {selectedDetails?.institute || 'Loading...'}</DialogTitle>
+                            <DialogDescription>
+                                Detailed breakdown of invalid or missing criteria.
+                            </DialogDescription>
+                        </DialogHeader>
+
+                        {detailsLoading ? (
+                            <div className="flex justify-center p-8">Loading details...</div>
+                        ) : selectedDetails ? (
+                            <div className="space-y-6">
+                                <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
+                                    <span className="font-semibold text-lg">Total Score</span>
+                                    <span className={`text-2xl font-bold ${selectedDetails.percentage === 100 ? 'text-green-600' :
+                                        selectedDetails.percentage < 50 ? 'text-red-600' : 'text-yellow-600'
+                                        }`}>
+                                        {selectedDetails.percentage}%
+                                    </span>
+                                </div>
+
+                                <div className="rounded-md border">
+                                    <table className="w-full text-sm">
+                                        <thead className="bg-muted/50 text-muted-foreground uppercase">
+                                            <tr>
+                                                <th className="px-4 py-3 text-left">Criteria</th>
+                                                <th className="px-4 py-3 text-right">Weight</th>
+                                                <th className="px-4 py-3 text-center">Status</th>
+                                                <th className="px-4 py-3 text-left">Message</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y">
+                                            {selectedDetails.criteria.map((criterion, idx) => (
+                                                <tr key={idx}>
+                                                    <td className="px-4 py-3 font-medium">{criterion.name}</td>
+                                                    <td className="px-4 py-3 text-right text-muted-foreground">{criterion.weight}%</td>
+                                                    <td className="px-4 py-3 text-center">
+                                                        {criterion.completed ? (
+                                                            <CheckCircle2 className="w-5 h-5 text-green-500 mx-auto" />
+                                                        ) : (
+                                                            <XCircle className="w-5 h-5 text-red-500 mx-auto" />
+                                                        )}
+                                                    </td>
+                                                    <td className={`px-4 py-3 ${criterion.completed ? 'text-green-600' : 'text-red-600'}`}>
+                                                        {criterion.message}
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                {/* Fallback/Help Text */}
+                                {selectedDetails.percentage < 100 && (
+                                    <div className="text-sm text-muted-foreground bg-blue-50 p-3 rounded border border-blue-100 dark:bg-blue-900/20 dark:border-blue-900">
+                                        Note: Please address the items marked with <XCircle className="w-3 h-3 inline text-red-500" /> to reach 100% completion.
+                                    </div>
+                                )}
+                            </div>
+                        ) : (
+                            <div className="text-center text-red-500">Failed to load details.</div>
+                        )}
+                    </DialogContent>
+                </Dialog>
             </div >
         </AppLayout >
     );
