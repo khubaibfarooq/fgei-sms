@@ -12,8 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('fund_helds', function (Blueprint $table) {
+            if (!Schema::hasColumn('fund_helds', 'added_by')) {
                      $table->foreignId('added_by')->constrained('users');
-
+            }
         });
     }
 

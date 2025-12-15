@@ -12,7 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('dashboard_cards', function (Blueprint $table) {
-           $table->string('redirectlink')->nullable();
+            if (!Schema::hasColumn('dashboard_cards', 'redirectlink')) {
+                 $table->string('redirectlink')->nullable();
+            }
         });
     }
 

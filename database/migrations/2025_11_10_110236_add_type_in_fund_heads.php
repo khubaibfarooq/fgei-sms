@@ -12,7 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('fund_heads', function (Blueprint $table) {
+             if (!Schema::hasColumn('fund_heads', 'type')) {
                $table->enum('type',['public', 'institutional','regional'])->default('institutional')->after('name');
+             }
         });
     }
 

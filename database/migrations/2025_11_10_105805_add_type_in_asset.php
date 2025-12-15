@@ -12,7 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('assets', function (Blueprint $table) {
+            if (!Schema::hasColumn('assets', 'type')) {
                $table->enum('type',['consumable', 'fixed'])->default('fixed')->after('name');
+            }
         });
     }
 

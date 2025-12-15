@@ -6,7 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { type BreadcrumbItem } from '@/types';
-import { Plus, Edit, Trash2, Building } from 'lucide-react';
+import { Plus, Edit, Trash2, Building, ClipboardCheck } from 'lucide-react';
+import ApprovalModal from './ApprovalModal';
 import {
   AlertDialog,
   AlertDialogTrigger,
@@ -23,13 +24,16 @@ import { toast } from 'sonner';
 interface Project {
   id: number;
   name: string;
-  cost: number;
-  status:string;
+  budget: number;
+  status: string;
+  overall_status: string;
+  priority: string;
   institute_id: number;
   institute: {
     name: string;
   };
   rooms_count?: number;
+  current_stage_id?: number;
 }
 
 interface Props {
@@ -41,12 +45,13 @@ interface Props {
   };
   filters: {
     search: string;
-    status:string;
+    status: string;
   };
   permissions: {
     can_add: boolean;
     can_edit: boolean;
     can_delete: boolean;
+    can_approve: boolean;
   };
 }
 
@@ -54,9 +59,11 @@ const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Projects', href: '/projects' },
 ];
 
-export default function ProjectIndex({ projects, filters,permissions }: Props) {
+export default function ProjectIndex({ projects, filters, permissions }: Props) {
   const [search, setSearch] = useState(filters.search || '');
   const [selectedStatus, setSelectedStatus] = useState(filters.status || '');
+  const [approvalModalOpen, setApprovalModalOpen] = useState(false);
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
 
   const handleDelete = (id: number) => {
     router.delete(`/projects/${id}`, {
@@ -70,23 +77,23 @@ export default function ProjectIndex({ projects, filters,permissions }: Props) {
       router.get('/projects', { ...filters, search }, { preserveScroll: true });
     }
   };
- const handleStatusChange= (e: React.ChangeEvent<HTMLSelectElement>) => {
-  const value=  e.target.value;
- setSelectedStatus(value); // reset room when block changes
-    updateFilters({ search: search, status: value });    
-  };  
+  const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
+    setSelectedStatus(value); // reset room when block changes
+    updateFilters({ search: search, status: value });
+  };
   const updateFilters = (newFilters: Partial<typeof filters>) => {
-      router.get(
-        '/projects',
-        { ...filters, ...newFilters },
-        {
-          preserveScroll: true,
-          preserveState: true,
-          replace: true,
-          only: ['projects', 'filters'],
-        }
-      );
-    };
+    router.get(
+      '/projects',
+      { ...filters, ...newFilters },
+      {
+        preserveScroll: true,
+        preserveState: true,
+        replace: true,
+        only: ['projects', 'filters'],
+      }
+    );
+  };
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Project Management" />
@@ -98,12 +105,12 @@ export default function ProjectIndex({ projects, filters,permissions }: Props) {
               <p className="text-muted-foreground text-sm md:text-md lg:text-lg">Manage institutional projects</p>
             </div>
             {permissions.can_add &&
-            <Link href="/projects/create">
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Project
-              </Button>
-            </Link>
+              <Link href="/projects/create">
+                <Button>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Project
+                </Button>
+              </Link>
             }
           </CardHeader>
 
@@ -118,94 +125,118 @@ export default function ProjectIndex({ projects, filters,permissions }: Props) {
                 onChange={(e) => setSearch(e.target.value)}
                 onKeyDown={handleSearchKey}
               />
-                 <select
-  value={selectedStatus}
-  onChange={handleStatusChange}
-  className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
->
-  <option value="">
-  All
-  </option>
- <option value="inprogress">
-  InProgress
-  </option><option value="completed">
-  Completed
-  </option><option value="planned">
-  Planned
-  </option>
-  
-</select>
+              <select
+                value={selectedStatus}
+                onChange={handleStatusChange}
+                className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">
+                  All
+                </option>
+                <option value="inprogress">
+                  InProgress
+                </option><option value="completed">
+                  Completed
+                </option><option value="planned">
+                  Planned
+                </option>
+
+              </select>
             </div>
 
             <div className="space-y-3">
-               <table className="w-full border-collapse  border-1 rounded-md overflow-hidden shadow-sm">
-  <thead>
-    <tr className="bg-primary dark:bg-gray-800 text-center" >
-      <th className="border p-2  text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Name</th>
-      <th className="border p-2  text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Cost</th>
-            <th className="border p-2  text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Status</th>
+              <table className="w-full border-collapse  border-1 rounded-md overflow-hidden shadow-sm">
+                <thead>
+                  <tr className="bg-primary dark:bg-gray-800 text-center" >
+                    <th className="border p-2  text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Name</th>
+                    <th className="border p-2  text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Budget</th>
+                    <th className="border p-2  text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Priority</th>
+                    <th className="border p-2  text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Status</th>
+                    <th className="border p-2  text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Stage</th>
 
 
-      <th className="border p-2  text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Action</th>
-     
-      
-    </tr>
-  </thead>
-  <tbody>
-              {projects.data.length === 0 ? (
-                <p className="text-muted-foreground text-center">No projects found.</p>
-              ) : (
-                projects.data.map((project) => (
-                   <tr  key={project.id} className="hover:bg-primary/10 dark:hover:bg-gray-700 text-center
+                    <th className="border p-2  text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Action</th>
+
+
+                  </tr>
+                </thead>
+                <tbody>
+                  {projects.data.length === 0 ? (
+                    <p className="text-muted-foreground text-center">No projects found.</p>
+                  ) : (
+                    projects.data.map((project) => (
+                      <tr key={project.id} className="hover:bg-primary/10 dark:hover:bg-gray-700 text-center
                     ">
-                     
-                         <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
+
+                        <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
                           {project.name}
-                         </td>
-                          <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
-                 {project.cost}
-                         </td>
-                           <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
-                   {project.status}
-                         </td>
-                          <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">  {permissions.can_edit &&
-                      <Link href={`/projects/${project.id}/edit`}>
-                        <Button variant="ghost" size="icon">
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                      </Link>
-                      }
-                      {permissions.can_delete &&
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="ghost" size="icon" className="text-destructive hover:text-red-600">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Delete this project?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Project <strong>{project.name}</strong> will be permanently deleted.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction
-                              className="bg-destructive hover:bg-destructive/90"
-                              onClick={() => handleDelete(project.id)}
+                        </td>
+                        <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
+                          {project.budget}
+                        </td>
+                        <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
+                          {project.priority || '-'}
+                        </td>
+                        <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
+                          {project.overall_status}
+                          <span className="text-xs text-muted-foreground ml-1">({project.status})</span>
+                        </td>
+                        <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
+                          {/* Pending Stage Logic Placeholder */}
+                          Draft
+                        </td>
+                        <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">  {permissions.can_edit &&
+                          <Link href={`/projects/${project.id}/edit`}>
+                            <Button variant="ghost" size="icon">
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </Link>
+                        }
+                          {permissions.can_delete &&
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="icon" className="text-destructive hover:text-red-600">
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete this project?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Project <strong>{project.name}</strong> will be permanently deleted.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    className="bg-destructive hover:bg-destructive/90"
+                                    onClick={() => handleDelete(project.id)}
+                                  >
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          }
+                          {permissions.can_approve &&
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="text-blue-600 hover:text-blue-700"
+                              onClick={() => {
+                                setSelectedProject(project);
+                                setApprovalModalOpen(true);
+                              }}
                             >
-                              Delete
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                      }</td>
-                          </tr>
-                 
-                ))
-              )}
-              </tbody></table>
+                              <ClipboardCheck className="h-4 w-4" />
+                            </Button>
+                          }
+                        </td>
+                      </tr>
+
+                    ))
+                  )}
+                </tbody></table>
             </div>
 
             {projects.links.length > 1 && (
@@ -226,6 +257,11 @@ export default function ProjectIndex({ projects, filters,permissions }: Props) {
           </CardContent>
         </Card>
       </div>
+      <ApprovalModal
+        isOpen={approvalModalOpen}
+        onClose={() => setApprovalModalOpen(false)}
+        project={selectedProject}
+      />
     </AppLayout>
   );
 }

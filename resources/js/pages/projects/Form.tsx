@@ -35,8 +35,10 @@ interface ProjectFormProps {
   project?: {
     id?: number;
     name: string;
-    cost: number;
+    budget: number; // Replaced cost
     project_type_id?: number;
+    description: string | null;
+    priority: string | null;
     status: string;
     milestones?: Array<{
       id: number;
@@ -55,8 +57,10 @@ export default function ProjectForm({ project, projectTypes }: ProjectFormProps)
   const isEdit = !!project?.id;
 
   const [name, setName] = useState(project?.name || '');
-  const [cost, setCost] = useState(project?.cost?.toString() || '');
+  const [cost, setCost] = useState(project?.budget?.toString() || ''); // cost -> budget
   const [projectTypeId, setProjectTypeId] = useState((project?.project_type_id || '').toString());
+  const [description, setDescription] = useState(project?.description || '');
+  const [priority, setPriority] = useState(project?.priority || 'Medium');
   const [status, setStatus] = useState<'planned' | 'inprogress' | 'completed'>(
     (project?.status as any) || 'planned'
   );
@@ -128,8 +132,10 @@ export default function ProjectForm({ project, projectTypes }: ProjectFormProps)
 
     const fd = new FormData();
     fd.append('name', name);
-    fd.append('cost', cost);
+    fd.append('budget', cost); // cost variable maps to budget
     fd.append('project_type_id', projectTypeId);
+    fd.append('description', description);
+    fd.append('priority', priority);
     fd.append('status', status);
 
     if (isEdit) {
@@ -171,7 +177,7 @@ export default function ProjectForm({ project, projectTypes }: ProjectFormProps)
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title={isEdit ? 'Edit Project' : 'Create Project'} />
 
-      <div className="p-4 md:p-6 max-w-7xl mx-auto">
+      <div className="p-4 md:p-6 w-full mx-auto">
         <Card>
           <CardHeader>
             <CardTitle className="text-2xl">
@@ -191,7 +197,7 @@ export default function ProjectForm({ project, projectTypes }: ProjectFormProps)
                   <Input value={name} onChange={e => setName(e.target.value)} required />
                 </div>
                 <div className="space-y-2">
-                  <Label>Cost <span className="text-red-500">*</span></Label>
+                  <Label>Budget <span className="text-red-500">*</span></Label>
                   <Input type="number" value={cost} onChange={e => setCost(e.target.value)} required />
                 </div>
                 <div className="space-y-2">
@@ -215,6 +221,21 @@ export default function ProjectForm({ project, projectTypes }: ProjectFormProps)
                       <SelectItem value="completed">Completed</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Priority</Label>
+                  <Select value={priority} onValueChange={setPriority}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Low">Low</SelectItem>
+                      <SelectItem value="Medium">Medium</SelectItem>
+                      <SelectItem value="High">High</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2 md:col-span-2">
+                  <Label>Description</Label>
+                  <Input value={description} onChange={e => setDescription(e.target.value)} />
                 </div>
               </div>
 
@@ -293,9 +314,9 @@ export default function ProjectForm({ project, projectTypes }: ProjectFormProps)
                               onChange={e => handleImageChange(m.key, e.target.files?.[0] || null)}
                             />
                             {(m.preview || m.existingImg) && (
-                                 <ImagePreview dataImg={m.preview || `${m.existingImg}`} />
-                             
-                              
+                              <ImagePreview dataImg={m.preview || `${m.existingImg}`} />
+
+
                             )}
                           </div>
 

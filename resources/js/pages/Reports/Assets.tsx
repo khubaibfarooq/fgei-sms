@@ -704,7 +704,7 @@ export default function Assets({ instituteAssets: instituteAssetsProp, institute
               </div>
               <Input
                 type="text"
-                placeholder="Search projects... (press Enter)"
+                placeholder="Search assets... (press Enter)"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 onKeyDown={applyFilters}

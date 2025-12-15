@@ -43,7 +43,9 @@ use App\Http\Controllers\TypeController;
 
 use App\Http\Controllers\DonationController;
 use App\Http\Controllers\HelpDeskController;
-use App\Http\Controllers\NotificationController;
+
+use App\Http\Controllers\ApprovalStageController;
+use App\Http\Controllers\ProjectApprovalController;
 Route::get('/', function () {
     return Inertia::render('welcome');
 })->name('home');
@@ -130,6 +132,12 @@ Route::get('/fund-trans/{id}', [FundsController::class, 'getFund'])->name('funds
 Route::resource('project-types', ProjectTypeController::class);
 // project
 Route::resource('projects', ProjectController::class);
+Route::post('/projects/{project}/approvals', [ProjectApprovalController::class, 'store'])->name('projects.approvals.store');
+Route::get('/projects/{project}/history', [ProjectApprovalController::class, 'history'])->name('projects.approvals.history');
+
+// approval stages
+Route::resource('approval-stages', ApprovalStageController::class);
+
 // project type 
 Route::resource('donation-types', DonationTypeController::class);
 // project

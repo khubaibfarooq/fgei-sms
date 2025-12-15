@@ -7,6 +7,8 @@ use Inertia\Inertia;
 use App\Models\ProjectType;
 use App\Models\Milestone;
 use Illuminate\Support\Facades\File;
+use App\Models\ApprovalStage;
+use App\Models\ProjectApproval;
 
 class ProjectController extends Controller
 {
@@ -34,6 +36,7 @@ $permissions = [
         'can_add'    => auth()->user()->can('project-add'),
         'can_edit'   => auth()->user()->can('project-edit'),
         'can_delete' => auth()->user()->can('project-delete'),
+        'can_approve' => true, // Placeholder for now, or auth()->user()->can('project-approve')
     ];
         return Inertia::render('projects/Index', [
             'projects' => $projects,
@@ -57,9 +60,11 @@ public function store(Request $request)
 {
     $request->validate([
         'name'            => 'required|string|max:255',
-        'cost'            => 'required|numeric',
+        'budget'          => 'required|numeric',
         'project_type_id' => 'required|exists:project_types,id',
         'status'          => 'required|in:planned,inprogress,completed',
+        'priority'        => 'nullable|string',
+        'description'     => 'nullable|string',
 
         'milestones.*.name'           => 'required_with:milestones.*.due_date|string|max:255',
         'milestones.*.description'    => 'nullable|string',
@@ -71,11 +76,33 @@ public function store(Request $request)
 
     $project = Project::create([
         'name'            => $request->name,
-        'cost'            => $request->cost,
+        'budget'          => $request->budget,
         'project_type_id' => $request->project_type_id,
         'status'          => $request->status,
+        'priority'        => $request->priority,
+        'description'     => $request->description,
         'institute_id'    => session('sms_inst_id'),
+        'submitted_by'    => auth()->id(),
+        'overall_status'  => 'draft',
     ]);
+
+    // Initialize Approval Workflow
+    $firstStage = ApprovalStage::where('project_type_id', $request->project_type_id)
+        ->orderBy('stage_order', 'asc')
+        ->first();
+
+    if ($firstStage) {
+        ProjectApproval::create([
+            'project_id' => $project->id,
+            'stage_id' => $firstStage->id,
+            'status' => 'pending',
+        ]);
+
+        $project->update([
+            'current_stage_id' => $firstStage->id,
+            'overall_status' => 'in_progress', // Or keep 'draft' depending on requirements, but 'in_progress' implies it's in the workflow
+        ]);
+    }
 
     if ($request->has('milestones')) {
         foreach ($request->input('milestones', []) as $index => $m) {
@@ -186,9 +213,11 @@ public function update(Request $request, Project $project)
 {
     $request->validate([
         'name'            => 'required|string|max:255',
-        'cost'            => 'required|numeric|min:0',
+        'budget'          => 'required|numeric|min:0',
         'project_type_id' => 'required|exists:project_types,id',
         'status'          => 'required|in:planned,inprogress,completed',
+        'priority'        => 'nullable|string',
+        'description'     => 'nullable|string',
 
         'milestones.*.id'             => 'nullable|integer|exists:milestones,id,project_id,' . $project->id,
         'milestones.*.name'           => 'required_with:milestones.*.due_date|string|max:255',
@@ -202,9 +231,11 @@ public function update(Request $request, Project $project)
     // Update main project
     $project->update([
         'name'            => $request->name,
-        'cost'            => $request->cost,
+        'budget'          => $request->budget,
         'project_type_id' => $request->project_type_id,
         'status'          => $request->status,
+        'priority'        => $request->priority,
+        'description'     => $request->description,
         'institute_id'    => session('sms_inst_id'),
     ]);
 

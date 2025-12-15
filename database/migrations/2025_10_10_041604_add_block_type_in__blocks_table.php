@@ -12,7 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('blocks', function (Blueprint $table) {
-          $table->foreignId('block_type_id')->constrained('block_types')->after('id');
+            if (!Schema::hasColumn('blocks', 'block_type_id')) {
+                 $table->foreignId('block_type_id')->constrained('block_types')->after('id');
+            }
         });
     }
 

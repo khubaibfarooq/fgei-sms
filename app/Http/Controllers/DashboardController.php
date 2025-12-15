@@ -458,7 +458,7 @@ $link3="/institute-assets?category=";
     ->where('institute_id', $sms_inst_id)
     ->select('status as Key','status')
     ->selectRaw('COUNT(*) as project_count')
-    ->selectRaw('SUM(cost) as total_cost')
+    ->selectRaw('SUM(budget) as total_cost')
     ->groupBy('status')
     ->get();
 
