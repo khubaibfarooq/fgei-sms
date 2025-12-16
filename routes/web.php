@@ -46,6 +46,8 @@ use App\Http\Controllers\HelpDeskController;
 
 use App\Http\Controllers\ApprovalStageController;
 use App\Http\Controllers\ProjectApprovalController;
+use App\Http\Controllers\NotificationController;
+
 Route::get('/', function () {
     return Inertia::render('welcome');
 })->name('home');
