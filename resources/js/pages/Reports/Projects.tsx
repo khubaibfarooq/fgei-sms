@@ -1,3 +1,4 @@
+// Imports updated with new dependencies
 import React, { useState, useEffect, useMemo, Component, ReactNode } from 'react';
 import { Head, router } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
@@ -7,7 +8,7 @@ import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { type BreadcrumbItem } from '@/types';
-import { Building } from 'lucide-react';
+import { Building, ClipboardCheck, X, CheckCircle2, XCircle, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 import { debounce } from 'lodash';
 import ExcelJS from 'exceljs';
@@ -16,6 +17,10 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { formatDate } from '@/utils/dateFormatter';
 import Combobox from '@/components/ui/combobox';
+import axios from 'axios';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import ApprovalModal from '../projects/ApprovalModal'; // Adjust import path if needed
 
 declare module 'jspdf' {
   interface jsPDF {
@@ -31,16 +36,38 @@ const breadcrumbs: BreadcrumbItem[] = [
 interface ProjectProp {
   id: number;
   name: string;
-  cost: string | number;
+  budget: string | number;
   status: string;
+  overall_status: string;
+  priority: string;
   institute?: { id: number; name?: string };
   region?: { id: number; name?: string };
   projecttype?: { id: number; name?: string };
+  current_stage_id?: number;
 }
 
 interface Item {
   id: number;
   name: string;
+}
+
+interface ApprovalHistory {
+  id: number;
+  status: string;
+  comments: string;
+  action_date: string;
+  approver: { name: string };
+  stage: { stage_name: string };
+}
+
+interface Milestone {
+  id: number;
+  name: string;
+  description: string | null;
+  due_date: string;
+  status: string;
+  completed_date: string | null;
+  img: string | null;
 }
 
 interface Props {
@@ -62,7 +89,7 @@ interface Props {
   projectTypes: Item[];
 }
 
-// Error Boundary
+// Error Boundary (Kept as is)
 class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean; error: string | null }> {
   state = { hasError: false, error: null };
 
@@ -106,6 +133,15 @@ export default function Projects({ projects: initialProjects, institutes, region
   const [filteredInstitutes, setFilteredInstitutes] = useState<Item[]>(institutes || []);
   const [region, setRegion] = useState(filters.region_id || '');
 
+  // Modal and Side Panel State
+  const [approvalModalOpen, setApprovalModalOpen] = useState(false);
+  const [selectedProject, setSelectedProject] = useState<ProjectProp | null>(null);
+
+  const [selectedPanelProject, setSelectedPanelProject] = useState<ProjectProp | null>(null);
+  const [approvalHistory, setApprovalHistory] = useState<ApprovalHistory[]>([]);
+  const [projectMilestones, setProjectMilestones] = useState<Milestone[]>([]);
+  const [loadingPanelData, setLoadingPanelData] = useState(false);
+
   // Memoized dropdown options
   const memoizedInstitutes = useMemo(() => {
     return Array.isArray(filteredInstitutes) ? filteredInstitutes.filter(isValidItem) : [];
@@ -118,6 +154,32 @@ export default function Projects({ projects: initialProjects, institutes, region
   const memoizedProjectTypes = useMemo(() => {
     return Array.isArray(projectTypes) ? projectTypes.filter(isValidItem) : [];
   }, [projectTypes]);
+
+  // Fetch Panel Data
+  useEffect(() => {
+    if (selectedPanelProject) {
+      setLoadingPanelData(true);
+      const fetchDetails = async () => {
+        try {
+          const [historyRes, milestonesRes] = await Promise.all([
+            axios.get(`/projects/${selectedPanelProject.id}/history`),
+            axios.get(`/projects/${selectedPanelProject.id}/milestones`)
+          ]);
+          setApprovalHistory(historyRes.data);
+          setProjectMilestones(milestonesRes.data);
+        } catch (error) {
+          console.error("Failed to fetch project details", error);
+          toast.error("Failed to load project details.");
+        } finally {
+          setLoadingPanelData(false);
+        }
+      };
+      fetchDetails();
+    } else {
+      setApprovalHistory([]);
+      setProjectMilestones([]);
+    }
+  }, [selectedPanelProject]);
 
   // Fetch institutes by region
   const fetchInstitutes = async (regionId: string) => {
@@ -157,7 +219,7 @@ export default function Projects({ projects: initialProjects, institutes, region
 
     worksheet.columns = [
       { header: 'Name', key: 'name', width: 30 },
-      { header: 'Cost', key: 'cost', width: 15 },
+      { header: 'Budget', key: 'budget', width: 15 },
       { header: 'Status', key: 'status', width: 15 },
       { header: 'Project Type', key: 'project_type', width: 25 },
       { header: 'Institute', key: 'institute', width: 30 },
@@ -167,7 +229,7 @@ export default function Projects({ projects: initialProjects, institutes, region
     projects.data.forEach((p) => {
       worksheet.addRow({
         name: p.name,
-        cost: p.cost,
+        budget: p.budget,
         status: p.status,
         project_type: p.projecttype?.name || 'N/A',
         institute: p.institute?.name || 'N/A',
@@ -186,10 +248,10 @@ export default function Projects({ projects: initialProjects, institutes, region
     doc.setFontSize(16);
     doc.text('Projects Report', 14, 15);
 
-    const headers = ['Name', 'Cost', 'Status', 'Project Type', 'Institute', 'Region'];
+    const headers = ['Name', 'Budget', 'Status', 'Project Type', 'Institute', 'Region'];
     const rows = projects.data.map((p) => [
       p.name,
-      p.cost,
+      p.budget,
       p.status,
       p.projecttype?.name || 'N/A',
       p.institute?.name || 'N/A',
@@ -243,174 +305,322 @@ export default function Projects({ projects: initialProjects, institutes, region
     [search, institute, region, projectType, status]
   );
 
-
-
   return (
     <ErrorBoundary>
       <AppLayout breadcrumbs={breadcrumbs}>
         <Head title="Projects Report" />
-        <div className="flex-1 p-1 md:p-1">
-          <div className="flex flex-col md:flex-row gap-3">
-            {/* Left: Filters */}
-            <div className="w-full md:w-1/3">
-              <Card>
-                <CardHeader>
+        <div className="flex flex-col lg:flex-row h-[calc(100vh-65px)] overflow-hidden">
+          {/* Main Content Area (Filters + Table) */}
+          <div className={`flex-1 p-2 md:p-4 overflow-y-auto ${selectedPanelProject ? 'lg:w-2/3' : 'w-full'}`}>
+            <div className="flex flex-col gap-3 h-full">
+
+              {/* Only Filter Card Area */}
+              <Card className="shrink-0">
+                <CardHeader className="py-3">
                   <CardTitle className="text-xl font-bold">Filters</CardTitle>
-                  <p className="text-muted-foreground text-sm">Refine your project search</p>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="py-2 space-y-4">
+                  <div className="flex flex-col md:flex-row gap-2">
+                    {/* Region */}
+                    {memoizedRegions.length > 0 && (
+                      <div className="w-full md:w-1/4">
+                        <Combobox
+                          entity="region"
+                          value={region}
+                          onChange={(value) => handleRegionChange(value)}
+                          options={memoizedRegions.map((reg) => ({
+                            id: reg.id.toString(),
+                            name: reg.name.split(' ').pop() || reg.name,
+                          }))}
+                          includeAllOption={true}
+                        />
+                      </div>
+                    )}
+                    {/* Institute */}
+                    <div className="w-full md:w-1/4">
+                      <Combobox
+                        entity="institute"
+                        value={institute}
+                        onChange={setInstitute}
+                        options={memoizedInstitutes.map((i) => ({ id: i.id.toString(), name: i.name }))}
+                        includeAllOption={false}
+                        placeholder="Select Institute"
+                      />
+                    </div>
 
+                    {/* Project Type */}
+                    <div className="w-full md:w-1/4">
+                      <Select value={projectType} onValueChange={(v) => setProjectType(v)}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select Project Type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="0">All Project Types</SelectItem>
+                          {memoizedProjectTypes.map((pt) => (
+                            <SelectItem key={pt.id} value={pt.id.toString()}>
+                              {pt.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-                  {/* Region */}
-                  {memoizedRegions.length > 0 && (
-                    <Combobox
-                      entity="region"
-                      value={region}
-                      onChange={(value) => handleRegionChange(value)}
-                      options={memoizedRegions.map((reg) => ({
-                        id: reg.id.toString(), // Convert ID to string to match prop type
-                        name: reg.name.split(' ').pop() || reg.name,
-                      }))}
-                      includeAllOption={true}
-
-                    />
-                  )}
-                  {/* Institute (Combobox) */}
-                  <Combobox
-                    entity="institute"
-                    value={institute}
-                    onChange={setInstitute}
-                    options={memoizedInstitutes.map((i) => ({ id: i.id.toString(), name: i.name }))}
-                    includeAllOption={false}
-                    placeholder="Select Institute"
-                  />
-
-                  {/* Project Type */}
-                  <Select value={projectType} onValueChange={(v) => setProjectType(v)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Project Type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="0">All Project Types</SelectItem>
-                      {memoizedProjectTypes.map((pt) => (
-                        <SelectItem key={pt.id} value={pt.id.toString()}>
-                          {pt.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-
-                  {/* Status */}
-                  <Select value={status} onValueChange={(v) => setStatus(v)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Status</SelectItem>
-                      <SelectItem value="planned">Planned</SelectItem>
-                      <SelectItem value="inprogress">In Progress</SelectItem>
-                      <SelectItem value="completed">Completed</SelectItem>
-                    </SelectContent>
-                  </Select>
-
-                  <Button onClick={debouncedApplyFilters} className="w-full">
-                    Apply Filters
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Right: Projects List */}
-            <div className="w-full md:w-2/3">
-              <Card>
-                <CardHeader className="pb-3 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                  <div>
-                    <CardTitle className="text-2xl font-bold">Projects Report</CardTitle>
+                    {/* Status */}
+                    <div className="w-full md:w-1/4">
+                      <Select value={status} onValueChange={(v) => setStatus(v)}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select Status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Status</SelectItem>
+                          <SelectItem value="planned">Planned</SelectItem>
+                          <SelectItem value="inprogress">In Progress</SelectItem>
+                          <SelectItem value="completed">Completed</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
-                  <div className="flex gap-2">
-                    <Button onClick={exportToPDF} className="w-full md:w-auto">
+
+                  <div className="flex gap-2 justify-end">
+                    <Button onClick={debouncedApplyFilters} size="sm">
+                      Apply Filters
+                    </Button>
+                    <Button onClick={exportToPDF} size="sm" variant="outline">
                       Export PDF
                     </Button>
-                    <Button onClick={exportToExcel} className="w-full md:w-auto">
+                    <Button onClick={exportToExcel} size="sm" variant="outline">
                       Export Excel
                     </Button>
                   </div>
-                </CardHeader>
-                <Separator />
-                <CardContent className="pt-6 space-y-6">
-                  <div className="overflow-x-auto">
-                    <table className="w-full border-collapse border-1 rounded-md overflow-hidden shadow-sm  text-sm md:text-md lg:text-lg">
-                      <thead>
-                        <tr className="bg-primary text-white text-center">
-                          <th className="border p-2 font-medium">Name</th>
-                          <th className="border p-2 font-medium">Cost</th>
-                          <th className="border p-2 font-medium">Status</th>
-                          <th className="border p-2 font-medium">Project Type</th>
-                          <th className="border p-2 font-medium">Institute</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {projects.data.length === 0 ? (
-                          <tr>
-                            <td colSpan={6} className="text-center p-4 text-muted-foreground">
-                              No projects found.
-                            </td>
-                          </tr>
-                        ) : (
-                          projects.data.map((project) => (
-                            <tr key={project.id} className="hover:bg-primary/10 dark:hover:bg-gray-700">
-                              <td className="border p-2  font-bold text-left">{project.name}</td>
-                              <td className="border p-2 text-right">{project.cost}</td>
-                              <td className="border p-2">
-                                <span className={`px-2 py-1 rounded text-xs font-medium ${project.status === 'completed' ? 'bg-green-100 text-green-800' :
-                                    project.status === 'inprogress' ? 'bg-yellow-100 text-yellow-800' :
-                                      'bg-blue-100 text-blue-800'
-                                  }`}>
-                                  {project.status.charAt(0).toUpperCase() + project.status.slice(1)}
-                                </span>
-                              </td>
-                              <td className="border p-2">{project.projecttype?.name || 'N/A'}</td>
-                              <td className="border p-2">{project.institute?.name || 'N/A'}</td>
-
-                            </tr>
-                          ))
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-
-                  {/* Pagination */}
-                  {projects.links.length > 1 && (
-                    <div className="flex justify-center pt-6 flex-wrap gap-2">
-                      {projects.links.map((link, i) => (
-                        <Button
-                          key={i}
-                          disabled={!link.url}
-                          variant={link.active ? 'default' : 'outline'}
-                          size="sm"
-                          onClick={() => {
-                            if (link.url) {
-                              fetch(link.url)
-                                .then((response) => response.json())
-                                .then((data) => {
-                                  setProjects(data);
-                                })
-                                .catch((error) => {
-                                  console.error('Error:', error);
-                                });
-                            }
-                          }}
-                        >
-                          <span dangerouslySetInnerHTML={{ __html: link.label }} />
-                        </Button>
-                      ))}
-                    </div>
-                  )}
                 </CardContent>
               </Card>
+
+              {/* Table Area */}
+              <Card className="flex-1 min-h-0 flex flex-col">
+                <CardContent className="p-0 flex-1 overflow-auto">
+                  <table className="w-full border-collapse text-sm">
+                    <thead className="sticky top-0 z-10">
+                      <tr className="bg-primary text-white text-center">
+                        <th className="border p-2 font-medium">Name</th>
+                        <th className="border p-2 font-medium">Budget</th>
+                        <th className="border p-2 font-medium">Status</th>
+                        <th className="border p-2 font-medium">Type</th>
+                        <th className="border p-2 font-medium">Institute</th>
+                        <th className="border p-2 font-medium">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {projects.data.length === 0 ? (
+                        <tr>
+                          <td colSpan={6} className="text-center p-4 text-muted-foreground">
+                            No projects found.
+                          </td>
+                        </tr>
+                      ) : (
+                        projects.data.map((project) => (
+                          <tr
+                            key={project.id}
+                            className={`hover:bg-primary/10 dark:hover:bg-gray-700 cursor-pointer transition-colors ${selectedPanelProject?.id === project.id ? 'bg-primary/5 dark:bg-gray-700 border-l-4 border-l-primary' : ''}`}
+                            onClick={() => setSelectedPanelProject(project)}
+                          >
+                            <td className="border p-2 font-medium">{project.name}</td>
+                            <td className="border p-2 text-right">{project.budget}</td>
+                            <td className="border p-2 text-center">
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${project.status === 'completed' ? 'bg-green-100 text-green-800' :
+                                project.status === 'inprogress' ? 'bg-yellow-100 text-yellow-800' :
+                                  'bg-blue-100 text-blue-800'
+                                }`}>
+                                {project.status.charAt(0).toUpperCase() + project.status.slice(1)}
+                              </span>
+                            </td>
+                            <td className="border p-2 text-center">{project.projecttype?.name || '-'}</td>
+                            <td className="border p-2">{project.institute?.name || '-'}</td>
+                            <td className="border p-2 text-center" onClick={(e) => e.stopPropagation()}>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                title="View/Approve"
+                                className="text-blue-600 hover:text-blue-700"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedProject(project);
+                                  setApprovalModalOpen(true);
+                                }}
+                              >
+                                <ClipboardCheck className="h-4 w-4" />
+                              </Button>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </CardContent>
+                {/* Pagination */}
+                {projects.links.length > 1 && (
+                  <div className="p-4 border-t flex justify-center flex-wrap gap-2 shrink-0">
+                    {projects.links.map((link, i) => (
+                      <Button
+                        key={i}
+                        disabled={!link.url}
+                        variant={link.active ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => {
+                          if (link.url) {
+                            fetch(link.url)
+                              .then((response) => response.json())
+                              .then((data) => {
+                                setProjects(data);
+                              })
+                              .catch((error) => {
+                                console.error('Error:', error);
+                              });
+                          }
+                        }}
+                      >
+                        <span dangerouslySetInnerHTML={{ __html: link.label }} />
+                      </Button>
+                    ))}
+                  </div>
+                )}
+              </Card>
+
             </div>
           </div>
+
+          {/* Right Side Panel */}
+          {selectedPanelProject && (
+            <div className="w-full lg:w-1/3 border-l bg-background p-4 md:p-6 shadow-xl overflow-y-auto flex flex-col h-full transition-all duration-300 ease-in-out z-20 absolute lg:relative right-0 top-0 lg:top-auto bottom-0 lg:bottom-auto">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h2 className="text-xl font-bold">{selectedPanelProject.name}</h2>
+                  <p className="text-sm text-muted-foreground">{selectedPanelProject.institute?.name}</p>
+                </div>
+                <Button variant="ghost" size="icon" onClick={() => setSelectedPanelProject(null)}>
+                  <X className="h-5 w-5" />
+                </Button>
+              </div>
+
+              <Tabs defaultValue="approvals" className="w-full flex-1 flex flex-col">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="approvals">Approvals</TabsTrigger>
+                  <TabsTrigger value="milestones">Milestones</TabsTrigger>
+                </TabsList>
+
+                <div className="flex-1 overflow-y-auto mt-4 px-1">
+                  <TabsContent value="approvals" className="space-y-4 m-0 h-full">
+                    {loadingPanelData ? (
+                      <div className="flex justify-center py-8 text-muted-foreground">Loading history...</div>
+                    ) : approvalHistory.length === 0 ? (
+                      <div className="text-center py-8 text-muted-foreground border rounded-lg border-dashed">
+                        No approval history found.
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {approvalHistory.map((record) => (
+                          <Card key={record.id} className="overflow-hidden">
+                            <CardHeader className="p-3 bg-muted/50 pb-2">
+                              <div className="flex justify-between items-start">
+                                <div className="font-semibold text-sm">{record.stage?.stage_name || 'Stage'}</div>
+                                {record.status === 'approved' ? (
+                                  <Badge variant="outline" className="border-green-500 text-green-600 bg-green-50 gap-1">
+                                    <CheckCircle2 className="w-3 h-3" /> Approved
+                                  </Badge>
+                                ) : record.status === 'rejected' ? (
+                                  <Badge variant="outline" className="border-red-500 text-red-600 bg-red-50 gap-1">
+                                    <XCircle className="w-3 h-3" /> Rejected
+                                  </Badge>
+                                ) : (
+                                  <Badge variant="outline" className="border-yellow-500 text-yellow-600 bg-yellow-50 gap-1">
+                                    <Clock className="w-3 h-3" /> Pending
+                                  </Badge>
+                                )}
+                              </div>
+                            </CardHeader>
+                            <CardContent className="p-3 text-sm">
+                              <div className="flex items-center text-xs text-muted-foreground mb-2">
+                                <Clock className="w-3 h-3 mr-1" />
+                                {record.action_date ? new Date(record.action_date).toLocaleString() : ''}
+                              </div>
+                              <div className="mb-2">
+                                <span className="font-medium text-xs">Approver: </span>
+                                {record.approver?.name}
+                              </div>
+                              {record.comments && (
+                                <div className="bg-muted/30 p-2 rounded text-xs italic border">
+                                  "{record.comments}"
+                                </div>
+                              )}
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    )}
+                  </TabsContent>
+
+                  <TabsContent value="milestones" className="space-y-4 m-0 h-full">
+                    {loadingPanelData ? (
+                      <div className="flex justify-center py-8 text-muted-foreground">Loading milestones...</div>
+                    ) : projectMilestones.length === 0 ? (
+                      <div className="text-center py-8 text-muted-foreground border rounded-lg border-dashed">
+                        No milestones found.
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {projectMilestones.map((milestone) => (
+                          <Card key={milestone.id}>
+                            <CardHeader className="p-3 pb-1">
+                              <div className="flex justify-between items-start">
+                                <div className="font-semibold text-sm">{milestone.name}</div>
+                                <Badge variant={
+                                  milestone.status === 'completed' ? 'default' :
+                                    milestone.status === 'inprogress' ? 'secondary' : 'outline'
+                                } className="capitalize text-xs">
+                                  {milestone.status}
+                                </Badge>
+                              </div>
+                            </CardHeader>
+                            <CardContent className="p-3 text-sm space-y-2">
+                              <div className="grid grid-cols-2 gap-2 text-xs">
+                                <div>
+                                  <span className="text-muted-foreground">Due: </span>
+                                  {new Date(milestone.due_date).toLocaleDateString()}
+                                </div>
+                                {milestone.completed_date && (
+                                  <div>
+                                    <span className="text-muted-foreground">Completed: </span>
+                                    <span className="text-green-600 dark:text-green-400">{new Date(milestone.completed_date).toLocaleDateString()}</span>
+                                  </div>
+                                )}
+                              </div>
+                              {milestone.description && (
+                                <p className="text-muted-foreground text-xs mt-1">
+                                  {milestone.description}
+                                </p>
+                              )}
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    )}
+                  </TabsContent>
+                </div>
+              </Tabs>
+            </div>
+          )}
+
         </div>
+        <ApprovalModal
+          isOpen={approvalModalOpen}
+          onClose={() => setApprovalModalOpen(false)}
+          project={selectedProject as any}
+        />
+        {selectedPanelProject && (
+          <div
+            className="fixed inset-0 bg-black/20 lg:hidden z-10"
+            onClick={() => setSelectedPanelProject(null)}
+          />
+        )}
       </AppLayout>
     </ErrorBoundary>
   );

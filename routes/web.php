@@ -134,6 +134,7 @@ Route::resource('project-types', ProjectTypeController::class);
 Route::resource('projects', ProjectController::class);
 Route::post('/projects/{project}/approvals', [ProjectApprovalController::class, 'store'])->name('projects.approvals.store');
 Route::get('/projects/{project}/history', [ProjectApprovalController::class, 'history'])->name('projects.approvals.history');
+Route::get('/projects/{project}/milestones', [ProjectController::class, 'milestones'])->name('projects.milestones');
 
 // approval stages
 Route::resource('approval-stages', ApprovalStageController::class);

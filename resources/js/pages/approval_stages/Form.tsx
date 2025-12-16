@@ -27,6 +27,8 @@ interface Props {
         description: string | null;
         is_mandatory: boolean;
         users_can_approve: number[] | null;
+        is_last: boolean;
+        level: string;
     };
     projectTypes: { id: number; name: string }[];
     users: { id: number; name: string }[];
@@ -41,6 +43,8 @@ export default function ApprovalStageForm({ stage, projectTypes, users }: Props)
         description: stage?.description || '',
         is_mandatory: stage?.is_mandatory ?? true,
         users_can_approve: stage?.users_can_approve || [],
+        is_last: stage?.is_last ?? false,
+        level: stage?.level || '',
     });
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -64,7 +68,7 @@ export default function ApprovalStageForm({ stage, projectTypes, users }: Props)
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={isEdit ? 'Edit Stage' : 'Create Stage'} />
-            <div className="flex-1 p-4 md:p-6 max-w-2xl mx-auto">
+            <div className="flex-1 p-4 md:p-6 w-full mx-auto">
                 <Card>
                     <CardHeader>
                         <CardTitle>{isEdit ? 'Edit Approval Stage' : 'Define New Stage'}</CardTitle>
@@ -134,6 +138,29 @@ export default function ApprovalStageForm({ stage, projectTypes, users }: Props)
                                     onChange={(vals) => setData({ ...data, users_can_approve: vals.map(v => parseInt(v)) })}
                                     placeholder="Select Approvers..."
                                 />
+                            </div>
+
+                            <div className="flex items-center space-x-2">
+                                <Checkbox
+                                    id="is_last"
+                                    checked={data.is_last}
+                                    onCheckedChange={(checked) => setData({ ...data, is_last: !!checked })}
+                                />
+                                <Label htmlFor="is_last">Is Last Stage?</Label>
+                            </div>
+
+                            <div className="flex items-center space-x-2">
+                                <Label>Level</Label>
+                                <select
+                                    value={data.level}
+                                    onChange={(e) => setData({ ...data, level: e.target.value })}
+                                    required
+                                >
+                                    <option value="">Select Level</option>
+                                    <option value="institutional">Institutional</option>
+                                    <option value="regional">Regional</option>
+                                    <option value="dte">DTE</option>
+                                </select>
                             </div>
 
                             <div className="flex justify-between pt-4">

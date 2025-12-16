@@ -2146,7 +2146,7 @@ if($buildingTypeId!=null){
                 if ($roomsCount > 0) $percentage += 10;
                 if ($shiftsCount > 0) $percentage += 10;
                 if ($plantsCount > 0) $percentage += 10;
-                if ($assetsCount > 50) $percentage += 20;
+                if ($assetsCount > 10) $percentage += 20;
             } else { // Rented / Other
                 $percentage += 40; // Institute Profile
                 if ($fundsCount > 0) $percentage += 40;
@@ -2346,12 +2346,12 @@ $totalinstitutes =Institute::count();
                 if ($plantsCompleted) $percentage += 10;
 
                 // Assets
-                $assetsCompleted = $assetsCount > 50;
+                $assetsCompleted = $assetsCount > 10;
                 $criteria[] = [
-                    'name' => 'Add at least 50 Assets',
+                    'name' => 'Add at least 10 Assets',
                     'weight' => 20,
                     'completed' => $assetsCompleted,
-                    'message' => $assetsCompleted ? 'Assets Added (>50)' : 'Assets Count: ' . $assetsCount
+                    'message' => $assetsCompleted ? 'Assets Added (>10)' : 'Assets Count: ' . $assetsCount
                 ];
                 if ($assetsCompleted) $percentage += 20;
 

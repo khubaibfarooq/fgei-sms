@@ -25,36 +25,53 @@ class ProjectApprovalController extends Controller
 
         // Check permission (mocking logic: assume if logic allows, implementation details for roles/permissions to be added)
         // For now, we allow any auth user for demo, or we check if user role matches `users_can_approve` JSON.
-        
         DB::transaction(function () use ($request, $project, $currentStage) {
-            // Record Approval
-            ProjectApproval::create([
-                'project_id' => $project->id,
-                'stage_id' => $currentStage->id,
-                'approver_id' => auth()->id(),
-                'status' => $request->status,
-                'comments' => $request->comments,
-                'action_date' => now(),
-            ]);
+            // Update the last approval record for the current stage or create new
+            $approval = ProjectApproval::where('project_id', $project->id)
+                ->where('stage_id', $currentStage->id)
+                ->latest()
+                ->first();
 
+            if ($approval) {
+                $approval->update([
+                    'approver_id' => auth()->id(),
+                    'status' => $request->status,
+                    'comments' => $request->comments,
+                    'action_date' => now(),
+                ]);
+            } 
             if ($request->status === 'approved') {
-                // Find next stage
-                $nextStage = ApprovalStage::where('project_type_id', $project->project_type_id)
-                    ->where('stage_order', '>', $currentStage->stage_order)
-                    ->orderBy('stage_order')
-                    ->first();
-
-                if ($nextStage) {
+                if ($currentStage->is_last) {
                     $project->update([
-                        'current_stage_id' => $nextStage->id,
-                        'overall_status' => 'in_progress'
+                        'overall_status' => 'approved' 
                     ]);
                 } else {
-                    // No next stage, final approval
-                    $project->update([
-                        'current_stage_id' => null, // Or keep last? Usually null or special completed stage.
-                        'overall_status' => 'approved'
-                    ]);
+                    // Find next stage
+                    $nextStage = ApprovalStage::where('project_type_id', $project->project_type_id)
+                        ->where('stage_order', '>', $currentStage->stage_order)
+                        ->orderBy('stage_order')
+                        ->first();
+
+                    if ($nextStage) {
+                        $project->update([
+                            'current_stage_id' => $nextStage->id,
+                            'overall_status' => 'in_progress'
+                        ]);
+                        
+                        // Create pending approval row for the next stage
+                        ProjectApproval::create([
+                            'project_id' => $project->id,
+                            'stage_id' => $nextStage->id,
+                            'status' => 'pending',
+                            'approver_id' => null,
+                            'comments' => null,
+                        ]);
+                    } else {
+                        // No next stage found, treat as approved
+                        $project->update([
+                            'overall_status' => 'approved'
+                        ]);
+                    }
                 }
             } else {
                 // Rejected

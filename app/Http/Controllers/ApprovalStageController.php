@@ -40,7 +40,9 @@ class ApprovalStageController extends Controller
             'stage_order' => 'required|integer',
             'users_can_approve' => 'nullable|array',
             'is_mandatory' => 'boolean',
-            'description' => 'nullable|string'
+            'description' => 'nullable|string',
+            'is_last' => 'boolean',
+            'level' => 'string'
         ]);
 
         ApprovalStage::create($request->all());
@@ -68,7 +70,9 @@ class ApprovalStageController extends Controller
             'stage_order' => 'required|integer',
             'users_can_approve' => 'nullable|array',
             'is_mandatory' => 'boolean',
-            'description' => 'nullable|string'
+            'description' => 'nullable|string',
+            'is_last' => 'boolean',
+            'level' => 'string'
         ]);
 
         $approvalStage->update($request->all());

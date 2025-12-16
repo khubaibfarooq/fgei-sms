@@ -102,7 +102,7 @@ export default function ApprovalModal({ isOpen, onClose, project }: ApprovalProp
                                                 {record.stage?.stage_name || 'Stage'} - {record.status}
                                             </p>
                                             <p className="text-xs text-muted-foreground">
-                                                by {record.approver?.name} on {new Date(record.action_date).toLocaleString()}
+                                                by {record.approver?.name} on {record.action_date ? new Date(record.action_date).toLocaleString() : ''}
                                             </p>
                                             {record.comments && (
                                                 <p className="mt-1 text-gray-700 bg-white p-2 rounded border">

@@ -113,8 +113,8 @@ else{
         // ],
         'assets' => [
             'weight' => 20, 
-            'check' => fn() => InstituteAsset::where('institute_id', $sms_inst_id)->count() > 50,
-            'instruction' => 'Add at least 50 Assets'
+            'check' => fn() => InstituteAsset::where('institute_id', $sms_inst_id)->count() > 10,
+            'instruction' => 'Add at least 10 Assets'
         ],
     ];
       }else{
@@ -359,12 +359,12 @@ return response()->json(['count' => $count]); // Keep 'count' key for frontend c
                 if ($plantsCompleted) $percentage += 10;
 
                 // Assets
-                $assetsCompleted = $assetsCount > 50;
+                $assetsCompleted = $assetsCount > 10;
                 $criteria[] = [
-                    'name' => 'Add at least 50 Assets',
+                    'name' => 'Add at least 10 Assets',
                     'weight' => 20,
                     'completed' => $assetsCompleted,
-                    'message' => $assetsCompleted ? 'Assets Added (>50)' : 'Assets Count: ' . $assetsCount
+                    'message' => $assetsCompleted ? 'Assets Added (>10)' : 'Assets Count: ' . $assetsCount
                 ];
                 if ($assetsCompleted) $percentage += 20;
 
@@ -490,9 +490,9 @@ $link3="/reports/projects?status=";
             ->get();
         $tab3 = DB::table('projects')->join('institutes', 'projects.institute_id', '=', 'institutes.id')
     ->where('institutes.region_id', $regionId)
-    ->select('projects.status as Key','projects.status')
+    ->select('projects.status as Key','projects.status as Status')
     ->selectRaw('COUNT(*) as project_count')
-    ->selectRaw('SUM(projects.cost) as total_cost')
+    ->selectRaw('SUM(project.budget) as total_cost')
     ->groupBy('status')
     ->get();
 
@@ -536,7 +536,7 @@ $tab1 = DB::table('fund_helds')
       
     ->select('projects.status as Key',DB::raw('CONCAT(UPPER(LEFT(projects.status, 1)), LOWER(SUBSTRING(projects.status, 2))) as status'))
     ->selectRaw('COUNT(*) as project_count')
-    ->selectRaw('SUM(projects.cost) as total_cost')
+    ->selectRaw('SUM(projects.budget) as total_cost')
     ->groupBy('status')
     ->get();
    

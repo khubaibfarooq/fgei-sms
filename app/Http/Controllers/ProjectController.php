@@ -330,5 +330,10 @@ public function update(Request $request, Project $project)
     return redirect()->route('projects.index')
         ->with('success', 'Project and all its milestones deleted successfully.');
 }
+
+    public function milestones(Project $project)
+    {
+        return response()->json($project->milestones()->orderBy('due_date')->get());
+}
 }
  

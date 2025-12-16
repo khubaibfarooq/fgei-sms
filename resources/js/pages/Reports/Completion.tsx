@@ -670,7 +670,7 @@ export default function Completion({
                                 <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
                                     <span className="font-semibold text-lg">Total Score</span>
                                     <span className={`text-2xl font-bold ${selectedDetails.percentage === 100 ? 'text-green-600' :
-                                        selectedDetails.percentage < 50 ? 'text-red-600' : 'text-yellow-600'
+                                        selectedDetails.percentage < 10 ? 'text-red-600' : 'text-yellow-600'
                                         }`}>
                                         {selectedDetails.percentage}%
                                     </span>
