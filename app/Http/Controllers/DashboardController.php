@@ -492,7 +492,7 @@ $link3="/reports/projects?status=";
     ->where('institutes.region_id', $regionId)
     ->select('projects.status as Key','projects.status as Status')
     ->selectRaw('COUNT(*) as project_count')
-    ->selectRaw('SUM(project.budget) as total_cost')
+    ->selectRaw('SUM(projects.budget) as total_cost')
     ->groupBy('status')
     ->get();
 

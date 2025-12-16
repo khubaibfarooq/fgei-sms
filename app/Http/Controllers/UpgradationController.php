@@ -41,33 +41,24 @@ $permissions = [
     }
 
     public function store(Request $request)
-    {try{
+    {
         $data = $request->validate([
- 
             'details' => 'required|string',
-            'from' => 'required|date',
-            'to' => 'required|date',
-              'levelfrom' => 'required|string',
+            'from' => 'required|date_format:d/m/Y',
+            'to' => 'required|date_format:d/m/Y',
+            'levelfrom' => 'required|string',
             'levelto' => 'required|string',
-            'status' => 'nullable|string|max:50',
-   
-            'approved_date' => 'nullable|date',
-            'approved_by' => 'nullable|integer',
+            'status' => 'nullable|string',
         ]);
-$data['institute_id']=session('sms_inst_id');
-$data['added_by']=auth()->user()->id;
-    $data['from'] = \Carbon\Carbon::parse($data['from'])->format('Y-m-d'); 
-    $data['to'] = \Carbon\Carbon::parse($data['to'])->format('Y-m-d');
+
+        $data['institute_id']=session('sms_inst_id');
+        $data['added_by']=auth()->user()->id;
+        $data['from'] = \Carbon\Carbon::createFromFormat('d/m/Y', $data['from'])->format('Y-m-d'); 
+        $data['to'] = \Carbon\Carbon::createFromFormat('d/m/Y', $data['to'])->format('Y-m-d');
 
         Upgradation::Create( $data);
 
-        return redirect()->back()->with('success', 'Upgradation saved successfully.');} catch (\Illuminate\Validation\ValidationException $e) {
-            // Return validation errors to the frontend
-            return back()->withErrors($e->validator->errors())->withInput();
-        } catch (\Exception $e) {
-            // Handle any unexpected errors
-            return back()->with('error', 'An error occurred while adding the fund: ' . $e->getMessage());
-        }
+        return redirect()->back()->with('success', 'Upgradation saved successfully.');
     }
     public function edit(Upgradation $upgradation)
     {
@@ -81,19 +72,19 @@ $data['added_by']=auth()->user()->id;
     {
         $data = $request->validate([
             'details' => 'required|string',
-            'from' => 'nullable|date',  
-            'to' => 'nullable|date',
-               'levelfrom' => 'required|string',
+            'from' => 'required|date_format:d/m/Y',  
+            'to' => 'required|date_format:d/m/Y',
+            'levelfrom' => 'required|string',
             'levelto' => 'required|string',
-            'status' => 'nullable|string|max:50',
+            'status' => 'nullable|string',
             
             'approved_date' => 'nullable|date',
             'approved_by' => 'nullable|integer',
         ]);
         $data['institute_id']=session('sms_inst_id');
-$data['added_by']=auth()->user()->id;
-$data['from'] = \Carbon\Carbon::parse($data['from'])->format('Y-m-d'); 
-    $data['to'] = \Carbon\Carbon::parse($data['to'])->format('Y-m-d');
+        $data['added_by']=auth()->user()->id;
+        if(isset($data['from'])) $data['from'] = \Carbon\Carbon::createFromFormat('d/m/Y', $data['from'])->format('Y-m-d'); 
+        if(isset($data['to'])) $data['to'] = \Carbon\Carbon::createFromFormat('d/m/Y', $data['to'])->format('Y-m-d');
 
         $upgradation->update($data);
         return redirect()->back()->with('success', 'Upgradation updated successfully.');  }

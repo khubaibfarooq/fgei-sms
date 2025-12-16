@@ -1,6 +1,6 @@
 // Imports updated with new dependencies
 import React, { useState, useEffect, useMemo, Component, ReactNode } from 'react';
-import { Head, router } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -44,6 +44,11 @@ interface ProjectProp {
   region?: { id: number; name?: string };
   projecttype?: { id: number; name?: string };
   current_stage_id?: number;
+  current_stage?: {
+    id: number;
+    level: string;
+    stage_name: string;
+  };
 }
 
 interface Item {
@@ -132,6 +137,32 @@ export default function Projects({ projects: initialProjects, institutes, region
   const [projects, setProjects] = useState(initialProjects);
   const [filteredInstitutes, setFilteredInstitutes] = useState<Item[]>(institutes || []);
   const [region, setRegion] = useState(filters.region_id || '');
+  const { auth } = usePage<any>().props;
+  const user = auth.user;
+
+  const canShowApproveButton = (project: ProjectProp) => {
+    const stageLevel = project.current_stage?.level;
+    const status = project.overall_status;
+
+    console.log("user", user);
+    console.log("stageLevel", stageLevel);
+
+    // The user strictly asked for region->region and dte->dte check logic.
+    if (!stageLevel) return false;
+
+    // Normalize logic
+    const userRole = (user.roles[0].name || '').toLowerCase(); // Assuming type/role property
+    const level = stageLevel.toLowerCase();
+    console.log("user", userRole);
+    console.log("stageLevel", level);
+    // Specific user requests
+    if (level === 'regional' && userRole === 'region' && status !== "approved") return true;
+    if (level === 'dte' && (userRole === 'dirhrm' || userRole === 'directorate') && status !== "approved") return true;
+
+
+    return false;
+  };
+
 
   // Modal and Side Panel State
   const [approvalModalOpen, setApprovalModalOpen] = useState(false);
@@ -436,19 +467,21 @@ export default function Projects({ projects: initialProjects, institutes, region
                             <td className="border p-2 text-center">{project.projecttype?.name || '-'}</td>
                             <td className="border p-2">{project.institute?.name || '-'}</td>
                             <td className="border p-2 text-center" onClick={(e) => e.stopPropagation()}>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                title="View/Approve"
-                                className="text-blue-600 hover:text-blue-700"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setSelectedProject(project);
-                                  setApprovalModalOpen(true);
-                                }}
-                              >
-                                <ClipboardCheck className="h-4 w-4" />
-                              </Button>
+                              {canShowApproveButton(project) && (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  title="View/Approve"
+                                  className="text-blue-600 hover:text-blue-700"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedProject(project);
+                                    setApprovalModalOpen(true);
+                                  }}
+                                >
+                                  <ClipboardCheck className="h-4 w-4" />
+                                </Button>
+                              )}
                             </td>
                           </tr>
                         ))
