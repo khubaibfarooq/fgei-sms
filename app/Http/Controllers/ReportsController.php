@@ -2209,7 +2209,7 @@ if($buildingTypeId!=null){
                  $region = Institute::where('region_id', $first['region_id'])->where('type', "Regional Office")->first();
                  return [
                      'id' => $first['region_id'],
-                     'name' => $region->name ?? 'Special Education',
+                     'name' => $region->name ?? 'SpecialEducation',
                      'is_region' => true,
                      'total_institutes' => $group->count(),
                      'completed' => $group->where('percentage', 100)->count(),
