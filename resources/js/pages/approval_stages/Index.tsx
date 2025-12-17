@@ -12,28 +12,59 @@ interface ApprovalStage {
     id: number;
     stage_name: string;
     stage_order: number;
+    is_user_required: boolean;
     is_mandatory: boolean;
+    level: string;
+    is_last: boolean;
+    users_can_approve: number[] | null;
     project_type: {
         id: number;
         name: string;
     };
 }
 
+interface User {
+    id: number;
+    name: string;
+}
+
+interface ProjectType {
+    id: number;
+    name: string;
+}
+
 interface Props {
     stages: ApprovalStage[];
+    users: User[];
+    projectTypes: ProjectType[];
+    filters: {
+        project_type_id: string;
+    };
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Approval Stages', href: '/approval-stages' },
 ];
 
-export default function ApprovalStagesIndex({ stages }: Props) {
+export default function ApprovalStagesIndex({ stages, users, projectTypes, filters }: Props) {
     const handleDelete = (id: number) => {
         if (confirm('Are you sure you want to delete this stage?')) {
             router.delete(`/approval-stages/${id}`, {
                 onSuccess: () => toast.success('Stage deleted successfully'),
             });
         }
+    };
+
+    const handleFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        router.get('/approval-stages',
+            { project_type_id: e.target.value },
+            { preserveState: true, preserveScroll: true }
+        );
+    };
+
+    const getUserNames = (userIds: number[] | null) => {
+        if (!userIds || userIds.length === 0) return '-';
+        return userIds.map(id => users.find(u => u.id === id)?.name).filter(Boolean).join(', ');
     };
 
     return (
@@ -43,11 +74,25 @@ export default function ApprovalStagesIndex({ stages }: Props) {
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between">
                         <CardTitle>Approval Stages</CardTitle>
-                        <Link href="/approval-stages/create">
-                            <Button>
-                                <Plus className="w-4 h-4 mr-2" /> Add Stage
-                            </Button>
-                        </Link>
+                        <div className="flex gap-2">
+                            <select
+                                className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                                value={filters?.project_type_id || ''}
+                                onChange={handleFilterChange}
+                            >
+                                <option value="">All Project Types</option>
+                                {projectTypes.map((type) => (
+                                    <option key={type.id} value={type.id}>
+                                        {type.name}
+                                    </option>
+                                ))}
+                            </select>
+                            <Link href="/approval-stages/create">
+                                <Button>
+                                    <Plus className="w-4 h-4 mr-2" /> Add Stage
+                                </Button>
+                            </Link>
+                        </div>
                     </CardHeader>
                     <CardContent>
                         <div className="rounded-md border overflow-hidden">
@@ -57,6 +102,10 @@ export default function ApprovalStagesIndex({ stages }: Props) {
                                         <th className="p-3 text-left font-medium">Order</th>
                                         <th className="p-3 text-left font-medium">Stage Name</th>
                                         <th className="p-3 text-left font-medium">Project Type</th>
+                                        <th className="p-3 text-left font-medium">Level</th>
+                                        <th className="p-3 text-left font-medium">User Req?</th>
+                                        <th className="p-3 text-left font-medium">Last Stage?</th>
+                                        <th className="p-3 text-left font-medium">Approvers</th>
                                         <th className="p-3 text-left font-medium">Mandatory</th>
                                         <th className="p-3 text-left font-medium">Actions</th>
                                     </tr>
@@ -64,7 +113,7 @@ export default function ApprovalStagesIndex({ stages }: Props) {
                                 <tbody>
                                     {stages.length === 0 ? (
                                         <tr>
-                                            <td colSpan={5} className="text-center text-muted-foreground p-6">
+                                            <td colSpan={9} className="text-center text-muted-foreground p-6">
                                                 No approval stages defined.
                                             </td>
                                         </tr>
@@ -74,6 +123,12 @@ export default function ApprovalStagesIndex({ stages }: Props) {
                                                 <td className="p-3">{stage.stage_order}</td>
                                                 <td className="p-3 font-medium">{stage.stage_name}</td>
                                                 <td className="p-3">{stage.project_type?.name || '-'}</td>
+                                                <td className="p-3 capitalize">{stage.level}</td>
+                                                <td className="p-3">{stage.is_user_required ? 'Yes' : 'No'}</td>
+                                                <td className="p-3">{stage.is_last ? 'Yes' : 'No'}</td>
+                                                <td className="p-3 max-w-xs truncate" title={getUserNames(stage.users_can_approve)}>
+                                                    {getUserNames(stage.users_can_approve)}
+                                                </td>
                                                 <td className="p-3">{stage.is_mandatory ? 'Yes' : 'No'}</td>
                                                 <td className="p-3 flex gap-2">
                                                     <Link href={`/approval-stages/${stage.id}/edit`}>

@@ -11,11 +11,25 @@ use Inertia\Inertia;
 
 class ApprovalStageController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $stages = ApprovalStage::with('projectType')->orderBy('project_type_id')->orderBy('stage_order')->get();
+        $query = ApprovalStage::with('projectType')->orderBy('project_type_id')->orderBy('stage_order');
+
+        if ($request->has('project_type_id') && $request->project_type_id) {
+            $query->where('project_type_id', $request->project_type_id);
+        }
+
+        $stages = $query->get();
+        $users = User::select('id', 'name')->get();
+        $projectTypes = ProjectType::select('id', 'name')->get();
+
         return Inertia::render('approval_stages/Index', [
-            'stages' => $stages
+            'stages' => $stages,
+            'users' => $users,
+            'projectTypes' => $projectTypes,
+            'filters' => [
+                'project_type_id' => $request->project_type_id
+            ]
         ]);
     }
 
@@ -42,7 +56,8 @@ class ApprovalStageController extends Controller
             'is_mandatory' => 'boolean',
             'description' => 'nullable|string',
             'is_last' => 'boolean',
-            'level' => 'string'
+            'level' => 'string',
+            'is_user_required' => 'boolean',
         ]);
 
         ApprovalStage::create($request->all());
@@ -72,7 +87,8 @@ class ApprovalStageController extends Controller
             'is_mandatory' => 'boolean',
             'description' => 'nullable|string',
             'is_last' => 'boolean',
-            'level' => 'string'
+            'level' => 'string',
+            'is_user_required' => 'boolean',
         ]);
 
         $approvalStage->update($request->all());

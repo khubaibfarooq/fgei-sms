@@ -31,7 +31,7 @@ $type=session('type');
         }
        
 
-        $projects = $query->paginate(10)->withQueryString();
+        $projects = $query->with('currentStage')->paginate(10)->withQueryString();
 $permissions = [
         'can_add'    => auth()->user()->can('project-add'),
         'can_edit'   => auth()->user()->can('project-edit'),
@@ -62,15 +62,13 @@ public function store(Request $request)
         'name'            => 'required|string|max:255',
         'budget'          => 'required|numeric',
         'project_type_id' => 'required|exists:project_types,id',
-        'status'          => 'required|in:planned,inprogress,completed',
+        // 'status'          => 'required|in:planned,inprogress,completed,waiting',
         'priority'        => 'nullable|string',
         'description'     => 'nullable|string',
 
         'milestones.*.name'           => 'required_with:milestones.*.due_date|string|max:255',
         'milestones.*.description'    => 'nullable|string',
         'milestones.*.due_date'       => 'required_with:milestones.*.name|date',
-        'milestones.*.status'         => 'required|in:planned,inprogress,completed',
-        'milestones.*.completed_date' => 'nullable|date',
         'milestones.*.img'            => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
     ]);
 
@@ -78,12 +76,12 @@ public function store(Request $request)
         'name'            => $request->name,
         'budget'          => $request->budget,
         'project_type_id' => $request->project_type_id,
-        'status'          => $request->status,
+        'status'          => 'waiting',
         'priority'        => $request->priority,
         'description'     => $request->description,
         'institute_id'    => session('sms_inst_id'),
         'submitted_by'    => auth()->id(),
-        'overall_status'  => 'draft',
+        'overall_status'  => 'waiting',
     ]);
 
     // Initialize Approval Workflow
@@ -114,8 +112,6 @@ public function store(Request $request)
                 'name'           => $m['name'],
                 'description'    => $m['description'] ?? null,
                 'due_date'       => $m['due_date'],
-                'status'         => $m['status'],
-                'completed_date' => $m['status'] === 'completed' ? ($m['completed_date'] ?? null) : null,
                 'added_by'       => auth()->id(),
             ];
 
@@ -215,7 +211,7 @@ public function update(Request $request, Project $project)
         'name'            => 'required|string|max:255',
         'budget'          => 'required|numeric|min:0',
         'project_type_id' => 'required|exists:project_types,id',
-        'status'          => 'required|in:planned,inprogress,completed',
+    
         'priority'        => 'nullable|string',
         'description'     => 'nullable|string',
 
@@ -223,8 +219,6 @@ public function update(Request $request, Project $project)
         'milestones.*.name'           => 'required_with:milestones.*.due_date|string|max:255',
         'milestones.*.description'    => 'nullable|string',
         'milestones.*.due_date'       => 'required_with:milestones.*.name|date',
-        'milestones.*.status'         => 'required|in:planned,inprogress,completed',
-        'milestones.*.completed_date' => 'nullable|date',
         'milestones.*.img'            => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
     ]);
 
@@ -233,7 +227,7 @@ public function update(Request $request, Project $project)
         'name'            => $request->name,
         'budget'          => $request->budget,
         'project_type_id' => $request->project_type_id,
-        'status'          => $request->status,
+        
         'priority'        => $request->priority,
         'description'     => $request->description,
         'institute_id'    => session('sms_inst_id'),
@@ -254,10 +248,8 @@ public function update(Request $request, Project $project)
                 'name'           => $milestoneData['name'],
                 'description'    => $milestoneData['description'] ?? null,
                 'due_date'       => $milestoneData['due_date'],
-                'status'         => $milestoneData['status'],
-                'completed_date' => $milestoneData['status'] === 'completed'
-                    ? ($milestoneData['completed_date'] ?? null)
-                    : null,
+     
+               
                 'added_by'       => auth()->id(),
             ];
 

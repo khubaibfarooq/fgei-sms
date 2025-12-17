@@ -23,6 +23,16 @@ import { toast } from 'sonner';
 import axios from 'axios';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 interface Project {
   id: number;
@@ -37,6 +47,9 @@ interface Project {
   };
   rooms_count?: number;
   current_stage_id?: number;
+  current_stage?: {
+    stage_name: string;
+  };
 }
 
 interface ApprovalHistory {
@@ -89,6 +102,72 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
   const [approvalHistory, setApprovalHistory] = useState<ApprovalHistory[]>([]);
   const [projectMilestones, setProjectMilestones] = useState<Milestone[]>([]);
   const [loadingPanelData, setLoadingPanelData] = useState(false);
+
+  // Milestone Edit State
+  const [editingMilestone, setEditingMilestone] = useState<Milestone | null>(null);
+  const [milestoneForm, setMilestoneForm] = useState({
+    name: '',
+    description: '',
+    due_date: '',
+    status: '',
+    completed_date: '',
+    img: null as File | null,
+  });
+  const [savingMilestone, setSavingMilestone] = useState(false);
+
+  const handleMilestoneClick = (milestone: Milestone) => {
+    setEditingMilestone(milestone);
+    setMilestoneForm({
+      name: milestone.name,
+      description: milestone.description || '',
+      due_date: milestone.due_date ? milestone.due_date.split('T')[0] : '',
+      status: milestone.status,
+      completed_date: milestone.completed_date ? milestone.completed_date.split('T')[0] : '',
+      img: null as File | null,
+    });
+  };
+
+  const handleMilestoneUpdate = async () => {
+    if (!editingMilestone) return;
+    setSavingMilestone(true);
+
+    const formData = new FormData();
+    formData.append('_method', 'PUT'); // Method spoofing for Laravel
+    formData.append('name', milestoneForm.name);
+    formData.append('due_date', milestoneForm.due_date);
+    formData.append('status', milestoneForm.status);
+    formData.append('description', milestoneForm.description);
+
+    if (milestoneForm.status === 'completed' && milestoneForm.completed_date) {
+      formData.append('completed_date', milestoneForm.completed_date);
+    } else {
+      formData.append('completed_date', '');
+    }
+
+    if (milestoneForm.img) {
+      formData.append('img', milestoneForm.img);
+    }
+
+    try {
+      await axios.post(`/milestones/${editingMilestone.id}`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      toast.success("Milestone updated successfully");
+      setEditingMilestone(null);
+      // Refresh milestones
+      if (selectedPanelProject) {
+        const res = await axios.get(`/projects/${selectedPanelProject.id}/milestones`);
+        setProjectMilestones(res.data);
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to update milestone");
+    } finally {
+      setSavingMilestone(false);
+    }
+  };
 
   const handleDelete = (id: number) => {
     router.delete(`/projects/${id}`, {
@@ -205,7 +284,7 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
                       <th className="border p-2 text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Budget</th>
                       <th className="border p-2 text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Priority</th>
                       <th className="border p-2 text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Status</th>
-                      <th className="border p-2 text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Stage</th>
+                      <th className="border p-2 text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Current Stage</th>
                       <th className="border p-2 text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Action</th>
                     </tr>
                   </thead>
@@ -237,7 +316,7 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
                           </td>
                           <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
                             {/* Pending Stage Logic Placeholder */}
-                            Draft
+                            {project.current_stage?.stage_name || 'Waiting'}
                           </td>
                           <td className="border text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100" onClick={(e) => e.stopPropagation()}>
                             {permissions.can_edit &&
@@ -353,7 +432,7 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
                           <CardContent className="p-3 text-sm">
                             <div className="flex items-center text-xs text-muted-foreground mb-2">
                               <Clock className="w-3 h-3 mr-1" />
-                              {new Date(record.action_date).toLocaleString()}
+                              {record.action_date ? new Date(record.action_date).toLocaleString() : ""}
                             </div>
                             <div className="mb-2">
                               <span className="font-medium text-xs">Approver: </span>
@@ -381,7 +460,11 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
                   ) : (
                     <div className="space-y-4">
                       {projectMilestones.map((milestone) => (
-                        <Card key={milestone.id}>
+                        <Card
+                          key={milestone.id}
+                          className="cursor-pointer hover:bg-muted/50 transition-colors"
+                          onClick={() => handleMilestoneClick(milestone)}
+                        >
                           <CardHeader className="p-3 pb-1">
                             <div className="flex justify-between items-start">
                               <div className="font-semibold text-sm">{milestone.name}</div>
@@ -394,6 +477,15 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
                             </div>
                           </CardHeader>
                           <CardContent className="p-3 text-sm space-y-2">
+                            {milestone.img && (
+                              <div className="mb-2">
+                                <img
+                                  src={`/${milestone.img}`}
+                                  alt={milestone.name}
+                                  className="w-full h-32 object-cover rounded-md"
+                                />
+                              </div>
+                            )}
                             <div className="grid grid-cols-2 gap-2 text-xs">
                               <div>
                                 <span className="text-muted-foreground">Due: </span>
@@ -429,6 +521,108 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
           onClick={() => setSelectedPanelProject(null)}
         />
       )}
+
+      <Dialog open={!!editingMilestone} onOpenChange={(open) => !open && setEditingMilestone(null)}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Edit Milestone</DialogTitle>
+            <DialogDescription>
+              Update the details of the milestone. Click save when you're done.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="name" className="text-right">
+                Name
+              </Label>
+              <Input
+                id="name"
+                value={milestoneForm.name}
+                onChange={(e) => setMilestoneForm({ ...milestoneForm, name: e.target.value })}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="status" className="text-right">
+                Status
+              </Label>
+              <select
+                id="status"
+                value={milestoneForm.status}
+                onChange={(e) => setMilestoneForm({ ...milestoneForm, status: e.target.value })}
+                className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <option value="pending">Pending</option>
+                <option value="inprogress">In Progress</option>
+                <option value="completed">Completed</option>
+              </select>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="due_date" className="text-right">
+                Due Date
+              </Label>
+              <Input
+                id="due_date"
+                type="date"
+                value={milestoneForm.due_date}
+                onChange={(e) => setMilestoneForm({ ...milestoneForm, due_date: e.target.value })}
+                className="col-span-3"
+              />
+            </div>
+
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="img" className="text-right">
+                Image
+              </Label>
+              <Input
+                id="img"
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  if (e.target.files && e.target.files[0]) {
+                    setMilestoneForm({ ...milestoneForm, img: e.target.files[0] });
+                  }
+                }}
+                className="col-span-3"
+              />
+            </div>
+
+            {milestoneForm.status === 'completed' && (
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="completed_date" className="text-right">
+                  Completed
+                </Label>
+                <Input
+                  id="completed_date"
+                  type="date"
+                  value={milestoneForm.completed_date}
+                  onChange={(e) => setMilestoneForm({ ...milestoneForm, completed_date: e.target.value })}
+                  className="col-span-3"
+                />
+              </div>
+            )}
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="description" className="text-right">
+                Description
+              </Label>
+              <Textarea
+                id="description"
+                value={milestoneForm.description}
+                onChange={(e) => setMilestoneForm({ ...milestoneForm, description: e.target.value })}
+                className="col-span-3"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="secondary" onClick={() => setEditingMilestone(null)}>
+              Cancel
+            </Button>
+            <Button type="submit" onClick={handleMilestoneUpdate} disabled={savingMilestone}>
+              {savingMilestone ? 'Saving...' : 'Save changes'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 }

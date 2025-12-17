@@ -17,14 +17,15 @@ class ApprovalStage extends Model
         'is_mandatory',
         'users_can_approve',
         'is_last',
-        'level'
+        'level',
+        'is_user_required'
     ];
 
     protected $casts = [
         'is_mandatory' => 'boolean',
         'users_can_approve' => 'array',
         'is_last' => 'boolean',
-      
+        'is_user_required' => 'boolean',
     ];
 
     public function projectType()

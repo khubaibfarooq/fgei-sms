@@ -29,6 +29,7 @@ interface Props {
         users_can_approve: number[] | null;
         is_last: boolean;
         level: string;
+        is_user_required: boolean;
     };
     projectTypes: { id: number; name: string }[];
     users: { id: number; name: string }[];
@@ -45,6 +46,7 @@ export default function ApprovalStageForm({ stage, projectTypes, users }: Props)
         users_can_approve: stage?.users_can_approve || [],
         is_last: stage?.is_last ?? false,
         level: stage?.level || '',
+        is_user_required: stage?.is_user_required ?? false,
     });
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -127,7 +129,19 @@ export default function ApprovalStageForm({ stage, projectTypes, users }: Props)
                                     checked={data.is_mandatory}
                                     onCheckedChange={(checked) => setData({ ...data, is_mandatory: !!checked })}
                                 />
-                                <Label htmlFor="mandatory">Is Mandatory?</Label>
+                                <Label htmlFor="is_user_required">Is User Required?</Label>
+                                <Checkbox
+                                    id="is_user_required"
+                                    checked={data.is_user_required}
+                                    onCheckedChange={(checked) => setData({ ...data, is_user_required: !!checked })}
+                                />
+                                <Label htmlFor="is_user_required">Is User Required?</Label>
+                                <Checkbox
+                                    id="is_last"
+                                    checked={data.is_last}
+                                    onCheckedChange={(checked) => setData({ ...data, is_last: !!checked })}
+                                />
+                                <Label htmlFor="is_last">Is Last Stage?</Label>
                             </div>
 
                             <div className="space-y-2">
@@ -141,12 +155,7 @@ export default function ApprovalStageForm({ stage, projectTypes, users }: Props)
                             </div>
 
                             <div className="flex items-center space-x-2">
-                                <Checkbox
-                                    id="is_last"
-                                    checked={data.is_last}
-                                    onCheckedChange={(checked) => setData({ ...data, is_last: !!checked })}
-                                />
-                                <Label htmlFor="is_last">Is Last Stage?</Label>
+
                             </div>
 
                             <div className="flex items-center space-x-2">

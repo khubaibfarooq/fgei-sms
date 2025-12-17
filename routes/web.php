@@ -45,6 +45,7 @@ use App\Http\Controllers\DonationController;
 use App\Http\Controllers\HelpDeskController;
 
 use App\Http\Controllers\ApprovalStageController;
+use App\Http\Controllers\MilestoneController;
 use App\Http\Controllers\ProjectApprovalController;
 use App\Http\Controllers\NotificationController;
 
@@ -137,6 +138,7 @@ Route::resource('projects', ProjectController::class);
 Route::post('/projects/{project}/approvals', [ProjectApprovalController::class, 'store'])->name('projects.approvals.store');
 Route::get('/projects/{project}/history', [ProjectApprovalController::class, 'history'])->name('projects.approvals.history');
 Route::get('/projects/{project}/milestones', [ProjectController::class, 'milestones'])->name('projects.milestones');
+Route::resource('milestones', MilestoneController::class);
 
 // approval stages
 Route::resource('approval-stages', ApprovalStageController::class);

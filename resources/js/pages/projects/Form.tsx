@@ -24,8 +24,6 @@ interface MilestoneRow {
   name: string;
   description: string;
   due_date: string;
-  status: 'planned' | 'inprogress' | 'completed';
-  completed_date: string | null;
   img: File | null;
   preview?: string;                     // Data URL preview
   existingImg?: string;                 // Path from DB (e.g. "milestones/abc.jpg")
@@ -39,14 +37,11 @@ interface ProjectFormProps {
     project_type_id?: number;
     description: string | null;
     priority: string | null;
-    status: string;
     milestones?: Array<{
       id: number;
       name: string;
       description: string | null;
       due_date: string;
-      status: 'planned' | 'inprogress' | 'completed';
-      completed_date: string | null;
       img: string | null;
     }>;
   };
@@ -61,9 +56,7 @@ export default function ProjectForm({ project, projectTypes }: ProjectFormProps)
   const [projectTypeId, setProjectTypeId] = useState((project?.project_type_id || '').toString());
   const [description, setDescription] = useState(project?.description || '');
   const [priority, setPriority] = useState(project?.priority || 'Medium');
-  const [status, setStatus] = useState<'planned' | 'inprogress' | 'completed'>(
-    (project?.status as any) || 'planned'
-  );
+
 
   const [milestones, setMilestones] = useState<MilestoneRow[]>(
     project?.milestones?.map((m) => ({
@@ -72,8 +65,6 @@ export default function ProjectForm({ project, projectTypes }: ProjectFormProps)
       name: m.name,
       description: m.description || '',
       due_date: m.due_date,
-      status: m.status,
-      completed_date: m.completed_date || null,
       img: null,
       existingImg: m.img || undefined,        // ← null → undefined
       preview: m.img ? `${m.img}` : undefined,
@@ -91,8 +82,6 @@ export default function ProjectForm({ project, projectTypes }: ProjectFormProps)
       name: '',
       description: '',
       due_date: '',
-      status: 'planned',
-      completed_date: null,
       img: null,
     }]);
   };
@@ -136,7 +125,6 @@ export default function ProjectForm({ project, projectTypes }: ProjectFormProps)
     fd.append('project_type_id', projectTypeId);
     fd.append('description', description);
     fd.append('priority', priority);
-    fd.append('status', status);
 
     if (isEdit) {
       fd.append('_method', 'PUT');
@@ -148,8 +136,6 @@ export default function ProjectForm({ project, projectTypes }: ProjectFormProps)
         fd.append(`milestones[${index}][name]`, m.name);
         fd.append(`milestones[${index}][description]`, m.description);
         fd.append(`milestones[${index}][due_date]`, m.due_date);
-        fd.append(`milestones[${index}][status]`, m.status);
-        if (m.completed_date) fd.append(`milestones[${index}][completed_date]`, m.completed_date);
         if (m.img) fd.append(`milestones[${index}][img]`, m.img);
       }
     });
@@ -211,17 +197,7 @@ export default function ProjectForm({ project, projectTypes }: ProjectFormProps)
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-2">
-                  <Label>Status</Label>
-                  <Select value={status} onValueChange={v => setStatus(v as any)}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="planned">Planned</SelectItem>
-                      <SelectItem value="inprogress">In Progress</SelectItem>
-                      <SelectItem value="completed">Completed</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+
                 <div className="space-y-2">
                   <Label>Priority</Label>
                   <Select value={priority} onValueChange={setPriority}>
@@ -256,7 +232,7 @@ export default function ProjectForm({ project, projectTypes }: ProjectFormProps)
                   <div className="space-y-6">
                     {milestones.map((m) => (
                       <Card key={m.key} className="p-6 border">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5  gap-6">
 
                           <div className="space-y-2">
                             <Label>Milestone Name <span className="text-red-500">*</span></Label>
@@ -284,27 +260,7 @@ export default function ProjectForm({ project, projectTypes }: ProjectFormProps)
                             />
                           </div>
 
-                          <div className="space-y-2">
-                            <Label>Status</Label>
-                            <Select value={m.status} onValueChange={v => updateMilestone(m.key, 'status', v)}>
-                              <SelectTrigger><SelectValue /></SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="planned">Planned</SelectItem>
-                                <SelectItem value="inprogress">In Progress</SelectItem>
-                                <SelectItem value="completed">Completed</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
 
-                          <div className="space-y-2">
-                            <Label>Completed Date</Label>
-                            <Input
-                              type="date"
-                              value={m.completed_date || ''}
-                              onChange={e => updateMilestone(m.key, 'completed_date', e.target.value || null)}
-                              disabled={m.status !== 'completed'}
-                            />
-                          </div>
 
                           <div className="space-y-2">
                             <Label>Proof Image</Label>
@@ -313,13 +269,18 @@ export default function ProjectForm({ project, projectTypes }: ProjectFormProps)
                               accept="image/*"
                               onChange={e => handleImageChange(m.key, e.target.files?.[0] || null)}
                             />
+
+                          </div>
+                          <div className="space-y-2">
+
                             {(m.preview || m.existingImg) && (
-                              <ImagePreview dataImg={m.preview || `${m.existingImg}`} />
-
-
+                              <img
+                                src={`/${m.existingImg}`}
+                                alt={m.name}
+                                className="w-full h-32 object-cover rounded-md"
+                              />
                             )}
                           </div>
-
                           <div className="flex items-end">
                             <Button
                               type="button"
