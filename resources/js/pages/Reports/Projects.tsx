@@ -21,6 +21,7 @@ import axios from 'axios';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import ApprovalModal from '../projects/ApprovalModal'; // Adjust import path if needed
+import FundHeadSelectModal from './FundHeadSelectModal';
 
 declare module 'jspdf' {
   interface jsPDF {
@@ -36,13 +37,15 @@ const breadcrumbs: BreadcrumbItem[] = [
 interface ProjectProp {
   id: number;
   name: string;
-  budget: string | number;
+  estimated_amount: string | number;
+  actual_amount: string | number;
   status: string;
   overall_status: string;
   priority: string;
   institute?: { id: number; name?: string };
   region?: { id: number; name?: string };
   projecttype?: { id: number; name?: string };
+  fund_head_id?: number | string | null;
   current_stage_id?: number;
   current_stage?: {
     id: number;
@@ -63,6 +66,8 @@ interface ApprovalHistory {
   action_date: string;
   approver: { name: string };
   stage: { stage_name: string };
+  pdf: string | null;
+  img: string | null;
 }
 
 interface Milestone {
@@ -73,6 +78,7 @@ interface Milestone {
   status: string;
   completed_date: string | null;
   img: string | null;
+  pdf: string | null;
 }
 
 interface Props {
@@ -92,6 +98,7 @@ interface Props {
   institutes: Item[];
   regions: Item[];
   projectTypes: Item[];
+  fundHeads: Item[];
 }
 
 // Error Boundary (Kept as is)
@@ -129,7 +136,7 @@ const isValidItem = (item: any): item is Item => {
   return isValid;
 };
 
-export default function Projects({ projects: initialProjects, institutes, regions, projectTypes, filters }: Props) {
+export default function Projects({ projects: initialProjects, institutes, regions, projectTypes, fundHeads, filters }: Props) {
   const [search, setSearch] = useState(filters.search || '');
   const [institute, setInstitute] = useState(filters.institute_id || '');
   const [projectType, setProjectType] = useState(filters.project_type_id || '');
@@ -144,8 +151,6 @@ export default function Projects({ projects: initialProjects, institutes, region
     const stageLevel = project.current_stage?.level;
     const status = project.overall_status;
 
-    console.log("user", user);
-    console.log("stageLevel", stageLevel);
 
     // The user strictly asked for region->region and dte->dte check logic.
     if (!stageLevel) return false;
@@ -153,8 +158,7 @@ export default function Projects({ projects: initialProjects, institutes, region
     // Normalize logic
     const userRole = (user.roles[0].name || '').toLowerCase(); // Assuming type/role property
     const level = stageLevel.toLowerCase();
-    console.log("user", userRole);
-    console.log("stageLevel", level);
+
     // Specific user requests
     if (level === 'regional' && userRole === 'region' && status !== "approved") return true;
     if (level === 'dte' && (userRole === 'dirhrm' || userRole === 'directorate') && status !== "approved") return true;
@@ -167,6 +171,9 @@ export default function Projects({ projects: initialProjects, institutes, region
   // Modal and Side Panel State
   const [approvalModalOpen, setApprovalModalOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<ProjectProp | null>(null);
+
+  const [fundHeadModalOpen, setFundHeadModalOpen] = useState(false);
+  const [selectedProjectForFundHead, setSelectedProjectForFundHead] = useState<ProjectProp | null>(null);
 
   const [selectedPanelProject, setSelectedPanelProject] = useState<ProjectProp | null>(null);
   const [approvalHistory, setApprovalHistory] = useState<ApprovalHistory[]>([]);
@@ -260,7 +267,8 @@ export default function Projects({ projects: initialProjects, institutes, region
     projects.data.forEach((p) => {
       worksheet.addRow({
         name: p.name,
-        budget: p.budget,
+        estimated_amount: p.estimated_amount,
+        actual_amount: p.actual_amount,
         status: p.status,
         project_type: p.projecttype?.name || 'N/A',
         institute: p.institute?.name || 'N/A',
@@ -279,10 +287,11 @@ export default function Projects({ projects: initialProjects, institutes, region
     doc.setFontSize(16);
     doc.text('Projects Report', 14, 15);
 
-    const headers = ['Name', 'Budget', 'Status', 'Project Type', 'Institute', 'Region'];
+    const headers = ['Name', 'Estimated Amount', 'Actual Amount', 'Status', 'Project Type', 'Institute', 'Region'];
     const rows = projects.data.map((p) => [
       p.name,
-      p.budget,
+      p.estimated_amount,
+      p.actual_amount,
       p.status,
       p.projecttype?.name || 'N/A',
       p.institute?.name || 'N/A',
@@ -433,7 +442,8 @@ export default function Projects({ projects: initialProjects, institutes, region
                     <thead className="sticky top-0 z-10">
                       <tr className="bg-primary text-white text-center">
                         <th className="border p-2 font-medium">Name</th>
-                        <th className="border p-2 font-medium">Budget</th>
+                        <th className="border p-2 font-medium">Estimated Amount</th>
+                        <th className="border p-2 font-medium">Actual Amount</th>
                         <th className="border p-2 font-medium">Status</th>
                         <th className="border p-2 font-medium">Type</th>
                         <th className="border p-2 font-medium">Institute</th>
@@ -455,7 +465,8 @@ export default function Projects({ projects: initialProjects, institutes, region
                             onClick={() => setSelectedPanelProject(project)}
                           >
                             <td className="border p-2 font-medium">{project.name}</td>
-                            <td className="border p-2 text-right">{project.budget}</td>
+                            <td className="border p-2 text-right">{project.estimated_amount}</td>
+                            <td className="border p-2 text-right">{project.actual_amount}</td>
                             <td className="border p-2 text-center">
                               <span className={`px-2 py-1 rounded-full text-xs font-medium ${project.status === 'completed' ? 'bg-green-100 text-green-800' :
                                 project.status === 'inprogress' ? 'bg-yellow-100 text-yellow-800' :
@@ -480,6 +491,22 @@ export default function Projects({ projects: initialProjects, institutes, region
                                   }}
                                 >
                                   <ClipboardCheck className="h-4 w-4" />
+                                </Button>
+                              )}
+
+                              {user.roles[0]?.name.toLowerCase() === 'region' && !project.fund_head_id && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  title="Select Fund Head"
+                                  className="text-orange-600 hover:text-orange-700 font-bold"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedProjectForFundHead(project);
+                                    setFundHeadModalOpen(true);
+                                  }}
+                                >
+                                  Select Head
                                 </Button>
                               )}
                             </td>
@@ -584,6 +611,24 @@ export default function Projects({ projects: initialProjects, institutes, region
                                   "{record.comments}"
                                 </div>
                               )}
+                              {record.pdf && (
+                                <a
+                                  href={`/${record.pdf}`}
+                                  target="_blank"
+                                  className="mt-1 text-blue-600 underline text-xs flex items-center gap-1"
+                                >
+                                  View PDF
+                                </a>
+                              )}
+                              {record.img && (
+                                <div className="mt-2">
+                                  <img
+                                    src={`/${record.img}`}
+                                    alt="Evidence"
+                                    className="h-20 w-auto rounded border"
+                                  />
+                                </div>
+                              )}
                             </CardContent>
                           </Card>
                         ))}
@@ -614,6 +659,24 @@ export default function Projects({ projects: initialProjects, institutes, region
                               </div>
                             </CardHeader>
                             <CardContent className="p-3 text-sm space-y-2">
+                              {milestone.img && (
+                                <div className="mb-2">
+                                  <img
+                                    src={`/${milestone.img}`}
+                                    alt={milestone.name}
+                                    className="w-full h-32 object-cover rounded-md"
+                                  />
+                                </div>
+                              )}
+                              {milestone.pdf && (
+                                <a
+                                  href={`/${milestone.pdf}`}
+                                  target="_blank"
+                                  className="mb-2 text-blue-600 underline text-xs flex items-center gap-1"
+                                >
+                                  View Document (PDF)
+                                </a>
+                              )}
                               <div className="grid grid-cols-2 gap-2 text-xs">
                                 <div>
                                   <span className="text-muted-foreground">Due: </span>
@@ -648,13 +711,25 @@ export default function Projects({ projects: initialProjects, institutes, region
           onClose={() => setApprovalModalOpen(false)}
           project={selectedProject as any}
         />
-        {selectedPanelProject && (
-          <div
-            className="fixed inset-0 bg-black/20 lg:hidden z-10"
-            onClick={() => setSelectedPanelProject(null)}
-          />
-        )}
-      </AppLayout>
-    </ErrorBoundary>
+        <FundHeadSelectModal
+          isOpen={fundHeadModalOpen}
+          onClose={() => setFundHeadModalOpen(false)}
+          project={selectedProjectForFundHead}
+          fundHeads={fundHeads}
+          onSuccess={() => {
+            // Refresh data
+            router.reload();
+          }}
+        />
+        {
+          selectedPanelProject && (
+            <div
+              className="fixed inset-0 bg-black/20 lg:hidden z-10"
+              onClick={() => setSelectedPanelProject(null)}
+            />
+          )
+        }
+      </AppLayout >
+    </ErrorBoundary >
   );
 }

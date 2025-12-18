@@ -136,6 +136,7 @@ Route::resource('project-types', ProjectTypeController::class);
 // project
 Route::resource('projects', ProjectController::class);
 Route::post('/projects/{project}/approvals', [ProjectApprovalController::class, 'store'])->name('projects.approvals.store');
+Route::post('/projects/{project}/select-head', [ProjectApprovalController::class, 'selectHead'])->name('projects.select-head');
 Route::get('/projects/{project}/history', [ProjectApprovalController::class, 'history'])->name('projects.approvals.history');
 Route::get('/projects/{project}/milestones', [ProjectController::class, 'milestones'])->name('projects.milestones');
 Route::resource('milestones', MilestoneController::class);

@@ -13,9 +13,12 @@ class Project extends Model
 
     protected $fillable = [
         'name', 
-        'budget', // Renamed from cost 
+        'estimated_amount', // Renamed from budget 
+        'actual_amount',
+        'final_comments',
         'institute_id',
-        'project_type_id',
+        'fund_head_id',
+        'project_type_id', // Keeping for now if needed for other logic, but stages are global
         'status',
         'description',
         'submitted_by',
@@ -23,6 +26,11 @@ class Project extends Model
         'overall_status',
         'priority'
     ];
+
+    public function fundHead()
+    {
+        return $this->belongsTo(FundHead::class);
+    }
 
     public function institute()
     {

@@ -17,10 +17,10 @@ interface ApprovalStage {
     level: string;
     is_last: boolean;
     users_can_approve: number[] | null;
-    project_type: {
+    fund_head: {
         id: number;
         name: string;
-    };
+    } | null;
 }
 
 interface User {
@@ -28,7 +28,7 @@ interface User {
     name: string;
 }
 
-interface ProjectType {
+interface FundHead {
     id: number;
     name: string;
 }
@@ -36,9 +36,9 @@ interface ProjectType {
 interface Props {
     stages: ApprovalStage[];
     users: User[];
-    projectTypes: ProjectType[];
+    fundHeads: FundHead[];
     filters: {
-        project_type_id: string;
+        fund_head_id: string;
     };
 }
 
@@ -46,7 +46,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Approval Stages', href: '/approval-stages' },
 ];
 
-export default function ApprovalStagesIndex({ stages, users, projectTypes, filters }: Props) {
+export default function ApprovalStagesIndex({ stages, users, fundHeads, filters }: Props) {
     const handleDelete = (id: number) => {
         if (confirm('Are you sure you want to delete this stage?')) {
             router.delete(`/approval-stages/${id}`, {
@@ -57,7 +57,7 @@ export default function ApprovalStagesIndex({ stages, users, projectTypes, filte
 
     const handleFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         router.get('/approval-stages',
-            { project_type_id: e.target.value },
+            { fund_head_id: e.target.value },
             { preserveState: true, preserveScroll: true }
         );
     };
@@ -77,13 +77,13 @@ export default function ApprovalStagesIndex({ stages, users, projectTypes, filte
                         <div className="flex gap-2">
                             <select
                                 className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                                value={filters?.project_type_id || ''}
+                                value={filters?.fund_head_id || ''}
                                 onChange={handleFilterChange}
                             >
-                                <option value="">All Project Types</option>
-                                {projectTypes.map((type) => (
-                                    <option key={type.id} value={type.id}>
-                                        {type.name}
+                                <option value="">All Fund Heads</option>
+                                {fundHeads.map((head) => (
+                                    <option key={head.id} value={head.id}>
+                                        {head.name}
                                     </option>
                                 ))}
                             </select>
@@ -101,7 +101,7 @@ export default function ApprovalStagesIndex({ stages, users, projectTypes, filte
                                     <tr className="border-b">
                                         <th className="p-3 text-left font-medium">Order</th>
                                         <th className="p-3 text-left font-medium">Stage Name</th>
-                                        <th className="p-3 text-left font-medium">Project Type</th>
+                                        <th className="p-3 text-left font-medium">Fund Head</th>
                                         <th className="p-3 text-left font-medium">Level</th>
                                         <th className="p-3 text-left font-medium">User Req?</th>
                                         <th className="p-3 text-left font-medium">Last Stage?</th>
@@ -122,7 +122,7 @@ export default function ApprovalStagesIndex({ stages, users, projectTypes, filte
                                             <tr key={stage.id} className="border-b hover:bg-muted/50 transition-colors">
                                                 <td className="p-3">{stage.stage_order}</td>
                                                 <td className="p-3 font-medium">{stage.stage_name}</td>
-                                                <td className="p-3">{stage.project_type?.name || '-'}</td>
+                                                <td className="p-3">{stage.fund_head?.name || '-'}</td>
                                                 <td className="p-3 capitalize">{stage.level}</td>
                                                 <td className="p-3">{stage.is_user_required ? 'Yes' : 'No'}</td>
                                                 <td className="p-3">{stage.is_last ? 'Yes' : 'No'}</td>

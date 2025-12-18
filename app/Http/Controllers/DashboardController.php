@@ -458,7 +458,9 @@ $link3="/institute-assets?category=";
     ->where('institute_id', $sms_inst_id)
     ->select('status as Key','status')
     ->selectRaw('COUNT(*) as project_count')
-    ->selectRaw('SUM(budget) as total_cost')
+    ->selectRaw('SUM(estimated_amount) as total_cost')
+            ->selectRaw('SUM(projects.actual_amount) as total_actual')
+
     ->groupBy('status')
     ->get();
 
@@ -492,7 +494,9 @@ $link3="/reports/projects?status=";
     ->where('institutes.region_id', $regionId)
     ->select('projects.status as Key','projects.status as Status')
     ->selectRaw('COUNT(*) as project_count')
-    ->selectRaw('SUM(projects.budget) as total_cost')
+    ->selectRaw('SUM(projects.estimated_amount) as total_cost')
+        ->selectRaw('SUM(projects.actual_amount) as total_actual')
+
     ->groupBy('status')
     ->get();
 
@@ -536,7 +540,9 @@ $tab1 = DB::table('fund_helds')
       
     ->select('projects.status as Key',DB::raw('CONCAT(UPPER(LEFT(projects.status, 1)), LOWER(SUBSTRING(projects.status, 2))) as status'))
     ->selectRaw('COUNT(*) as project_count')
-    ->selectRaw('SUM(projects.budget) as total_cost')
+    ->selectRaw('SUM(projects.estimated_amount) as total_cost')
+            ->selectRaw('SUM(projects.actual_amount) as total_actual')
+
     ->groupBy('status')
     ->get();
    

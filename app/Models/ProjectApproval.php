@@ -16,6 +16,8 @@ class ProjectApproval extends Model
         'status',
         'action_date',
         'comments',
+        'pdf',
+        'img',
         'deadline'
     ];
 

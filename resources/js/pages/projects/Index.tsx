@@ -37,7 +37,8 @@ import { Textarea } from "@/components/ui/textarea";
 interface Project {
   id: number;
   name: string;
-  budget: number;
+  estimated_amount: number;
+  actual_amount: number;
   status: string;
   overall_status: string;
   priority: string;
@@ -59,6 +60,8 @@ interface ApprovalHistory {
   action_date: string;
   approver: { name: string };
   stage: { stage_name: string };
+  pdf: string | null;
+  img: string | null;
 }
 
 interface Milestone {
@@ -69,6 +72,7 @@ interface Milestone {
   status: string;
   completed_date: string | null;
   img: string | null;
+  pdf: string | null;
 }
 
 interface Props {
@@ -112,6 +116,7 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
     status: '',
     completed_date: '',
     img: null as File | null,
+    pdf: null as File | null,
   });
   const [savingMilestone, setSavingMilestone] = useState(false);
 
@@ -124,6 +129,7 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
       status: milestone.status,
       completed_date: milestone.completed_date ? milestone.completed_date.split('T')[0] : '',
       img: null as File | null,
+      pdf: null as File | null,
     });
   };
 
@@ -146,6 +152,9 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
 
     if (milestoneForm.img) {
       formData.append('img', milestoneForm.img);
+    }
+    if (milestoneForm.pdf) {
+      formData.append('pdf', milestoneForm.pdf);
     }
 
     try {
@@ -281,7 +290,8 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
                   <thead className="sticky top-0 z-10">
                     <tr className="bg-primary dark:bg-gray-800 text-center" >
                       <th className="border p-2 text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Name</th>
-                      <th className="border p-2 text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Budget</th>
+                      <th className="border p-2 text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Estimated Amount</th>
+                      <th className="border p-2 text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Actual Amount</th>
                       <th className="border p-2 text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Priority</th>
                       <th className="border p-2 text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Status</th>
                       <th className="border p-2 text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Current Stage</th>
@@ -305,7 +315,10 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
                             {project.name}
                           </td>
                           <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
-                            {project.budget}
+                            {project.estimated_amount}
+                          </td>
+                          <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
+                            {project.actual_amount || '-'}
                           </td>
                           <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
                             {project.priority || '-'}
@@ -443,6 +456,23 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
                                 "{record.comments}"
                               </div>
                             )}
+                            {record.pdf && (
+                              <a
+                                href={`/${record.pdf}`}
+                                target="_blank"
+                                className="mt-1 text-blue-600 underline text-xs flex items-center gap-1"
+                              >
+                                View PDF
+                              </a>)}
+                            {record.img && (
+                              <div className="mt-2">
+                                <img
+                                  src={`/${record.img}`}
+                                  alt="Evidence"
+                                  className="h-20 w-auto rounded border"
+                                />
+                              </div>
+                            )}
                           </CardContent>
                         </Card>
                       ))}
@@ -485,6 +515,15 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
                                   className="w-full h-32 object-cover rounded-md"
                                 />
                               </div>
+                            )}
+                            {milestone.pdf && (
+                              <a
+                                href={`/${milestone.pdf}`}
+                                target="_blank"
+                                className="mb-2 text-blue-600 underline text-xs flex items-center gap-1"
+                              >
+                                View Document (PDF)
+                              </a>
                             )}
                             <div className="grid grid-cols-2 gap-2 text-xs">
                               <div>
@@ -581,6 +620,23 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
                 onChange={(e) => {
                   if (e.target.files && e.target.files[0]) {
                     setMilestoneForm({ ...milestoneForm, img: e.target.files[0] });
+                  }
+                }}
+                className="col-span-3"
+              />
+            </div>
+
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="pdf" className="text-right">
+                PDF
+              </Label>
+              <Input
+                id="pdf"
+                type="file"
+                accept=".pdf"
+                onChange={(e) => {
+                  if (e.target.files && e.target.files[0]) {
+                    setMilestoneForm({ ...milestoneForm, pdf: e.target.files[0] });
                   }
                 }}
                 className="col-span-3"

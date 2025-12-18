@@ -1,6 +1,6 @@
 // resources/js/pages/projects/form.tsx
 import React, { useState } from 'react';
-import { Head, router } from '@inertiajs/react';
+import { Head, router, Link } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,16 +25,22 @@ interface MilestoneRow {
   description: string;
   due_date: string;
   img: File | null;
+  pdf: File | null;                     // Added PDF field
   preview?: string;                     // Data URL preview
-  existingImg?: string;                 // Path from DB (e.g. "milestones/abc.jpg")
+  existingImg?: string;
+  existingPdf?: string;                 // Added PDF path
 }
 
 interface ProjectFormProps {
   project?: {
     id?: number;
     name: string;
-    budget: number; // Replaced cost
-    project_type_id?: number;
+    estimated_amount: number;
+    actual_amount: number | null;
+    final_comments: string | null;
+    fund_head_id: number | null;
+    project_type_id: number | null;
+    status: string;
     description: string | null;
     priority: string | null;
     milestones?: Array<{
@@ -43,17 +49,23 @@ interface ProjectFormProps {
       description: string | null;
       due_date: string;
       img: string | null;
+      pdf: string | null;
     }>;
   };
   projectTypes: Record<string, string>;
+  fundHeads: Array<{ id: number; name: string }>;
 }
 
-export default function ProjectForm({ project, projectTypes }: ProjectFormProps) {
+export default function ProjectForm({ project, projectTypes, fundHeads }: ProjectFormProps) {
   const isEdit = !!project?.id;
 
   const [name, setName] = useState(project?.name || '');
-  const [cost, setCost] = useState(project?.budget?.toString() || ''); // cost -> budget
+  const [estimatedAmount, setEstimatedAmount] = useState(project?.estimated_amount?.toString() || '');
+  const [actualAmount, setActualAmount] = useState(project?.actual_amount?.toString() || '');
+  const [finalComments, setFinalComments] = useState(project?.final_comments || '');
+  const [fundHeadId, setFundHeadId] = useState(project?.fund_head_id?.toString() || '');
   const [projectTypeId, setProjectTypeId] = useState((project?.project_type_id || '').toString());
+  const [status, setStatus] = useState(project?.status || 'waiting');
   const [description, setDescription] = useState(project?.description || '');
   const [priority, setPriority] = useState(project?.priority || 'Medium');
 
@@ -66,7 +78,9 @@ export default function ProjectForm({ project, projectTypes }: ProjectFormProps)
       description: m.description || '',
       due_date: m.due_date,
       img: null,
-      existingImg: m.img || undefined,        // ← null → undefined
+      pdf: null,
+      existingImg: m.img || undefined,
+      existingPdf: m.pdf || undefined,
       preview: m.img ? `${m.img}` : undefined,
     })) || []
   );
@@ -83,6 +97,7 @@ export default function ProjectForm({ project, projectTypes }: ProjectFormProps)
       description: '',
       due_date: '',
       img: null,
+      pdf: null,
     }]);
   };
 
@@ -114,15 +129,19 @@ export default function ProjectForm({ project, projectTypes }: ProjectFormProps)
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!name.trim() || !cost || !projectTypeId) {
+    if (!name.trim() || !estimatedAmount || !projectTypeId) {
       toast.error('Please fill all required project fields');
       return;
     }
 
     const fd = new FormData();
     fd.append('name', name);
-    fd.append('budget', cost); // cost variable maps to budget
+    fd.append('estimated_amount', estimatedAmount);
+    fd.append('actual_amount', actualAmount);
+    fd.append('final_comments', finalComments);
+    fd.append('fund_head_id', fundHeadId);
     fd.append('project_type_id', projectTypeId);
+    fd.append('status', status);
     fd.append('description', description);
     fd.append('priority', priority);
 
@@ -137,6 +156,7 @@ export default function ProjectForm({ project, projectTypes }: ProjectFormProps)
         fd.append(`milestones[${index}][description]`, m.description);
         fd.append(`milestones[${index}][due_date]`, m.due_date);
         if (m.img) fd.append(`milestones[${index}][img]`, m.img);
+        if (m.pdf) fd.append(`milestones[${index}][pdf]`, m.pdf);
       }
     });
 
@@ -183,9 +203,46 @@ export default function ProjectForm({ project, projectTypes }: ProjectFormProps)
                   <Input value={name} onChange={e => setName(e.target.value)} required />
                 </div>
                 <div className="space-y-2">
-                  <Label>Budget <span className="text-red-500">*</span></Label>
-                  <Input type="number" value={cost} onChange={e => setCost(e.target.value)} required />
+                  <Label>Estimated Amount <span className="text-red-500">*</span></Label>
+                  <Input type="number" value={estimatedAmount} onChange={e => setEstimatedAmount(e.target.value)} required />
                 </div>
+                <div className="space-y-2">
+                  <Label>Fund Head (Categorical) <span className="text-red-500">*</span></Label>
+                  <Select value={fundHeadId} onValueChange={setFundHeadId}>
+                    <SelectTrigger><SelectValue placeholder="Select Fund Source" /></SelectTrigger>
+                    <SelectContent>
+                      {fundHeads.map(fh => (
+                        <SelectItem key={fh.id} value={fh.id.toString()}>{fh.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Status</Label>
+                  <Select value={status} onValueChange={setStatus}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="draft">Draft</SelectItem>
+                      <SelectItem value="waiting">Waiting for Approval</SelectItem>
+                      <SelectItem value="inprogress">In Progress</SelectItem>
+                      <SelectItem value="completed">Completed</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {status === 'completed' && (
+                  <>
+                    <div className="space-y-2">
+                      <Label>Actual Amount <span className="text-red-500">*</span></Label>
+                      <Input type="number" value={actualAmount} onChange={e => setActualAmount(e.target.value)} required />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Final Comments <span className="text-red-500">*</span></Label>
+                      <Input value={finalComments} onChange={e => setFinalComments(e.target.value)} required />
+                    </div>
+                  </>
+                )}
+
                 <div className="space-y-2">
                   <Label>Project Type <span className="text-red-500">*</span></Label>
                   <Select value={projectTypeId} onValueChange={setProjectTypeId}>
@@ -230,9 +287,9 @@ export default function ProjectForm({ project, projectTypes }: ProjectFormProps)
                   </div>
                 ) : (
                   <div className="space-y-6">
-                    {milestones.map((m) => (
+                    {milestones.map((m, index) => (
                       <Card key={m.key} className="p-6 border">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5  gap-6">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-6">
 
                           <div className="space-y-2">
                             <Label>Milestone Name <span className="text-red-500">*</span></Label>
@@ -260,8 +317,6 @@ export default function ProjectForm({ project, projectTypes }: ProjectFormProps)
                             />
                           </div>
 
-
-
                           <div className="space-y-2">
                             <Label>Proof Image</Label>
                             <Input
@@ -269,23 +324,41 @@ export default function ProjectForm({ project, projectTypes }: ProjectFormProps)
                               accept="image/*"
                               onChange={e => handleImageChange(m.key, e.target.files?.[0] || null)}
                             />
-
-                          </div>
-                          <div className="space-y-2">
-
-                            {(m.preview || m.existingImg) && (
-                              <img
-                                src={`/${m.existingImg}`}
-                                alt={m.name}
-                                className="w-full h-32 object-cover rounded-md"
-                              />
+                            {m.existingImg && !m.preview && (
+                              <p className="text-xs text-muted-foreground mt-1">Has existing image</p>
                             )}
                           </div>
-                          <div className="flex items-end">
+
+                          <div className="space-y-2">
+                            <Label>Signed Document (PDF)</Label>
+                            <Input
+                              type="file"
+                              accept=".pdf"
+                              onChange={e => updateMilestone(m.key, 'pdf', e.target.files?.[0] || null)}
+                            />
+                            {m.existingPdf && (
+                              <a href={`/${m.existingPdf}`} target="_blank" className="text-xs text-blue-500 underline mt-1 block">
+                                View PDF
+                              </a>
+                            )}
+                          </div>
+
+                          <div className="flex items-end justify-between">
+                            <div className="h-10 w-10 overflow-hidden rounded bg-muted border flex items-center justify-center">
+                              {(m.preview || m.existingImg) ? (
+                                <img
+                                  src={m.preview || `/${m.existingImg}`}
+                                  alt="Preview"
+                                  className="h-full w-full object-cover"
+                                />
+                              ) : (
+                                <span className="text-[10px] text-muted-foreground italic">No image</span>
+                              )}
+                            </div>
                             <Button
                               type="button"
                               variant="destructive"
-                              size="sm"
+                              size="icon"
                               onClick={() => removeMilestone(m.key)}
                             >
                               <Trash2 className="w-4 h-4" />
@@ -300,9 +373,9 @@ export default function ProjectForm({ project, projectTypes }: ProjectFormProps)
 
               <div className="flex justify-between pt-8 border-t">
                 <Button type="button" variant="secondary" asChild>
-                  <a href="/projects">
+                  <Link href="/projects">
                     <ArrowLeft className="mr-2 h-4 w-4" /> Back
-                  </a>
+                  </Link>
                 </Button>
                 <Button type="submit" size="lg">
                   <Save className="mr-2 h-4 w-4" />

@@ -14,6 +14,7 @@ import { CheckCircle2, XCircle, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 import { router } from '@inertiajs/react';
 import axios from 'axios';
+import { Input } from '@/components/ui/input';
 
 interface ApprovalProps {
     isOpen: boolean;
@@ -28,10 +29,14 @@ interface ApprovalHistory {
     action_date: string;
     approver: { name: string };
     stage: { stage_name: string };
+    pdf: string | null;
+    img: string | null;
 }
 
 export default function ApprovalModal({ isOpen, onClose, project }: ApprovalProps) {
     const [comment, setComment] = useState('');
+    const [pdfFile, setPdfFile] = useState<File | null>(null);
+    const [imgFile, setImgFile] = useState<File | null>(null);
     const [history, setHistory] = useState<ApprovalHistory[]>([]);
     const [loading, setLoading] = useState(false);
 
@@ -46,6 +51,7 @@ export default function ApprovalModal({ isOpen, onClose, project }: ApprovalProp
         try {
             const { data } = await axios.get(`/projects/${project.id}/history`);
             setHistory(data);
+
         } catch (error) {
             console.error('Failed to fetch history', error);
         }
@@ -54,14 +60,32 @@ export default function ApprovalModal({ isOpen, onClose, project }: ApprovalProp
     const handleAction = (status: 'approved' | 'rejected') => {
         if (!project) return;
         setLoading(true);
+
+        const fd = new FormData();
+        fd.append('status', status);
+        fd.append('comments', comment);
+        if (!pdfFile) {
+            toast.error('Please upload a PDF file');
+            return;
+        }
+        if (pdfFile) {
+            fd.append('pdf', pdfFile);
+        }
+        if (imgFile) {
+            fd.append('img', imgFile);
+        }
+
         router.post(
             `/projects/${project.id}/approvals`,
-            { status, comments: comment },
+            fd,
             {
+                forceFormData: true,
                 onSuccess: () => {
                     toast.success(`Project ${status} successfully`);
                     onClose();
                     setComment('');
+                    setPdfFile(null);
+                    setImgFile(null);
                 },
                 onError: () => {
                     toast.error('Failed to process approval');
@@ -109,6 +133,24 @@ export default function ApprovalModal({ isOpen, onClose, project }: ApprovalProp
                                                     "{record.comments}"
                                                 </p>
                                             )}
+                                            {record.pdf && (
+                                                <a
+                                                    href={`/${record.pdf}`}
+                                                    target="_blank"
+                                                    className="mt-1 text-blue-600 underline text-xs flex items-center gap-1"
+                                                >
+                                                    View PDF
+                                                </a>
+                                            )}
+                                            {record.img && (
+                                                <div className="mt-2">
+                                                    <img
+                                                        src={`/${record.img}`}
+                                                        alt="Approval evidence"
+                                                        className="h-20 w-auto rounded border"
+                                                    />
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 ))
@@ -125,24 +167,45 @@ export default function ApprovalModal({ isOpen, onClose, project }: ApprovalProp
                             onChange={(e) => setComment(e.target.value)}
                         />
                     </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="pdf">Attachment (PDF)</Label>
+                            <Input
+                                id="pdf"
+                                type="file"
+                                accept=".pdf"
+                                onChange={(e) => setPdfFile(e.target.files?.[0] || null)}
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="img">Attachment (Image)</Label>
+                            <Input
+                                id="img"
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => setImgFile(e.target.files?.[0] || null)}
+                            />
+                        </div>
+                    </div>
                 </div>
 
                 <DialogFooter className="gap-2 sm:gap-0">
-                    <Button variant="outline" onClick={onClose} disabled={loading}>
+                    <Button variant="outline" onClick={onClose} >
                         Cancel
                     </Button>
                     <div className="flex gap-2">
                         <Button
                             variant="destructive"
                             onClick={() => handleAction('rejected')}
-                            disabled={loading}
+
                         >
                             Reject
                         </Button>
                         <Button
                             className="bg-green-600 hover:bg-green-700"
                             onClick={() => handleAction('approved')}
-                            disabled={loading}
+
                         >
                             Approve
                         </Button>

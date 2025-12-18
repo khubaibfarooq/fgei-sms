@@ -8,39 +8,40 @@ use Spatie\Permission\Models\Role;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use App\Models\FundHead;
 
 class ApprovalStageController extends Controller
 {
     public function index(Request $request)
     {
-        $query = ApprovalStage::with('projectType')->orderBy('project_type_id')->orderBy('stage_order');
+        $query = ApprovalStage::with('fundHead')->orderBy('stage_order');
 
-        if ($request->has('project_type_id') && $request->project_type_id) {
-            $query->where('project_type_id', $request->project_type_id);
+        if ($request->has('fund_head_id') && $request->fund_head_id) {
+            $query->where('fund_head_id', $request->fund_head_id);
         }
 
         $stages = $query->get();
         $users = User::select('id', 'name')->get();
-        $projectTypes = ProjectType::select('id', 'name')->get();
+        $fundHeads = FundHead::select('id', 'name')->get();
 
         return Inertia::render('approval_stages/Index', [
             'stages' => $stages,
             'users' => $users,
-            'projectTypes' => $projectTypes,
+            'fundHeads' => $fundHeads,
             'filters' => [
-                'project_type_id' => $request->project_type_id
+                'fund_head_id' => $request->fund_head_id
             ]
         ]);
     }
 
     public function create()
     {
-        $projectTypes = ProjectType::all();
+        $fundHeads = FundHead::all();
         $roles = Role::all(); 
         $users = User::select('id', 'name')->get(); 
 
         return Inertia::render('approval_stages/Form', [
-            'projectTypes' => $projectTypes,
+            'fundHeads' => $fundHeads,
             'users' => $users,
             'roles' => $roles
         ]);
@@ -50,7 +51,7 @@ class ApprovalStageController extends Controller
     {
         $request->validate([
             'stage_name' => 'required|string|max:255',
-            'project_type_id' => 'required|exists:project_types,id',
+            'fund_head_id' => 'nullable|exists:fund_heads,id',
             'stage_order' => 'required|integer',
             'users_can_approve' => 'nullable|array',
             'is_mandatory' => 'boolean',
@@ -67,12 +68,12 @@ class ApprovalStageController extends Controller
 
     public function edit(ApprovalStage $approvalStage)
     {
-        $projectTypes = ProjectType::all();
+        $fundHeads = FundHead::all();
         $users = User::select('id', 'name')->get();
         
         return Inertia::render('approval_stages/Form', [
             'stage' => $approvalStage,
-            'projectTypes' => $projectTypes,
+            'fundHeads' => $fundHeads,
             'users' => $users
         ]);
     }
@@ -81,7 +82,7 @@ class ApprovalStageController extends Controller
     {
         $request->validate([
              'stage_name' => 'required|string|max:255',
-            'project_type_id' => 'required|exists:project_types,id',
+            'fund_head_id' => 'nullable|exists:fund_heads,id',
             'stage_order' => 'required|integer',
             'users_can_approve' => 'nullable|array',
             'is_mandatory' => 'boolean',

@@ -9,6 +9,7 @@ use App\Models\Milestone;
 use Illuminate\Support\Facades\File;
 use App\Models\ApprovalStage;
 use App\Models\ProjectApproval;
+use App\Models\FundHead;
 
 class ProjectController extends Controller
 {
@@ -52,55 +53,51 @@ $permissions = [
         if(!auth()->user()->can('project-add')){
             abort(403);
         }
-                $projectTypes = ProjectType::pluck('name', 'id')->toArray();
+        $projectTypes = ProjectType::pluck('name', 'id')->toArray();
+        $fundHeads = FundHead::all();
 
-        return Inertia::render('projects/Form', ['project' => null,'projectTypes'=>$projectTypes]);
+        return Inertia::render('projects/Form', [
+            'project' => null,
+            'projectTypes' => $projectTypes,
+            'fundHeads' => $fundHeads
+        ]);
     }
 public function store(Request $request)
 {
     $request->validate([
-        'name'            => 'required|string|max:255',
-        'budget'          => 'required|numeric',
-        'project_type_id' => 'required|exists:project_types,id',
-        // 'status'          => 'required|in:planned,inprogress,completed,waiting',
-        'priority'        => 'nullable|string',
-        'description'     => 'nullable|string',
+        'name'             => 'required|string|max:255',
+        'estimated_amount' => 'required|numeric',
+        'fund_head_id'     => 'nullable|exists:fund_heads,id',
+        'project_type_id'  => 'required|exists:project_types,id',
+        'priority'         => 'nullable|string',
+        'description'      => 'nullable|string',
+        'status'           => 'required|in:waiting,inprogress,completed,draft',
+        'actual_amount'    => 'required_if:status,completed|nullable|numeric',
+        'final_comments'   => 'required_if:status,completed|nullable|string',
 
         'milestones.*.name'           => 'required_with:milestones.*.due_date|string|max:255',
         'milestones.*.description'    => 'nullable|string',
         'milestones.*.due_date'       => 'required_with:milestones.*.name|date',
         'milestones.*.img'            => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+        'milestones.*.pdf'            => 'nullable|mimes:pdf|max:10240',
     ]);
 
     $project = Project::create([
-        'name'            => $request->name,
-        'budget'          => $request->budget,
-        'project_type_id' => $request->project_type_id,
-        'status'          => 'waiting',
-        'priority'        => $request->priority,
-        'description'     => $request->description,
-        'institute_id'    => session('sms_inst_id'),
-        'submitted_by'    => auth()->id(),
-        'overall_status'  => 'waiting',
+        'name'             => $request->name,
+        'estimated_amount' => $request->estimated_amount,
+        'fund_head_id'     => $request->fund_head_id,
+        'project_type_id'  => $request->project_type_id,
+        'status'           => $request->status,
+        'actual_amount'    => $request->actual_amount,
+        'final_comments'   => $request->final_comments,
+        'priority'         => $request->priority,
+        'description'      => $request->description,
+        'institute_id'     => session('sms_inst_id'),
+        'submitted_by'     => auth()->id(),
+        'overall_status'   => 'waiting',
     ]);
 
-    // Initialize Approval Workflow
-    $firstStage = ApprovalStage::where('project_type_id', $request->project_type_id)
-        ->orderBy('stage_order', 'asc')
-        ->first();
-
-    if ($firstStage) {
-        ProjectApproval::create([
-            'project_id' => $project->id,
-            'stage_id' => $firstStage->id,
-            'status' => 'pending',
-        ]);
-
-        $project->update([
-            'current_stage_id' => $firstStage->id,
-            'overall_status' => 'in_progress', // Or keep 'draft' depending on requirements, but 'in_progress' implies it's in the workflow
-        ]);
-    }
+   
 
     if ($request->has('milestones')) {
         foreach ($request->input('milestones', []) as $index => $m) {
@@ -120,6 +117,13 @@ public function store(Request $request)
                 $imageName = time() . '-' . uniqid() . '.' . $file->getClientOriginalExtension();
                 $file->move(public_path('assets/milestones'), $imageName);
                 $payload['img'] = 'milestones/' . $imageName;
+            }
+
+            if ($request->hasFile("milestones.$index.pdf")) {
+                $file = $request->file("milestones.$index.pdf");
+                $pdfName = time() . '-' . uniqid() . '.' . $file->getClientOriginalExtension();
+                $file->move(public_path('assets/milestones/pdfs'), $pdfName);
+                $payload['pdf'] = 'milestones/pdfs/' . $pdfName;
             }
 
             $project->milestones()->create($payload);
@@ -191,16 +195,19 @@ public function store(Request $request)
 //         ->with('success', 'Project saved successfully with milestones.');
 // }
     public function edit(Project $project)
-    {if (!auth()->user()->can('project-edit')) {
-        abort(403, 'You do not have permission to edit a project.');
-    }
-     $projectTypes = ProjectType::pluck('name', 'id')->toArray();
-     $miletones = $project->milestones;
+    {
+        if (!auth()->user()->can('project-edit')) {
+            abort(403, 'You do not have permission to edit a project.');
+        }
+        $projectTypes = ProjectType::pluck('name', 'id')->toArray();
+        $fundHeads = FundHead::all();
+        $milestones = $project->milestones;
         return Inertia::render('projects/Form', [
-            'project' => $project,
-    'projectTypes'=>$projectTypes,
-    'miletones'=>$miletones,
-]);
+            'project'     => $project,
+            'projectTypes'=> $projectTypes,
+            'fundHeads'   => $fundHeads,
+            'milestones'  => $milestones,
+        ]);
     }
   
 
@@ -208,29 +215,36 @@ public function store(Request $request)
 public function update(Request $request, Project $project)
 {
     $request->validate([
-        'name'            => 'required|string|max:255',
-        'budget'          => 'required|numeric|min:0',
-        'project_type_id' => 'required|exists:project_types,id',
-    
-        'priority'        => 'nullable|string',
-        'description'     => 'nullable|string',
+        'name'             => 'required|string|max:255',
+        'estimated_amount' => 'required|numeric|min:0',
+        'fund_head_id'     => 'nullable|exists:fund_heads,id',
+        'project_type_id'  => 'required|exists:project_types,id',
+        'priority'         => 'nullable|string',
+        'description'      => 'nullable|string',
+        'status'           => 'required|in:waiting,inprogress,completed,draft',
+        'actual_amount'    => 'required_if:status,completed|nullable|numeric',
+        'final_comments'   => 'required_if:status,completed|nullable|string',
 
         'milestones.*.id'             => 'nullable|integer|exists:milestones,id,project_id,' . $project->id,
         'milestones.*.name'           => 'required_with:milestones.*.due_date|string|max:255',
         'milestones.*.description'    => 'nullable|string',
         'milestones.*.due_date'       => 'required_with:milestones.*.name|date',
         'milestones.*.img'            => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+        'milestones.*.pdf'            => 'nullable|mimes:pdf|max:10240',
     ]);
 
     // Update main project
     $project->update([
-        'name'            => $request->name,
-        'budget'          => $request->budget,
-        'project_type_id' => $request->project_type_id,
-        
-        'priority'        => $request->priority,
-        'description'     => $request->description,
-        'institute_id'    => session('sms_inst_id'),
+        'name'             => $request->name,
+        'estimated_amount' => $request->estimated_amount,
+        'fund_head_id'     => $request->fund_head_id,
+        'project_type_id'  => $request->project_type_id,
+        'status'           => $request->status,
+        'actual_amount'    => $request->actual_amount,
+        'final_comments'   => $request->final_comments,
+        'priority'         => $request->priority,
+        'description'      => $request->description,
+        'institute_id'     => session('sms_inst_id'),
     ]);
 
     $submittedIds = [];
@@ -272,6 +286,26 @@ public function update(Request $request, Project $project)
                 $imageName = time() . '-' . uniqid() . '.' . $file->getClientOriginalExtension();
                 $file->move(public_path('assets/milestones'), $imageName);
                 $payload['img'] = 'milestones/' . $imageName;
+            }
+
+            // Handle PDF upload
+            if ($request->hasFile("milestones.$index.pdf")) {
+                $file = $request->file("milestones.$index.pdf");
+
+                // Delete old PDF if exists
+                if ($milestoneId) {
+                    $oldMilestone = $project->milestones()->find($milestoneId);
+                    if ($oldMilestone && $oldMilestone->pdf) {
+                        $oldPath = public_path('assets/' . $oldMilestone->pdf);
+                        if (File::exists($oldPath)) {
+                            File::delete($oldPath);
+                        }
+                    }
+                }
+
+                $pdfName = time() . '-' . uniqid() . '.' . $file->getClientOriginalExtension();
+                $file->move(public_path('assets/milestones/pdfs'), $pdfName);
+                $payload['pdf'] = 'milestones/pdfs/' . $pdfName;
             }
 
             if ($milestoneId) {

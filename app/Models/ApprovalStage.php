@@ -11,7 +11,7 @@ class ApprovalStage extends Model
 
     protected $fillable = [
         'stage_name',
-        'project_type_id',
+        'fund_head_id', // Routing for Fund Head stage
         'stage_order',
         'description',
         'is_mandatory',
@@ -28,8 +28,8 @@ class ApprovalStage extends Model
         'is_user_required' => 'boolean',
     ];
 
-    public function projectType()
+    public function fundHead()
     {
-        return $this->belongsTo(ProjectType::class);
+        return $this->belongsTo(FundHead::class);
     }
 }

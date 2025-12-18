@@ -118,26 +118,42 @@ $data['added_by'] = auth()->id();
                 'description'   => 'nullable|string',
                 'completed_date'=> 'nullable|date_format:Y-m-d',
                 'img'           => 'nullable|file',
+                'pdf'           => 'nullable|mimes:pdf|max:10240',
             ]);
        
             $resultImageName = null;
-        if ($request->hasFile('img')) {
-            $resultImage = $request->file('img');
-            $resultImageName = time() . '-' . uniqid() . '.' . $resultImage->getClientOriginalExtension();
+            if ($request->hasFile('img')) {
+                $resultImage = $request->file('img');
+                $resultImageName = time() . '-' . uniqid() . '.' . $resultImage->getClientOriginalExtension();
 
-            $destinationPath = public_path('milestones');
-            if (!file_exists($destinationPath)) {
-                mkdir($destinationPath, 0755, true);
+                $destinationPath = public_path('milestones');
+                if (!file_exists($destinationPath)) {
+                    mkdir($destinationPath, 0755, true);
+                }
+
+                (new ImageManager(new Driver()))->read($resultImage->getPathname())
+                    ->scale(width: 1280)
+                    ->save($destinationPath . '/' . $resultImageName, quality: 60);
+
+                $validated['img'] = 'milestones/' . $resultImageName;
+            } else {
+                unset($validated['img']);
             }
 
-            (new ImageManager(new Driver()))->read($resultImage->getPathname())
-                ->scale(width: 1280)
-                ->save($destinationPath . '/' . $resultImageName, quality: 60);
-
-                 $validated['img']='milestones/'.$resultImageName;        } 
-                 else {
-            unset($validated['img']);
-        }
+            if ($request->hasFile('pdf')) {
+                $file = $request->file('pdf');
+                $pdfName = time() . '-' . uniqid() . '.' . $file->getClientOriginalExtension();
+                
+                $destinationPath = public_path('milestones/pdfs');
+                if (!file_exists($destinationPath)) {
+                    mkdir($destinationPath, 0755, true);
+                }
+                
+                $file->move($destinationPath, $pdfName);
+                $validated['pdf'] = 'milestones/pdfs/' . $pdfName;
+            } else {
+                unset($validated['pdf']);
+            }
   
 
             // project_id should probably not be changeable, or if it is, validate it. 

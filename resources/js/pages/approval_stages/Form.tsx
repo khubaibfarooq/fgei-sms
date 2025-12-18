@@ -22,7 +22,7 @@ interface Props {
     stage?: {
         id: number;
         stage_name: string;
-        project_type_id: number;
+        fund_head_id: number | null;
         stage_order: number;
         description: string | null;
         is_mandatory: boolean;
@@ -31,15 +31,15 @@ interface Props {
         level: string;
         is_user_required: boolean;
     };
-    projectTypes: { id: number; name: string }[];
+    fundHeads: { id: number; name: string }[];
     users: { id: number; name: string }[];
 }
 
-export default function ApprovalStageForm({ stage, projectTypes, users }: Props) {
+export default function ApprovalStageForm({ stage, fundHeads, users }: Props) {
     const isEdit = !!stage;
     const [data, setData] = useState({
         stage_name: stage?.stage_name || '',
-        project_type_id: stage?.project_type_id?.toString() || '',
+        fund_head_id: stage?.fund_head_id?.toString() || '',
         stage_order: stage?.stage_order?.toString() || '',
         description: stage?.description || '',
         is_mandatory: stage?.is_mandatory ?? true,
@@ -87,18 +87,19 @@ export default function ApprovalStageForm({ stage, projectTypes, users }: Props)
                             </div>
 
                             <div className="space-y-2">
-                                <Label>Project Type <span className="text-red-500">*</span></Label>
+                                <Label>Fund Head (Categorical)</Label>
                                 <Select
-                                    value={data.project_type_id}
-                                    onValueChange={(val) => setData({ ...data, project_type_id: val })}
+                                    value={data.fund_head_id}
+                                    onValueChange={(val) => setData({ ...data, fund_head_id: val })}
                                 >
                                     <SelectTrigger>
-                                        <SelectValue placeholder="Select Project Type" />
+                                        <SelectValue placeholder="Select Fund Head (Optional)" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {projectTypes.map((pt) => (
-                                            <SelectItem key={pt.id} value={pt.id.toString()}>
-                                                {pt.name}
+                                        <SelectItem value="0">Global (No specific Fund Head)</SelectItem>
+                                        {fundHeads.map((fh) => (
+                                            <SelectItem key={fh.id} value={fh.id.toString()}>
+                                                {fh.name}
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
@@ -123,25 +124,31 @@ export default function ApprovalStageForm({ stage, projectTypes, users }: Props)
                                 />
                             </div>
 
-                            <div className="flex items-center space-x-2">
-                                <Checkbox
-                                    id="mandatory"
-                                    checked={data.is_mandatory}
-                                    onCheckedChange={(checked) => setData({ ...data, is_mandatory: !!checked })}
-                                />
-                                <Label htmlFor="is_user_required">Is User Required?</Label>
-                                <Checkbox
-                                    id="is_user_required"
-                                    checked={data.is_user_required}
-                                    onCheckedChange={(checked) => setData({ ...data, is_user_required: !!checked })}
-                                />
-                                <Label htmlFor="is_user_required">Is User Required?</Label>
-                                <Checkbox
-                                    id="is_last"
-                                    checked={data.is_last}
-                                    onCheckedChange={(checked) => setData({ ...data, is_last: !!checked })}
-                                />
-                                <Label htmlFor="is_last">Is Last Stage?</Label>
+                            <div className="flex items-center space-x-6">
+                                <div className="flex items-center space-x-2">
+                                    <Checkbox
+                                        id="mandatory"
+                                        checked={data.is_mandatory}
+                                        onCheckedChange={(checked) => setData({ ...data, is_mandatory: !!checked })}
+                                    />
+                                    <Label htmlFor="mandatory">Mandatory Stage?</Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                    <Checkbox
+                                        id="is_user_required"
+                                        checked={data.is_user_required}
+                                        onCheckedChange={(checked) => setData({ ...data, is_user_required: !!checked })}
+                                    />
+                                    <Label htmlFor="is_user_required">User Selection Req?</Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                    <Checkbox
+                                        id="is_last"
+                                        checked={data.is_last}
+                                        onCheckedChange={(checked) => setData({ ...data, is_last: !!checked })}
+                                    />
+                                    <Label htmlFor="is_last">Is Last Stage?</Label>
+                                </div>
                             </div>
 
                             <div className="space-y-2">
