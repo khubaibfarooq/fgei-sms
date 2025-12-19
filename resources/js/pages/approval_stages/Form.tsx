@@ -30,6 +30,7 @@ interface Props {
         is_last: boolean;
         level: string;
         is_user_required: boolean;
+        change_to_in_progress: boolean;
     };
     fundHeads: { id: number; name: string }[];
     users: { id: number; name: string }[];
@@ -47,6 +48,7 @@ export default function ApprovalStageForm({ stage, fundHeads, users }: Props) {
         is_last: stage?.is_last ?? false,
         level: stage?.level || '',
         is_user_required: stage?.is_user_required ?? false,
+        change_to_in_progress: stage?.change_to_in_progress ?? false,
     });
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -148,6 +150,14 @@ export default function ApprovalStageForm({ stage, fundHeads, users }: Props) {
                                         onCheckedChange={(checked) => setData({ ...data, is_last: !!checked })}
                                     />
                                     <Label htmlFor="is_last">Is Last Stage?</Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                    <Checkbox
+                                        id="change_to_in_progress"
+                                        checked={data.change_to_in_progress}
+                                        onCheckedChange={(checked) => setData({ ...data, change_to_in_progress: !!checked })}
+                                    />
+                                    <Label htmlFor="change_to_in_progress">Change to In Progress?</Label>
                                 </div>
                             </div>
 

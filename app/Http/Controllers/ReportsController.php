@@ -981,7 +981,7 @@ $regions = Institute::select('region_id as id', 'name')->where('type', 'Regional
         // -----------------------------------------------------------------
         // Fund Heads (always available)
         // -----------------------------------------------------------------
-        $fundHeads = FundHead::select('id', 'name')->get();
+        $fundHeads = FundHead::select('id', 'name')->where('type', 'regional')->get();
 
         return Inertia::render('Reports/Projects', [
             'institutes'    => $institutes,

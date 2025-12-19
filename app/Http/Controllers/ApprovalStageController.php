@@ -59,6 +59,7 @@ class ApprovalStageController extends Controller
             'is_last' => 'boolean',
             'level' => 'string',
             'is_user_required' => 'boolean',
+            'change_to_in_progress' => 'boolean',
         ]);
 
         ApprovalStage::create($request->all());
@@ -90,6 +91,7 @@ class ApprovalStageController extends Controller
             'is_last' => 'boolean',
             'level' => 'string',
             'is_user_required' => 'boolean',
+            'change_to_in_progress' => 'boolean',
         ]);
 
         $approvalStage->update($request->all());

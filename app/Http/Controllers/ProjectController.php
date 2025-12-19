@@ -54,25 +54,22 @@ $permissions = [
             abort(403);
         }
         $projectTypes = ProjectType::pluck('name', 'id')->toArray();
-        $fundHeads = FundHead::all();
 
         return Inertia::render('projects/Form', [
             'project' => null,
             'projectTypes' => $projectTypes,
-            'fundHeads' => $fundHeads
         ]);
     }
 public function store(Request $request)
 {
     $request->validate([
         'name'             => 'required|string|max:255',
-        'estimated_amount' => 'required|numeric',
-        'fund_head_id'     => 'nullable|exists:fund_heads,id',
+        'estimated_cost'   => 'required|numeric',
         'project_type_id'  => 'required|exists:project_types,id',
         'priority'         => 'nullable|string',
         'description'      => 'nullable|string',
-        'status'           => 'required|in:waiting,inprogress,completed,draft',
-        'actual_amount'    => 'required_if:status,completed|nullable|numeric',
+        'actual_cost'      => 'required_if:status,completed|nullable|numeric',
+
         'final_comments'   => 'required_if:status,completed|nullable|string',
 
         'milestones.*.name'           => 'required_with:milestones.*.due_date|string|max:255',
@@ -84,11 +81,11 @@ public function store(Request $request)
 
     $project = Project::create([
         'name'             => $request->name,
-        'estimated_amount' => $request->estimated_amount,
+        'estimated_cost'   => $request->estimated_cost,
         'fund_head_id'     => $request->fund_head_id,
         'project_type_id'  => $request->project_type_id,
-        'status'           => $request->status,
-        'actual_amount'    => $request->actual_amount,
+        'status'           => 'waiting',
+        'actual_cost'      => $request->actual_cost,
         'final_comments'   => $request->final_comments,
         'priority'         => $request->priority,
         'description'      => $request->description,
@@ -200,12 +197,11 @@ public function store(Request $request)
             abort(403, 'You do not have permission to edit a project.');
         }
         $projectTypes = ProjectType::pluck('name', 'id')->toArray();
-        $fundHeads = FundHead::all();
         $milestones = $project->milestones;
         return Inertia::render('projects/Form', [
             'project'     => $project,
             'projectTypes'=> $projectTypes,
-            'fundHeads'   => $fundHeads,
+    
             'milestones'  => $milestones,
         ]);
     }
@@ -216,13 +212,11 @@ public function update(Request $request, Project $project)
 {
     $request->validate([
         'name'             => 'required|string|max:255',
-        'estimated_amount' => 'required|numeric|min:0',
-        'fund_head_id'     => 'nullable|exists:fund_heads,id',
-        'project_type_id'  => 'required|exists:project_types,id',
+        'estimated_cost'   => 'required|numeric|min:0',        'project_type_id'  => 'required|exists:project_types,id',
         'priority'         => 'nullable|string',
         'description'      => 'nullable|string',
-        'status'           => 'required|in:waiting,inprogress,completed,draft',
-        'actual_amount'    => 'required_if:status,completed|nullable|numeric',
+        'actual_cost'      => 'required_if:status,completed|nullable|numeric',
+
         'final_comments'   => 'required_if:status,completed|nullable|string',
 
         'milestones.*.id'             => 'nullable|integer|exists:milestones,id,project_id,' . $project->id,
@@ -236,11 +230,10 @@ public function update(Request $request, Project $project)
     // Update main project
     $project->update([
         'name'             => $request->name,
-        'estimated_amount' => $request->estimated_amount,
-        'fund_head_id'     => $request->fund_head_id,
+        'estimated_cost'   => $request->estimated_cost,
         'project_type_id'  => $request->project_type_id,
-        'status'           => $request->status,
-        'actual_amount'    => $request->actual_amount,
+        'actual_cost'      => $request->actual_cost,
+
         'final_comments'   => $request->final_comments,
         'priority'         => $request->priority,
         'description'      => $request->description,

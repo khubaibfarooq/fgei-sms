@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+
 import {
     Dialog,
     DialogContent,
@@ -20,7 +21,9 @@ interface ApprovalProps {
     isOpen: boolean;
     onClose: () => void;
     project: { id: number; name: string; current_stage_id?: number; overall_status: string } | null;
+    onSuccess?: () => void;
 }
+
 
 interface ApprovalHistory {
     id: number;
@@ -33,12 +36,25 @@ interface ApprovalHistory {
     img: string | null;
 }
 
-export default function ApprovalModal({ isOpen, onClose, project }: ApprovalProps) {
+export default function ApprovalModal({ isOpen, onClose, project, onSuccess }: ApprovalProps) {
+
     const [comment, setComment] = useState('');
     const [pdfFile, setPdfFile] = useState<File | null>(null);
     const [imgFile, setImgFile] = useState<File | null>(null);
     const [history, setHistory] = useState<ApprovalHistory[]>([]);
     const [loading, setLoading] = useState(false);
+    const historyEndRef = useRef<HTMLDivElement>(null);
+
+    const scrollToBottom = () => {
+        historyEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    };
+
+    useEffect(() => {
+        if (history.length > 0) {
+            scrollToBottom();
+        }
+    }, [history]);
+
 
     useEffect(() => {
         if (isOpen && project) {
@@ -82,7 +98,9 @@ export default function ApprovalModal({ isOpen, onClose, project }: ApprovalProp
                 forceFormData: true,
                 onSuccess: () => {
                     toast.success(`Project ${status} successfully`);
+                    if (onSuccess) onSuccess();
                     onClose();
+
                     setComment('');
                     setPdfFile(null);
                     setImgFile(null);
@@ -155,8 +173,10 @@ export default function ApprovalModal({ isOpen, onClose, project }: ApprovalProp
                                     </div>
                                 ))
                             )}
+                            <div ref={historyEndRef} />
                         </div>
                     </div>
+
 
                     <div className="space-y-2">
                         <Label htmlFor="comments">Comments</Label>

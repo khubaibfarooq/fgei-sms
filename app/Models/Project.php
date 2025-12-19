@@ -13,8 +13,8 @@ class Project extends Model
 
     protected $fillable = [
         'name', 
-        'estimated_amount', // Renamed from budget 
-        'actual_amount',
+        'estimated_cost', // Renamed from budget 
+        'actual_cost',
         'final_comments',
         'institute_id',
         'fund_head_id',

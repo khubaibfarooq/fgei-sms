@@ -1,0 +1,30 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::table('projects', function (Blueprint $table) {
+            $table->renameColumn('estimated_amount', 'estimated_cost');
+            $table->renameColumn('actual_amount', 'actual_cost');
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::table('projects', function (Blueprint $table) {
+            $table->renameColumn('estimated_cost', 'estimated_amount');
+            $table->renameColumn('actual_cost', 'actual_amount');
+        });
+    }
+};

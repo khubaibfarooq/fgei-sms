@@ -35,12 +35,11 @@ interface ProjectFormProps {
   project?: {
     id?: number;
     name: string;
-    estimated_amount: number;
-    actual_amount: number | null;
+    estimated_cost: number;
+    actual_cost: number | null;
+
     final_comments: string | null;
-    fund_head_id: number | null;
     project_type_id: number | null;
-    status: string;
     description: string | null;
     priority: string | null;
     milestones?: Array<{
@@ -53,19 +52,17 @@ interface ProjectFormProps {
     }>;
   };
   projectTypes: Record<string, string>;
-  fundHeads: Array<{ id: number; name: string }>;
 }
 
-export default function ProjectForm({ project, projectTypes, fundHeads }: ProjectFormProps) {
+export default function ProjectForm({ project, projectTypes }: ProjectFormProps) {
   const isEdit = !!project?.id;
 
   const [name, setName] = useState(project?.name || '');
-  const [estimatedAmount, setEstimatedAmount] = useState(project?.estimated_amount?.toString() || '');
-  const [actualAmount, setActualAmount] = useState(project?.actual_amount?.toString() || '');
+  const [estimatedCost, setEstimatedCost] = useState(project?.estimated_cost?.toString() || '');
+  const [actualCost, setActualCost] = useState(project?.actual_cost?.toString() || '');
+
   const [finalComments, setFinalComments] = useState(project?.final_comments || '');
-  const [fundHeadId, setFundHeadId] = useState(project?.fund_head_id?.toString() || '');
   const [projectTypeId, setProjectTypeId] = useState((project?.project_type_id || '').toString());
-  const [status, setStatus] = useState(project?.status || 'waiting');
   const [description, setDescription] = useState(project?.description || '');
   const [priority, setPriority] = useState(project?.priority || 'Medium');
 
@@ -129,19 +126,19 @@ export default function ProjectForm({ project, projectTypes, fundHeads }: Projec
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!name.trim() || !estimatedAmount || !projectTypeId) {
+    if (!name.trim() || !estimatedCost || !projectTypeId) {
+
       toast.error('Please fill all required project fields');
       return;
     }
 
     const fd = new FormData();
     fd.append('name', name);
-    fd.append('estimated_amount', estimatedAmount);
-    fd.append('actual_amount', actualAmount);
+    fd.append('estimated_cost', estimatedCost);
+    fd.append('actual_cost', actualCost);
+
     fd.append('final_comments', finalComments);
-    fd.append('fund_head_id', fundHeadId);
     fd.append('project_type_id', projectTypeId);
-    fd.append('status', status);
     fd.append('description', description);
     fd.append('priority', priority);
 
@@ -203,45 +200,9 @@ export default function ProjectForm({ project, projectTypes, fundHeads }: Projec
                   <Input value={name} onChange={e => setName(e.target.value)} required />
                 </div>
                 <div className="space-y-2">
-                  <Label>Estimated Amount <span className="text-red-500">*</span></Label>
-                  <Input type="number" value={estimatedAmount} onChange={e => setEstimatedAmount(e.target.value)} required />
+                  <Label>Estimated Cost <span className="text-red-500">*</span></Label>
+                  <Input type="number" value={estimatedCost} onChange={e => setEstimatedCost(e.target.value)} required />
                 </div>
-                <div className="space-y-2">
-                  <Label>Fund Head (Categorical) <span className="text-red-500">*</span></Label>
-                  <Select value={fundHeadId} onValueChange={setFundHeadId}>
-                    <SelectTrigger><SelectValue placeholder="Select Fund Source" /></SelectTrigger>
-                    <SelectContent>
-                      {fundHeads.map(fh => (
-                        <SelectItem key={fh.id} value={fh.id.toString()}>{fh.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Status</Label>
-                  <Select value={status} onValueChange={setStatus}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="draft">Draft</SelectItem>
-                      <SelectItem value="waiting">Waiting for Approval</SelectItem>
-                      <SelectItem value="inprogress">In Progress</SelectItem>
-                      <SelectItem value="completed">Completed</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {status === 'completed' && (
-                  <>
-                    <div className="space-y-2">
-                      <Label>Actual Amount <span className="text-red-500">*</span></Label>
-                      <Input type="number" value={actualAmount} onChange={e => setActualAmount(e.target.value)} required />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Final Comments <span className="text-red-500">*</span></Label>
-                      <Input value={finalComments} onChange={e => setFinalComments(e.target.value)} required />
-                    </div>
-                  </>
-                )}
 
                 <div className="space-y-2">
                   <Label>Project Type <span className="text-red-500">*</span></Label>

@@ -18,7 +18,8 @@ class ApprovalStage extends Model
         'users_can_approve',
         'is_last',
         'level',
-        'is_user_required'
+        'is_user_required',
+        'change_to_in_progress'
     ];
 
     protected $casts = [
@@ -26,6 +27,7 @@ class ApprovalStage extends Model
         'users_can_approve' => 'array',
         'is_last' => 'boolean',
         'is_user_required' => 'boolean',
+        'change_to_in_progress' => 'boolean',
     ];
 
     public function fundHead()

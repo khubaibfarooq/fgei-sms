@@ -33,12 +33,15 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import ApprovalModal from './ApprovalModal';
+
 
 interface Project {
   id: number;
   name: string;
-  estimated_amount: number;
-  actual_amount: number;
+  estimated_cost: number;
+  actual_cost: number;
+
   status: string;
   overall_status: string;
   priority: string;
@@ -50,8 +53,10 @@ interface Project {
   current_stage_id?: number;
   current_stage?: {
     stage_name: string;
+    level?: string;
   };
 }
+
 
 interface ApprovalHistory {
   id: number;
@@ -106,6 +111,15 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
   const [approvalHistory, setApprovalHistory] = useState<ApprovalHistory[]>([]);
   const [projectMilestones, setProjectMilestones] = useState<Milestone[]>([]);
   const [loadingPanelData, setLoadingPanelData] = useState(false);
+
+  // Approval Modal State
+  const [approvalModalOpen, setApprovalModalOpen] = useState(false);
+  const [selectedProjectForApproval, setSelectedProjectForApproval] = useState<Project | null>(null);
+
+  const canShowInstitutionalApprove = (project: Project) => {
+    return project.current_stage?.level?.toLowerCase() === 'institutional' && project.overall_status !== 'approved';
+  };
+
 
   // Milestone Edit State
   const [editingMilestone, setEditingMilestone] = useState<Milestone | null>(null);
@@ -282,6 +296,9 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
                   </option><option value="planned">
                     Planned
                   </option>
+                  <option value="waiting">
+                    Waiting
+                  </option>
                 </select>
               </div>
 
@@ -290,10 +307,13 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
                   <thead className="sticky top-0 z-10">
                     <tr className="bg-primary dark:bg-gray-800 text-center" >
                       <th className="border p-2 text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Name</th>
-                      <th className="border p-2 text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Estimated Amount</th>
-                      <th className="border p-2 text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Actual Amount</th>
+                      <th className="border p-2 text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Estimated Cost</th>
+                      <th className="border p-2 text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Actual Cost</th>
+
                       <th className="border p-2 text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Priority</th>
-                      <th className="border p-2 text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Status</th>
+
+                      <th className="border p-2 text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Overall Status</th>
+                      <th className="border p-2 text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Approval Status</th>
                       <th className="border p-2 text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Current Stage</th>
                       <th className="border p-2 text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Action</th>
                     </tr>
@@ -315,17 +335,20 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
                             {project.name}
                           </td>
                           <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
-                            {project.estimated_amount}
+                            {project.estimated_cost}
                           </td>
                           <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
-                            {project.actual_amount || '-'}
+                            {project.actual_cost || '-'}
                           </td>
+
                           <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
                             {project.priority || '-'}
                           </td>
                           <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
+                            {project.status}
+                          </td>
+                          <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
                             {project.overall_status}
-                            <span className="text-xs text-muted-foreground ml-1">({project.status})</span>
                           </td>
                           <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
                             {/* Pending Stage Logic Placeholder */}
@@ -366,7 +389,24 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
                               </AlertDialog>
                             }
 
+                            {canShowInstitutionalApprove(project) && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                title="View/Approve"
+                                className="text-blue-600 hover:text-blue-700"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedProjectForApproval(project);
+                                  setApprovalModalOpen(true);
+                                }}
+                              >
+                                <ClipboardCheck className="h-4 w-4" />
+                              </Button>
+                            )}
+
                           </td>
+
                         </tr>
 
                       ))
@@ -679,6 +719,16 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ApprovalModal
+        isOpen={approvalModalOpen}
+        onClose={() => setApprovalModalOpen(false)}
+        project={selectedProjectForApproval as any}
+        onSuccess={() => {
+          router.reload({ only: ['projects'] });
+        }}
+      />
     </AppLayout>
+
   );
 }

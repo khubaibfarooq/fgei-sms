@@ -73,9 +73,15 @@ class ProjectApprovalController extends Controller
             if ($request->status === 'approved') {
                 if ($currentStage->is_last) {
                     $project->update([
-                        'overall_status' => 'approved' 
+                        'overall_status' => 'approved',
+                        'status' => 'completed'
                     ]);
                 } else {
+                    if($currentStage->change_to_in_progress){
+                        $project->update([
+                            'status' => 'in_progress',
+                        ]);
+                    }
                     // Find next stage (GLOBAL sequence)
                     $nextStage = ApprovalStage::where('stage_order', '>', $currentStage->stage_order)
                         ->orderBy('stage_order')
@@ -113,7 +119,7 @@ class ProjectApprovalController extends Controller
 
     public function history(Project $project)
     {
-        $history = $project->approvals()->with('stage', 'approver')->orderBy('action_date', 'desc')->get();
+        $history = $project->approvals()->with('stage', 'approver')->orderBy('id', 'asc')->get();
         return response()->json($history);
     }
     public function selectHead(Request $request, Project $project)

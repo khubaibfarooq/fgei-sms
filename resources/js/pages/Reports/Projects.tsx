@@ -37,8 +37,9 @@ const breadcrumbs: BreadcrumbItem[] = [
 interface ProjectProp {
   id: number;
   name: string;
-  estimated_amount: string | number;
-  actual_amount: string | number;
+  estimated_cost: string | number;
+  actual_cost: string | number;
+
   status: string;
   overall_status: string;
   priority: string;
@@ -143,6 +144,20 @@ export default function Projects({ projects: initialProjects, institutes, region
   const [status, setStatus] = useState(filters.status || '');
   const [projects, setProjects] = useState(initialProjects);
   const [filteredInstitutes, setFilteredInstitutes] = useState<Item[]>(institutes || []);
+
+  useEffect(() => {
+    setProjects(initialProjects);
+  }, [initialProjects]);
+
+  useEffect(() => {
+    if (selectedPanelProject) {
+      const updated = projects.data.find((p: ProjectProp) => p.id === selectedPanelProject.id);
+      if (updated) setSelectedPanelProject(updated);
+    }
+  }, [projects]);
+
+
+
   const [region, setRegion] = useState(filters.region_id || '');
   const { auth } = usePage<any>().props;
   const user = auth.user;
@@ -257,7 +272,8 @@ export default function Projects({ projects: initialProjects, institutes, region
 
     worksheet.columns = [
       { header: 'Name', key: 'name', width: 30 },
-      { header: 'Budget', key: 'budget', width: 15 },
+      { header: 'Cost', key: 'cost', width: 15 },
+
       { header: 'Status', key: 'status', width: 15 },
       { header: 'Project Type', key: 'project_type', width: 25 },
       { header: 'Institute', key: 'institute', width: 30 },
@@ -267,8 +283,9 @@ export default function Projects({ projects: initialProjects, institutes, region
     projects.data.forEach((p) => {
       worksheet.addRow({
         name: p.name,
-        estimated_amount: p.estimated_amount,
-        actual_amount: p.actual_amount,
+        estimated_cost: p.estimated_cost,
+        actual_cost: p.actual_cost,
+
         status: p.status,
         project_type: p.projecttype?.name || 'N/A',
         institute: p.institute?.name || 'N/A',
@@ -287,11 +304,12 @@ export default function Projects({ projects: initialProjects, institutes, region
     doc.setFontSize(16);
     doc.text('Projects Report', 14, 15);
 
-    const headers = ['Name', 'Estimated Amount', 'Actual Amount', 'Status', 'Project Type', 'Institute', 'Region'];
+    const headers = ['Name', 'Estimated Cost', 'Actual Cost', 'Status', 'Project Type', 'Institute', 'Region'];
     const rows = projects.data.map((p) => [
       p.name,
-      p.estimated_amount,
-      p.actual_amount,
+      p.estimated_cost,
+      p.actual_cost,
+
       p.status,
       p.projecttype?.name || 'N/A',
       p.institute?.name || 'N/A',
@@ -416,6 +434,7 @@ export default function Projects({ projects: initialProjects, institutes, region
                           <SelectItem value="planned">Planned</SelectItem>
                           <SelectItem value="inprogress">In Progress</SelectItem>
                           <SelectItem value="completed">Completed</SelectItem>
+                          <SelectItem value="waiting">Waiting</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -442,9 +461,11 @@ export default function Projects({ projects: initialProjects, institutes, region
                     <thead className="sticky top-0 z-10">
                       <tr className="bg-primary text-white text-center">
                         <th className="border p-2 font-medium">Name</th>
-                        <th className="border p-2 font-medium">Estimated Amount</th>
-                        <th className="border p-2 font-medium">Actual Amount</th>
-                        <th className="border p-2 font-medium">Status</th>
+                        <th className="border p-2 font-medium">Estimated Cost</th>
+                        <th className="border p-2 font-medium">Actual Cost</th>
+                        <th className="border p-2 font-medium">Overall Status</th>
+                        <th className="border p-2 font-medium">Approval Status</th>
+
                         <th className="border p-2 font-medium">Type</th>
                         <th className="border p-2 font-medium">Institute</th>
                         <th className="border p-2 font-medium">Action</th>
@@ -465,14 +486,23 @@ export default function Projects({ projects: initialProjects, institutes, region
                             onClick={() => setSelectedPanelProject(project)}
                           >
                             <td className="border p-2 font-medium">{project.name}</td>
-                            <td className="border p-2 text-right">{project.estimated_amount}</td>
-                            <td className="border p-2 text-right">{project.actual_amount}</td>
+                            <td className="border p-2 text-right">{project.estimated_cost}</td>
+                            <td className="border p-2 text-right">{project.actual_cost}</td>
+
                             <td className="border p-2 text-center">
                               <span className={`px-2 py-1 rounded-full text-xs font-medium ${project.status === 'completed' ? 'bg-green-100 text-green-800' :
                                 project.status === 'inprogress' ? 'bg-yellow-100 text-yellow-800' :
                                   'bg-blue-100 text-blue-800'
                                 }`}>
                                 {project.status.charAt(0).toUpperCase() + project.status.slice(1)}
+                              </span>
+                            </td>
+                            <td className="border p-2 text-center">
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${project.overall_status === 'completed' ? 'bg-green-100 text-green-800' :
+                                project.overall_status === 'inprogress' ? 'bg-yellow-100 text-yellow-800' :
+                                  'bg-blue-100 text-blue-800'
+                                }`}>
+                                {project.overall_status.charAt(0).toUpperCase() + project.overall_status.slice(1)}
                               </span>
                             </td>
                             <td className="border p-2 text-center">{project.projecttype?.name || '-'}</td>
@@ -710,15 +740,18 @@ export default function Projects({ projects: initialProjects, institutes, region
           isOpen={approvalModalOpen}
           onClose={() => setApprovalModalOpen(false)}
           project={selectedProject as any}
+          onSuccess={() => {
+            debouncedApplyFilters();
+          }}
         />
+
         <FundHeadSelectModal
           isOpen={fundHeadModalOpen}
           onClose={() => setFundHeadModalOpen(false)}
           project={selectedProjectForFundHead}
           fundHeads={fundHeads}
           onSuccess={() => {
-            // Refresh data
-            router.reload();
+            debouncedApplyFilters();
           }}
         />
         {
