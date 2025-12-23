@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use App\Models\Project;
 use App\Models\ProjectApproval;
+use App\Models\Fund;
 
 class ProjectApprovalController extends Controller
 {
@@ -73,13 +74,14 @@ class ProjectApprovalController extends Controller
             if ($request->status === 'approved') {
                 if ($currentStage->is_last) {
                     $project->update([
-                        'overall_status' => 'approved',
+                        
                         'status' => 'completed'
                     ]);
                 } else {
                     if($currentStage->change_to_in_progress){
                         $project->update([
-                            'status' => 'in_progress',
+                            'overall_status' => 'approved',
+                            'status' => 'inprogress',
                         ]);
                     }
                     // Find next stage (GLOBAL sequence)
@@ -153,5 +155,40 @@ class ProjectApprovalController extends Controller
         });
 
         return redirect()->back()->with('success', 'Fund head selected and approval workflow initialized.');
+    }
+
+    public function updateActualCost(Request $request, Project $project)
+    {
+        $request->validate([
+            'actual_cost' => 'required|numeric|min:0',
+        ]);
+
+        $currentStage = $project->currentStage;
+        if (!$currentStage || !$currentStage->can_change_cost) {
+            return redirect()->back()->with('error', 'You are not allowed to update the cost at this stage.');
+        }
+
+        DB::transaction(function () use ($request, $project) {
+            $project->update([
+                'actual_cost' => $request->actual_cost,
+            ]);
+
+            // 2. Transaction for the Region (20% of actual cost)
+            if ($project->institute && $project->institute->region_id) {
+                Fund::create([
+                    'fund_head_id' => $project->fund_head_id,
+                    'institute_id' => $project->institute->region_id,
+                    'amount'       => $project->actual_cost * 0.20,
+                    'added_by'     => auth()->id(),
+                    'added_date'   => now(),
+                    'status'       => 'pending',
+                    'type'         => 'out',
+                    'description'  => 'Region share (20%) for project: ' . $project->name,
+                    'trans_type'   => 'project',
+                    'tid'          => $project->id,
+                ]);
+            }
+        });
+        return redirect()->back()->with('success', 'Actual cost updated successfully.');
     }
 }

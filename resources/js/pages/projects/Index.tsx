@@ -54,6 +54,7 @@ interface Project {
   current_stage?: {
     stage_name: string;
     level?: string;
+    can_change_cost?: boolean;
   };
 }
 
@@ -115,6 +116,14 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
   // Approval Modal State
   const [approvalModalOpen, setApprovalModalOpen] = useState(false);
   const [selectedProjectForApproval, setSelectedProjectForApproval] = useState<Project | null>(null);
+
+  // Actual Cost Modal State
+  const [costModalOpen, setCostModalOpen] = useState(false);
+  const [selectedProjectForCost, setSelectedProjectForCost] = useState<Project | null>(null);
+  const [updatingCost, setUpdatingCost] = useState(false);
+  const [actualCostForm, setActualCostForm] = useState({
+    actual_cost: '',
+  });
 
   const canShowInstitutionalApprove = (project: Project) => {
     return project.current_stage?.level?.toLowerCase() === 'institutional' && project.overall_status !== 'approved';
@@ -248,6 +257,30 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
     }
   }, [selectedPanelProject]);
 
+  const handleCostUpdate = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedProjectForCost) return;
+    setUpdatingCost(true);
+
+    router.post(`/projects/${selectedProjectForCost.id}/update-cost`, actual_cost_form_data(), {
+      onSuccess: () => {
+        toast.success("Actual cost updated successfully");
+        setCostModalOpen(false);
+        setUpdatingCost(false);
+      },
+      onError: (errors) => {
+        toast.error("Failed to update cost");
+        setUpdatingCost(false);
+      }
+    });
+  };
+
+  const actual_cost_form_data = () => {
+    return {
+      actual_cost: actualCostForm.actual_cost,
+    };
+  };
+
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Project Management" />
@@ -337,8 +370,26 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
                           <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
                             {project.estimated_cost}
                           </td>
-                          <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
-                            {project.actual_cost || '-'}
+                          <td className="border text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
+                            <div className="flex items-center justify-center gap-2">
+                              {project.actual_cost || '-'}
+                              {project.current_stage?.can_change_cost && (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-6 w-6 text-blue-600 hover:text-blue-700"
+                                  title="Add/Update Actual Cost"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedProjectForCost(project);
+                                    setActualCostForm({ actual_cost: (project.actual_cost || '').toString() });
+                                    setCostModalOpen(true);
+                                  }}
+                                >
+                                  <Plus className="h-3 w-3" />
+                                </Button>
+                              )}
+                            </div>
                           </td>
 
                           <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
@@ -728,6 +779,40 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
           router.reload({ only: ['projects'] });
         }}
       />
+
+      <Dialog open={costModalOpen} onOpenChange={setCostModalOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Update Actual Cost</DialogTitle>
+            <DialogDescription>
+              Enter the actual cost for <strong>{selectedProjectForCost?.name}</strong>.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleCostUpdate}>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="actual_cost" className="text-right">
+                  Cost
+                </Label>
+                <Input
+                  id="actual_cost"
+                  type="number"
+                  step="0.01"
+                  className="col-span-3"
+                  value={actualCostForm.actual_cost}
+                  onChange={(e) => setActualCostForm({ actual_cost: e.target.value })}
+                  required
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="submit" disabled={updatingCost}>
+                {updatingCost ? 'Updating...' : 'Save changes'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </AppLayout>
 
   );

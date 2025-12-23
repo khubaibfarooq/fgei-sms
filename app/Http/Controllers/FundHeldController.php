@@ -94,7 +94,10 @@ $balance=$data['balance'];
                     'added_date' => now(), // or use your specific date field
                     'status' => 'Approved', // set appropriate status
                     'type' => $data['transaction_type'], // set appropriate type
-                    'description' => $data['description']
+                    'description' => $data['description'],
+                    'trans_type' => 'funds',
+                    'approve_by' => auth()->id(),
+                    'approved_date' => now(),
                 ]
             );
             

@@ -16,6 +16,7 @@ interface ApprovalStage {
     is_mandatory: boolean;
     level: string;
     is_last: boolean;
+    can_change_cost: boolean;
     users_can_approve: number[] | null;
     fund_head: {
         id: number;
@@ -105,6 +106,7 @@ export default function ApprovalStagesIndex({ stages, users, fundHeads, filters 
                                         <th className="p-3 text-left font-medium">Level</th>
                                         <th className="p-3 text-left font-medium">User Req?</th>
                                         <th className="p-3 text-left font-medium">Last Stage?</th>
+                                        <th className="p-3 text-left font-medium">Change Cost?</th>
                                         <th className="p-3 text-left font-medium">Approvers</th>
                                         <th className="p-3 text-left font-medium">Mandatory</th>
                                         <th className="p-3 text-left font-medium">Actions</th>
@@ -126,6 +128,7 @@ export default function ApprovalStagesIndex({ stages, users, fundHeads, filters 
                                                 <td className="p-3 capitalize">{stage.level}</td>
                                                 <td className="p-3">{stage.is_user_required ? 'Yes' : 'No'}</td>
                                                 <td className="p-3">{stage.is_last ? 'Yes' : 'No'}</td>
+                                                <td className="p-3">{stage.can_change_cost ? 'Yes' : 'No'}</td>
                                                 <td className="p-3 max-w-xs truncate" title={getUserNames(stage.users_can_approve)}>
                                                     {getUserNames(stage.users_can_approve)}
                                                 </td>
