@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\File;
 use App\Models\ApprovalStage;
 use App\Models\ProjectApproval;
 use App\Models\FundHead;
+use App\Models\Fund;
+use App\Models\Institute;
 
 class ProjectController extends Controller
 {
@@ -353,6 +355,69 @@ public function update(Request $request, Project $project)
     public function milestones(Project $project)
     {
         return response()->json($project->milestones()->orderBy('due_date')->get());
-}
+    }
+
+    public function payments(Project $project)
+    {
+        $project->load('currentStage');
+        return response()->json([
+            'payments' => Fund::with('FundHead')
+                ->where('trans_type', 'project')
+                ->where('tid', $project->id)
+                ->orderBy('added_date', 'asc')
+                ->get(),
+            'current_stage' => $project->currentStage
+        ]);
+    }
+
+    public function requestPayment(Project $project)
+    {
+        if (!$project->actual_cost) {
+            return response()->json(['success' => false, 'message' => 'Actual cost not set.'], 400);
+        }
+
+        $existingFunds = Fund::where('trans_type', 'project')
+            ->where('tid', $project->id)
+            ->get();
+
+        $count = $existingFunds->count();
+        $totalPaid = $existingFunds->sum('amount');
+
+        
+
+        $amount = 0;
+        $percentage = 0;
+        if ($count == 1) {
+            $amount = $project->actual_cost * 0.25;
+            $percentage = 25;
+        } elseif ($count == 2) {
+            $amount = $project->actual_cost * 0.30;
+            $percentage = 30;
+        } elseif ($count == 3) {
+            $project->load('currentStage');
+            if ($project->currentStage && $project->currentStage->is_last) {
+                $amount = $project->actual_cost - $totalPaid;
+            } else {
+                return response()->json(['success' => false, 'message' => 'Final payment only allowed at the last stage.'], 400);
+            }
+        } else {
+            return response()->json(['success' => false, 'message' => 'Invalid payment stage.'], 400);
+        }
+     $regionid=Institute::where("region_id",$project->institute->region_id)->where("type","Regional Office")->first()->id;
+        Fund::create([
+            'fund_head_id' => $project->fund_head_id,
+            'institute_id' => $regionid,
+            'amount' => round($amount, 2),
+            'added_by' => auth()->id(),
+            'added_date' => now(),
+            'status' => 'Pending',
+            'type' => 'out',
+            'trans_type' => 'project',
+            'tid' => $project->id,
+            'description' => "Payment request for stage " . ($count + 1) . " (" . $percentage . "% of remaining balance)",
+        ]);
+
+        return response()->json(['success' => true, 'message' => 'Payment request created successfully.']);
+    }
 }
  

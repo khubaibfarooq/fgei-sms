@@ -142,6 +142,8 @@ Route::post('/projects/{project}/update-cost', [ProjectApprovalController::class
 Route::post('/projects/{project}/select-head', [ProjectApprovalController::class, 'selectHead'])->name('projects.select-head');
 Route::get('/projects/{project}/history', [ProjectApprovalController::class, 'history'])->name('projects.approvals.history');
 Route::get('/projects/{project}/milestones', [ProjectController::class, 'milestones'])->name('projects.milestones');
+Route::get('/projects/{project}/payments', [ProjectController::class, 'payments'])->name('projects.payments');
+Route::post('/projects/{project}/request-payment', [ProjectController::class, 'requestPayment'])->name('projects.request-payment');
 Route::resource('milestones', MilestoneController::class);
 
 // approval stages

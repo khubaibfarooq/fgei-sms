@@ -113,6 +113,11 @@ interface Funds {
   fund_head: { id: number; name?: string };
   balance: number;
 }
+interface Transport {
+  id: number;
+  vehicle_no: string;
+  vehicle_type?: { id: number; name?: string };
+}
 interface Shifts {
   id: number;
   name: string;
@@ -130,6 +135,7 @@ interface Props {
   institute?: Institute | null;
   instituteAssets?: InstituteAsset[];
   rooms?: Room[];
+  transports?: Transport[];
   filters?: {
     search: string;
     institute_id?: string;
@@ -155,7 +161,7 @@ const isValidItem = (item: any): item is Item => {
   return isValid;
 };
 
-export default function InstitutionalReportIndex({ institute: initialInstitute = null, institutes: initialInstitutes = [], regions: initialRegions = [], blocks: initialBlocks = [], instituteAssets: initialAssets = [], rooms: initialRooms = [], shifts: initialShifts = [], upgradations: initialUpgradations = [], funds: initialFunds = [], projects: initialProjects = [], filters: initialFilters = { search: '', institute_id: '', region_id: '' } }: Props) {
+export default function InstitutionalReportIndex({ institute: initialInstitute = null, institutes: initialInstitutes = [], regions: initialRegions = [], blocks: initialBlocks = [], instituteAssets: initialAssets = [], rooms: initialRooms = [], shifts: initialShifts = [], upgradations: initialUpgradations = [], funds: initialFunds = [], projects: initialProjects = [], transports: initialTransports = [], filters: initialFilters = { search: '', institute_id: '', region_id: '' } }: Props) {
   const [search, setSearch] = useState(initialFilters.search || '');
   const [institute, setInstitute] = useState(initialFilters.institute_id || '');
   const [fetchedinstitute, setFetchedInstitute] = useState<Institute | null>(initialInstitute);
@@ -177,6 +183,8 @@ export default function InstitutionalReportIndex({ institute: initialInstitute =
   const [funds, setFunds] = useState<Funds[]>(initialFunds);
   const [projects, setProjects] = useState<Project[]>(initialProjects);
   const [projectsOpen, setProjectsOpen] = useState(false);
+  const [transports, setTransports] = useState<Transport[]>(initialTransports);
+  const [transportsOpen, setTransportsOpen] = useState(false);
 
 
   const memoizedInstitutes = useMemo(() => institutes.filter(isValidItem), [institutes]);
@@ -201,6 +209,7 @@ export default function InstitutionalReportIndex({ institute: initialInstitute =
       setFunds(data.funds || []);
       console.log(data.projects);
       setProjects(data.projects || []);
+      setTransports(data.transports || []);
 
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -360,6 +369,18 @@ export default function InstitutionalReportIndex({ institute: initialInstitute =
         inprogress: p.inprogress,
         planned: p.planned,
 
+      });
+    });
+    // Transports Worksheet
+    const transportsSheet = workbook.addWorksheet('Transports');
+    transportsSheet.columns = [
+      { header: 'Vehicle No', key: 'vehicle_no', width: 20 },
+      { header: 'Vehicle Type', key: 'vehicle_type', width: 20 },
+    ];
+    transports.forEach((t) => {
+      transportsSheet.addRow({
+        vehicle_no: t.vehicle_no,
+        vehicle_type: t.vehicle_type?.name || 'N/A',
       });
     });
     const buffer = await workbook.xlsx.writeBuffer();
@@ -606,6 +627,15 @@ export default function InstitutionalReportIndex({ institute: initialInstitute =
         p.planned
 
       ]); addSectionToPDF('Institute Projects', projectsColumns, projectsData);
+    }
+    // Transports Section
+    if (transports.length > 0) {
+      const transportsColumns = ['Vehicle No', 'Vehicle Type'];
+      const transportsData = transports.map(t => [
+        t.vehicle_no,
+        t.vehicle_type?.name || 'N/A'
+      ]);
+      addSectionToPDF('Institute Transports', transportsColumns, transportsData);
     }
 
     // Institute Layout Image
@@ -1047,6 +1077,99 @@ export default function InstitutionalReportIndex({ institute: initialInstitute =
                   </div>
                 ) : (
                   <div className="text-gray-500 dark:text-gray-400 text-sm">No Fund available</div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+        <div className="grid grid-cols-1 my-2  md:grid-cols-2 gap-6">
+          {/* Institute Funds */}
+          <div className="border rounded-lg border-primary/95">
+            <button
+              className="w-full p-4 text-left flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-800"
+              onClick={() => setFundsOpen(!fundsOpen)}
+            >
+              <h3 className="text-lg font-semibold">Institute Funds({funds.length})</h3>
+              <svg
+                className={`w-5 h-5 transform transition-transform ${fundsOpen ? 'rotate-180' : ''}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            {fundsOpen && (
+              <div className="p-4 border-t">
+                {funds.length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <table className="w-full border-collapse rounded-md overflow-hidden shadow-sm border-1">
+                      <thead>
+                        <tr className="bg-[#0b431b] dark:bg-gray-800">
+                          <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Fund Head</th>
+                          <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Balance</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {funds.map((f) => (
+                          <tr key={f.id} className="hover:bg-primary/10  dark:hover:bg-gray-700">
+                            <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{f.fund_head?.name}</td>
+                            <td className="border p-2 text-sm text-gray-900 dark:text-gray-100 font-bold">{f.balance}</td>
+                          </tr>
+                        ))}
+                        <tr>
+                          <td className="border p-2 text-sm text-gray-900 font-bold dark:text-gray-100">Total</td>
+                          <td className="border p-2 text-sm text-gray-900 font-bold dark:text-gray-100">{funds.reduce((total, f) => Number(total) + Number(f.balance), 0)}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="text-gray-500 dark:text-gray-400 text-sm">No Fund available</div>
+                )}
+              </div>
+            )}
+          </div>
+          {/* Institute Transports */}
+          <div className="border rounded-lg border-primary/100">
+            <button
+              className="w-full p-4 text-left flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-800"
+              onClick={() => setTransportsOpen(!transportsOpen)}
+            >
+              <h3 className="text-lg font-semibold">Institute Transports({transports.length})</h3>
+              <svg
+                className={`w-5 h-5 transform transition-transform ${transportsOpen ? 'rotate-180' : ''}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            {transportsOpen && (
+              <div className="p-4 border-t">
+                {transports.length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <table className="w-full border-collapse rounded-md overflow-hidden shadow-sm border-1">
+                      <thead>
+                        <tr className="bg-[#0b431b] dark:bg-gray-800">
+                          <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Vehicle No</th>
+                          <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Vehicle Type</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {transports.map((t) => (
+                          <tr key={t.id} className="hover:bg-primary/10  dark:hover:bg-gray-700">
+                            <td className="border p-2 text-sm text-gray-900 font-bold dark:text-gray-100">{t.vehicle_no}</td>
+                            <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{t.vehicle_type?.name}</td>
+                          </tr>
+                        ))}
+
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="text-gray-500 dark:text-gray-400 text-sm">No Transport available</div>
                 )}
               </div>
             )}

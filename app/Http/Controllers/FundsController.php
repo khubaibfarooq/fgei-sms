@@ -54,7 +54,7 @@ class FundsController extends Controller
         }
 
         // ---- Build transaction query --------------------------------------
-        $query = Fund::with(['institute', 'FundHead', 'user'])
+        $query = Fund::with(['institute', 'FundHead', 'user', 'approver'])
             ->where('institute_id', $institute_id)
             ->where('fund_head_id', $request->id);
   
@@ -92,7 +92,7 @@ class FundsController extends Controller
         $institute_id = session('sms_inst_id');
 
         // Build query for pending transactions
-        $query = Fund::with(['institute', 'FundHead', 'user'])
+        $query = Fund::with(['institute', 'FundHead', 'user', 'approver'])
             ->where('institute_id', $institute_id)
             ->where('status', 'Pending');
 
@@ -276,12 +276,12 @@ class FundsController extends Controller
                 $imgName = time() . '-' . uniqid() . '.' . $file->getClientOriginalExtension();
                 
                 // Create directory if it doesn't exist
-                if (!file_exists(public_path('funds/images'))) {
-                    mkdir(public_path('funds/images'), 0755, true);
+                if (!file_exists(public_path('assets/funds/images'))) {
+                    mkdir(public_path('assets/funds/images'), 0755, true);
                 }
                 
-                $file->move(public_path('funds/images'), $imgName);
-                $imgPath = 'funds/images/' . $imgName;
+                $file->move(public_path('assets/funds/images'), $imgName);
+                $imgPath = 'assets/funds/images/' . $imgName;
             }
  
 

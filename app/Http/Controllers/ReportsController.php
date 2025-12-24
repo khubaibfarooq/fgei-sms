@@ -67,6 +67,7 @@ $regions = Institute::select('region_id as id', 'name')->where('type', 'Regional
    $upgradations=[];
     $funds=[];
     $projects=[];
+    $transports=[];
     if ($request->institute_id && is_numeric($request->institute_id) && $request->institute_id > 0) {
 
                $institute=Institute::find($request->institute_id);
@@ -92,6 +93,7 @@ $regions = Institute::select('region_id as id', 'name')->where('type', 'Regional
        $shifts=Shift::where('institute_id', $request->institute_id)->with('buildingType')->get();
       $upgradations=Upgradation::where('institute_id', $request->institute_id)->get();
     $funds=FundHeld::where('institute_id', $request->institute_id)->with('fundHead')->get();
+    $transports=Transport::where('institute_id', $request->institute_id)->with('vehicleType')->get();
 $projects = ProjectType::whereHas('projects', function($query) use ($request) {
         $query->where('institute_id', $request->institute_id);
     })
@@ -133,6 +135,7 @@ $projects = ProjectType::whereHas('projects', function($query) use ($request) {
         'upgradations' => $upgradations,
         'funds' => $funds,
         'projects' => $projects,
+        'transports' => $transports,
         'filters' => [
             'search' => $request->search ?? '',
             'institute_id' =>$request->institute_id ?? '',
@@ -153,12 +156,14 @@ $projects = ProjectType::whereHas('projects', function($query) use ($request) {
    $upgradations=[];
     $funds=[];
     $projects=[];
+    $transports=[];
     $institute=[];
     if ($request->institute_id && is_numeric($request->institute_id) && $request->institute_id > 0) {
         $institute=Institute::find($request->institute_id);
         $shifts=Shift::where('institute_id', $request->institute_id)->with('buildingType')->get();
       $upgradations=Upgradation::where('institute_id', $request->institute_id)->get();
     $funds=FundHeld::where('institute_id', $request->institute_id)->with('fundHead')->get();
+        $transports=Transport::where('institute_id', $request->institute_id)->with('vehicleType')->get();
         $blocks = Block::where('institute_id', $request->institute_id)->get();
         $blockIds = $blocks->pluck('id')->toArray();
         $rooms = Room::whereIn('block_id', $blockIds)->with('block')->get();
@@ -209,6 +214,7 @@ $projects = ProjectType::whereHas('projects', function($query) use ($request) {
         'upgradations'=>$upgradations,
         'funds'=>$funds,
         'projects'=>$projects,
+        'transports'=>$transports,
        
     ]);
 }

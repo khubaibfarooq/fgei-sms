@@ -35,5 +35,10 @@ class Fund extends Model
     {
         return $this->belongsTo(User::class, 'added_by');
     }
+
+    public function approver(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(User::class, 'approve_by');
+    }
  
 }

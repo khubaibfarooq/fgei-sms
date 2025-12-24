@@ -217,14 +217,14 @@ export default function ApprovalModal({ isOpen, onClose, project, onSuccess }: A
                     <div className="flex gap-2">
                         <Button
                             variant="destructive"
-                            onClick={() => handleAction('rejected')}
+                            onClick={() => handleAction("rejected")}
 
                         >
                             Reject
                         </Button>
                         <Button
                             className="bg-green-600 hover:bg-green-700"
-                            onClick={() => handleAction('approved')}
+                            onClick={() => handleAction("approved")}
 
                         >
                             Approve

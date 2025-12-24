@@ -51,6 +51,11 @@ interface FundTransaction {
     id: number;
     name: string;
   };
+  approver?: {
+    id: number;
+    name: string;
+  } | null;
+  approved_date?: string | null;
 }
 
 interface TransactionDetail {
@@ -343,6 +348,7 @@ export default function FundsTran({ fundheld, fundtrans, filters }: Props) {
                     <th className="border p-3 text-left text-sm font-medium text-white dark:text-gray-200">Description</th>
                     <th className="border p-3 text-center text-sm font-medium text-white dark:text-gray-200">Type</th>
                     <th className="border p-3 text-right text-sm font-medium text-white dark:text-gray-200">Amount</th>
+                    <th className="border p-3 text-left text-sm font-medium text-white dark:text-gray-200">Admin Info</th>
                     <th className="border p-3 text-center text-sm font-medium text-white dark:text-gray-200">Status</th>
                     <th className="border p-3 text-center text-sm font-medium text-white dark:text-gray-200">Actions</th>
                   </tr>
@@ -371,6 +377,27 @@ export default function FundsTran({ fundheld, fundtrans, filters }: Props) {
                             {transaction.type === 'in' ? '+' : '-'}
                             {transaction.amount.toLocaleString()}
                           </span>
+                        </td>
+                        <td className="border p-3 text-sm">
+                          <div className="flex flex-col gap-1">
+                            <div className="flex items-center gap-1 text-xs">
+                              <User className="h-3 w-3 text-muted-foreground" />
+                              <span className="text-muted-foreground">Added:</span>
+                              <span className="font-medium text-gray-700 dark:text-gray-300">{transaction.user.name}</span>
+                            </div>
+                            {transaction.approver && (
+                              <div className="flex items-center gap-1 text-xs">
+                                <Check className="h-3 w-3 text-green-600" />
+                                <span className="text-muted-foreground">Appr:</span>
+                                <span className="font-medium text-gray-700 dark:text-gray-300">{transaction.approver.name}</span>
+                              </div>
+                            )}
+                            {transaction.approved_date && (
+                              <div className="flex items-center gap-1 text-[10px] text-muted-foreground ml-4">
+                                <span>{new Date(transaction.approved_date).toLocaleDateString()}</span>
+                              </div>
+                            )}
+                          </div>
                         </td>
                         <td className="border p-3 text-center">{getStatusBadge(transaction.status)}</td>
                         <td className="border p-3 text-center">

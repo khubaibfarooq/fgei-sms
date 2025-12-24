@@ -2,16 +2,23 @@ import React, { useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { type BreadcrumbItem } from '@/types';
 import {
+    Plus,
     Calendar,
+    ArrowLeft,
+    CheckCircle,
+    XCircle,
     FileText,
-    Check,
+    Eye,
     User,
+    Check,
+    Clock,
     Building,
+    ClipboardCheck,
     Filter,
     Upload,
     X,
@@ -32,8 +39,11 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format } from 'date-fns';
 import axios from 'axios';
+import { ImagePreview } from '@/components/ui/image-preview';
+import { toast } from 'sonner';
 
 // -----------------------------------------------------------------------------
 // Types
@@ -64,11 +74,74 @@ interface FundTransaction {
         id: number;
         name: string;
     };
+    approver?: {
+        id: number;
+        name: string;
+    } | null;
+    approved_date?: string | null;
 }
 
 interface FundHead {
     id: number;
     name: string;
+}
+
+interface Payment {
+    id: number;
+    amount: number;
+    status: string;
+    added_date: string;
+    description: string | null;
+    fund_head?: {
+        name: string;
+    };
+}
+
+interface Milestone {
+    id: number;
+    name: string;
+    description: string | null;
+    due_date: string;
+    status: string;
+    completed_date: string | null;
+    img: string | null;
+    pdf: string | null;
+}
+
+interface ApprovalHistory {
+    id: number;
+    status: string;
+    comments: string;
+    action_date: string;
+    approver: { name: string };
+    stage: { stage_name: string };
+    pdf: string | null;
+    img: string | null;
+}
+
+interface ProjectDetails {
+    project: {
+        id: number;
+        name: string;
+        estimated_cost: number;
+        actual_cost: number | null;
+        status: string;
+        overall_status: string;
+        priority: string;
+        institute: { name: string };
+    };
+    history: ApprovalHistory[];
+    milestones: Milestone[];
+    payments: Payment[];
+}
+
+interface TransactionDetail {
+    id: number;
+    fund_head_name: string;
+    asset_name: string;
+    room_name: string;
+    amount: string;
+    qty: number;
 }
 
 interface Props {
@@ -106,10 +179,82 @@ export default function PendingTrans({ transactions, summary, fundHeads, filters
     const [toDate, setToDate] = useState(filters.to || '');
     const [fundHeadId, setFundHeadId] = useState(filters.fund_head_id || '');
 
-    // Modal state
+    // Modal state for Transactions
+    const [transactionModalOpen, setTransactionModalOpen] = useState(false);
+    const [selectedTxDetail, setSelectedTxDetail] = useState<FundTransaction | null>(null);
+    const [txDetails, setTxDetails] = useState<TransactionDetail | null>(null);
+
+    // Modal state for Projects
+    const [projectModalOpen, setProjectModalOpen] = useState(false);
+    const [projectDetails, setProjectDetails] = useState<ProjectDetails | null>(null);
+
+    const [loadingDetails, setLoadingDetails] = useState(false);
+
+    // Approval Modal state
     const [modalOpen, setModalOpen] = useState(false);
     const [selectedTx, setSelectedTx] = useState<FundTransaction | null>(null);
     const [approvingId, setApprovingId] = useState<number | null>(null);
+
+    const fetchTransactionDetails = async (tx: FundTransaction) => {
+        if (!tx.tid) return;
+        setSelectedTxDetail(tx);
+        setTransactionModalOpen(true);
+        setLoadingDetails(true);
+        try {
+            const { data } = await axios.get(`/transactions/getbytid?tid=${tx.tid}`);
+            setTxDetails(data.transdetails?.[0] || null);
+        } catch (err) {
+            console.error('Failed to load transaction details:', err);
+            toast.error('Failed to load transaction details');
+        } finally {
+            setLoadingDetails(false);
+        }
+    };
+
+    const fetchProjectDetails = async (tx: FundTransaction) => {
+        const projectId = tx.tid;
+        if (!projectId) return;
+
+        setSelectedTxDetail(tx);
+        setProjectModalOpen(true);
+        setLoadingDetails(true);
+        try {
+            const [historyRes, milestonesRes, paymentsRes] = await Promise.all([
+                axios.get(`/projects/${projectId}/history`),
+                axios.get(`/projects/${projectId}/milestones`),
+                axios.get(`/projects/${projectId}/payments`)
+            ]);
+
+            setProjectDetails({
+                project: {
+                    id: projectId,
+                    name: tx.description,
+                    estimated_cost: tx.amount,
+                    actual_cost: null,
+                    status: tx.status,
+                    overall_status: tx.status,
+                    priority: '',
+                    institute: tx.institute
+                },
+                history: historyRes.data,
+                milestones: milestonesRes.data,
+                payments: paymentsRes.data.payments
+            });
+        } catch (err) {
+            console.error('Failed to load project details:', err);
+            toast.error('Failed to load project details');
+        } finally {
+            setLoadingDetails(false);
+        }
+    };
+
+    const openDetails = (tx: FundTransaction) => {
+        if (tx.trans_type === 'project') {
+            fetchProjectDetails(tx);
+        } else {
+            fetchTransactionDetails(tx);
+        }
+    };
 
     // Image upload state
     const [selectedImage, setSelectedImage] = useState<File | null>(null);
@@ -327,6 +472,7 @@ export default function PendingTrans({ transactions, summary, fundHeads, filters
                                         <th className="border p-3 text-left text-sm font-medium text-white dark:text-gray-200">Description</th>
                                         <th className="border p-3 text-center text-sm font-medium text-white dark:text-gray-200">Type</th>
                                         <th className="border p-3 text-right text-sm font-medium text-white dark:text-gray-200">Amount</th>
+                                        <th className="border p-3 text-left text-sm font-medium text-white dark:text-gray-200">Added By</th>
                                         <th className="border p-3 text-center text-sm font-medium text-white dark:text-gray-200">Actions</th>
                                     </tr>
                                 </thead>
@@ -357,16 +503,33 @@ export default function PendingTrans({ transactions, summary, fundHeads, filters
                                                         {transaction.amount.toLocaleString()}
                                                     </span>
                                                 </td>
+                                                <td className="border p-3 text-sm">
+                                                    <div className="flex items-center gap-2">
+                                                        <User className="h-4 w-4 text-muted-foreground" />
+                                                        {transaction.user.name}
+                                                    </div>
+                                                </td>
                                                 <td className="border p-3 text-center">
-                                                    <Button
-                                                        size="sm"
-                                                        variant="default"
-                                                        onClick={() => openApprovalModal(transaction)}
-                                                        className="bg-green-600 hover:bg-green-700"
-                                                    >
-                                                        <Check className="h-4 w-4 mr-1" />
-                                                        Approve
-                                                    </Button>
+                                                    <div className="flex items-center justify-center gap-2">
+                                                        <Button
+                                                            size="sm"
+                                                            variant="outline"
+                                                            onClick={() => openDetails(transaction)}
+                                                            className="text-blue-600 border-blue-600 hover:bg-blue-50"
+                                                        >
+                                                            <Eye className="h-4 w-4 mr-1" />
+                                                            View
+                                                        </Button>
+                                                        <Button
+                                                            size="sm"
+                                                            variant="default"
+                                                            onClick={() => openApprovalModal(transaction)}
+                                                            className="bg-green-600 hover:bg-green-700"
+                                                        >
+                                                            <Check className="h-4 w-4 mr-1" />
+                                                            Approve
+                                                        </Button>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         ))
@@ -512,6 +675,182 @@ export default function PendingTrans({ transactions, summary, fundHeads, filters
                                     Approve Transaction
                                 </>
                             )}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Transaction Detail Modal */}
+            <Dialog open={transactionModalOpen} onOpenChange={setTransactionModalOpen}>
+                <DialogContent className="max-w-md h-[90vh]  overflow-y-auto">
+                    <DialogHeader>
+                        <DialogTitle>Transaction Details</DialogTitle>
+                        <DialogDescription>
+                            Detailed breakdown of the selected transaction
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    {loadingDetails ? (
+                        <div className="flex justify-center py-8">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                        </div>
+                    ) : txDetails ? (
+                        <div className="space-y-4">
+                            <div className="grid grid-cols-2 gap-3 text-sm">
+                                <div className="space-y-1">
+                                    <p className="text-muted-foreground">Fund Head</p>
+                                    <p className="font-medium">{txDetails.fund_head_name}</p>
+                                </div>
+                                <div className="space-y-1">
+                                    <p className="text-muted-foreground">Amount</p>
+                                    <p className="font-medium text-lg">
+                                        {Number(txDetails.amount).toLocaleString()}
+                                    </p>
+                                </div>
+                                {txDetails.asset_name && (
+                                    <div className="space-y-1">
+                                        <p className="text-muted-foreground">Asset</p>
+                                        <p className="font-medium">{txDetails.asset_name}</p>
+                                    </div>
+                                )}
+                                {txDetails.qty > 0 && (
+                                    <div className="space-y-1">
+                                        <p className="text-muted-foreground">Quantity</p>
+                                        <p className="font-medium">{txDetails.qty}</p>
+                                    </div>
+                                )}
+                                {txDetails.room_name && (
+                                    <div className="space-y-1">
+                                        <p className="text-muted-foreground">Room</p>
+                                        <p className="font-medium">{txDetails.room_name}</p>
+                                    </div>
+                                )}
+                            </div>
+
+                            {selectedTxDetail?.img && (
+                                <div className="space-y-2">
+                                    <p className="text-sm text-muted-foreground">Transaction Evidence</p>
+                                    <ImagePreview dataImg={selectedTxDetail.img} size="h-64 w-full" />
+                                </div>
+                            )}
+
+                            <div className="pt-2">
+                                <p className="text-sm text-muted-foreground mb-1">Description</p>
+                                <p className="text-sm p-3 bg-muted rounded-md border">
+                                    {selectedTxDetail?.description || 'No description provided'}
+                                </p>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="text-center py-8 text-muted-foreground">
+                            No additional details found for this transaction.
+                        </div>
+                    )}
+
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setTransactionModalOpen(false)}>
+                            Close
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Project Detail Modal */}
+            <Dialog open={projectModalOpen} onOpenChange={setProjectModalOpen}>
+                <DialogContent className="max-w-3xl h-[90vh] flex flex-col p-0">
+                    <DialogHeader className="p-6 pb-0">
+                        <DialogTitle className="text-xl font-bold flex items-center gap-2">
+                            <Building className="h-5 w-5 text-primary" />
+                            {projectDetails?.project.name}
+                        </DialogTitle>
+                        <DialogDescription>
+                            {projectDetails?.project.institute.name}
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="flex-1 overflow-y-auto px-6 h-full min-h-0">
+                        <Tabs defaultValue="approvals" className="w-full h-full flex flex-col">
+                            <TabsList className="grid w-full grid-cols-3 shrink-0">
+                                <TabsTrigger value="approvals">Approvals</TabsTrigger>
+                                <TabsTrigger value="milestones">Milestones</TabsTrigger>
+                                <TabsTrigger value="payments">Payments</TabsTrigger>
+                            </TabsList>
+
+                            <div className="flex-1 mt-4 pb-6 h-full min-h-0">
+                                <TabsContent value="approvals" className="m-0 space-y-4">
+                                    {loadingDetails ? (
+                                        <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>
+                                    ) : projectDetails?.history.length === 0 ? (
+                                        <div className="text-center py-12 text-muted-foreground border-2 border-dashed rounded-lg">No approval history.</div>
+                                    ) : (
+                                        <div className="space-y-4">
+                                            {projectDetails?.history.map((record) => (
+                                                <Card key={record.id} className="overflow-hidden">
+                                                    <div className="p-4 flex gap-4">
+                                                        <div className="mt-1">
+                                                            {record.status === 'approved' ? <CheckCircle className="h-5 w-5 text-green-500" /> : <XCircle className="h-5 w-5 text-red-500" />}
+                                                        </div>
+                                                        <div className="flex-1 space-y-1">
+                                                            <div className="flex justify-between items-start">
+                                                                <p className="font-semibold">{record.stage?.stage_name || 'Stage'}</p>
+                                                                <Badge variant={record.status === 'approved' ? 'default' : 'destructive'} className="capitalize">{record.status}</Badge>
+                                                            </div>
+                                                            <p className="text-xs text-muted-foreground flex items-center gap-1"><User className="h-3 w-3" /> {record.approver?.name} • <Clock className="h-3 w-3 ml-1" /> {new Date(record.action_date).toLocaleString()}</p>
+                                                            {record.comments && <p className="text-sm bg-muted/50 p-2 rounded mt-2 border italic">"{record.comments}"</p>}
+                                                        </div>
+                                                    </div>
+                                                </Card>
+                                            ))}
+                                        </div>
+                                    )}
+                                </TabsContent>
+
+                                <TabsContent value="milestones" className="m-0 space-y-4">
+                                    {projectDetails?.milestones.length === 0 ? (
+                                        <div className="text-center py-12 text-muted-foreground border-2 border-dashed rounded-lg">No milestones found.</div>
+                                    ) : (
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            {projectDetails?.milestones.map((milestone) => (
+                                                <Card key={milestone.id} className="p-4 space-y-2">
+                                                    <div className="flex justify-between items-start gap-2">
+                                                        <p className="font-semibold text-sm">{milestone.name}</p>
+                                                        <Badge variant={milestone.status === 'completed' ? 'default' : 'outline'} className="text-[10px]">{milestone.status}</Badge>
+                                                    </div>
+                                                    <div className="text-[10px] text-muted-foreground space-y-1">
+                                                        <p className="flex items-center gap-1"><Calendar className="h-3 w-3" /> Due: {new Date(milestone.due_date).toLocaleDateString()}</p>
+                                                        {milestone.completed_date && <p className="flex items-center gap-1 text-green-600"><CheckCircle className="h-3 w-3" /> Done: {new Date(milestone.completed_date).toLocaleDateString()}</p>}
+                                                    </div>
+                                                    {milestone.description && <p className="text-xs text-muted-foreground line-clamp-2">{milestone.description}</p>}
+                                                </Card>
+                                            ))}
+                                        </div>
+                                    )}
+                                </TabsContent>
+
+                                <TabsContent value="payments" className="m-0 space-y-4">
+                                    {projectDetails?.payments.length === 0 ? (
+                                        <div className="text-center py-12 text-muted-foreground border-2 border-dashed rounded-lg">No payments recorded.</div>
+                                    ) : (
+                                        <div className="space-y-3">
+                                            {projectDetails?.payments.map((payment) => (
+                                                <div key={payment.id} className="flex items-center justify-between p-3 border rounded-lg bg-muted/30">
+                                                    <div className="space-y-1">
+                                                        <p className="font-bold">{payment.amount.toLocaleString()}</p>
+                                                        <p className="text-xs text-muted-foreground">{payment.fund_head?.name || 'General Fund'} • {new Date(payment.added_date).toLocaleDateString()}</p>
+                                                    </div>
+                                                    <Badge variant={payment.status === 'Approved' ? 'default' : 'outline'}>{payment.status}</Badge>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </TabsContent>
+                            </div>
+                        </Tabs>
+                    </div>
+
+                    <DialogFooter className="p-6 border-t shrink-0">
+                        <Button variant="outline" onClick={() => setProjectModalOpen(false)}>
+                            Close
                         </Button>
                     </DialogFooter>
                 </DialogContent>

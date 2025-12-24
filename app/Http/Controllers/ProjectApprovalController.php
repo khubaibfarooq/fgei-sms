@@ -92,7 +92,7 @@ class ProjectApprovalController extends Controller
                     if ($nextStage) {
                         $project->update([
                             'current_stage_id' => $nextStage->id,
-                            'overall_status' => 'in_progress'
+                            'overall_status' => 'inprogress'
                         ]);
                         
                         // Create pending approval row for the next stage
@@ -149,7 +149,7 @@ class ProjectApprovalController extends Controller
 
                 $project->update([
                     'current_stage_id' => $firstStage->id,
-                    'overall_status'   => 'in_progress',
+                    'overall_status'   => 'inprogress',
                 ]);
             }
         });

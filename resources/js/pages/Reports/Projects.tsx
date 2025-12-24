@@ -82,6 +82,17 @@ interface Milestone {
   pdf: string | null;
 }
 
+interface Payment {
+  id: number;
+  amount: number;
+  status: string;
+  added_date: string;
+  description: string | null;
+  fund_head?: {
+    name: string;
+  };
+}
+
 interface Props {
   projects: {
     data: ProjectProp[];
@@ -193,6 +204,7 @@ export default function Projects({ projects: initialProjects, institutes, region
   const [selectedPanelProject, setSelectedPanelProject] = useState<ProjectProp | null>(null);
   const [approvalHistory, setApprovalHistory] = useState<ApprovalHistory[]>([]);
   const [projectMilestones, setProjectMilestones] = useState<Milestone[]>([]);
+  const [projectPayments, setProjectPayments] = useState<Payment[]>([]);
   const [loadingPanelData, setLoadingPanelData] = useState(false);
 
   // Memoized dropdown options
@@ -214,12 +226,14 @@ export default function Projects({ projects: initialProjects, institutes, region
       setLoadingPanelData(true);
       const fetchDetails = async () => {
         try {
-          const [historyRes, milestonesRes] = await Promise.all([
+          const [historyRes, milestonesRes, paymentsRes] = await Promise.all([
             axios.get(`/projects/${selectedPanelProject.id}/history`),
-            axios.get(`/projects/${selectedPanelProject.id}/milestones`)
+            axios.get(`/projects/${selectedPanelProject.id}/milestones`),
+            axios.get(`/projects/${selectedPanelProject.id}/payments`)
           ]);
           setApprovalHistory(historyRes.data);
           setProjectMilestones(milestonesRes.data);
+          setProjectPayments(paymentsRes.data.payments);
         } catch (error) {
           console.error("Failed to fetch project details", error);
           toast.error("Failed to load project details.");
@@ -231,6 +245,7 @@ export default function Projects({ projects: initialProjects, institutes, region
     } else {
       setApprovalHistory([]);
       setProjectMilestones([]);
+      setProjectPayments([]);
     }
   }, [selectedPanelProject]);
 
@@ -592,9 +607,10 @@ export default function Projects({ projects: initialProjects, institutes, region
               </div>
 
               <Tabs defaultValue="approvals" className="w-full flex-1 flex flex-col">
-                <TabsList className="grid w-full grid-cols-2">
+                <TabsList className="grid w-full grid-cols-3">
                   <TabsTrigger value="approvals">Approvals</TabsTrigger>
                   <TabsTrigger value="milestones">Milestones</TabsTrigger>
+                  <TabsTrigger value="payments">Payments</TabsTrigger>
                 </TabsList>
 
                 <div className="flex-1 overflow-y-auto mt-4 px-1">
@@ -722,6 +738,47 @@ export default function Projects({ projects: initialProjects, institutes, region
                               {milestone.description && (
                                 <p className="text-muted-foreground text-xs mt-1">
                                   {milestone.description}
+                                </p>
+                              )}
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    )}
+                  </TabsContent>
+
+                  <TabsContent value="payments" className="space-y-4 m-0 h-full">
+                    {loadingPanelData ? (
+                      <div className="flex justify-center py-8 text-muted-foreground">Loading payments...</div>
+                    ) : projectPayments.length === 0 ? (
+                      <div className="text-center py-8 text-muted-foreground border rounded-lg border-dashed">
+                        No payments found.
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {projectPayments.map((payment) => (
+                          <Card key={payment.id}>
+                            <CardHeader className="p-3 pb-1">
+                              <div className="flex justify-between items-start">
+                                <div className="font-semibold text-sm">Amount: {payment.amount}</div>
+                                <Badge variant="outline" className={`capitalize text-xs ${payment.status === 'Approved' ? 'border-green-500 text-green-600 bg-green-50' :
+                                  payment.status === 'Rejected' ? 'border-red-500 text-red-600 bg-red-50' :
+                                    'border-yellow-500 text-yellow-600 bg-yellow-50'
+                                  }`}>
+                                  {payment.status}
+                                </Badge>
+                              </div>
+                            </CardHeader>
+                            <CardContent className="p-3 text-sm space-y-2">
+                              <div className="text-xs text-muted-foreground">
+                                {payment.fund_head?.name || 'General Fund'}
+                              </div>
+                              <div className="text-xs">
+                                {new Date(payment.added_date).toLocaleDateString()}
+                              </div>
+                              {payment.description && (
+                                <p className="text-muted-foreground text-xs italic">
+                                  "{payment.description}"
                                 </p>
                               )}
                             </CardContent>
