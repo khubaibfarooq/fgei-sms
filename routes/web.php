@@ -131,6 +131,8 @@ Route::resource('funds', FundHeldController::class);
 //get funds transactions
 
 Route::get('/fund-trans/{id}', [FundsController::class, 'getFund'])->name('funds.getFund');
+Route::post('/funds/{fund}/approve', [FundsController::class, 'approveFundTransaction'])->name('funds.approve');
+Route::get('/pending-transactions', [FundsController::class, 'pendingTransactions'])->name('pending-transactions');
 // project type 
 Route::resource('project-types', ProjectTypeController::class);
 // project

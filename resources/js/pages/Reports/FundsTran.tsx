@@ -42,6 +42,8 @@ interface FundTransaction {
   created_at: string;
   updated_at: string;
   added_by: number;
+  trans_type: string;
+  img: string;
   tid?: number | null;
   user: {
     id: number;
@@ -348,7 +350,7 @@ export default function FundsTran({ fundheld, fundtrans, filters }: Props) {
                         </td>
                         <td className="border p-3 text-center">{getStatusBadge(transaction.status)}</td>
                         <td className="border p-3 text-center">
-                          {transaction.tid ? (
+                          {transaction.tid && transaction.trans_type === 'transaction' ? (
                             <Button
                               size="sm"
                               variant="ghost"

@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { type BreadcrumbItem } from '@/types';
+import { ImagePreview } from '@/components/ui/image-preview';
 import {
   ArrowLeft,
   Calendar,
@@ -15,6 +16,7 @@ import {
   Eye,
   User,
   Building,
+  Check,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -42,6 +44,8 @@ interface FundTransaction {
   created_at: string;
   updated_at: string;
   added_by: number;
+  trans_type: string;
+  img: string;
   tid?: number | null;
   user: {
     id: number;
@@ -121,6 +125,9 @@ export default function FundsTran({ fundheld, fundtrans, filters }: Props) {
   const [txDetails, setTxDetails] = useState<TransactionDetail | null>(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
 
+  // Approve state
+  const [approvingId, setApprovingId] = useState<number | null>(null);
+
   // Apply filters
   const applyFilters = () => {
     router.get(
@@ -194,6 +201,32 @@ export default function FundsTran({ fundheld, fundtrans, filters }: Props) {
       setTxDetails(null);
     } finally {
       setLoadingDetail(false);
+    }
+  };
+
+  // Handle approve transaction
+  const handleApprove = async (transaction: FundTransaction) => {
+    if (!confirm('Are you sure you want to approve this transaction?')) {
+      return;
+    }
+
+    setApprovingId(transaction.id);
+
+    try {
+      const { data } = await axios.post(`/funds/${transaction.id}/approve`);
+
+      if (data.success) {
+        // Refresh the page to show updated data
+        router.reload();
+      } else {
+        alert(data.message || 'Failed to approve transaction');
+      }
+    } catch (err: any) {
+      console.error('Failed to approve transaction:', err);
+      const errorMessage = err.response?.data?.message || 'An error occurred while approving the transaction';
+      alert(errorMessage);
+    } finally {
+      setApprovingId(null);
     }
   };
 
@@ -331,7 +364,7 @@ export default function FundsTran({ fundheld, fundtrans, filters }: Props) {
                             {new Date(transaction.added_date).toLocaleDateString()}
                           </div>
                         </td>
-                        <td className="border p-3 text-sm">{transaction.description}</td>
+                        <td className="border p-3 text-sm">  <div className='flex flex-row gap-2 align-middle'> <ImagePreview dataImg={transaction.img} size="h-20 w-20" />  <span className='font-bold'>{transaction.description}</span></div></td>
                         <td className="border p-3 text-center">{getTypeBadge(transaction.type)}</td>
                         <td className="border p-3 text-right text-sm font-medium">
                           <span className={transaction.type === 'in' ? 'text-green-600' : 'text-red-600'}>
@@ -341,18 +374,34 @@ export default function FundsTran({ fundheld, fundtrans, filters }: Props) {
                         </td>
                         <td className="border p-3 text-center">{getStatusBadge(transaction.status)}</td>
                         <td className="border p-3 text-center">
-                          {transaction.tid ? (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => openDetailModal(transaction)}
-                              title="View Details"
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                          ) : (
-                            <span className="text-muted-foreground text-xs">—</span>
-                          )}
+                          <div className="flex items-center justify-center gap-2">
+                            {transaction.status === 'Pending' && (
+                              <Button
+                                size="sm"
+                                variant="default"
+                                onClick={() => handleApprove(transaction)}
+                                disabled={approvingId === transaction.id}
+                                title="Approve Transaction"
+                                className="bg-green-600 hover:bg-green-700"
+                              >
+                                {approvingId === transaction.id ? (
+                                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                ) : (
+                                  <Check className="h-4 w-4" />
+                                )}
+                              </Button>
+                            )}
+                            {transaction.tid && transaction.trans_type === 'transaction' ? (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => openDetailModal(transaction)}
+                                title="View Details"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                            ) : null}
+                          </div>
                         </td>
                       </tr>
                     ))
