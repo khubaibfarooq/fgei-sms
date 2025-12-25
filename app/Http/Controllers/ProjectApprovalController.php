@@ -17,8 +17,8 @@ class ProjectApprovalController extends Controller
         $request->validate([
             'status' => ['required', Rule::in(['approved', 'rejected'])],
             'comments' => 'nullable|string',
-            'pdf' => 'nullable|mimes:pdf|max:10240',
-            'img' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+            'pdf' => 'nullable|file',
+            'img' => 'nullable|file',
         ]);
 
         $currentStage = $project->currentStage;
