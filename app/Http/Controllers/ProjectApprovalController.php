@@ -80,7 +80,7 @@ class ProjectApprovalController extends Controller
                 } else {
                     
                     // Find next stage (GLOBAL sequence)
-                    $nextStage = ApprovalStage::where('stage_order', '>', $currentStage->stage_order)
+                    $nextStage = ApprovalStage::where('stage_order', '>', $currentStage->stage_order)->where('fund_head_id', $project->fund_head_id)
                         ->orderBy('stage_order')
                         ->first();
 
