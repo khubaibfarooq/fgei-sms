@@ -75,7 +75,7 @@ interface Milestone {
   id: number;
   name: string;
   description: string | null;
-  due_date: string;
+  days: number;
   status: string;
   completed_date: string | null;
   img: string | null;
@@ -139,7 +139,7 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
   });
 
   const canShowInstitutionalApprove = (project: Project) => {
-    return project.current_stage?.level?.toLowerCase() === 'institutional' && project.overall_status !== 'approved';
+    return project.current_stage?.level?.toLowerCase() === 'institutional' && project.status !== 'completed';
   };
 
 
@@ -148,7 +148,7 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
   const [milestoneForm, setMilestoneForm] = useState({
     name: '',
     description: '',
-    due_date: '',
+    days: 0,
     status: '',
     completed_date: '',
     img: null as File | null,
@@ -161,7 +161,7 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
     setMilestoneForm({
       name: milestone.name,
       description: milestone.description || '',
-      due_date: milestone.due_date ? milestone.due_date.split('T')[0] : '',
+      days: milestone.days || 0,
       status: milestone.status,
       completed_date: milestone.completed_date ? milestone.completed_date.split('T')[0] : '',
       img: null as File | null,
@@ -176,7 +176,7 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
     const formData = new FormData();
     formData.append('_method', 'PUT'); // Method spoofing for Laravel
     formData.append('name', milestoneForm.name);
-    formData.append('due_date', milestoneForm.due_date);
+    formData.append('days', milestoneForm.days.toString());
     formData.append('status', milestoneForm.status);
     formData.append('description', milestoneForm.description);
 
@@ -652,8 +652,8 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
                             )}
                             <div className="grid grid-cols-2 gap-2 text-xs">
                               <div>
-                                <span className="text-muted-foreground">Due: </span>
-                                {new Date(milestone.due_date).toLocaleDateString()}
+                                <span className="text-muted-foreground">Due in: </span>
+                                {milestone.days} days
                               </div>
                               {milestone.completed_date && (
                                 <div>
@@ -779,17 +779,32 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
               </select>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="due_date" className="text-right">
-                Due Date
+              <Label htmlFor="days" className="text-right">
+                Days
               </Label>
               <Input
-                id="due_date"
-                type="date"
-                value={milestoneForm.due_date}
-                onChange={(e) => setMilestoneForm({ ...milestoneForm, due_date: e.target.value })}
+                id="days"
+                type="number"
+                value={milestoneForm.days}
+                onChange={(e) => setMilestoneForm({ ...milestoneForm, days: parseInt(e.target.value) || 0 })}
                 className="col-span-3"
               />
             </div>
+
+            {milestoneForm.status === 'completed' && (
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="completed_date" className="text-right">
+                  Completed Date
+                </Label>
+                <Input
+                  id="completed_date"
+                  type="date"
+                  value={milestoneForm.completed_date}
+                  onChange={(e) => setMilestoneForm({ ...milestoneForm, completed_date: e.target.value })}
+                  className="col-span-3"
+                />
+              </div>
+            )}
 
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="img" className="text-right">
@@ -825,20 +840,7 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
               />
             </div>
 
-            {milestoneForm.status === 'completed' && (
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="completed_date" className="text-right">
-                  Completed
-                </Label>
-                <Input
-                  id="completed_date"
-                  type="date"
-                  value={milestoneForm.completed_date}
-                  onChange={(e) => setMilestoneForm({ ...milestoneForm, completed_date: e.target.value })}
-                  className="col-span-3"
-                />
-              </div>
-            )}
+
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="description" className="text-right">
                 Description
@@ -904,7 +906,7 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
           </form>
         </DialogContent>
       </Dialog>
-    </AppLayout>
+    </AppLayout >
 
   );
 }

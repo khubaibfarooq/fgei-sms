@@ -68,7 +68,7 @@ if($request->search){
             $data = $request->validate([
                 'amount'        => 'required|numeric',
           'project_id'   => 'required|numeric',
-                'due_date'    => 'required|date_format:Y-m-d',
+                'days'        => 'required|integer',
                 'status'        => 'required|string',
                 'description'   => 'nullable|string',
                 'status'          => 'required|string',
@@ -113,7 +113,7 @@ $data['added_by'] = auth()->id();
 
             $validated = $request->validate([
                 'name'          => 'required|string',
-                'due_date'      => 'required|date_format:Y-m-d',  
+                'days'          => 'required|integer',  
                 'status'        => 'required|string',
                 'description'   => 'nullable|string',
                 'completed_date'=> 'nullable|date_format:Y-m-d',

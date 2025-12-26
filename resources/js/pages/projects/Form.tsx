@@ -23,7 +23,10 @@ interface MilestoneRow {
   id?: number;                          // Laravel milestone ID
   name: string;
   description: string;
-  due_date: string;
+  due_date?: string;                      // Kept for backward compat if any, but adding days
+  days: string;
+  status: string;
+  completed_date: string;
   img: File | null;
   pdf: File | null;                     // Added PDF field
   preview?: string;                     // Data URL preview
@@ -46,9 +49,12 @@ interface ProjectFormProps {
       id: number;
       name: string;
       description: string | null;
-      due_date: string;
+      due_date?: string;
+      days: number | null;
       img: string | null;
       pdf: string | null;
+      status?: string;
+      completed_date?: string;
     }>;
   };
   projectTypes: Record<string, string>;
@@ -73,12 +79,14 @@ export default function ProjectForm({ project, projectTypes }: ProjectFormProps)
       id: m.id,
       name: m.name,
       description: m.description || '',
-      due_date: m.due_date,
+      days: (m.days || '').toString(),
       img: null,
       pdf: null,
       existingImg: m.img || undefined,
       existingPdf: m.pdf || undefined,
       preview: m.img ? `${m.img}` : undefined,
+      status: m.status || 'pending',
+      completed_date: m.completed_date ? m.completed_date.split('T')[0] : '',
     })) || []
   );
 
@@ -92,9 +100,11 @@ export default function ProjectForm({ project, projectTypes }: ProjectFormProps)
       key: Date.now(),
       name: '',
       description: '',
-      due_date: '',
+      days: '',
       img: null,
       pdf: null,
+      status: 'pending',
+      completed_date: '',
     }]);
   };
 
@@ -147,11 +157,15 @@ export default function ProjectForm({ project, projectTypes }: ProjectFormProps)
     }
 
     milestones.forEach((m, index) => {
-      if (m.name.trim() && m.due_date) {
+      if (m.name.trim() && m.days) {
         if (m.id) fd.append(`milestones[${index}][id]`, m.id.toString());
         fd.append(`milestones[${index}][name]`, m.name);
         fd.append(`milestones[${index}][description]`, m.description);
-        fd.append(`milestones[${index}][due_date]`, m.due_date);
+        fd.append(`milestones[${index}][days]`, m.days);
+        fd.append(`milestones[${index}][status]`, m.status);
+        if (m.status === 'completed' && m.completed_date) {
+          fd.append(`milestones[${index}][completed_date]`, m.completed_date);
+        }
         if (m.img) fd.append(`milestones[${index}][img]`, m.img);
         if (m.pdf) fd.append(`milestones[${index}][pdf]`, m.pdf);
       }
@@ -270,61 +284,94 @@ export default function ProjectForm({ project, projectTypes }: ProjectFormProps)
                           </div>
 
                           <div className="space-y-2">
-                            <Label>Due Date <span className="text-red-500">*</span></Label>
+                            <Label>Due (Days) <span className="text-red-500">*</span></Label>
                             <Input
-                              type="date"
-                              value={m.due_date}
-                              onChange={e => updateMilestone(m.key, 'due_date', e.target.value)}
+                              type="number"
+                              value={m.days}
+                              onChange={e => updateMilestone(m.key, 'days', e.target.value)}
+                              placeholder="e.g. 30"
                             />
                           </div>
 
-                          <div className="space-y-2">
-                            <Label>Proof Image</Label>
-                            <Input
-                              type="file"
-                              accept="image/*"
-                              onChange={e => handleImageChange(m.key, e.target.files?.[0] || null)}
-                            />
-                            {m.existingImg && !m.preview && (
-                              <p className="text-xs text-muted-foreground mt-1">Has existing image</p>
-                            )}
-                          </div>
+                          {isEdit && (
+                            <>
+                              <div className="space-y-2">
+                                <Label>Status</Label>
+                                <select
+                                  value={m.status}
+                                  onChange={e => updateMilestone(m.key, 'status', e.target.value)}
+                                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                >
+                                  <option value="pending">Pending</option>
+                                  <option value="inprogress">In Progress</option>
+                                  <option value="completed">Completed</option>
+                                </select>
+                              </div>
 
-                          <div className="space-y-2">
-                            <Label>Signed Document (PDF)</Label>
-                            <Input
-                              type="file"
-                              accept=".pdf"
-                              onChange={e => updateMilestone(m.key, 'pdf', e.target.files?.[0] || null)}
-                            />
-                            {m.existingPdf && (
-                              <a href={`/${m.existingPdf}`} target="_blank" className="text-xs text-blue-500 underline mt-1 block">
-                                View PDF
-                              </a>
-                            )}
-                          </div>
-
-                          <div className="flex items-end justify-between">
-                            <div className="h-10 w-10 overflow-hidden rounded bg-muted border flex items-center justify-center">
-                              {(m.preview || m.existingImg) ? (
-                                <img
-                                  src={m.preview || `/${m.existingImg}`}
-                                  alt="Preview"
-                                  className="h-full w-full object-cover"
-                                />
-                              ) : (
-                                <span className="text-[10px] text-muted-foreground italic">No image</span>
+                              {m.status === 'completed' && (
+                                <div className="space-y-2">
+                                  <Label>Completed Date</Label>
+                                  <Input
+                                    type="date"
+                                    value={m.completed_date}
+                                    onChange={e => updateMilestone(m.key, 'completed_date', e.target.value)}
+                                  />
+                                </div>
                               )}
-                            </div>
-                            <Button
-                              type="button"
-                              variant="destructive"
-                              size="icon"
-                              onClick={() => removeMilestone(m.key)}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
+                            </>
+                          )}
+                          {isEdit && (
+                            <>
+                              <div className="space-y-2">
+                                <Label>Proof Image</Label>
+                                <Input
+                                  type="file"
+                                  accept="image/*"
+                                  onChange={e => handleImageChange(m.key, e.target.files?.[0] || null)}
+                                />
+                                {m.existingImg && !m.preview && (
+                                  <p className="text-xs text-muted-foreground mt-1">Has existing image</p>
+                                )}
+                              </div>
+
+                              <div className="space-y-2">
+                                <Label>Signed Document (PDF)</Label>
+                                <Input
+                                  type="file"
+                                  accept=".pdf"
+                                  onChange={e => updateMilestone(m.key, 'pdf', e.target.files?.[0] || null)}
+                                />
+                                {m.existingPdf && (
+                                  <a href={`/${m.existingPdf}`} target="_blank" className="text-xs text-blue-500 underline mt-1 block">
+                                    View PDF
+                                  </a>
+                                )}
+                              </div>
+
+                              <div className="flex items-end justify-between">
+                                <div className="h-10 w-10 overflow-hidden rounded bg-muted border flex items-center justify-center">
+                                  {(m.preview || m.existingImg) ? (
+                                    <img
+                                      src={m.preview || `/${m.existingImg}`}
+                                      alt="Preview"
+                                      className="h-full w-full object-cover"
+                                    />
+                                  ) : (
+                                    <span className="text-[10px] text-muted-foreground italic">No image</span>
+                                  )}
+                                </div>
+
+                                <Button
+                                  type="button"
+                                  variant="destructive"
+                                  size="icon"
+                                  onClick={() => removeMilestone(m.key)}
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </div>
+                            </>
+                          )}
                         </div>
                       </Card>
                     ))}

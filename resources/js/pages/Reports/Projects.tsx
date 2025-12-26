@@ -75,7 +75,7 @@ interface Milestone {
   id: number;
   name: string;
   description: string | null;
-  due_date: string;
+  days: number;
   status: string;
   completed_date: string | null;
   img: string | null;
@@ -725,8 +725,8 @@ export default function Projects({ projects: initialProjects, institutes, region
                               )}
                               <div className="grid grid-cols-2 gap-2 text-xs">
                                 <div>
-                                  <span className="text-muted-foreground">Due: </span>
-                                  {new Date(milestone.due_date).toLocaleDateString()}
+                                  <span className="text-muted-foreground">Due in: </span>
+                                  {milestone.days} days
                                 </div>
                                 {milestone.completed_date && (
                                   <div>

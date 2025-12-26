@@ -78,12 +78,7 @@ class ProjectApprovalController extends Controller
                         'status' => 'completed'
                     ]);
                 } else {
-                    if($currentStage->change_to_in_progress){
-                        $project->update([
-                            'overall_status' => 'approved',
-                            'status' => 'inprogress',
-                        ]);
-                    }
+                    
                     // Find next stage (GLOBAL sequence)
                     $nextStage = ApprovalStage::where('stage_order', '>', $currentStage->stage_order)
                         ->orderBy('stage_order')
@@ -92,9 +87,14 @@ class ProjectApprovalController extends Controller
                     if ($nextStage) {
                         $project->update([
                             'current_stage_id' => $nextStage->id,
-                            'overall_status' => 'inprogress'
+                      
                         ]);
-                        
+                        if($currentStage->change_to_in_progress){
+                        $project->update([
+                            'overall_status' => 'approved',
+                            'status' => 'inprogress',
+                        ]);
+                    }
                         // Create pending approval row for the next stage
                         ProjectApproval::create([
                             'project_id' => $project->id,
@@ -106,7 +106,8 @@ class ProjectApprovalController extends Controller
                     } else {
                         // No next stage found, treat as approved
                         $project->update([
-                            'overall_status' => 'approved'
+                            'overall_status' => 'approved',
+                            'status' => 'completed',
                         ]);
                     }
                 }

@@ -101,7 +101,7 @@ interface Milestone {
     id: number;
     name: string;
     description: string | null;
-    due_date: string;
+    days: number;
     status: string;
     completed_date: string | null;
     img: string | null;
@@ -817,7 +817,7 @@ export default function PendingTrans({ transactions, summary, fundHeads, filters
                                                         <Badge variant={milestone.status === 'completed' ? 'default' : 'outline'} className="text-[10px]">{milestone.status}</Badge>
                                                     </div>
                                                     <div className="text-[10px] text-muted-foreground space-y-1">
-                                                        <p className="flex items-center gap-1"><Calendar className="h-3 w-3" /> Due: {new Date(milestone.due_date).toLocaleDateString()}</p>
+                                                        <p className="flex items-center gap-1"><Calendar className="h-3 w-3" /> Due in: {milestone.days} days</p>
                                                         {milestone.completed_date && <p className="flex items-center gap-1 text-green-600"><CheckCircle className="h-3 w-3" /> Done: {new Date(milestone.completed_date).toLocaleDateString()}</p>}
                                                     </div>
                                                     {milestone.description && <p className="text-xs text-muted-foreground line-clamp-2">{milestone.description}</p>}

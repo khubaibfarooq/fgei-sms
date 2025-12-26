@@ -74,9 +74,11 @@ public function store(Request $request)
 
         'final_comments'   => 'required_if:status,completed|nullable|string',
 
-        'milestones.*.name'           => 'required_with:milestones.*.due_date|string|max:255',
+        'milestones.*.name'           => 'required_with:milestones.*.days|string|max:255',
         'milestones.*.description'    => 'nullable|string',
-        'milestones.*.due_date'       => 'required_with:milestones.*.name|date',
+        'milestones.*.days'           => 'required_with:milestones.*.name|integer',
+        'milestones.*.status'         => 'nullable|string',
+        'milestones.*.completed_date' => 'nullable|date',
         'milestones.*.img'            => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
         'milestones.*.pdf'            => 'nullable|mimes:pdf|max:10240',
     ]);
@@ -100,14 +102,16 @@ public function store(Request $request)
 
     if ($request->has('milestones')) {
         foreach ($request->input('milestones', []) as $index => $m) {
-            if (empty($m['name']) || empty($m['due_date'])) {
+            if (empty($m['name']) || empty($m['days'])) {
                 continue;
             }
 
             $payload = [
                 'name'           => $m['name'],
                 'description'    => $m['description'] ?? null,
-                'due_date'       => $m['due_date'],
+                'days'           => $m['days'],
+                'status'         => $m['status'] ?? 'pending',
+                'completed_date' => $m['completed_date'] ?? null,
                 'added_by'       => auth()->id(),
             ];
 
@@ -222,9 +226,11 @@ public function update(Request $request, Project $project)
         'final_comments'   => 'required_if:status,completed|nullable|string',
 
         'milestones.*.id'             => 'nullable|integer|exists:milestones,id,project_id,' . $project->id,
-        'milestones.*.name'           => 'required_with:milestones.*.due_date|string|max:255',
+        'milestones.*.name'           => 'required_with:milestones.*.days|string|max:255',
         'milestones.*.description'    => 'nullable|string',
-        'milestones.*.due_date'       => 'required_with:milestones.*.name|date',
+        'milestones.*.days'           => 'required_with:milestones.*.name|integer',
+        'milestones.*.status'         => 'nullable|string',
+        'milestones.*.completed_date' => 'nullable|date',
         'milestones.*.img'            => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
         'milestones.*.pdf'            => 'nullable|mimes:pdf|max:10240',
     ]);
@@ -249,16 +255,16 @@ public function update(Request $request, Project $project)
             $milestoneId = $milestoneData['id'] ?? null;
 
             // Skip completely empty rows
-            if (empty($milestoneData['name']) && empty($milestoneData['due_date'])) {
+            if (empty($milestoneData['name']) && empty($milestoneData['days'])) {
                 continue;
             }
 
             $payload = [
                 'name'           => $milestoneData['name'],
                 'description'    => $milestoneData['description'] ?? null,
-                'due_date'       => $milestoneData['due_date'],
-     
-               
+                'days'           => $milestoneData['days'],
+                'status'         => $milestoneData['status'] ?? 'pending',
+                'completed_date' => $milestoneData['completed_date'] ?? null,
                 'added_by'       => auth()->id(),
             ];
 
@@ -354,7 +360,7 @@ public function update(Request $request, Project $project)
 
     public function milestones(Project $project)
     {
-        return response()->json($project->milestones()->orderBy('due_date')->get());
+        return response()->json($project->milestones()->orderBy('days')->get());
     }
 
     public function payments(Project $project)
@@ -414,7 +420,7 @@ public function update(Request $request, Project $project)
             'type' => 'out',
             'trans_type' => 'project',
             'tid' => $project->id,
-            'description' => "Payment request for stage " . ($count + 1) . " (" . $percentage . "% of remaining balance)",
+            'description' => "Payment request for stage " . ($count + 1) . " (" . $percentage . "% of total cost)",
         ]);
 
         return response()->json(['success' => true, 'message' => 'Payment request created successfully.']);
