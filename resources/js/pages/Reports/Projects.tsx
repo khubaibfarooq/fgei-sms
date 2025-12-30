@@ -22,7 +22,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import ApprovalModal from '../projects/ApprovalModal'; // Adjust import path if needed
 import FundHeadSelectModal from './FundHeadSelectModal';
-
+import { ImagePreview } from '@/components/ui/image-preview2';
 declare module 'jspdf' {
   interface jsPDF {
     autoTable: (options: any) => jsPDF;
@@ -41,7 +41,7 @@ interface ProjectProp {
   actual_cost: string | number;
 
   status: string;
-  overall_status: string;
+  approval_status: string;
   priority: string;
   institute?: { id: number; name?: string };
   region?: { id: number; name?: string };
@@ -53,6 +53,11 @@ interface ProjectProp {
     level: string;
     stage_name: string;
   };
+  fund_head?: {
+    id: number;
+    name: string;
+  };
+  final_comments?: string;
 }
 
 interface Item {
@@ -175,7 +180,7 @@ export default function Projects({ projects: initialProjects, institutes, region
 
   const canShowApproveButton = (project: ProjectProp) => {
     const stageLevel = project.current_stage?.level;
-    const status = project.overall_status;
+    const status = project.approval_status;
 
 
     // The user strictly asked for region->region and dte->dte check logic.
@@ -478,8 +483,12 @@ export default function Projects({ projects: initialProjects, institutes, region
                         <th className="border p-2 font-medium">Name</th>
                         <th className="border p-2 font-medium">Estimated Cost</th>
                         <th className="border p-2 font-medium">Actual Cost</th>
+                        <th className="border p-2 font-medium">Fund Head</th>
+
                         <th className="border p-2 font-medium">Overall Status</th>
                         <th className="border p-2 font-medium">Approval Status</th>
+                        <th className="border p-2 font-medium">Final Comments</th>
+                        <th className="border p-2 font-medium">Current Stage</th>
 
                         <th className="border p-2 font-medium">Type</th>
                         <th className="border p-2 font-medium">Institute</th>
@@ -503,7 +512,7 @@ export default function Projects({ projects: initialProjects, institutes, region
                             <td className="border p-2 font-medium">{project.name}</td>
                             <td className="border p-2 text-right">{project.estimated_cost}</td>
                             <td className="border p-2 text-right">{project.actual_cost}</td>
-
+                            <td className="border p-2 text-center">{project.fund_head?.name}</td>
                             <td className="border p-2 text-center">
                               <span className={`px-2 py-1 rounded-full text-xs font-medium ${project.status === 'completed' ? 'bg-green-100 text-green-800' :
                                 project.status === 'inprogress' ? 'bg-yellow-100 text-yellow-800' :
@@ -513,13 +522,15 @@ export default function Projects({ projects: initialProjects, institutes, region
                               </span>
                             </td>
                             <td className="border p-2 text-center">
-                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${project.overall_status === 'completed' ? 'bg-green-100 text-green-800' :
-                                project.overall_status === 'inprogress' ? 'bg-yellow-100 text-yellow-800' :
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${project.approval_status === 'completed' ? 'bg-green-100 text-green-800' :
+                                project.approval_status === 'inprogress' ? 'bg-yellow-100 text-yellow-800' :
                                   'bg-blue-100 text-blue-800'
                                 }`}>
-                                {project.overall_status.charAt(0).toUpperCase() + project.overall_status.slice(1)}
+                                {project.approval_status.charAt(0).toUpperCase() + project.approval_status.slice(1)}
                               </span>
                             </td>
+                            <td className="border p-2 text-center">{project.final_comments || '-'}</td>
+                            <td className="border p-2 text-center">{project.current_stage?.stage_name || '-'}</td>
                             <td className="border p-2 text-center">{project.projecttype?.name || '-'}</td>
                             <td className="border p-2">{project.institute?.name || '-'}</td>
                             <td className="border p-2 text-center" onClick={(e) => e.stopPropagation()}>
@@ -668,10 +679,10 @@ export default function Projects({ projects: initialProjects, institutes, region
                               )}
                               {record.img && (
                                 <div className="mt-2">
-                                  <img
-                                    src={`/${record.img}`}
-                                    alt="Evidence"
-                                    className="h-20 w-auto rounded border"
+                                  <ImagePreview
+                                    dataImg={record.img}
+                                    size="h-20"
+                                    className="rounded border"
                                   />
                                 </div>
                               )}
@@ -707,10 +718,10 @@ export default function Projects({ projects: initialProjects, institutes, region
                             <CardContent className="p-3 text-sm space-y-2">
                               {milestone.img && (
                                 <div className="mb-2">
-                                  <img
-                                    src={`/${milestone.img}`}
-                                    alt={milestone.name}
-                                    className="w-full h-32 object-cover rounded-md"
+                                  <ImagePreview
+                                    dataImg={milestone.img}
+                                    size="h-32"
+                                    className="w-full object-cover rounded-md"
                                   />
                                 </div>
                               )}

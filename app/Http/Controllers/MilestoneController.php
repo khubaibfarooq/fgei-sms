@@ -107,10 +107,12 @@ $data['added_by'] = auth()->id();
     public function update(Request $request, Milestone $milestone)
     {           
         try {
-            if (!auth()->user()->can('milestone-edit')) {
-                abort(403);
-            }
+            
 
+//             if (!auth()->user()->can('milestone-edit')) {
+//                 abort(403);
+//             }
+// dd($request->all());
             $validated = $request->validate([
                 'name'          => 'required|string',
                 'days'          => 'required|integer',  
@@ -118,7 +120,7 @@ $data['added_by'] = auth()->id();
                 'description'   => 'nullable|string',
                 'completed_date'=> 'nullable|date_format:Y-m-d',
                 'img'           => 'nullable|file',
-                'pdf'           => 'nullable|mimes:pdf|max:10240',
+                'pdf'           => 'nullable|file',
             ]);
        
             $resultImageName = null;

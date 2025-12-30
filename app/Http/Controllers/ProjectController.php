@@ -18,7 +18,7 @@ class ProjectController extends Controller
     public function index(Request $request)
     {
 
-        $query = Project::with('institute');
+        $query = Project::with('institute','fundHead');
 $inst_id = session('sms_inst_id');
 $type=session('type');
 
@@ -95,7 +95,7 @@ public function store(Request $request)
         'description'      => $request->description,
         'institute_id'     => session('sms_inst_id'),
         'submitted_by'     => auth()->id(),
-        'overall_status'   => 'waiting',
+        'approval_status'   => 'waiting',
     ]);
 
    

@@ -34,6 +34,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import ApprovalModal from './ApprovalModal';
+import { ImagePreview } from '@/components/ui/image-preview2';
 
 
 interface Project {
@@ -41,14 +42,17 @@ interface Project {
   name: string;
   estimated_cost: number;
   actual_cost: number | null;
-
+  final_comments: string | null;
   status: string;
-  overall_status: string;
+  approval_status: string;
   priority: string;
   institute_id: number;
   institute: {
     name: string;
   };
+  fund_head?: {
+    name: string;
+  }
   rooms_count?: number;
   current_stage_id?: number;
   current_stage?: {
@@ -137,6 +141,7 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
   const [actualCostForm, setActualCostForm] = useState({
     actual_cost: '',
   });
+  const [showCostHigherWarning, setShowCostHigherWarning] = useState(false);
 
   const canShowInstitutionalApprove = (project: Project) => {
     return project.current_stage?.level?.toLowerCase() === 'institutional' && project.status !== 'completed';
@@ -276,12 +281,27 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
   const handleCostUpdate = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedProjectForCost) return;
+
+    const actualCost = parseFloat(actualCostForm.actual_cost);
+    const estimatedCost = selectedProjectForCost.estimated_cost;
+
+    if (actualCost > estimatedCost) {
+      setShowCostHigherWarning(true);
+      return;
+    }
+
+    proceedWithCostUpdate();
+  };
+
+  const proceedWithCostUpdate = () => {
+    if (!selectedProjectForCost) return;
     setUpdatingCost(true);
 
     router.post(`/projects/${selectedProjectForCost.id}/update-cost`, actual_cost_form_data(), {
       onSuccess: () => {
         toast.success("Actual cost updated successfully");
         setCostModalOpen(false);
+        setShowCostHigherWarning(false);
         setUpdatingCost(false);
       },
       onError: (errors) => {
@@ -373,6 +393,7 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
                   <thead className="sticky top-0 z-10">
                     <tr className="bg-primary dark:bg-gray-800 text-center" >
                       <th className="border p-2 text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Name</th>
+                      <th className="border p-2 text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Fund Head</th>
                       <th className="border p-2 text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Estimated Cost</th>
                       <th className="border p-2 text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Actual Cost</th>
 
@@ -381,6 +402,7 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
                       <th className="border p-2 text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Overall Status</th>
                       <th className="border p-2 text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Approval Status</th>
                       <th className="border p-2 text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Current Stage</th>
+                      <th className="border p-2 text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Final Comment</th>
                       <th className="border p-2 text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Action</th>
                     </tr>
                   </thead>
@@ -399,6 +421,9 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
 
                           <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
                             {project.name}
+                          </td>
+                          <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
+                            {project.fund_head?.name}
                           </td>
                           <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
                             {project.estimated_cost}
@@ -432,11 +457,14 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
                             {project.status}
                           </td>
                           <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
-                            {project.overall_status}
+                            {project.approval_status}
                           </td>
                           <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
                             {/* Pending Stage Logic Placeholder */}
                             {project.current_stage?.stage_name || 'Waiting'}
+                          </td>
+                          <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
+                            {project.final_comments || '-'}
                           </td>
                           <td className="border text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100" onClick={(e) => e.stopPropagation()}>
                             {permissions.can_edit &&
@@ -591,10 +619,10 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
                               </a>)}
                             {record.img && (
                               <div className="mt-2">
-                                <img
-                                  src={`/${record.img}`}
-                                  alt="Evidence"
-                                  className="h-20 w-auto rounded border"
+                                <ImagePreview
+                                  dataImg={record.img}
+                                  size="h-20"
+                                  className="rounded border"
                                 />
                               </div>
                             )}
@@ -634,10 +662,10 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
                           <CardContent className="p-3 text-sm space-y-2">
                             {milestone.img && (
                               <div className="mb-2">
-                                <img
-                                  src={`/${milestone.img}`}
-                                  alt={milestone.name}
-                                  className="w-full h-32 object-cover rounded-md"
+                                <ImagePreview
+                                  dataImg={milestone.img}
+                                  size="h-32"
+                                  className="w-full object-cover rounded-md"
                                 />
                               </div>
                             )}
@@ -906,6 +934,23 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
           </form>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={showCostHigherWarning} onOpenChange={setShowCostHigherWarning}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Actual Cost Higher than Estimated</AlertDialogTitle>
+            <AlertDialogDescription>
+              The actual cost you entered (<strong>{actualCostForm.actual_cost}</strong>) is higher than the estimated cost (<strong>{selectedProjectForCost?.estimated_cost}</strong>).
+              <br /><br />
+              Are you sure you want to proceed with this then  project will be marked as waiting and project submit to Regional Head for approval ?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setShowCostHigherWarning(false)}>No</AlertDialogCancel>
+            <AlertDialogAction onClick={proceedWithCostUpdate}>Yes</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AppLayout >
 
   );

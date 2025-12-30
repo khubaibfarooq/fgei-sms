@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\FundHeld;
 use App\Models\Fund;
 use App\Models\FundHead;
+use App\Models\Institute;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class FundsController extends Controller
 {
@@ -91,6 +93,7 @@ class FundsController extends Controller
     {
         $institute_id = session('sms_inst_id');
 
+
         // Build query for pending transactions
         $query = Fund::with(['institute', 'FundHead', 'user', 'approver'])
             ->where('institute_id', $institute_id)
@@ -125,6 +128,32 @@ class FundsController extends Controller
             'total_out' => $allPending->where('type', 'out')->sum('amount'),
         ];
 
+        // Fetch regional fund balances
+
+
+            $balances = FundHeld::query()
+                ->join('fund_heads', 'fund_helds.fund_head_id', '=', 'fund_heads.id')
+                ->join('institutes', 'fund_helds.institute_id', '=', 'institutes.id')
+                ->where('institutes.id', $institute_id)
+                ->where('fund_heads.type', 'regional')
+                ->select([
+                    'fund_heads.id as fund_head_id',
+                    'fund_heads.name as fund_head_name',
+                    DB::raw('SUM(fund_helds.balance) as balance')
+                ])
+                ->groupBy('fund_heads.id', 'fund_heads.name')
+                ->get()
+                ->map(function ($item) {
+                    return [
+                        'fund_head' => [
+                            'id' => $item->fund_head_id,
+                            'name' => $item->fund_head_name,
+                        ],
+                        'balance' => $item->balance,
+                    ];
+                });
+        
+
         // Paginate results
         $transactions = $query->orderBy('added_date', 'desc')
             ->paginate(15)
@@ -137,6 +166,7 @@ class FundsController extends Controller
             'transactions' => $transactions,
             'summary' => $summary,
             'fundHeads' => $fundHeads,
+            'balances' => $balances,
             'filters' => $request->only(['search', 'from', 'to', 'fund_head_id']),
         ]);
     }

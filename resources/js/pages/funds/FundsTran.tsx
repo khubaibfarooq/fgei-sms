@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { type BreadcrumbItem } from '@/types';
-import { ImagePreview } from '@/components/ui/image-preview';
+import { ImagePreview } from '@/components/ui/image-preview2';
 import {
   ArrowLeft,
   Calendar,

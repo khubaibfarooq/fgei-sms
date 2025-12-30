@@ -934,7 +934,7 @@ $regions = Institute::select('region_id as id', 'name')->where('type', 'Regional
         // -----------------------------------------------------------------
         if ($type === 'Regional Office') {
              if($request->status ){
-                        $query = Project::query()->with(['institute', 'projecttype', 'currentStage']);
+                        $query = Project::query()->with(['institute', 'projecttype', 'currentStage','fundHead']);
             $query->where('status', $request->status)->whereHas('institute', function ($q) use ($regionid) {
                 $q->where('region_id', $regionid);
             });
@@ -954,7 +954,7 @@ $regions = Institute::select('region_id as id', 'name')->where('type', 'Regional
         // -----------------------------------------------------------------
         else {
             if($request->status ){
-                        $query = Project::query()->with(['institute', 'projecttype', 'currentStage']);
+                        $query = Project::query()->with(['institute', 'projecttype', 'currentStage','fundHead']);
             $query->where('status', $request->status);
             $projects = $query->paginate(10)->withQueryString();
  $projects->getCollection()->transform(function ($project) {

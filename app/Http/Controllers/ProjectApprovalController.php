@@ -74,7 +74,7 @@ class ProjectApprovalController extends Controller
             if ($request->status === 'approved') {
                 if ($currentStage->is_last) {
                     $project->update([
-                        
+                        'final_comments' => $request->comments,
                         'status' => 'completed'
                     ]);
                 } else {
@@ -91,7 +91,7 @@ class ProjectApprovalController extends Controller
                         ]);
                         if($currentStage->change_to_in_progress){
                         $project->update([
-                            'overall_status' => 'approved',
+                            'approval_status' => 'approved',
                             'status' => 'inprogress',
                         ]);
                     }
@@ -106,14 +106,14 @@ class ProjectApprovalController extends Controller
                     } else {
                         // No next stage found, treat as approved
                         $project->update([
-                            'overall_status' => 'approved',
+                            'approval_status' => 'approved',
                             'status' => 'completed',
                         ]);
                     }
                 }
             } else {
                 // Rejected
-                $project->update(['overall_status' => 'rejected']);
+                $project->update(['approval_status' => 'rejected']);
             }
         });
 
@@ -150,7 +150,7 @@ class ProjectApprovalController extends Controller
 
                 $project->update([
                     'current_stage_id' => $firstStage->id,
-                    'overall_status'   => 'inprogress',
+                    'approval_status'   => 'inprogress',
                 ]);
             }
         });
@@ -168,7 +168,29 @@ class ProjectApprovalController extends Controller
         if (!$currentStage || !$currentStage->can_change_cost) {
             return redirect()->back()->with('error', 'You are not allowed to update the cost at this stage.');
         }
+if($request->actual_cost > $project->estimated_cost){
+    $firstStage = ApprovalStage::where('stage_order',  1)->where('fund_head_id', $project->fund_head_id)
+                        ->orderBy('stage_order')
+                        ->first();
+                      
+                        $lastapprovalstage=ProjectApproval::where('project_id', $project->id)->orderBy('id', 'desc')->first();
+                        $lastapprovalstage->update([
+                            'status' => 'rejected',
+                            'comments' => 'Actual cost('.$request->actual_cost.') greater than estimated cost('.$project->estimated_cost.')',
+                        ]);
+                        ProjectApproval::create([
+                            'project_id' => $project->id,
+                            'stage_id' => $firstStage->id,
+                            'status' => 'pending',
+                        ]);
+                          $project->update([
+                            'current_stage_id' => $firstStage->id,
+                            'approval_status'   => 'waiting',
+                            'status'   => 'waiting',
+                            'estimated_cost' => $request->actual_cost,
 
+                        ]);
+                        }else{
         DB::transaction(function () use ($request, $project) {
             $project->update([
                 'actual_cost' => $request->actual_cost,
@@ -193,4 +215,5 @@ class ProjectApprovalController extends Controller
         });
         return redirect()->back()->with('success', 'Actual cost updated successfully.');
     }
+}
 }

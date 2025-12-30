@@ -23,7 +23,7 @@ class Project extends Model
         'description',
         'submitted_by',
         'current_stage_id',
-        'overall_status',
+        'approval_status',
         'priority'
     ];
 

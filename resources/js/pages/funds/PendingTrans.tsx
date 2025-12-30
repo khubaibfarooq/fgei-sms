@@ -126,7 +126,7 @@ interface ProjectDetails {
         estimated_cost: number;
         actual_cost: number | null;
         status: string;
-        overall_status: string;
+        approval_status: string;
         priority: string;
         institute: { name: string };
     };
@@ -142,6 +142,11 @@ interface TransactionDetail {
     room_name: string;
     amount: string;
     qty: number;
+}
+
+interface BalanceItem {
+    fund_head: { id: number; name: string };
+    balance: number | string;
 }
 
 interface Props {
@@ -166,6 +171,7 @@ interface Props {
         to?: string;
         fund_head_id?: string;
     };
+    balances: BalanceItem[];
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -173,7 +179,17 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Pending Transactions', href: '#' },
 ];
 
-export default function PendingTrans({ transactions, summary, fundHeads, filters }: Props) {
+export default function PendingTrans({ transactions, summary, fundHeads, balances = [], filters }: Props) {
+    const formatCurrency = (amount: any): string => {
+        const num = typeof amount === 'number' ? amount : parseFloat(String(amount).replace(/,/g, '')) || 0;
+        return new Intl.NumberFormat('ur-PK', {
+            style: 'currency',
+            currency: 'PKR',
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0,
+        }).format(num);
+    };
+
     const [search, setSearch] = useState(filters.search || '');
     const [fromDate, setFromDate] = useState(filters.from || '');
     const [toDate, setToDate] = useState(filters.to || '');
@@ -232,7 +248,7 @@ export default function PendingTrans({ transactions, summary, fundHeads, filters
                     estimated_cost: tx.amount,
                     actual_cost: null,
                     status: tx.status,
-                    overall_status: tx.status,
+                    approval_status: tx.status,
                     priority: '',
                     institute: tx.institute
                 },
@@ -414,6 +430,34 @@ export default function PendingTrans({ transactions, summary, fundHeads, filters
                                 </CardContent>
                             </Card>
                         </div>
+
+                        {/* Regional Fund Head Balances */}
+                        {balances.length > 0 && (
+                            <div className="space-y-3">
+                                <div className="flex items-center justify-between">
+                                    <h3 className="text-lg font-semibold flex items-center gap-2">
+                                        <Building className="h-5 w-5 text-primary" />
+                                        Regional Fund Head Balances
+                                    </h3>
+                                </div>
+                                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+                                    {balances.map((b, i) => (
+                                        <div
+                                            key={i}
+                                            className="bg-muted/50 dark:bg-gray-800 p-4 rounded-lg border hover:shadow-md transition-shadow cursor-default"
+                                        >
+                                            <p className="text-xs font-medium text-muted-foreground truncate">
+                                                {b.fund_head.name}
+                                            </p>
+                                            <p className="text-xl font-bold text-green-600 dark:text-green-400 mt-2">
+                                                {formatCurrency(b.balance)}
+                                            </p>
+                                        </div>
+                                    ))}
+                                </div>
+                                <Separator />
+                            </div>
+                        )}
 
                         {/* Filters */}
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">

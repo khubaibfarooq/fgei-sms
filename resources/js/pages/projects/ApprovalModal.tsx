@@ -20,7 +20,7 @@ import { Input } from '@/components/ui/input';
 interface ApprovalProps {
     isOpen: boolean;
     onClose: () => void;
-    project: { id: number; name: string; current_stage_id?: number; overall_status: string } | null;
+    project: { id: number; name: string; current_stage_id?: number; approval_status: string } | null;
     onSuccess?: () => void;
 }
 
