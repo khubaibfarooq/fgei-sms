@@ -191,7 +191,7 @@ export default function HelpDeskIndex({ helpDesk, filters, institutes, auth }: P
                     setSelectedHelpDesk(req);
                     setEditData({ status: req.status, feedback: req.feedback || '' });
                   }}
-                  className={`p-4 cursor-pointer hover:bg-muted/50 transition-all border-l-4 ${selectedHelpDesk?.id === req.id ? 'bg-primary/5 border-primary shadow-sm' : 'border-transparent'}`}
+                  className={`p-4 cursor-pointer hover:bg-muted/50 transition-all border-l-4 min-h-[90px] flex flex-col justify-center ${selectedHelpDesk?.id === req.id ? 'bg-primary/5 border-primary shadow-sm' : 'border-transparent'}`}
                 >
                   <div className="flex justify-between items-center mb-1.5">
                     <span className="text-[10px] font-bold text-muted-foreground tracking-tighter">#{req.token}</span>
@@ -261,11 +261,11 @@ export default function HelpDeskIndex({ helpDesk, filters, institutes, auth }: P
               </div>
 
               {/* Scrollable Area */}
-              <div className="flex-1 overflow-y-auto p-4 lg:p-8 scrollbar-thin scrollbar-thumb-muted">
+              <div className="flex-1 overflow-y-auto p-4 lg:p-6 scrollbar-thin scrollbar-thumb-muted">
                 <div className="max-w-full mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
 
-                  {/* Left Column: Context & resolution */}
-                  <div className="lg:col-span-4 space-y-6">
+                  {/* Metadata summary (Top on mobile, side on desktop) */}
+                  <div className="lg:col-span-4 order-2 lg:order-1 space-y-6">
                     {/* Resolution Form */}
                     <Card className="shadow-md border-primary/10 overflow-hidden">
                       <CardHeader className="py-3 px-4 bg-primary/5 border-b">
@@ -336,8 +336,8 @@ export default function HelpDeskIndex({ helpDesk, filters, institutes, auth }: P
                     </div>
                   </div>
 
-                  {/* Right Column: Original Issue & Conversation */}
-                  <div className="lg:col-span-8 space-y-6">
+                  {/* Description & Chat (Top on mobile, main on desktop) */}
+                  <div className="lg:col-span-8 order-1 lg:order-2 space-y-6">
                     {/* Original Description */}
                     <div className="bg-card rounded-2xl border p-6 shadow-sm shadow-primary/5">
                       <h4 className="text-[10px] uppercase font-black tracking-widest text-primary mb-4 border-b pb-2 flex items-center justify-between">

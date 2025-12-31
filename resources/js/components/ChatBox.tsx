@@ -93,56 +93,80 @@ export default function ChatBox({ helpDeskId, status }: ChatBoxProps) {
     };
 
     return (
-        <Card className="flex flex-col h-[500px]">
-            <CardHeader className="pb-2">
-                <CardTitle className="text-lg">Conversation</CardTitle>
-                <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground mt-1">
-                    <div className="flex items-center gap-1">
-                        <span className="font-bold">Creator:</span> {ticketOwnerName}
+        <Card className="flex flex-col border-none shadow-none bg-transparent h-full min-h-[450px]">
+            <CardHeader className="p-3 border-b bg-card/50 backdrop-blur-sm sticky top-0 z-10 rounded-t-xl">
+                <div className="flex items-center justify-between">
+                    <CardTitle className="text-sm font-black uppercase tracking-widest text-primary/70">Live Support Chat</CardTitle>
+                    <div className="flex gap-2">
+                        <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                    </div>
+                </div>
+                <div className="flex flex-wrap gap-x-4 gap-y-1 text-[10px] text-muted-foreground mt-1.5 font-bold uppercase tracking-tight">
+                    <div className="flex items-center gap-1.5">
+                        <span className="opacity-50">Creator:</span>
+                        <span className="text-foreground/80">{ticketOwnerName}</span>
                     </div>
                     {respondentName && (
-                        <div className="flex items-center gap-1">
-                            <span className="font-bold">Support:</span> {respondentName}
+                        <div className="flex items-center gap-1.5 border-l pl-3 ml-1">
+                            <span className="opacity-50">Support:</span>
+                            <span className="text-primary">{respondentName}</span>
                         </div>
                     )}
                 </div>
             </CardHeader>
-            <CardContent className="flex-1 overflow-y-auto space-y-4 p-4">
-                {messages.map((msg) => (
-                    <div
-                        key={msg.id}
-                        className={`flex flex-col ${msg.user.id === auth.user.id ? 'items-end' : 'items-start'
-                            }`}
-                    >
-                        <div
-                            className={`px-4 py-2 rounded-lg max-w-[80%] ${msg.user.id === auth.user.id
-                                ? 'bg-primary text-primary-foreground'
-                                : 'bg-muted'
-                                }`}
-                        >
-                            <p className="text-[10px] uppercase font-bold tracking-wider opacity-60 mb-0.5">
-                                {msg.user.id === ticketOwnerId ? 'Creator' : 'Support'}
-                            </p>
-                            <p className="text-sm font-semibold mb-1">{msg.user.name}</p>
-                            <p className="text-sm">{msg.message}</p>
-                            <span className="text-[10px] opacity-70 block mt-1">
-                                {new Date(msg.created_at).toLocaleTimeString()}
-                            </span>
-                        </div>
+            <CardContent className="flex-1 overflow-y-auto space-y-4 p-4 md:p-6 scrollbar-thin scrollbar-thumb-muted">
+                {messages.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center h-full opacity-30 py-20">
+                        <p className="text-xs font-black uppercase tracking-widest">No messages yet</p>
                     </div>
-                ))}
+                ) : (
+                    messages.map((msg, index) => {
+                        const isMe = msg.user.id === auth.user.id;
+                        return (
+                            <div
+                                key={msg.id}
+                                className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}
+                            >
+                                <div
+                                    className={`relative px-4 py-3 rounded-2xl max-w-[85%] md:max-w-[75%] shadow-sm ${isMe
+                                            ? 'bg-primary text-primary-foreground rounded-tr-none'
+                                            : 'bg-card border border-primary/5 rounded-tl-none'
+                                        }`}
+                                >
+                                    <div className="flex items-center justify-between gap-4 mb-1 border-b border-current/10 pb-1">
+                                        <p className="text-[9px] uppercase font-black tracking-[0.1em] opacity-80">
+                                            {msg.user.id === ticketOwnerId ? 'Originator' : 'Technical Support'}
+                                        </p>
+                                        <span className="text-[9px] opacity-60 font-medium">
+                                            {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                        </span>
+                                    </div>
+                                    <p className="text-[11px] font-black mb-1.5 opacity-90 uppercase tracking-tight">{msg.user.name}</p>
+                                    <p className="text-sm leading-relaxed font-medium">{msg.message}</p>
+                                </div>
+                            </div>
+                        );
+                    })
+                )}
                 <div ref={messagesEndRef} />
             </CardContent>
             {status !== 'Resolved' && (
-                <CardFooter className="p-4 pt-0">
-                    <form onSubmit={handleSendMessage} className="flex w-full gap-2">
+                <CardFooter className="p-3 md:p-4 bg-card/30 backdrop-blur-md rounded-b-xl border-t mt-auto">
+                    <form onSubmit={handleSendMessage} className="flex w-full gap-2 items-center">
                         <Input
                             value={newMessage}
                             onChange={(e) => setNewMessage(e.target.value)}
-                            placeholder="Type your message..."
-                            className="flex-1"
+                            placeholder="Type real-time message..."
+                            className="flex-1 bg-background h-11 md:h-10 text-sm font-medium border-primary/10 focus-visible:ring-primary/20"
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' && !e.shiftKey) {
+                                    // Submit automatically
+                                }
+                            }}
                         />
-                        <Button type="submit">Send</Button>
+                        <Button type="submit" size="icon" className="h-11 w-11 md:h-10 md:w-10 shadow-lg shadow-primary/20 shrink-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-send-horizontal"><path d="M3.714 3.048a.498.498 0 0 0-.683.627l2.854 8.325a.5.5 0 0 1 0 .3l-2.854 8.325a.498.498 0 0 0 .683.627l18-9a.5.5 0 0 0 0-.894Z" /><path d="M6.5 12h13.5" /></svg>
+                        </Button>
                     </form>
                 </CardFooter>
             )}

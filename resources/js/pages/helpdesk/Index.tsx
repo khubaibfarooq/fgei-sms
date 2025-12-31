@@ -83,6 +83,16 @@ const getStatusStyles = (status: string) => {
   }
 };
 
+const getStatusColor = (status: string) => {
+  switch (status) {
+    case 'Pending': return 'yellow';
+    case 'Waiting': return 'blue';
+    case 'Resolved': return 'green';
+    case 'Rejected': return 'red';
+    default: return 'gray';
+  }
+};
+
 export default function HelpDeskIndex({ helpDesk, filters, institutes, auth }: Props) {
 
 
@@ -234,7 +244,7 @@ export default function HelpDeskIndex({ helpDesk, filters, institutes, auth }: P
                 <div
                   key={req.id}
                   onClick={() => setSelectedHelpDesk(req)}
-                  className={`p-4 cursor-pointer hover:bg-muted/50 transition-colors ${selectedHelpDesk?.id === req.id ? 'bg-primary/10 border-r-2 border-primary' : ''}`}
+                  className={`p-4 cursor-pointer hover:bg-muted/50 transition-colors min-h-[80px] flex flex-col justify-center ${selectedHelpDesk?.id === req.id ? 'bg-primary/10 border-r-2 border-primary' : ''}`}
                 >
                   <div className="flex justify-between items-start mb-1">
                     <span className="text-[10px] font-mono font-medium text-muted-foreground">#{req.token}</span>
@@ -298,11 +308,11 @@ export default function HelpDeskIndex({ helpDesk, filters, institutes, auth }: P
               </div>
 
               {/* Scrollable Conversation */}
-              <div className="flex-1 overflow-y-auto p-4 lg:p-6">
-                <div className="max-w-full mx-auto space-y-6">
+              <div className="flex-1 overflow-y-auto p-1 lg:p-2">
+                <div className="max-w-full mx-auto space-y-2">
                   {/* Ticket Details Summary */}
-                  <div className="bg-card rounded-xl border p-5 shadow-sm space-y-4">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pb-4 border-b">
+                  <div className="bg-card rounded-xl border p-2 shadow-sm space-y-2">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 pb-2 border-b">
                       <div>
                         <label className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest block mb-1">Created By</label>
                         <p className="text-sm font-medium">{selectedHelpDesk.user.name}</p>
@@ -355,11 +365,17 @@ export default function HelpDeskIndex({ helpDesk, filters, institutes, auth }: P
 
                   {/* Official Resolution Overlay */}
                   {(selectedHelpDesk.feedback || selectedHelpDesk.feedbackby) && (
-                    <div className={`${getStatusStyles(selectedHelpDesk.status)}/10 border-${getStatusStyles(selectedHelpDesk.status)}/20 rounded-xl p-5 border text-${getStatusStyles(selectedHelpDesk.status)}-900 dark:text-${getStatusStyles(selectedHelpDesk.status)}-100 shadow-sm relative overflow-hidden group`}>
-                      <div className="absolute top-0 right-0 w-32 h-32 bg-${getStatusStyles(selectedHelpDesk.status)}/5 rounded-full -mr-16 -mt-16 group-hover:scale-110 transition-transform" />
-                      <h4 className="text-[11px] font-black uppercase tracking-[0.2em] mb-3 text-${getStatusStyles(selectedHelpDesk.status)}-600 dark:text-${getStatusStyles(selectedHelpDesk.status)}-500">Official Support Resolution</h4>
+                    <div className={
+                      selectedHelpDesk.status === 'Pending' ? 'bg-yellow-500/10 border-yellow-500/20 rounded-xl p-4 md:p-5 border text-yellow-900 dark:text-yellow-100 shadow-sm relative overflow-hidden group' :
+                        selectedHelpDesk.status === 'Waiting' ? 'bg-blue-500/10 border-blue-500/20 rounded-xl p-4 md:p-5 border text-blue-900 dark:text-blue-100 shadow-sm relative overflow-hidden group' :
+                          selectedHelpDesk.status === 'Resolved' ? 'bg-green-500/10 border-green-500/20 rounded-xl p-4 md:p-5 border text-green-900 dark:text-green-100 shadow-sm relative overflow-hidden group' :
+                            selectedHelpDesk.status === 'Rejected' ? 'bg-red-500/10 border-red-500/20 rounded-xl p-4 md:p-5 border text-red-900 dark:text-red-100 shadow-sm relative overflow-hidden group' :
+                              'bg-gray-500/10 border-gray-500/20 rounded-xl p-4 md:p-5 border text-gray-900 dark:text-gray-100 shadow-sm relative overflow-hidden group'
+                    }>
+                      <div className={`absolute top-0 right-0 w-32 h-32 bg-${getStatusColor(selectedHelpDesk.status)}-500/5 rounded-full -mr-16 -mt-16 group-hover:scale-110 transition-transform`} />
+                      <h4 className={`text-[11px] font-black uppercase tracking-[0.2em] mb-3 text-${getStatusColor(selectedHelpDesk.status)}-600 dark:text-${getStatusColor(selectedHelpDesk.status)}-500`}>Official Support Resolution</h4>
                       <p className="text-sm leading-relaxed mb-4 font-medium">{selectedHelpDesk.feedback || 'In Progress - Awaiting final resolution.'}</p>
-                      <div className="flex items-center justify-between pt-3 border-t border-${getStatusStyles(selectedHelpDesk.status)}/10 text-[10px] uppercase font-bold tracking-wider">
+                      <div className={`flex items-center justify-between pt-3 border-t border-${getStatusColor(selectedHelpDesk.status)}-500/10 text-[10px] uppercase font-bold tracking-wider`}>
                         <span className="flex items-center gap-1.5">
                           <Building className="h-3 w-3" />
                           {selectedHelpDesk.feedbackby?.name || 'Assigned Agent'}
@@ -372,7 +388,7 @@ export default function HelpDeskIndex({ helpDesk, filters, institutes, auth }: P
                   )}
 
                   {/* Chat Section */}
-                  <div className="pt-2">
+                  <div className="pt-1">
                     <ChatBox helpDeskId={selectedHelpDesk.id} status={selectedHelpDesk.status} />
                   </div>
                 </div>
