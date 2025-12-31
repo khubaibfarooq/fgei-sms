@@ -242,6 +242,8 @@ Route::put('/helpdesk/{helpDesk}', [HelpDeskController::class, 'update'])->name(
 Route::get('/helpdesk', [HelpDeskController::class, 'index'])->name('helpdesk.index');
 Route::get('/reports/fundstrans', [ReportsController::class, 'getFund'])->name('reports.fundstrans');
 Route::post('/helpdesk', [HelpDeskController::class, 'store'])->name('helpdesk.store');
+Route::get('/helpdesk/{helpDesk}/messages', [HelpDeskController::class, 'fetchMessages'])->name('helpdesk.messages.fetch');
+Route::post('/helpdesk/{helpDesk}/messages', [HelpDeskController::class, 'sendMessage'])->name('helpdesk.messages.send');
 
 });
 

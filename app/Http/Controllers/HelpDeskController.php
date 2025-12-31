@@ -2,6 +2,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\HelpDesk;
+use App\Models\HelpDeskMessage;
+use App\Events\MessageSent;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -16,7 +18,7 @@ if($type=="School"||$type=="College")
    {$query->where('institute_id',$inst_id);}
 
         if ($request->search) {
-            $query->where('name', 'like', '%' . $request->search . '%');
+            $query->where('token', 'like', '%' . $request->search . '%')->orWhere('title', 'like', '%' . $request->search . '%')->orWhere('description', 'like', '%' . $request->search . '%')->orWhere('feedback', 'like', '%' . $request->search . '%');
         }
         if ($request->status && $request->status != 'all') {
             $query->where('status', $request->status);
@@ -96,5 +98,32 @@ if($type=="School"||$type=="College"){
     {
         $HelpDesk->delete();   
         return redirect()->back()->with('success', 'Request deleted successfully.');
+    }
+
+    public function fetchMessages(HelpDesk $helpDesk)
+    {
+        return response()->json([
+            'messages' => $helpDesk->messages()->with('user')->get(),
+            'ticket_owner_id' => $helpDesk->user_id,
+            'ticket_owner_name' => $helpDesk->user?->name,
+            'respondent_id' => $helpDesk->feedback_by,
+            'respondent_name' => $helpDesk->feedbackBy?->name,
+        ]);
+    }
+
+    public function sendMessage(Request $request, HelpDesk $helpDesk)
+    {
+        $request->validate([
+            'message' => 'required|string',
+        ]);
+
+        $message = $helpDesk->messages()->create([
+            'user_id' => auth()->id(),
+            'message' => $request->message,
+        ]);
+
+        broadcast(new MessageSent($message))->toOthers();
+
+        return response()->json($message->load('user'));
     }
 }

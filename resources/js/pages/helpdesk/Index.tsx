@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { type BreadcrumbItem } from '@/types';
-import { Plus, Building } from 'lucide-react';
+import { Plus, Building, ChevronLeft, Search } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   AlertDialog,
@@ -20,6 +20,7 @@ import {
   AlertDialogAction,
 } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
+import ChatBox from '@/components/ChatBox';
 
 interface HelpDesk {
   id: number;
@@ -31,6 +32,8 @@ interface HelpDesk {
   title: string;
   institute_id: number;
   feedback_date: Date | null;
+  created_at: Date;
+  updated_at: Date;
   institute: {
     name: string;
   };
@@ -86,7 +89,6 @@ export default function HelpDeskIndex({ helpDesk, filters, institutes, auth }: P
   const [search, setSearch] = useState(filters.search || '');
   const [status, setStatus] = useState(filters.status || '');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [selectedHelpDesk, setSelectedHelpDesk] = useState<HelpDesk | null>(null);
 
   // Form state for creating a new ticket
@@ -126,10 +128,6 @@ export default function HelpDeskIndex({ helpDesk, filters, institutes, auth }: P
     });
   };
 
-  const openViewModal = (helpDesk: HelpDesk) => {
-    setSelectedHelpDesk(helpDesk);
-    setIsViewModalOpen(true);
-  };
 
   const isImageAttachment = (attachment: string | null) => {
     if (!attachment) return false;
@@ -139,155 +137,129 @@ export default function HelpDeskIndex({ helpDesk, filters, institutes, auth }: P
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
-      <Head title="HelpDesk Management" />
-      <div className="flex-1 p-4 md:p-6">
-        <Card>
-          <CardHeader className="pb-3 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-              <CardTitle className="text-2xl font-bold">HelpDesks</CardTitle>
-              <p className="text-muted-foreground text-sm">Manage institutional helpdesk</p>
+      <Head title="HelpDesk" />
+      <div className="flex h-[calc(100vh-64px)] overflow-hidden bg-background">
+        {/* Left Sidebar: Ticket List */}
+        <div className={`w-full md:w-80 lg:w-96 flex flex-col border-r bg-card transition-all ${selectedHelpDesk ? 'hidden md:flex' : 'flex'}`}>
+          <div className="p-4 border-b space-y-4">
+            <div className="flex items-center justify-between">
+              <h1 className="text-xl font-bold">HelpDesk</h1>
+              <AlertDialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
+                <AlertDialogTrigger asChild>
+                  <Button size="icon" variant="ghost">
+                    <Plus className="h-5 w-5" />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Create Help Desk Ticket</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Fill in the details to create a new help desk ticket.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <form onSubmit={handleCreateSubmit} encType="multipart/form-data" className="space-y-4">
+                    <div>
+                      <label htmlFor="create-title" className="block text-sm font-medium">Title</label>
+                      <Input
+                        id="create-title"
+                        type="text"
+                        value={createData.title}
+                        onChange={(e) => setCreateData('title', e.target.value)}
+                        placeholder="Enter ticket title"
+                      />
+                      {createErrors.title && <p className="text-xs text-destructive mt-1">{createErrors.title}</p>}
+                    </div>
+                    <div>
+                      <label htmlFor="create-description" className="block text-sm font-medium">Description</label>
+                      <Input
+                        id="create-description"
+                        type="text"
+                        value={createData.description}
+                        onChange={(e) => setCreateData('description', e.target.value)}
+                        placeholder="Enter description"
+                      />
+                      {createErrors.description && <p className="text-xs text-destructive mt-1">{createErrors.description}</p>}
+                    </div>
+                    <div>
+                      <label htmlFor="create-attachment" className="block text-sm font-medium">Attachment</label>
+                      <Input
+                        id="create-attachment"
+                        type="file"
+                        accept=".jpg,.png,.pdf,.doc,.docx"
+                        onChange={(e) => setCreateData('attachment', e.target.files ? e.target.files[0] : null)}
+                      />
+                    </div>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction type="submit" disabled={processing}>Create</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </form>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
-            <AlertDialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
-              <AlertDialogTrigger asChild>
-                <Button>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create Request
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Create Help Desk Ticket</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Fill in the details to create a new help desk ticket.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <form onSubmit={handleCreateSubmit} encType="multipart/form-data" className="space-y-4">
-                  <div>
-                    <label htmlFor="create-title" className="block text-sm font-medium text-gray-700">
-                      Title
-                    </label>
-                    <Input
-                      id="create-title"
-                      type="text"
-                      value={createData.title}
-                      onChange={(e) => setCreateData('title', e.target.value)}
-                      placeholder="Enter ticket title"
-                      className="mt-1"
-                    />
-                    {createErrors.title && <p className="mt-1 text-sm text-red-600">{createErrors.title}</p>}
-                  </div>
-                  <div>
-                    <label htmlFor="create-description" className="block text-sm font-medium text-gray-700">
-                      Description
-                    </label>
-                    <Input
-                      id="create-description"
-                      type="text"
-                      value={createData.description}
-                      onChange={(e) => setCreateData('description', e.target.value)}
-                      placeholder="Enter description"
-                      className="mt-1"
-                    />
-                    {createErrors.description && <p className="mt-1 text-sm text-red-600">{createErrors.description}</p>}
-                  </div>
-                  <div>
-                    <label htmlFor="create-attachment" className="block text-sm font-medium text-gray-700">
-                      Attachment
-                    </label>
-                    <Input
-                      id="create-attachment"
-                      type="file"
-                      accept=".jpg,.png,.pdf,.doc,.docx"
-                      onChange={(e) => setCreateData('attachment', e.target.files ? e.target.files[0] : null)}
-                      className="mt-1"
-                    />
-                    {createData.attachment && (
-                      <p className="mt-1 text-sm text-gray-600">Selected file: {createData.attachment.name}</p>
-                    )}
-                    {createErrors.attachment && <p className="mt-1 text-sm text-red-600">{createErrors.attachment}</p>}
-                  </div>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction type="submit" disabled={processing}>
-                      Create
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </form>
-              </AlertDialogContent>
-            </AlertDialog>
-          </CardHeader>
 
-          <Separator />
-
-          <CardContent className="pt-4 space-y-3">
-            <div className="flex flex-col md:flex-row md:items-center gap-4">
-              <Input
-                type="text"
-                placeholder="Search helpdesk... (press Enter)"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                onKeyDown={handleSearchKey}
-              />
+            <div className="space-y-2">
+              <div className="relative">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  onKeyDown={handleSearchKey}
+                  className="h-9 pl-9"
+                />
+              </div>
               <Select value={status} onValueChange={handleStatusChange}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger className="h-9">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All</SelectItem>
-
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="waiting">Waiting</SelectItem>
-                  <SelectItem value="resolved">Resolved</SelectItem>
-                  <SelectItem value="rejected">Rejected</SelectItem>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="Pending">Pending</SelectItem>
+                  <SelectItem value="Waiting">Waiting</SelectItem>
+                  <SelectItem value="Resolved">Resolved</SelectItem>
+                  <SelectItem value="Rejected">Rejected</SelectItem>
                 </SelectContent>
               </Select>
             </div>
+          </div>
 
-            <div className="space-y-3">
-              <table className="w-full border-collapse  border-1 rounded-md overflow-hidden shadow-sm">
-                <thead>
-                  <tr className="bg-primary dark:bg-gray-800 text-center text-sm md:text-md lg:text-lg" >
-                    <th className="border p-2   font-medium text-white dark:text-gray-200">Token</th>
-                    <th className="border p-2   font-medium text-white dark:text-gray-200">Title</th>
-                    <th className="border p-2   font-medium text-white dark:text-gray-200">Descriptions</th>
-                    <th className="border p-2   font-medium text-white dark:text-gray-200">Status</th>
+          <div className="flex-1 overflow-y-auto divide-y">
+            {!helpDesk?.data || helpDesk.data.length === 0 ? (
+              <div className="p-8 text-center text-muted-foreground text-sm italic">
+                No tickets found
+              </div>
+            ) : (
+              helpDesk.data.map((req) => (
+                <div
+                  key={req.id}
+                  onClick={() => setSelectedHelpDesk(req)}
+                  className={`p-4 cursor-pointer hover:bg-muted/50 transition-colors ${selectedHelpDesk?.id === req.id ? 'bg-primary/10 border-r-2 border-primary' : ''}`}
+                >
+                  <div className="flex justify-between items-start mb-1">
+                    <span className="text-[10px] font-mono font-medium text-muted-foreground">#{req.token}</span>
+                    <span className={`text-[9px] uppercase font-bold px-1.5 py-0.5 rounded-full ${getStatusStyles(req.status)}`}>
+                      {req.status}
+                    </span>
+                  </div>
+                  <h3 className="font-semibold text-sm truncate">{req.title}</h3>
+                  <p className="text-xs text-muted-foreground truncate">{req.description}</p>
+                  <div className="flex justify-between mt-2 text-[10px] text-muted-foreground italic">
+                    <span>{new Date(req.created_at).toLocaleDateString()}</span>
+                  </div>
+                </div>
+              ))
+            )}
 
-
-                  </tr>
-                </thead>
-                <tbody>
-                  {!helpDesk?.data || helpDesk.data.length === 0 ? (
-                    <p className="text-muted-foreground text-center">No Request found.</p>
-                  ) : (
-                    helpDesk.data.map((req) => (
-                      <tr onClick={() => openViewModal(req)} key={req.id} className=" p-1 hover:bg-primary/10 text-sm md:text-md lg:text-lg dark:hover:bg-gray-700 text-center
-                    ">
-                        <td className="border   text-gray-900 dark:text-gray-100">
-                          #{req.token}
-                        </td>
-                        <td className="border font-bold   text-gray-900 dark:text-gray-100">
-                          {req.title}
-                        </td>
-                        <td className="border   text-gray-900 dark:text-gray-100">{req.description} </td>
-                        <td className="border   text-gray-900 dark:text-gray-100">  <span className={`inline-block px-2 py-1 rounded-full  font-semibold ${getStatusStyles(req.status)}`}>
-                          {req.status}
-                        </span> </td>
-
-
-                      </tr>
-
-
-                    ))
-                  )}
-                </tbody></table>
-            </div>
-
-            {helpDesk?.links && helpDesk.links.length > 1 && (
-              <div className="flex justify-center pt-6 flex-wrap gap-2">
+            {helpDesk?.links && helpDesk.links.length > 3 && (
+              <div className="p-4 flex justify-center gap-1 border-t">
                 {helpDesk.links.map((link, i) => (
                   <Button
                     key={i}
                     disabled={!link.url}
-                    variant={link.active ? 'default' : 'outline'}
-                    size="sm"
+                    variant={link.active ? 'default' : 'ghost'}
+                    size="icon"
+                    className="h-8 w-8 text-[10px]"
                     onClick={() => router.visit(link.url || '', { preserveScroll: true })}
                   >
                     <span dangerouslySetInnerHTML={{ __html: link.label }} />
@@ -295,94 +267,129 @@ export default function HelpDeskIndex({ helpDesk, filters, institutes, auth }: P
                 ))}
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        {/* View Modal */}
-        <AlertDialog open={isViewModalOpen} onOpenChange={setIsViewModalOpen}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Help Desk Ticket Details</AlertDialogTitle>
-              <AlertDialogDescription>Details of the selected help desk ticket.</AlertDialogDescription>
-            </AlertDialogHeader>
-            {selectedHelpDesk && (
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Token</label>
-                  <p className="mt-1 text-sm text-gray-900">#{selectedHelpDesk.token}</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Title</label>
-                  <p className="mt-1 text-sm text-gray-900">{selectedHelpDesk.title}</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Description</label>
-                  <p className="mt-1 text-sm text-gray-900">{selectedHelpDesk.description}</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Status</label>
-                  <span
-                    className={`inline-block px-2 py-1 rounded-full text-xs font-semibold ${getStatusStyles(
-                      selectedHelpDesk.status
-                    )}`}
+        {/* Right Main Content: Conversation */}
+        <div className={`flex-1 flex flex-col bg-muted/5 transition-all ${!selectedHelpDesk ? 'hidden md:flex' : 'flex'}`}>
+          {selectedHelpDesk ? (
+            <>
+              {/* Header */}
+              <div className="p-4 border-b bg-card flex items-center justify-between sticky top-0 z-10 shadow-sm">
+                <div className="flex items-center gap-3">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="md:hidden"
+                    onClick={() => setSelectedHelpDesk(null)}
                   >
-                    {selectedHelpDesk.status}
-                  </span>
+                    <ChevronLeft className="h-5 w-5" />
+                  </Button>
+                  <div>
+                    <h2 className="font-bold text-base leading-none mb-1">{selectedHelpDesk.title}</h2>
+                    <p className="text-xs text-muted-foreground">
+                      Ticket #{selectedHelpDesk.token} • {selectedHelpDesk.institute.name}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Feedback</label>
-                  <p className="mt-1 text-sm text-gray-900">{selectedHelpDesk.feedback || 'No feedback provided'}</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Feedback Date</label>
-                  <p className="mt-1 text-sm text-gray-900">
-                    {selectedHelpDesk.feedback_date
-                      ? new Date(selectedHelpDesk.feedback_date).toLocaleDateString()
-                      : 'No feedback date'}
-                  </p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Institute</label>
-                  <p className="mt-1 text-sm text-gray-900">{selectedHelpDesk.institute.name}</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Created By</label>
-                  <p className="mt-1 text-sm text-gray-900">{selectedHelpDesk.user.name}</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Feedback By</label>
-                  <p className="mt-1 text-sm text-gray-900">{selectedHelpDesk.feedbackby?.name || 'None'}</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Attachment</label>
-                  {selectedHelpDesk.attachment ? (
-                    isImageAttachment(selectedHelpDesk.attachment) ? (
-                      <img
-                        src={`/storage/${selectedHelpDesk.attachment}`}
-                        alt="Attachment"
-                        className="mt-2 max-w-full h-auto rounded-md"
-                        style={{ maxHeight: '300px' }}
-                      />
-                    ) : (
-                      <Button
-                        variant="outline"
-                        className="mt-2"
-                        onClick={() => window.open(`/storage/${selectedHelpDesk.attachment}`, '_blank')}
-                      >
-                        View Attachment
-                      </Button>
-                    )
-                  ) : (
-                    <p className="mt-1 text-sm text-gray-900">No attachment</p>
-                  )}
+                <div className={`text-[10px] uppercase font-black px-2 py-1 rounded-full ${getStatusStyles(selectedHelpDesk.status)}`}>
+                  {selectedHelpDesk.status}
                 </div>
               </div>
-            )}
-            <AlertDialogFooter>
-              <AlertDialogCancel onClick={() => setSelectedHelpDesk(null)}>Close</AlertDialogCancel>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+
+              {/* Scrollable Conversation */}
+              <div className="flex-1 overflow-y-auto p-4 lg:p-6">
+                <div className="max-w-full mx-auto space-y-6">
+                  {/* Ticket Details Summary */}
+                  <div className="bg-card rounded-xl border p-5 shadow-sm space-y-4">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pb-4 border-b">
+                      <div>
+                        <label className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest block mb-1">Created By</label>
+                        <p className="text-sm font-medium">{selectedHelpDesk.user.name}</p>
+                      </div>
+                      <div>
+                        <label className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest block mb-1">Date Created</label>
+                        <p className="text-sm font-medium">{new Date(selectedHelpDesk.created_at).toLocaleDateString()}</p>
+                      </div>
+                      <div>
+                        <label className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest block mb-1">Last Update</label>
+                        <p className="text-sm font-medium">{new Date(selectedHelpDesk.updated_at).toLocaleDateString()}</p>
+                      </div>
+                      <div>
+                        <label className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest block mb-1">Institute</label>
+                        <p className="text-sm font-medium truncate">{selectedHelpDesk.institute.name}</p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <p className="text-sm leading-relaxed text-foreground/80 whitespace-pre-wrap italic">
+                        "{selectedHelpDesk.description}"
+                      </p>
+
+                      {selectedHelpDesk.attachment && (
+                        <div className="pt-2">
+                          <label className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest block mb-2">Attached Documents</label>
+                          {isImageAttachment(selectedHelpDesk.attachment) ? (
+                            <div className="relative group max-w-[240px]">
+                              <img
+                                src={`/storage/${selectedHelpDesk.attachment}`}
+                                alt="Attachment preview"
+                                className="rounded-lg border object-cover h-32 w-full hover:brightness-90 transition-all cursor-zoom-in"
+                                onClick={() => window.open(`/storage/${selectedHelpDesk.attachment}`, '_blank')}
+                              />
+                            </div>
+                          ) : (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-8"
+                              onClick={() => window.open(`/storage/${selectedHelpDesk.attachment}`, '_blank')}
+                            >
+                              Download File
+                            </Button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Official Resolution Overlay */}
+                  {(selectedHelpDesk.feedback || selectedHelpDesk.feedbackby) && (
+                    <div className={`${getStatusStyles(selectedHelpDesk.status)}/10 border-${getStatusStyles(selectedHelpDesk.status)}/20 rounded-xl p-5 border text-${getStatusStyles(selectedHelpDesk.status)}-900 dark:text-${getStatusStyles(selectedHelpDesk.status)}-100 shadow-sm relative overflow-hidden group`}>
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-${getStatusStyles(selectedHelpDesk.status)}/5 rounded-full -mr-16 -mt-16 group-hover:scale-110 transition-transform" />
+                      <h4 className="text-[11px] font-black uppercase tracking-[0.2em] mb-3 text-${getStatusStyles(selectedHelpDesk.status)}-600 dark:text-${getStatusStyles(selectedHelpDesk.status)}-500">Official Support Resolution</h4>
+                      <p className="text-sm leading-relaxed mb-4 font-medium">{selectedHelpDesk.feedback || 'In Progress - Awaiting final resolution.'}</p>
+                      <div className="flex items-center justify-between pt-3 border-t border-${getStatusStyles(selectedHelpDesk.status)}/10 text-[10px] uppercase font-bold tracking-wider">
+                        <span className="flex items-center gap-1.5">
+                          <Building className="h-3 w-3" />
+                          {selectedHelpDesk.feedbackby?.name || 'Assigned Agent'}
+                        </span>
+                        {selectedHelpDesk.feedback_date && (
+                          <span>Resolved at: {new Date(selectedHelpDesk.feedback_date).toLocaleDateString()}</span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Chat Section */}
+                  <div className="pt-2">
+                    <ChatBox helpDeskId={selectedHelpDesk.id} status={selectedHelpDesk.status} />
+                  </div>
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="flex-1 flex flex-col items-center justify-center p-8 opacity-40">
+              <div className="w-24 h-24 bg-muted rounded-full flex items-center justify-center mb-6">
+                <Building className="h-12 w-12" />
+              </div>
+              <h2 className="text-xl font-bold mb-2">Your Conversations</h2>
+              <p className="text-sm text-center max-w-[300px]">
+                Select a ticket from the left sidebar to view the details and start chatting with support.
+              </p>
+            </div>
+          )}
+        </div>
       </div>
     </AppLayout>
   );

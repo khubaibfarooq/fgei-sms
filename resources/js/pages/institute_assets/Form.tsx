@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Save, ArrowLeft, Plus, Trash2 } from 'lucide-react';
+import { Save, ArrowLeft, Plus, Trash2, Building } from 'lucide-react';
 import { BreadcrumbItem } from '@/types';
 import Combobox from '@/components/ui//combobox';
 
@@ -242,25 +242,25 @@ export default function InstituteAssetForm({ instituteAsset, assets, rooms }: In
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title={isEdit ? 'Edit Institute Asset' : 'Add Institute Asset'} />
 
-      <div className="flex-1 p-4 md:p-6 w-[80vw] mx-auto">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-2xl font-bold">
-              {isEdit ? 'Edit Institute Asset' : 'Add Institute Asset'}
+      <div className="flex-1 p-4 md:p-6 w-full max-w-7xl mx-auto">
+        <Card className="shadow-lg border-primary/10">
+          <CardHeader className="space-y-1">
+            <CardTitle className="text-2xl md:text-3xl font-black uppercase tracking-tighter">
+              {isEdit ? 'Modify Asset' : 'Register Assets'}
             </CardTitle>
-            <p className="text-sm text-muted-foreground">
-              {isEdit ? 'Edit institute asset details' : 'Add new assets to institute inventory'}
+            <p className="text-sm text-muted-foreground font-medium">
+              {isEdit ? 'Update existing inventory record' : 'Batch add new assets to institute rooms'}
             </p>
           </CardHeader>
 
           <Separator />
 
           <CardContent className="pt-6">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* First Row: Room and Date */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-                <div className="space-y-2">
-                  <Label htmlFor="room_id">Room</Label>
+            <form onSubmit={handleSubmit} className="space-y-8">
+              {/* Header Section: Room and Date */}
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-end bg-muted/20 p-4 md:p-6 rounded-2xl border border-primary/5">
+                <div className="space-y-2 md:col-span-5">
+                  <Label htmlFor="room_id" className="text-[10px] uppercase font-black tracking-widest text-primary/70 ml-1">Location / Room</Label>
                   <Combobox
                     entity="room"
                     value={roomId.toString()}
@@ -272,144 +272,175 @@ export default function InstituteAssetForm({ instituteAsset, assets, rooms }: In
                     includeAllOption={false}
                   />
                   {errors.room_id && (
-                    <p className="text-sm text-destructive">{errors.room_id}</p>
+                    <p className="text-[10px] font-bold text-destructive italic">{errors.room_id}</p>
                   )}
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="added_date">Added Date</Label>
+                <div className="space-y-2 md:col-span-4">
+                  <Label htmlFor="added_date" className="text-[10px] uppercase font-black tracking-widest text-primary/70 ml-1">Registration Date</Label>
                   <Input
                     id="added_date"
                     type="date"
                     value={addedDate}
                     onChange={(e) => setAddedDate(e.target.value)}
+                    className="bg-background font-bold h-10"
                   />
                   {errors.added_date && (
-                    <p className="text-sm text-destructive">{errors.added_date}</p>
+                    <p className="text-[10px] font-bold text-destructive italic">{errors.added_date}</p>
                   )}
                 </div>
 
-                <div>
-                  <Button type="button" onClick={handleAddRow} className="w-full">
+                <div className="md:col-span-3">
+                  <Button
+                    type="button"
+                    onClick={handleAddRow}
+                    className="w-full h-10 font-black uppercase text-[10px] tracking-widest shadow-sm"
+                    variant="outline"
+                  >
                     <Plus className="mr-2 h-4 w-4" />
-                    Add Row (Shit+ Entr)
+                    New Row (Shift+Enter)
                   </Button>
                 </div>
               </div>
 
               {errors.assets && (
-                <p className="text-sm text-destructive">{errors.assets}</p>
+                <p className="text-sm font-bold text-destructive text-center bg-destructive/5 py-2 rounded-md border border-destructive/10 animate-pulse">{errors.assets}</p>
               )}
 
-              {/* Asset Table */}
-              {assetRows.length > 0 && (
-                <div className="border rounded-lg overflow-hidden">
-                  <table className="w-full">
-                    <thead className="bg-primary text-white">
-                      <tr>
-                        <th className="p-3 text-left font-medium">Asset</th>
-                        <th className="p-3 text-left font-medium w-32">Quantity</th>
-                        <th className="p-3 text-left font-medium">Description</th>
-                        <th className="p-3 text-center font-medium w-20">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {assetRows.map((row, index) => (
-                        <tr key={row.id} data-row-id={row.id} className="border-t hover:bg-muted/50">
-                          <td className="p-3">
-                            <Combobox
-                              entity="asset"
-                              value={row.asset_id.toString()}
-                              onChange={(value) =>
-                                handleRowChange(row.id, 'asset_id', value ? parseInt(value) : '')
-                              }
-                              options={assets.map((asset) => ({
-                                id: asset.id.toString(),
-                                name: asset.name + (asset.category ? ` (${asset.category.name})` : ''),
-                              }))}
-                              includeAllOption={false}
-                            />
-                            {errors[`assets.${index}.asset_id`] && (
-                              <p className="text-sm text-destructive mt-1">
-                                {errors[`assets.${index}.asset_id`]}
-                              </p>
-                            )}
-                          </td>
-                          <td className="p-3">
-                            <Input
-                              type="number"
-                              min="1"
-                              value={row.current_qty}
-                              onChange={(e) =>
-                                handleRowChange(
-                                  row.id,
-                                  'current_qty',
-                                  e.target.value ? parseInt(e.target.value) : ''
-                                )
-                              }
-                              placeholder="Qty"
-                            />
-                            {errors[`assets.${index}.current_qty`] && (
-                              <p className="text-sm text-destructive mt-1">
-                                {errors[`assets.${index}.current_qty`]}
-                              </p>
-                            )}
-                          </td>
-                          <td className="p-3">
-                            <Input
-                              type="text"
-                              value={row.details}
-                              onChange={(e) =>
-                                handleRowChange(row.id, 'details', e.target.value)
-                              }
-                              placeholder="Enter description"
-                            />
-                            {errors[`assets.${index}.details`] && (
-                              <p className="text-sm text-destructive mt-1">
-                                {errors[`assets.${index}.details`]}
-                              </p>
-                            )}
-                          </td>
-                          <td className="p-3 text-center">
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleDeleteRow(row.id)}
-                              className="text-destructive hover:text-destructive"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+              {/* Assets Section */}
+              <div className="space-y-4">
+                <div className="hidden md:grid md:grid-cols-12 gap-4 px-4 text-[10px] uppercase font-black tracking-widest text-muted-foreground/60">
+                  <div className="col-span-12 lg:col-span-5">Asset Details</div>
+                  <div className="col-span-12 lg:col-span-2">Quantity</div>
+                  <div className="col-span-12 lg:col-span-4">Description / Condition</div>
+                  <div className="col-span-12 lg:col-span-1 text-center">Action</div>
                 </div>
-              )}
 
-              {assetRows.length === 0 && (
-                <div className="text-center py-8 text-muted-foreground border rounded-lg border-dashed">
-                  <p>No assets added yet. Click "Add Row" to start adding assets.</p>
+                <div className="space-y-4 md:space-y-1">
+                  {assetRows.length > 0 ? (
+                    assetRows.map((row, index) => (
+                      <div
+                        key={row.id}
+                        data-row-id={row.id}
+                        className="group relative flex flex-col md:grid md:grid-cols-12 gap-4 bg-card md:bg-transparent p-5 md:p-3 rounded-2xl md:rounded-none border md:border-0 md:border-b last:border-0 hover:bg-primary/[0.02] transition-colors shadow-sm md:shadow-none"
+                      >
+                        {/* Asset Column */}
+                        <div className="space-y-1 md:col-span-12 lg:col-span-5">
+                          <Label className="md:hidden text-[9px] uppercase font-black text-primary/50 mb-1 block tracking-widest">Select Asset</Label>
+                          <Combobox
+                            entity="asset"
+                            value={row.asset_id.toString()}
+                            onChange={(value) =>
+                              handleRowChange(row.id, 'asset_id', value ? parseInt(value) : '')
+                            }
+                            options={assets.map((asset) => ({
+                              id: asset.id.toString(),
+                              name: asset.name + (asset.category ? ` (${asset.category.name})` : ''),
+                            }))}
+                            includeAllOption={false}
+                          />
+                          {errors[`assets.${index}.asset_id`] && (
+                            <p className="text-[10px] font-bold text-destructive italic mt-1">
+                              {errors[`assets.${index}.asset_id`]}
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Qty Column */}
+                        <div className="space-y-1 md:col-span-12 lg:col-span-2">
+                          <Label className="md:hidden text-[9px] uppercase font-black text-primary/50 mb-1 block tracking-widest">Current Qty</Label>
+                          <Input
+                            type="number"
+                            min="1"
+                            value={row.current_qty}
+                            onChange={(e) =>
+                              handleRowChange(
+                                row.id,
+                                'current_qty',
+                                e.target.value ? parseInt(e.target.value) : ''
+                              )
+                            }
+                            placeholder="Qty"
+                            className="font-bold h-10 md:h-9"
+                          />
+                          {errors[`assets.${index}.current_qty`] && (
+                            <p className="text-[10px] font-bold text-destructive italic mt-1">
+                              {errors[`assets.${index}.current_qty`]}
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Details Column */}
+                        <div className="space-y-1 md:col-span-12 lg:col-span-4">
+                          <Label className="md:hidden text-[9px] uppercase font-black text-primary/50 mb-1 block tracking-widest">Description</Label>
+                          <Input
+                            type="text"
+                            value={row.details}
+                            onChange={(e) =>
+                              handleRowChange(row.id, 'details', e.target.value)
+                            }
+                            placeholder="Condition, batch, etc."
+                            className="font-medium h-10 md:h-9"
+                          />
+                          {errors[`assets.${index}.details`] && (
+                            <p className="text-[10px] font-bold text-destructive italic mt-1">
+                              {errors[`assets.${index}.details`]}
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Actions Column */}
+                        <div className="md:col-span-12 lg:col-span-1 flex items-center justify-end md:justify-center pt-2 md:pt-0">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteRow(row.id)}
+                            className="text-destructive hover:text-destructive hover:bg-destructive/10 w-full md:w-auto font-black text-[10px] uppercase tracking-widest h-9"
+                          >
+                            <Trash2 className="h-4 w-4 mr-2 md:mr-0" />
+                            <span className="md:hidden">Remove Asset</span>
+                          </Button>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-20 bg-muted/10 rounded-3xl border-2 border-dashed border-muted flex flex-col items-center justify-center space-y-4">
+                      <div className="w-16 h-16 bg-muted/20 rounded-full flex items-center justify-center">
+                        <Building className="h-8 w-8 text-muted-foreground/30" />
+                      </div>
+                      <div className="max-w-[280px]">
+                        <p className="font-bold text-sm text-foreground/70 uppercase tracking-tight">Empty Inventory Batch</p>
+                        <p className="text-[11px] text-muted-foreground font-medium leading-relaxed mt-1">
+                          Use the button above to add assets to this room. You can add multiple assets at once.
+                        </p>
+                      </div>
+                      <Button type="button" size="sm" onClick={handleAddRow} variant="outline" className="font-black text-[10px] uppercase tracking-widest mt-2 h-9">
+                        <Plus className="mr-2 h-4 w-4" /> Start Adding
+                      </Button>
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
 
-              {/* Action Buttons */}
-              <div className="flex items-center justify-between pt-6">
-                <Link href="/institute-assets">
-                  <Button type="button" variant="secondary">
+              {/* Footer Actions */}
+              <div className="flex flex-col md:flex-row items-center justify-between gap-4 pt-8 border-t">
+                <Link href="/institute-assets" className="w-full md:w-auto order-2 md:order-1">
+                  <Button type="button" variant="ghost" className="w-full font-black uppercase text-[10px] tracking-widest h-12 md:h-10">
                     <ArrowLeft className="mr-2 h-4 w-4" />
-                    Back
+                    Back to List
                   </Button>
                 </Link>
-                <Button type="submit" disabled={processing || assetRows.length === 0}>
-                  <Save className="mr-2 h-4 w-4" />
-                  {processing
-                    ? 'Saving...'
-                    : isEdit
-                      ? 'Save Changes'
-                      : 'Save Assets'}
-                </Button>
+                <div className="flex w-full md:w-auto gap-3 order-1 md:order-2">
+                  <Button
+                    type="submit"
+                    className="flex-1 md:flex-none w-full md:w-48 h-12 md:h-10 font-black uppercase text-[10px] tracking-[0.1em] shadow-lg shadow-primary/20"
+                    disabled={processing || assetRows.length === 0}
+                  >
+                    <Save className="mr-2 h-4 w-4" />
+                    {processing ? 'Saving...' : isEdit ? 'Update Record' : 'Commit Changes'}
+                  </Button>
+                </div>
               </div>
             </form>
           </CardContent>

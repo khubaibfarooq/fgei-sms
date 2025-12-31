@@ -46,4 +46,9 @@ class HelpDesk extends Model
     {
         return $this->belongsTo(User::class, 'feedback_by');
     }
+
+    public function messages(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(HelpDeskMessage::class);
+    }
 }
