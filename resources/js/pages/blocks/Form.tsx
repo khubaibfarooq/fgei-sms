@@ -21,7 +21,7 @@ interface BlockFormProps {
     id: number;
     name: string;
     area: number;
-    img:string | null;
+    img: string | null;
     institute_id: number;
     block_type_id?: number;
     establish_date?: string;
@@ -31,18 +31,18 @@ interface BlockFormProps {
 
 export default function BlockForm({ block, blockTypes }: BlockFormProps) {
   const isEdit = !!block;
-  
+
   console.log('blockTypes:', blockTypes);
 
   // Convert blockTypes object to array format for the Select component
   const blockTypesArray = React.useMemo(() => {
     if (!blockTypes) return [];
-    
+
     // If blockTypes is already an array, use it directly
     if (Array.isArray(blockTypes)) {
       return blockTypes;
     }
-    
+
     // Convert object { "1": "Administration", "2": "Academic" } to array format
     return Object.entries(blockTypes).map(([id, name]) => ({
       id: parseInt(id),
@@ -55,7 +55,7 @@ export default function BlockForm({ block, blockTypes }: BlockFormProps) {
     area: number;
     institute_id: number;
     block_type_id: number;
-    img:string |File | null;
+    img: string | File | null;
     establish_date?: string;
   }>({
     name: block?.name || '',
@@ -68,10 +68,10 @@ export default function BlockForm({ block, blockTypes }: BlockFormProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-       const formData = new FormData();
+    const formData = new FormData();
     (Object.keys(data) as Array<keyof typeof data>).forEach(key => {
       // Skip null or empty values
-  
+
       if (data[key] === null || data[key] === '') {
         return;
       }
@@ -83,19 +83,19 @@ export default function BlockForm({ block, blockTypes }: BlockFormProps) {
         return;
       }
 
-     
+
 
       // Handle all other values
       formData.append(key, data[key] as string);
     });
     if (isEdit) {
-         formData.append('_method', 'PUT');
+      formData.append('_method', 'PUT');
       router.post(`/blocks/${block.id}`, formData, {
-                forceFormData: true,
+        forceFormData: true,
         preserveScroll: true,
         preserveState: true,
-          onSuccess: () => {
-           router.get('/blocks'); 
+        onSuccess: () => {
+          router.get('/blocks');
         },
       });
     } else {
@@ -116,7 +116,7 @@ export default function BlockForm({ block, blockTypes }: BlockFormProps) {
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title={isEdit ? 'Edit Block' : 'Add Block'} />
 
-      <div className="flex-1 p-4 md:p-6 w-[70vw] mx-auto">
+      <div className="flex-1 p-4 md:p-6 w-full max-w-4xl mx-auto">
         <Card>
           <CardHeader>
             <CardTitle className="text-2xl font-bold">
@@ -152,7 +152,7 @@ export default function BlockForm({ block, blockTypes }: BlockFormProps) {
                     placeholder="Enter area"
                   />
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="block_type_id">Block Type</Label>
                   <Select
@@ -181,42 +181,42 @@ export default function BlockForm({ block, blockTypes }: BlockFormProps) {
                     placeholder="Select establish date"
                   />
                 </div>
-                  <div className="space-y-2">
-            
-                                    <Label htmlFor="img">Image</Label>
-                                    <Input
-                                      id="img"
-                                      type="file"
-                                      accept="image/*"
-                                      onChange={(e) => setData('img', e.target.files?.[0] || null)}
-                                    />
-                                  
-                               
-                              </div>
-                              <div className="space-y-2">
-                                    <Label>Image Preview</Label>
-                                    <ImagePreview dataImg={data.img} /> 
-                                    </div>
+                <div className="space-y-2">
+
+                  <Label htmlFor="img">Image</Label>
+                  <Input
+                    id="img"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setData('img', e.target.files?.[0] || null)}
+                  />
+
+
+                </div>
+                <div className="space-y-2">
+                  <Label>Image Preview</Label>
+                  <ImagePreview dataImg={data.img} />
+                </div>
               </div>
 
-             
 
-              <div className="flex items-center justify-between pt-6">
-                <Link href="/blocks">
-                  <Button type="button" variant="secondary">
+
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6">
+                <Link href="/blocks" className="w-full sm:w-auto">
+                  <Button type="button" variant="secondary" className="w-full">
                     <ArrowLeft className="mr-2 h-4 w-4" />
                     Back
                   </Button>
                 </Link>
-                <Button type="submit" disabled={processing}>
+                <Button type="submit" disabled={processing} className="w-full sm:w-auto">
                   <Save className="mr-2 h-4 w-4" />
                   {processing
                     ? isEdit
                       ? 'Saving...'
                       : 'Adding...'
                     : isEdit
-                    ? 'Save Changes'
-                    : 'Add Block'}
+                      ? 'Save Changes'
+                      : 'Add Block'}
                 </Button>
               </div>
             </form>

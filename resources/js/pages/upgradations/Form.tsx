@@ -16,9 +16,9 @@ interface Props {
     institution_id: number;
     details: string;
     from: string;
-     to: string;
-        levelfrom: string;
-     levelto: string;
+    to: string;
+    levelfrom: string;
+    levelto: string;
     status: string;
   };
 }
@@ -28,25 +28,25 @@ export default function AssetupgradationForm({ upgradation }: Props) {
 
   const { data, setData, processing, errors, reset } = useForm<{
     details: string;
-       institution_id: number;
+    institution_id: number;
     from: string;
     to: string;
-        levelfrom: string;
-      levelto: string;
+    levelfrom: string;
+    levelto: string;
     status: string;
   }>({
-   details: upgradation?.details || '',
+    details: upgradation?.details || '',
     institution_id: upgradation?.institution_id || 0,
     from: upgradation?.from || '',
     to: upgradation?.to || '',
-        levelfrom: upgradation?.levelfrom || '',
-      levelto: upgradation?.levelto || '',
+    levelfrom: upgradation?.levelfrom || '',
+    levelto: upgradation?.levelto || '',
     status: upgradation?.status || '',
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (isEdit) {
       router.put(`/upgradations/${upgradation.id}`, data, {
         preserveScroll: true,
@@ -70,7 +70,7 @@ export default function AssetupgradationForm({ upgradation }: Props) {
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title={isEdit ? 'Edit Upgradation' : 'Add Upgradation'} />
 
-      <div className="flex-1 p-4 md:p-6 w-[70vw] mx-auto">
+      <div className="flex-1 p-4 md:p-6 w-full max-w-4xl mx-auto">
         <Card>
           <CardHeader>
             <CardTitle className="text-2xl font-bold">
@@ -94,29 +94,31 @@ export default function AssetupgradationForm({ upgradation }: Props) {
                   placeholder="Enter upgradation Details"
                 />
               </div>
-              <div className="space-y-2 space-x-1 gap-2 md:flex md:items-center ">
-                <Label htmlFor="from">From</Label>
-               
-             <DateInput
-             id="from"
-        value={data.from}
-        onChange={(value: string) => setData('from', value)}
-        placeholder="DD/MM/YYYY"
-      />
-
-                <Label htmlFor="to">To</Label>
+              <div className="space-y-4 md:space-y-0 md:space-x-4 md:flex md:items-end ">
+                <div className="flex-1 space-y-2">
+                  <Label htmlFor="from">From</Label>
                   <DateInput
-                  id="to"
-        value={data.to}
-        onChange={(value: string) => setData('to', value)}
-        placeholder="DD/MM/YYYY"
-      />
-                
+                    id="from"
+                    value={data.from}
+                    onChange={(value: string) => setData('from', value)}
+                    placeholder="DD/MM/YYYY"
+                  />
+                </div>
+
+                <div className="flex-1 space-y-2">
+                  <Label htmlFor="to">To</Label>
+                  <DateInput
+                    id="to"
+                    value={data.to}
+                    onChange={(value: string) => setData('to', value)}
+                    placeholder="DD/MM/YYYY"
+                  />
+                </div>
               </div>
-                <div className="space-y-2">
+              <div className="space-y-2">
                 <Label htmlFor="levelfrom">Level From</Label>
                 <Input
-                
+
                   id="levelfrom"
                   value={data.levelfrom}
                   onChange={(e) => setData('levelfrom', e.target.value)}
@@ -126,7 +128,7 @@ export default function AssetupgradationForm({ upgradation }: Props) {
               <div className="space-y-2">
                 <Label htmlFor="levelto">Level To</Label>
                 <Input
-             
+
                   id="levelto"
                   value={data.levelto}
                   onChange={(e) => setData('levelto', e.target.value)}
@@ -148,22 +150,22 @@ export default function AssetupgradationForm({ upgradation }: Props) {
                 </select>
               </div>
 
-              <div className="flex items-center justify-between pt-6">
-                <Link href="/upgradations">
-                  <Button type="button" variant="secondary">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6">
+                <Link href="/upgradations" className="w-full sm:w-auto">
+                  <Button type="button" variant="secondary" className="w-full">
                     <ArrowLeft className="mr-2 h-4 w-4" />
                     Back
                   </Button>
                 </Link>
-                <Button type="submit" disabled={processing}>
+                <Button type="submit" disabled={processing} className="w-full sm:w-auto">
                   <Save className="mr-2 h-4 w-4" />
                   {processing
                     ? isEdit
                       ? 'Saving...'
                       : 'Adding...'
                     : isEdit
-                    ? 'Save Changes'
-                    : 'Add upgradation'}
+                      ? 'Save Changes'
+                      : 'Add upgradation'}
                 </Button>
               </div>
             </form>

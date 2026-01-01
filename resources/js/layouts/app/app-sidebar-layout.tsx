@@ -38,16 +38,8 @@ export default function AppSidebarLayout({
     if (flash.error) toast.error(flash.error);
   }, [flash]);
 
-  const primaryColor = setting?.warna || '#0ea5e9';
+  const primaryColor = (setting?.warna as string) || '#0ea5e9';
   const primaryForeground = '#ffffff';
-
-  useEffect(() => {
-    const unsubscribe = router.on('navigate', () => {
-      router.reload({ only: ['menus'] });
-    });
-
-    return () => unsubscribe();
-  }, []);
 
   return (
     <>

@@ -152,8 +152,8 @@ export default function Completion({
             { header: 'Region', key: 'region', width: 30 },
             { header: 'Total Institutes', key: 'total', width: 20 },
             { header: 'Completed', key: 'completed', width: 20 },
-            { header: '> 50%', key: 'greater', width: 20 },
-            { header: '< 50%', key: 'less', width: 20 },
+            { header: 'Greater than 50%', key: 'greater', width: 20 },
+            { header: 'Less than 50%', key: 'less', width: 20 },
         ];
         summary.forEach(item => {
             wsSummary.addRow({
@@ -184,8 +184,8 @@ export default function Completion({
                 { header: 'Upgradations', key: 'upgradations', width: 12 },
                 { header: 'Total Institutes', key: 'total', width: 20 },
                 { header: 'Completed', key: 'completed', width: 20 },
-                { header: '> 50%', key: 'greater', width: 20 },
-                { header: '< 50%', key: 'less', width: 20 },
+                { header: 'Greater than 50%', key: 'greater', width: 20 },
+                { header: 'Less than 50%', key: 'less', width: 20 },
             ];
             details.forEach(item => {
                 wsDetails.addRow({
@@ -248,7 +248,7 @@ export default function Completion({
         // Summary
         doc.text('Completion Report - Summary', 14, 15);
         autoTable(doc, {
-            head: [['Region', 'Total Institutes', 'Completed', '> 50%', '< 50%']],
+            head: [['Region', 'Total Institutes', 'Completed', 'Greater than 50%', 'Less than 50%']],
             body: summary.map(s => [s.region, s.total_institutes, s.completed, s.greater_than_50, s.less_than_50]),
             startY: 20,
         });
@@ -261,18 +261,9 @@ export default function Completion({
 
         if (isRegionView) {
             autoTable(doc, {
-                head: [['Region', 'Shifts', 'Blocks', 'Rooms', 'Assets', 'Plants', 'Transports', 'Funds', 'Projects', 'Upgradations', 'Total Inst.', 'Comp.', '> 50%', '< 50%']],
+                head: [['Region', 'Total Inst.', 'Comp.', 'Greater than 50%', 'Less than 50%']],
                 body: details.map(d => [
                     d.name,
-                    d.shifts || 0,
-                    d.blocks || 0,
-                    d.rooms || 0,
-                    d.assets || 0,
-                    d.plants || 0,
-                    d.transports || 0,
-                    d.funds || 0,
-                    d.projects || 0,
-                    d.upgradations || 0,
                     d.total_institutes || 0,
                     d.completed || 0,
                     d.greater_than_50 || 0,
@@ -283,10 +274,10 @@ export default function Completion({
             });
         } else {
             autoTable(doc, {
-                head: [['Institute', 'Region', 'Shifts', 'Blocks', 'Rooms', 'Assets', 'Plants', 'Transports', 'Funds', 'Projects', 'Upgradations', 'Total %']],
+                head: [['Institute', 'Shifts', 'Blocks', 'Rooms', 'Assets', 'Plants', 'Transports', 'Funds', 'Projects', 'Upgradations', 'Total %']],
                 body: details.map(d => [
                     d.name,
-                    d.region_name || '',
+
                     d.shifts || 0,
                     d.blocks || 0,
                     d.rooms || 0,
@@ -544,10 +535,10 @@ export default function Completion({
                                                     status == 'completed' || status == '' ? <th className="px-4 py-3 text-center">Comp.</th> : null
                                                 }
                                                 {
-                                                    status == 'greater_than_50' || status == '' ? <th className="px-4 py-3 text-center">&gt; 50%</th> : null
+                                                    status == 'greater_than_50' || status == '' ? <th className="px-4 py-3 text-center">Greater than 50%</th> : null
                                                 }
                                                 {
-                                                    status == 'less_than_50' || status == '' ? <th className="px-4 py-3 text-center">&lt; 50%</th> : null
+                                                    status == 'less_than_50' || status == '' ? <th className="px-4 py-3 text-center">Less than 50%</th> : null
                                                 }
                                                 {
                                                     status == 'zero' || status == '' ? <th className="px-4 py-3 text-center">Zero (0%)</th> : null

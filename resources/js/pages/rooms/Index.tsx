@@ -71,7 +71,6 @@ export default function RoomIndex({ rooms, filters, blocks, roomtypes, permissio
         preserveScroll: true,
         preserveState: true,
         replace: true,
-        only: ['rooms', 'filters'],
       }
     );
   };
@@ -118,8 +117,8 @@ export default function RoomIndex({ rooms, filters, blocks, roomtypes, permissio
               <p className="text-muted-foreground text-sm">Manage institutional rooms</p>
             </div>
             {permissions.can_add && (
-              <Link href="/rooms/create">
-                <Button>
+              <Link href="/rooms/create" className="w-full md:w-auto">
+                <Button className="w-full">
                   <Plus className="h-4 w-4 mr-2" />
                   Add Room
                 </Button>
@@ -137,13 +136,13 @@ export default function RoomIndex({ rooms, filters, blocks, roomtypes, permissio
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 onKeyDown={handleSearchKey}
-                className="md:w-64"
+                className="w-full md:w-64"
               />
 
               <select
                 value={selectedBlock}
                 onChange={handleBlockChange}
-                className="px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full md:w-auto px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">All Blocks</option>
                 {blockOptions.map((block) => (
@@ -156,7 +155,7 @@ export default function RoomIndex({ rooms, filters, blocks, roomtypes, permissio
               <select
                 value={selectedRoomType}
                 onChange={handleRoomTypeChange}
-                className="px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full md:w-auto px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">All Room Types</option>
                 {roomTypeOptions.map((type) => (
@@ -166,23 +165,23 @@ export default function RoomIndex({ rooms, filters, blocks, roomtypes, permissio
                 ))}
               </select>
 
-              <Button onClick={handleSearch} variant="outline">
+              <Button onClick={handleSearch} variant="outline" className="w-full md:w-auto">
                 Search
               </Button>
 
               {(search || selectedBlock || selectedRoomType) && (
-                <Button onClick={clearFilters} variant="ghost">
+                <Button onClick={clearFilters} variant="ghost" className="w-full md:w-auto">
                   Clear Filters
                 </Button>
               )}
             </div>
 
             {/* Table */}
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto space-y-3">
               {rooms.data.length === 0 ? (
                 <p className="text-center text-muted-foreground py-10">No rooms found.</p>
               ) : (
-                <table className="w-full min-w-max border-collapse rounded-lg overflow-hidden shadow-sm">
+                <table className="w-full min-w-[800px] border-collapse rounded-lg overflow-hidden shadow-sm">
                   <thead>
                     <tr className="bg-primary text-white text-center">
                       <th className="border p-3">Room Name</th>

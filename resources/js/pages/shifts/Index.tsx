@@ -23,9 +23,9 @@ import { toast } from 'sonner';
 interface shifts {
   id: number;
   name: string;
-  building_name:string;
+  building_name: string;
   building_type?: { id: number; name?: string };
- shifts_count?: number;
+  shifts_count?: number;
 }
 
 interface Props {
@@ -49,25 +49,25 @@ const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Shifts', href: '/shifts' },
 ];
 
-export default function ShiftsIndex({ shifts, filters,permissions }: Props) {
+export default function ShiftsIndex({ shifts, filters, permissions }: Props) {
   const [search, setSearch] = useState(filters.search || '');
-console.log(shifts);
+  console.log(shifts);
 
   const handleDelete = (id: number) => {
-  if (!permissions.can_delete) {
-    toast.error("You don’t have permission to delete shifts");
-    return;
-  }
+    if (!permissions.can_delete) {
+      toast.error("You don’t have permission to delete shifts");
+      return;
+    }
 
-  router.delete(`/shifts/${id}`, {
-    onSuccess: () => toast.success("Shift deleted successfully"),
-    onError: () => toast.error("Failed to delete Shift"),
-  });
-};
+    router.delete(`/shifts/${id}`, {
+      onSuccess: () => toast.success("Shift deleted successfully"),
+      onError: () => toast.error("Failed to delete Shift"),
+    });
+  };
 
   const handleSearchKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
-      router.get('/shifts', { ...filters, search }, { preserveScroll: true });
+      router.get('/shifts', { ...filters, search }, { preserveScroll: true, preserveState: true });
     }
   };
 
@@ -81,13 +81,13 @@ console.log(shifts);
               <CardTitle className="text-2xl font-bold">Shifts</CardTitle>
               <p className="text-muted-foreground text-sm md:text-md lg:text-lg">Manage  Shifts</p>
             </div>
-            {permissions.can_add &&  (
-            <Link href="/shifts/create">
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Shift
-              </Button>
-            </Link>
+            {permissions.can_add && (
+              <Link href="/shifts/create" className="w-full md:w-auto">
+                <Button className="w-full">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Shift
+                </Button>
+              </Link>
             )}
           </CardHeader>
 
@@ -101,77 +101,82 @@ console.log(shifts);
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 onKeyDown={handleSearchKey}
+                className="w-full"
               />
             </div>
 
-            <div className="space-y-3">  
-               <table className="w-full border-collapse  border-1 rounded-md overflow-hidden shadow-sm">
-  <thead>
-    <tr className="bg-primary dark:bg-gray-800 text-center" >
-      <th className="border p-2  text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Shift</th>
-      <th className="border p-2  text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Building</th>
-       <th className="border p-2  text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Building Type</th>
-      <th className="border p-2  text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Action</th>
-     
-      
-    </tr>
-  </thead>
-  <tbody>
-              {shifts.data.length === 0 ? (
-                <p className="text-muted-foreground text-center">No shift found.</p>
-              ) : (
-                shifts.data.map((shift) => (
+            <div className="space-y-3 overflow-x-auto">
+              <table className="w-full border-collapse border-1 rounded-md overflow-hidden shadow-sm min-w-[700px]">
+                <thead>
+                  <tr className="bg-primary dark:bg-gray-800 text-center" >
+                    <th className="border p-2  text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Shift</th>
+                    <th className="border p-2  text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Building</th>
+                    <th className="border p-2  text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Building Type</th>
+                    <th className="border p-2  text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Action</th>
 
-                   <tr  key={shift.id} className="hover:bg-primary/10 dark:hover:bg-gray-700 text-center
+
+                  </tr>
+                </thead>
+                <tbody>
+                  {shifts.data.length === 0 ? (
+                    <tr>
+                      <td colSpan={4} className="border p-8 text-muted-foreground text-center">
+                        No shift found.
+                      </td>
+                    </tr>
+                  ) : (
+                    shifts.data.map((shift) => (
+
+                      <tr key={shift.id} className="hover:bg-primary/10 dark:hover:bg-gray-700 text-center
                     ">
-                      <td className="border font-bold  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
+                        <td className="border font-bold  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
                           {shift.name}
-                         </td>
-                           <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
-                        {shift.building_name}
-                         </td>
-                         <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">{shift.building_type?.name || 'N/A'}</td>
-                          <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">   {permissions.can_edit &&  (
-                      <Link href={`/shifts/${shift.id}/edit`}>
-                        <Button variant="ghost" size="icon">
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                      </Link>
-                      )}
-                      {permissions.can_delete &&  (
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="ghost" size="icon" className="text-destructive hover:text-red-600">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Delete this shift?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              shift <strong>{shift.name}</strong> will be permanently deleted.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction
-                              className="bg-destructive hover:bg-destructive/90"
-                              onClick={() => handleDelete(shift.id)}
-                            >
-                              Delete
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>)} </td>
-                     
-                       
-                         </tr>
+                        </td>
+                        <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
+                          {shift.building_name}
+                        </td>
+                        <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">{shift.building_type?.name || 'N/A'}</td>
+                        <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">   {permissions.can_edit && (
+                          <Link href={`/shifts/${shift.id}/edit`}>
+                            <Button variant="ghost" size="icon">
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </Link>
+                        )}
+                          {permissions.can_delete && (
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="icon" className="text-destructive hover:text-red-600">
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete this shift?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    shift <strong>{shift.name}</strong> will be permanently deleted.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    className="bg-destructive hover:bg-destructive/90"
+                                    onClick={() => handleDelete(shift.id)}
+                                  >
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>)} </td>
 
 
-                  
-                ))
-              )}
-              </tbody></table>
+                      </tr>
+
+
+
+                    ))
+                  )}
+                </tbody></table>
             </div>
 
             {shifts.links.length > 1 && (

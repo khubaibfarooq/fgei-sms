@@ -26,6 +26,7 @@ interface ComboboxProps {
   notFoundMessage?: string; // Optional custom not found message
   includeAllOption?: boolean; // Optional flag to include "All" option
   allOptionLabel?: string; // Optional label for "All" option
+  disabled?: boolean; // Optional flag to disable the combobox
 }
 
 export default function Combobox({
@@ -37,6 +38,7 @@ export default function Combobox({
   notFoundMessage,
   includeAllOption = false,
   allOptionLabel = `All ${entity}s`,
+  disabled = false,
 }: ComboboxProps) {
   const [open, setOpen] = useState(false);
 
@@ -83,6 +85,7 @@ export default function Combobox({
           role="combobox"
           aria-expanded={open}
           className="w-full justify-between"
+          disabled={disabled}
         >
           {value && selectedOption ? selectedOption.name : buttonPlaceholder}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />

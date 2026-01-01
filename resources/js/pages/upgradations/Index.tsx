@@ -24,11 +24,11 @@ import { formatDate } from '@/utils/dateFormatter';
 interface upgradations {
   id: number;
   details: string;
-  from:string;
-   to: string;
-    levelfrom: string;
-     levelto: string;
-    status: string;
+  from: string;
+  to: string;
+  levelfrom: string;
+  levelto: string;
+  status: string;
 
   count?: number;
 }
@@ -54,7 +54,7 @@ const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Upgradations', href: '/upgradations' },
 ];
 
-export default function UpgradationsIndex({ upgradations, filters,permissions }: Props) {
+export default function UpgradationsIndex({ upgradations, filters, permissions }: Props) {
   const [search, setSearch] = useState(filters.search || '');
 
   const handleDelete = (id: number) => {
@@ -66,22 +66,22 @@ export default function UpgradationsIndex({ upgradations, filters,permissions }:
 
   const handleSearchKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
-      router.get('/upgradations', { ...filters, search }, { preserveScroll: true });
+      router.get('/upgradations', { ...filters, search }, { preserveScroll: true, preserveState: true });
     }
   };
-const getStatusStyles = (status: string) => {
-  switch (status) {
-    case 'pending':
-      return 'bg-yellow-500 text-white';
-    case 'approved':
-      return 'bg-green-500 text-white';
-   
-    case 'rejected':
-      return 'bg-red-500 text-white';
-    default:
-      return 'bg-gray-500 text-white';
-  }
-};
+  const getStatusStyles = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return 'bg-yellow-500 text-white';
+      case 'approved':
+        return 'bg-green-500 text-white';
+
+      case 'rejected':
+        return 'bg-red-500 text-white';
+      default:
+        return 'bg-gray-500 text-white';
+    }
+  };
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Upgradations Management" />
@@ -92,13 +92,13 @@ const getStatusStyles = (status: string) => {
               <CardTitle className="text-2xl font-bold">Upgradations</CardTitle>
               <p className="text-muted-foreground text-sm md:text-md lg:text-lg">View Upgradations</p>
             </div>
-            {permissions.can_add &&(
-            <Link href="/upgradations/create">
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Upgradation
-              </Button>
-            </Link>
+            {permissions.can_add && (
+              <Link href="/upgradations/create" className="w-full md:w-auto">
+                <Button className="w-full">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Upgradation
+                </Button>
+              </Link>
             )}
           </CardHeader>
 
@@ -112,91 +112,96 @@ const getStatusStyles = (status: string) => {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 onKeyDown={handleSearchKey}
+                className="w-full"
               />
             </div>
 
-            <div className="space-y-3">
-               <table className="w-full border-collapse">
-  <thead>
-    <tr className="bg-primary dark:bg-gray-800 text-center" >
-      <th className="border p-2  text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Details</th>
-      <th className="border p-2  text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">From</th>
-            <th className="border p-2  text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">To</th>
-            <th className="border p-2  text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Level From</th>
-            <th className="border p-2  text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Level To</th>
-            <th className="border p-2  text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Status</th>
+            <div className="space-y-3 overflow-x-auto">
+              <table className="w-full border-collapse min-w-[900px]">
+                <thead>
+                  <tr className="bg-primary dark:bg-gray-800 text-center" >
+                    <th className="border p-2  text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Details</th>
+                    <th className="border p-2  text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">From</th>
+                    <th className="border p-2  text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">To</th>
+                    <th className="border p-2  text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Level From</th>
+                    <th className="border p-2  text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Level To</th>
+                    <th className="border p-2  text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Status</th>
 
 
-      <th className="border p-2  text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200"></th>
-     
-      
-    </tr>
-  </thead>
-  <tbody>
-              {upgradations.data.length === 0 ? (
-                <p className="text-muted-foreground text-center">No upgradations found.</p>
-              ) : (
-                upgradations.data.map((upgradation) => (
+                    <th className="border p-2  text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200"></th>
 
-                   <tr  key={upgradation.id} className="hover:bg-primary/10 dark:hover:bg-gray-700 text-center
+
+                  </tr>
+                </thead>
+                <tbody>
+                  {upgradations.data.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="border p-8 text-muted-foreground text-center">
+                        No upgradations found.
+                      </td>
+                    </tr>
+                  ) : (
+                    upgradations.data.map((upgradation) => (
+
+                      <tr key={upgradation.id} className="hover:bg-primary/10 dark:hover:bg-gray-700 text-center
                     ">
-                      <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
-                        {upgradation.details}
-                         </td>
-                         <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
-                        {formatDate(upgradation.from)}
-                         </td>
-                         <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
-                       {formatDate(upgradation.to)}
-                         </td>
-                         <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
-                       {upgradation.levelfrom}
-                         </td>
-                         <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
-                        {upgradation.levelto} 
-                         </td>
-                         <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100"><span className={`inline-block px-2 py-1 rounded-full text-xs font-semibold ${getStatusStyles(upgradation.status)}`}>
-                          {upgradation.status} 
-                          </span>
-                       
-                         </td>
-                          <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">{permissions.can_edit &&(
-                      <Link href={`/upgradations/${upgradation.id}/edit`}>
-                        <Button variant="ghost" size="icon">
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                      </Link>)}
-                       {permissions.can_delete &&(
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="ghost" size="icon" className="text-destructive hover:text-red-600">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Delete this upgradation?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              upgradation <strong>{upgradation.details}</strong> will be permanently deleted.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction
-                              className="bg-destructive hover:bg-destructive/90"
-                              onClick={() => handleDelete(upgradation.id)}
-                            >
-                              Delete
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                      )}</td>
-                          </tr>
-                
-                ))
-              )}
-              </tbody></table>
+                        <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
+                          {upgradation.details}
+                        </td>
+                        <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
+                          {formatDate(upgradation.from)}
+                        </td>
+                        <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
+                          {formatDate(upgradation.to)}
+                        </td>
+                        <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
+                          {upgradation.levelfrom}
+                        </td>
+                        <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
+                          {upgradation.levelto}
+                        </td>
+                        <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100"><span className={`inline-block px-2 py-1 rounded-full text-xs font-semibold ${getStatusStyles(upgradation.status)}`}>
+                          {upgradation.status}
+                        </span>
+
+                        </td>
+                        <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">{permissions.can_edit && (
+                          <Link href={`/upgradations/${upgradation.id}/edit`}>
+                            <Button variant="ghost" size="icon">
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </Link>)}
+                          {permissions.can_delete && (
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="icon" className="text-destructive hover:text-red-600">
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete this upgradation?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    upgradation <strong>{upgradation.details}</strong> will be permanently deleted.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    className="bg-destructive hover:bg-destructive/90"
+                                    onClick={() => handleDelete(upgradation.id)}
+                                  >
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          )}</td>
+                      </tr>
+
+                    ))
+                  )}
+                </tbody></table>
             </div>
 
             {upgradations.links.length > 1 && (

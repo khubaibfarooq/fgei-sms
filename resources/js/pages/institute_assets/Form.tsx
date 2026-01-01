@@ -108,6 +108,9 @@ export default function InstituteAssetForm({ instituteAsset, assets, rooms }: In
 
   // Add a new empty row
   const handleAddRow = () => {
+    if (isEdit) {
+      return;
+    }
     const newRowId = Date.now().toString();
     const newRow: AssetRow = {
       id: newRowId,
@@ -263,6 +266,7 @@ export default function InstituteAssetForm({ instituteAsset, assets, rooms }: In
                   <Label htmlFor="room_id" className="text-[10px] uppercase font-black tracking-widest text-primary/70 ml-1">Location / Room</Label>
                   <Combobox
                     entity="room"
+                    disabled={isEdit}
                     value={roomId.toString()}
                     onChange={(value) => setRoomId(value ? parseInt(value) : '')}
                     options={rooms.map((room) => ({
@@ -291,15 +295,19 @@ export default function InstituteAssetForm({ instituteAsset, assets, rooms }: In
                 </div>
 
                 <div className="md:col-span-3">
-                  <Button
-                    type="button"
-                    onClick={handleAddRow}
-                    className="w-full h-10 font-black uppercase text-[10px] tracking-widest shadow-sm"
-                    variant="outline"
-                  >
-                    <Plus className="mr-2 h-4 w-4" />
-                    New Row (Shift+Enter)
-                  </Button>
+                  {
+                    !isEdit &&
+                    <Button
+                      type="button"
+                      onClick={handleAddRow}
+                      className="w-full h-10 font-black uppercase text-[10px] tracking-widest shadow-sm"
+                      variant="outline"
+                    >
+                      <Plus className="mr-2 h-4 w-4" />
+                      New Row (Shift+Enter)
+                    </Button>
+
+                  }
                 </div>
               </div>
 
@@ -391,16 +399,18 @@ export default function InstituteAssetForm({ instituteAsset, assets, rooms }: In
 
                         {/* Actions Column */}
                         <div className="md:col-span-12 lg:col-span-1 flex items-center justify-end md:justify-center pt-2 md:pt-0">
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDeleteRow(row.id)}
-                            className="text-destructive hover:text-destructive hover:bg-destructive/10 w-full md:w-auto font-black text-[10px] uppercase tracking-widest h-9"
-                          >
-                            <Trash2 className="h-4 w-4 mr-2 md:mr-0" />
-                            <span className="md:hidden">Remove Asset</span>
-                          </Button>
+                          {!isEdit &&
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteRow(row.id)}
+                              className="text-destructive hover:text-destructive hover:bg-destructive/10 w-full md:w-auto font-black text-[10px] uppercase tracking-widest h-9"
+                            >
+                              <Trash2 className="h-4 w-4 mr-2 md:mr-0" />
+                              <span className="md:hidden">Remove Asset</span>
+                            </Button>
+                          }
                         </div>
                       </div>
                     ))

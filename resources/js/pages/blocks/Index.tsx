@@ -67,7 +67,7 @@ export default function BlockIndex({ blocks, filters, permissions }: Props) {
 
   const handleSearchKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
-      router.get('/blocks', { ...filters, search }, { preserveScroll: true });
+      router.get('/blocks', { ...filters, search }, { preserveScroll: true, preserveState: true });
     }
   };
 
@@ -82,8 +82,8 @@ export default function BlockIndex({ blocks, filters, permissions }: Props) {
               <p className="text-muted-foreground text-sm">Manage institutional blocks</p>
             </div>
             {permissions.can_add &&
-              <Link href="/blocks/create">
-                <Button>
+              <Link href="/blocks/create" className="w-full md:w-auto">
+                <Button className="w-full">
                   <Plus className="h-4 w-4 mr-2" />
                   Add Block
                 </Button>
@@ -101,11 +101,12 @@ export default function BlockIndex({ blocks, filters, permissions }: Props) {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 onKeyDown={handleSearchKey}
+                className="w-full"
               />
             </div>
 
-            <div className="space-y-3">
-              <table className="w-full border-collapse border-1 rounded-md overflow-hidden shadow-sm">
+            <div className="space-y-3 overflow-x-auto">
+              <table className="w-full border-collapse border-1 rounded-md overflow-hidden shadow-sm min-w-[800px]">
                 <thead>
                   <tr className="bg-primary dark:bg-gray-800 text-center " >
                     <th className="border p-2  text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Name</th>
@@ -120,14 +121,18 @@ export default function BlockIndex({ blocks, filters, permissions }: Props) {
                 </thead>
                 <tbody>
                   {blocks.data.length === 0 ? (
-                    <p className="text-muted-foreground text-center">No blocks found.</p>
+                    <tr>
+                      <td colSpan={5} className="border p-8 text-muted-foreground text-center">
+                        No blocks found.
+                      </td>
+                    </tr>
                   ) : (
                     blocks.data.map((block) => (
 
                       <tr key={block.id} className="hover:bg-primary/10 dark:hover:bg-gray-700 text-center
                     ">
                         <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
-                          <div className='flex flex-column gap-2 align-middle'> <ImagePreview dataImg={block.img} size="h-20" />  <span className='font-bold'>{block.name}</span></div>
+                          <div className='flex flex-col gap-2 align-middle'> <ImagePreview dataImg={block.img} size="h-20" />  <span className='font-bold'>{block.name}</span></div>
                         </td>
                         <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
                           {block.establish_date || 'N/A'}

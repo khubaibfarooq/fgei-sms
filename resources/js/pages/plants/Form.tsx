@@ -13,7 +13,7 @@ interface plantsFormProps {
   plant?: {
     id: number;
     name: string;
-    qty: number;  
+    qty: number;
 
   };
 }
@@ -31,7 +31,7 @@ export default function plantsForm({ plant }: plantsFormProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (isEdit) {
       router.put(`/plants/${plant.id}`, data, {
         preserveScroll: true,
@@ -55,7 +55,7 @@ export default function plantsForm({ plant }: plantsFormProps) {
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title={isEdit ? 'Edit Plant' : 'Add Plant'} />
 
-      <div className="flex-1 p-4 md:p-6 w-[70vw] mx-auto">
+      <div className="flex-1 p-4 md:p-6 w-full max-w-4xl mx-auto">
         <Card>
           <CardHeader>
             <CardTitle className="text-2xl font-bold">
@@ -97,22 +97,22 @@ export default function plantsForm({ plant }: plantsFormProps) {
                 )}
               </div>
 
-              <div className="flex items-center justify-between pt-6">
-                <Link href="/plants">
-                  <Button type="button" variant="secondary">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6">
+                <Link href="/plants" className="w-full sm:w-auto">
+                  <Button type="button" variant="secondary" className="w-full">
                     <ArrowLeft className="mr-2 h-4 w-4" />
                     Back
                   </Button>
                 </Link>
-                <Button type="submit" disabled={processing}>
+                <Button type="submit" disabled={processing} className="w-full sm:w-auto">
                   <Save className="mr-2 h-4 w-4" />
                   {processing
                     ? isEdit
                       ? 'Saving...'
                       : 'Adding...'
                     : isEdit
-                    ? 'Save Changes'
-                    : 'Add Plant'}
+                      ? 'Save Changes'
+                      : 'Add Plant'}
                 </Button>
               </div>
             </form>

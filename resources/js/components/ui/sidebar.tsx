@@ -75,8 +75,10 @@ const SidebarProvider = React.forwardRef<
 
     // Helper to toggle the sidebar.
     const toggleSidebar = React.useCallback(() => {
-        return isMobile ? setOpenMobile((open) => !open) : setOpen((open) => !open);
-    }, [isMobile, setOpen, setOpenMobile]);
+        // Direct check to avoid any state sync delays
+        const isCurrentlyMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+        return isCurrentlyMobile ? setOpenMobile((open) => !open) : setOpen((open) => !open);
+    }, [setOpen, setOpenMobile]);
 
     // Listen for mobile navigation events
     React.useEffect(() => {
@@ -238,14 +240,15 @@ const SidebarTrigger = React.forwardRef<React.ElementRef<typeof Button>, React.C
                 data-sidebar="trigger"
                 variant="ghost"
                 size="icon"
-                className={cn(' text-white h-7 w-7', className)}
+                className={cn('text-white h-9 w-9 hover:bg-white/10 relative z-[100] pointer-events-auto', className)}
                 onClick={(event) => {
+                    event.stopPropagation();
                     onClick?.(event);
                     toggleSidebar();
                 }}
                 {...props}
             >
-                <PanelLeft />
+                <PanelLeft className="size-5" />
                 <span className="sr-only">Toggle Sidebar</span>
             </Button>
         );

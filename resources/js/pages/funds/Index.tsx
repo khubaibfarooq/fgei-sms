@@ -114,8 +114,8 @@ export default function FundIndex({ funds, filters, permissions }: Props) {
               <p className="text-muted-foreground text-sm">Manage institutional funds</p>
             </div>
             {permissions.can_add &&
-              <Link href="/funds/create">
-                <Button>
+              <Link href="/funds/create" className="w-full md:w-auto">
+                <Button className="w-full">
 
                   Fund Transaction
                 </Button>
@@ -133,11 +133,12 @@ export default function FundIndex({ funds, filters, permissions }: Props) {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 onKeyDown={handleSearchKey}
+                className="w-full"
               />
             </div>
 
-            <div className="space-y-3">
-              <table className="w-full border-collapse border-1 rounded-md overflow-hidden shadow-sm">
+            <div className="space-y-3 overflow-x-auto">
+              <table className="w-full border-collapse border-1 rounded-md overflow-hidden shadow-sm min-w-[600px]">
                 <thead>
                   <tr className="bg-primary dark:bg-gray-800 text-center text-sm md:text-md lg:text-lg ">
                     <th className="border p-2  font-medium text-white dark:text-gray-200">Fund Head</th>

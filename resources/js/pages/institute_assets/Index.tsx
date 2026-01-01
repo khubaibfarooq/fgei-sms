@@ -202,8 +202,8 @@ export default function InstituteAssetIndex({
               <p className="text-muted-foreground text-sm">Manage institute asset inventory</p>
             </div>
             {permissions?.can_add && (
-              <Link href="/institute-assets/create">
-                <Button>
+              <Link href="/institute-assets/create" className="w-full md:w-auto">
+                <Button className="w-full">
                   <Plus className="h-4 w-4 mr-2" />
                   Add Asset
                 </Button>
@@ -221,13 +221,13 @@ export default function InstituteAssetIndex({
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 onKeyDown={handleSearchKey}
-                className="md:w-64"
+                className="w-full md:w-64"
               />
 
               <select
                 value={selectedCategory}
                 onChange={handleCategoryChange}
-                className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full md:w-auto px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">All Categories</option>
                 {catOptions.map((cat) => (
@@ -239,7 +239,7 @@ export default function InstituteAssetIndex({
               <select
                 value={selectedAsset}
                 onChange={handleAssetChange}
-                className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full md:w-auto px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">All Assets</option>
                 {assetOptions.map((asset) => (
@@ -251,7 +251,7 @@ export default function InstituteAssetIndex({
               <select
                 value={selectedBlock}
                 onChange={handleBlockChange}
-                className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full md:w-auto px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">All Blocks</option>
                 {blockOptions.map((block) => (
@@ -264,7 +264,7 @@ export default function InstituteAssetIndex({
               <select
                 value={selectedRoom}
                 onChange={handleRoomChange}
-                className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full md:w-auto px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">
                   {selectedBlock ? 'All Rooms in This Block' : 'All Rooms'}
@@ -278,32 +278,33 @@ export default function InstituteAssetIndex({
                     </option>
                   ))}
               </select>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 w-full md:w-auto">
                 <Input
                   type="checkbox"
                   checked={details}
                   onChange={(e) => handleDetailChange(e.target.checked)}
                   id="details-mode"
+                  className="w-4 h-4"
                 />
-                <label htmlFor="details-mode" className="cursor-pointer select-none font-medium">
-                  {details ? 'Detailed View' : 'Summary View'} — Show Details
+                <label htmlFor="details-mode" className="cursor-pointer select-none font-medium whitespace-nowrap">
+                  {details ? 'Detailed' : 'Summary'} Mode
                 </label>
               </div>
               {(search || selectedBlock || selectedRoom || selectedCategory || selectedAsset) && (
-                <Button onClick={clearFilters} variant="ghost">
+                <Button onClick={clearFilters} variant="ghost" className="w-full md:w-auto">
                   Clear Filters
                 </Button>
               )}
             </div>
 
             {/* Table */}
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto space-y-3">
               {instituteAssets.data.length === 0 ? (
                 <p className="text-center text-muted-foreground py-10">
                   No assets found.
                 </p>
               ) : (
-                <table className="w-full min-w-max border-collapse rounded-lg overflow-hidden shadow-sm">
+                <table className="w-full min-w-[1000px] border-collapse rounded-lg overflow-hidden shadow-sm">
                   <thead>
                     <tr className="bg-primary text-white">
                       <th className="border p-3 text-left">Asset Name</th>

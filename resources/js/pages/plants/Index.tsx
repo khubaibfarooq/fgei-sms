@@ -52,7 +52,7 @@ const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Plants', href: '/plants' },
 ];
 
-export default function plantsIndex({ plants, filters,permissions }: Props) {
+export default function plantsIndex({ plants, filters, permissions }: Props) {
   const [search, setSearch] = useState(filters.search || '');
 
   const handleDelete = (id: number) => {
@@ -79,12 +79,12 @@ export default function plantsIndex({ plants, filters,permissions }: Props) {
               <p className="text-muted-foreground text-sm">Manage Plants</p>
             </div>
             {permissions.can_add &&
-            <Link href="/plants/create">
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Add plant
-              </Button>
-            </Link>
+              <Link href="/plants/create" className="w-full md:w-auto">
+                <Button className="w-full">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add plant
+                </Button>
+              </Link>
             }
           </CardHeader>
 
@@ -98,73 +98,74 @@ export default function plantsIndex({ plants, filters,permissions }: Props) {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 onKeyDown={handleSearchKey}
+                className="w-full"
               />
             </div>
 
-            <div className="space-y-3">
-               <table className="w-full border-collapse border-1 rounded-md overflow-hidden shadow-sm">
-  <thead>
-    <tr className="bg-primary dark:bg-gray-800 text-center text-sm md:text-md lg:text-lg" >
-      <th className="border p-2   font-medium text-white dark:text-gray-200">Plants/Tree</th>
-      <th className="border p-2   font-medium text-white dark:text-gray-200">Quantity</th>
-      <th className="border p-2   font-medium text-white dark:text-gray-200">Action</th>
-     
-      
-    </tr>
-  </thead>
-  <tbody>
-              {plants.data.length === 0 ? (
-                <p className="text-muted-foreground text-center">No plants found.</p>
-              ) : (
-                plants.data.map((plant) => (
+            <div className="space-y-3 overflow-x-auto">
+              <table className="w-full border-collapse border-1 rounded-md overflow-hidden shadow-sm min-w-[600px]">
+                <thead>
+                  <tr className="bg-primary dark:bg-gray-800 text-center text-sm md:text-md lg:text-lg" >
+                    <th className="border p-2   font-medium text-white dark:text-gray-200">Plants/Tree</th>
+                    <th className="border p-2   font-medium text-white dark:text-gray-200">Quantity</th>
+                    <th className="border p-2   font-medium text-white dark:text-gray-200">Action</th>
 
-                   <tr  key={plant.id} className="hover:bg-primary/10 text-sm md:text-md lg:text-lg dark:hover:bg-gray-700 text-center
+
+                  </tr>
+                </thead>
+                <tbody>
+                  {plants.data.length === 0 ? (
+                    <p className="text-muted-foreground text-center">No plants found.</p>
+                  ) : (
+                    plants.data.map((plant) => (
+
+                      <tr key={plant.id} className="hover:bg-primary/10 text-sm md:text-md lg:text-lg dark:hover:bg-gray-700 text-center
                     ">
-                      <td className="border font-bold   text-gray-900 dark:text-gray-100">
-                        {plant.name}
-                         </td>
-                         <td className="border   text-gray-900 dark:text-gray-100">
-                         {plant.qty || 0} 
-                         </td>
-                          <td className="border  text-sm text-gray-900 dark:text-gray-100">
-                       {permissions.can_edit &&
-                      <Link href={`/plants/${plant.id}/edit`}>
-                        <Button variant="ghost" size="icon">
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                      </Link>
-                      }
-                      {permissions.can_delete &&
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="ghost" size="icon" className="text-destructive hover:text-red-600">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Delete this plant?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              plant <strong>{plant.name}</strong> will be permanently deleted.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction
-                              className="bg-destructive hover:bg-destructive/90"
-                              onClick={() => handleDelete(plant.id)}
-                            >
-                              Delete
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>}
-                         </td>
-                         </tr>
-                 
-                ))
-              )}
-              </tbody></table>
+                        <td className="border font-bold   text-gray-900 dark:text-gray-100">
+                          {plant.name}
+                        </td>
+                        <td className="border   text-gray-900 dark:text-gray-100">
+                          {plant.qty || 0}
+                        </td>
+                        <td className="border  text-sm text-gray-900 dark:text-gray-100">
+                          {permissions.can_edit &&
+                            <Link href={`/plants/${plant.id}/edit`}>
+                              <Button variant="ghost" size="icon">
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                            </Link>
+                          }
+                          {permissions.can_delete &&
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="icon" className="text-destructive hover:text-red-600">
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete this plant?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    plant <strong>{plant.name}</strong> will be permanently deleted.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    className="bg-destructive hover:bg-destructive/90"
+                                    onClick={() => handleDelete(plant.id)}
+                                  >
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>}
+                        </td>
+                      </tr>
+
+                    ))
+                  )}
+                </tbody></table>
             </div>
 
             {plants.links.length > 1 && (

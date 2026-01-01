@@ -122,7 +122,7 @@ export default function InstituteForm({ institute }: InstituteFormProps) {
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title={isEdit ? 'Update Institute' : 'Add Institute'} />
 
-      <div className="flex-1 p-4 md:p-6 w-full mx-auto">
+      <div className="flex-1 p-4 md:p-6 w-full max-w-5xl mx-auto">
         <Card>
           <CardHeader>
             <CardTitle className="text-2xl font-bold text-center">
@@ -252,9 +252,14 @@ export default function InstituteForm({ institute }: InstituteFormProps) {
               </div>
 
 
-              <div className="flex items-center justify-between pt-2">
-
-                <Button type="submit" disabled={processing}>
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2">
+                <Link href="/institute" className="w-full sm:w-auto">
+                  <Button type="button" variant="secondary" className="w-full">
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Back
+                  </Button>
+                </Link>
+                <Button type="submit" disabled={processing} className="w-full sm:w-auto">
                   <Save className="mr-2 h-4 w-4" />
                   {processing
                     ? isEdit
