@@ -74,7 +74,7 @@ export default function ShiftsIndex({ shifts, filters, permissions }: Props) {
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Shift Management" />
-      <div className="flex-1 p-4 md:p-6">
+      <div className="flex-1 p-2 md:p-4">
         <Card>
           <CardHeader className="pb-3 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
@@ -94,7 +94,7 @@ export default function ShiftsIndex({ shifts, filters, permissions }: Props) {
           <Separator />
 
           <CardContent className="pt-6 space-y-6">
-            <div className="flex flex-col md:flex-row md:items-center gap-4">
+            <div className="flex flex-col md:flex-row md:items-center gap-2">
               <Input
                 type="text"
                 placeholder="Search Shift... (press Enter)"
@@ -106,7 +106,7 @@ export default function ShiftsIndex({ shifts, filters, permissions }: Props) {
             </div>
 
             <div className="space-y-3 overflow-x-auto">
-              <table className="w-full border-collapse border-1 rounded-md overflow-hidden shadow-sm min-w-[700px]">
+              <table className="w-full border-collapse border-1 rounded-md overflow-hidden shadow-sm ">
                 <thead>
                   <tr className="bg-primary dark:bg-gray-800 text-center" >
                     <th className="border p-2  text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Shift</th>

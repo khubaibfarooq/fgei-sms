@@ -76,7 +76,7 @@ const SidebarProvider = React.forwardRef<
     // Helper to toggle the sidebar.
     const toggleSidebar = React.useCallback(() => {
         // Direct check to avoid any state sync delays
-        const isCurrentlyMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+        const isCurrentlyMobile = typeof window !== 'undefined' && window.innerWidth < 640;
         return isCurrentlyMobile ? setOpenMobile((open) => !open) : setOpen((open) => !open);
     }, [setOpen, setOpenMobile]);
 

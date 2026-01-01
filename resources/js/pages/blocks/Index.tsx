@@ -106,7 +106,7 @@ export default function BlockIndex({ blocks, filters, permissions }: Props) {
             </div>
 
             <div className="space-y-3 overflow-x-auto">
-              <table className="w-full border-collapse border-1 rounded-md overflow-hidden shadow-sm min-w-[800px]">
+              <table className="w-full border-collapse border-1 rounded-md overflow-hidden shadow-sm">
                 <thead>
                   <tr className="bg-primary dark:bg-gray-800 text-center " >
                     <th className="border p-2  text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Name</th>

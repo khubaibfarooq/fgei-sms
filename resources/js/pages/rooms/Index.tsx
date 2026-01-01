@@ -109,7 +109,7 @@ export default function RoomIndex({ rooms, filters, blocks, roomtypes, permissio
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Room Management" />
-      <div className="flex-1 p-4 md:p-6">
+      <div className="flex-1 p-2 md:p-4">
         <Card>
           <CardHeader className="pb-3 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
@@ -130,7 +130,7 @@ export default function RoomIndex({ rooms, filters, blocks, roomtypes, permissio
 
           <CardContent className="pt-6 space-y-6">
             {/* Filters */}
-            <div className="flex flex-col md:flex-row gap-4 flex-wrap items-center">
+            <div className="flex flex-col md:flex-row gap-2 flex-wrap items-center">
               <Input
                 placeholder="Search rooms... (press Enter)"
                 value={search}
@@ -176,82 +176,151 @@ export default function RoomIndex({ rooms, filters, blocks, roomtypes, permissio
               )}
             </div>
 
-            {/* Table */}
-            <div className="overflow-x-auto space-y-3">
+            {/* Table - Desktop / Cards - Mobile */}
+            <div className="space-y-3">
               {rooms.data.length === 0 ? (
                 <p className="text-center text-muted-foreground py-10">No rooms found.</p>
               ) : (
-                <table className="w-full min-w-[800px] border-collapse rounded-lg overflow-hidden shadow-sm">
-                  <thead>
-                    <tr className="bg-primary text-white text-center">
-                      <th className="border p-3">Room Name</th>
-                      <th className="border p-3">Area (Sq Ft)</th>
-                      <th className="border p-3">Block</th>
-                      <th className="border p-3">Room Type</th>
-                      <th className="border p-3">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
+                <>
+                  {/* Mobile Card View */}
+                  <div className="grid grid-cols-1 gap-3 md:hidden">
                     {rooms.data.map((room) => (
-                      <tr key={room.id} className="hover:bg-muted/50 text-center">
-                        <td className="border p-3">
-                          <div className="flex items-center justify-center gap-3">
-                            <ImagePreview dataImg={room.img} size="h-16 w-16 rounded" />
-                            <span className="font-semibold">{room.name}</span>
+                      <div key={room.id} className="border rounded-lg p-4 bg-card shadow-sm">
+                        <div className="flex items-start gap-3">
+                          <ImagePreview dataImg={room.img} size="h-16 w-16 rounded" />
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold text-lg truncate">{room.name}</h3>
+                            <div className="text-sm text-muted-foreground space-y-1 mt-1">
+                              <p><span className="font-medium">Area:</span> {room.area} Sq Ft</p>
+                              <p><span className="font-medium">Block:</span> {room.block.name}</p>
+                              <p><span className="font-medium">Type:</span> {room.type.name}</p>
+                            </div>
                           </div>
-                        </td>
-                        <td className="border p-3">{room.area}</td>
-                        <td className="border p-3">{room.block.name}</td>
-                        <td className="border p-3">{room.type.name}</td>
-                        <td className="border p-3">
-                          <div className="flex justify-center gap-2">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => window.open(`/institute-assets?room=${room.id}`, '_blank')}
-                              title="View Assets"
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                            {permissions.can_edit && (
-                              <Link href={`/rooms/${room.id}/edit`}>
-                                <Button variant="ghost" size="icon">
-                                  <Edit className="h-4 w-4" />
+                        </div>
+                        <div className="flex justify-end gap-2 mt-3 pt-3 border-t">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => window.open(`/institute-assets?room=${room.id}`, '_blank')}
+                          >
+                            <Eye className="h-4 w-4 mr-1" />
+                            Assets
+                          </Button>
+                          {permissions.can_edit && (
+                            <Link href={`/rooms/${room.id}/edit`}>
+                              <Button variant="outline" size="sm">
+                                <Edit className="h-4 w-4 mr-1" />
+                                Edit
+                              </Button>
+                            </Link>
+                          )}
+                          {permissions.can_delete && (
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="destructive" size="sm">
+                                  <Trash2 className="h-4 w-4 mr-1" />
+                                  Delete
                                 </Button>
-                              </Link>
-                            )}
-                            {permissions.can_delete && (
-                              <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="text-destructive">
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                  <AlertDialogHeader>
-                                    <AlertDialogTitle>Delete Room?</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                      Room <strong>{room.name}</strong> will be permanently deleted.
-                                    </AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                    <AlertDialogAction
-                                      className="bg-destructive"
-                                      onClick={() => handleDelete(room.id)}
-                                    >
-                                      Delete
-                                    </AlertDialogAction>
-                                  </AlertDialogFooter>
-                                </AlertDialogContent>
-                              </AlertDialog>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete Room?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Room <strong>{room.name}</strong> will be permanently deleted.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    className="bg-destructive"
+                                    onClick={() => handleDelete(room.id)}
+                                  >
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          )}
+                        </div>
+                      </div>
                     ))}
-                  </tbody>
-                </table>
+                  </div>
+
+                  {/* Desktop Table View */}
+                  <div className="hidden md:block overflow-x-auto">
+                    <table className="w-full border-collapse rounded-lg overflow-hidden shadow-sm">
+                      <thead>
+                        <tr className="bg-primary text-white text-center">
+                          <th className="border p-3 text-sm lg:text-base">Room Name</th>
+                          <th className="border p-3 text-sm lg:text-base">Area (Sq Ft)</th>
+                          <th className="border p-3 text-sm lg:text-base">Block</th>
+                          <th className="border p-3 text-sm lg:text-base">Room Type</th>
+                          <th className="border p-3 text-sm lg:text-base">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {rooms.data.map((room) => (
+                          <tr key={room.id} className="hover:bg-muted/50 text-center">
+                            <td className="border p-3">
+                              <div className="flex items-center justify-center gap-3">
+                                <ImagePreview dataImg={room.img} size="h-12 w-12 rounded" />
+                                <span className="font-semibold">{room.name}</span>
+                              </div>
+                            </td>
+                            <td className="border p-3">{room.area}</td>
+                            <td className="border p-3">{room.block.name}</td>
+                            <td className="border p-3">{room.type.name}</td>
+                            <td className="border p-3">
+                              <div className="flex justify-center gap-2">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => window.open(`/institute-assets?room=${room.id}`, '_blank')}
+                                  title="View Assets"
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                                {permissions.can_edit && (
+                                  <Link href={`/rooms/${room.id}/edit`}>
+                                    <Button variant="ghost" size="icon">
+                                      <Edit className="h-4 w-4" />
+                                    </Button>
+                                  </Link>
+                                )}
+                                {permissions.can_delete && (
+                                  <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                      <Button variant="ghost" size="icon" className="text-destructive">
+                                        <Trash2 className="h-4 w-4" />
+                                      </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                      <AlertDialogHeader>
+                                        <AlertDialogTitle>Delete Room?</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                          Room <strong>{room.name}</strong> will be permanently deleted.
+                                        </AlertDialogDescription>
+                                      </AlertDialogHeader>
+                                      <AlertDialogFooter>
+                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                        <AlertDialogAction
+                                          className="bg-destructive"
+                                          onClick={() => handleDelete(room.id)}
+                                        >
+                                          Delete
+                                        </AlertDialogAction>
+                                      </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                  </AlertDialog>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
               )}
             </div>
 
