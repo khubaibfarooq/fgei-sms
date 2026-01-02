@@ -2065,14 +2065,14 @@ public function getFund(Request $request)
     $type = session('type');
     $regions=[];
     $institutes=[];
-
+  $totalinstitutes = 0;
     if($type=="Regional Office"){
   $institutes = Institute::select('id', 'name')
             ->where('region_id', $regionid)
             ->get()
             ->filter(fn($r) => is_numeric($r->id) && $r->id > 0 && !empty(trim($r->name)))
             ->values();
-    
+    $totalinstitutes = Institute::where('region_id', $regionid)->whereIn('type', ['School', 'College','Regional Office'])->count();
     }else{
   $regions = Institute::select('region_id as id', 'name')
             ->where('type', 'Regional Office')
@@ -2080,8 +2080,8 @@ public function getFund(Request $request)
             ->get()
             ->filter(fn($r) => is_numeric($r->id) && $r->id > 0 && !empty(trim($r->name)))
             ->values();
+    $totalinstitutes = Institute::where('type', 'Regional Office')->count();
     }
-      $totalinstitutes = Institute::count();
 
         return Inertia::render('Reports/Completion', [
             'regions' => $regions,
@@ -2115,10 +2115,11 @@ public function getFund(Request $request)
                 'upgradations'
             ])->orderByRaw('ISNULL(`order`) ASC, `order` ASC, id DESC')
 ;
+   $totalinstitutes = 0;
            
             if($type=="Regional Office"){
                 $query->where('region_id', $regionid)->whereIn('type', ['School', 'College']);
-
+$totalinstitutes = Institute::where('region_id', $regionid)->whereIn('type', ['School', 'College','Regional Office'])->count();
             } // director or dg
             else{ 
                 
@@ -2126,7 +2127,13 @@ public function getFund(Request $request)
                 
                 if ($request->filled('region_id') && is_numeric($request->region_id) && $request->region_id > 0) {
             $query->where('region_id', $request->region_id);
-        }}
+                $totalinstitutes = Institute::where('region_id', $request->region_id)->whereIn('type', ['School', 'College','Regional Office'])->count();
+
+        }else{
+            $totalinstitutes = Institute::whereIn('type', ['School', 'College','Regional Office'])->count();
+        }
+    
+    }
       
 
         if ($request->filled('institute_id') && is_numeric($request->institute_id) && $request->institute_id > 0) {
@@ -2248,12 +2255,13 @@ if($type=="Regional Office"){
     $institutesFilter = Institute::whereIn('type', ['School', 'College'])->get();
 }
 
-$totalinstitutes =Institute::count();
+
         return response()->json([
             'summary' => $summary,
             'details' => $details,
             'institutes' => $institutesFilter,
             'totalinstitutes' => $totalinstitutes,
+
         ]);
     }
 

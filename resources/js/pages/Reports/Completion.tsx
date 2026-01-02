@@ -89,6 +89,7 @@ export default function Completion({
     institutes: initialInstitutes = [],
     totalinstitutes,
 }: Props) {
+    const [totalInstitutes, setTotalInstitutes] = useState(totalinstitutes);
     const [region, setRegion] = useState(initialFilters.region_id || '');
     const [institute, setInstitute] = useState(initialFilters.institute_id || '');
     const [status, setStatus] = useState(initialFilters.status || '');
@@ -152,8 +153,8 @@ export default function Completion({
             { header: 'Region', key: 'region', width: 30 },
             { header: 'Total Institutes', key: 'total', width: 20 },
             { header: 'Completed', key: 'completed', width: 20 },
-            { header: 'Greater than 50%', key: 'greater', width: 20 },
-            { header: 'Less than 50%', key: 'less', width: 20 },
+            { header: 'Above 50%', key: 'greater', width: 20 },
+            { header: 'Below 50%', key: 'less', width: 20 },
         ];
         summary.forEach(item => {
             wsSummary.addRow({
@@ -184,8 +185,8 @@ export default function Completion({
                 { header: 'Upgradations', key: 'upgradations', width: 12 },
                 { header: 'Total Institutes', key: 'total', width: 20 },
                 { header: 'Completed', key: 'completed', width: 20 },
-                { header: 'Greater than 50%', key: 'greater', width: 20 },
-                { header: 'Less than 50%', key: 'less', width: 20 },
+                { header: 'Above 50%', key: 'greater', width: 20 },
+                { header: 'Below 50%', key: 'less', width: 20 },
             ];
             details.forEach(item => {
                 wsDetails.addRow({
@@ -248,7 +249,7 @@ export default function Completion({
         // Summary
         doc.text('Completion Report - Summary', 14, 15);
         autoTable(doc, {
-            head: [['Region', 'Total Institutes', 'Completed', 'Greater than 50%', 'Less than 50%']],
+            head: [['Region', 'Total Institutes', 'Completed', 'Above 50%', 'Below 50%']],
             body: summary.map(s => [s.region, s.total_institutes, s.completed, s.greater_than_50, s.less_than_50]),
             startY: 20,
         });
@@ -261,7 +262,7 @@ export default function Completion({
 
         if (isRegionView) {
             autoTable(doc, {
-                head: [['Region', 'Total Inst.', 'Comp.', 'Greater than 50%', 'Less than 50%']],
+                head: [['Region', 'Total Inst.', 'Comp.', 'Above 50%', 'Below 50%']],
                 body: details.map(d => [
                     d.name,
                     d.total_institutes || 0,
@@ -310,6 +311,7 @@ export default function Completion({
             const data = await res.json();
             setSummary(data.summary);
             setDetails(data.details);
+            setTotalInstitutes(data.totalinstitutes);
             if (data.institutes) setInstitutesList(data.institutes);
         } catch (error) {
             toast.error('Failed to load report data');
@@ -380,8 +382,8 @@ export default function Completion({
                                 <SelectContent>
                                     <SelectItem value="all">All Statuses</SelectItem>
                                     <SelectItem value="completed">Completed (100%)</SelectItem>
-                                    <SelectItem value="greater_than_50">Greater than 50%</SelectItem>
-                                    <SelectItem value="less_than_50">Less than 50%</SelectItem>
+                                    <SelectItem value="greater_than_50">Above 50%</SelectItem>
+                                    <SelectItem value="less_than_50">Below 50%</SelectItem>
                                     <SelectItem value="zero">Zero (0%)</SelectItem>
                                 </SelectContent>
                             </Select>
@@ -407,8 +409,8 @@ export default function Completion({
                                     <tr>
                                         <th className="px-4 py-3 text-center">Total Institutes</th>
                                         {status == 'completed' || status == '' ? <th className="px-4 py-3 text-center">Completed Data</th> : null}
-                                        {status == 'greater_than_50' || status == '' ? <th className="px-4 py-3 text-center">Greater than 50%</th> : null}
-                                        {status == 'less_than_50' || status == '' ? <th className="px-4 py-3 text-center">Less than 50%</th> : null}
+                                        {status == 'greater_than_50' || status == '' ? <th className="px-4 py-3 text-center">Above 50%</th> : null}
+                                        {status == 'less_than_50' || status == '' ? <th className="px-4 py-3 text-center">Below 50%</th> : null}
                                         {status == 'zero' || status == '' ? <th className="px-4 py-3 text-center">Zero (0%)</th> : null}
                                     </tr>
                                 </thead>
@@ -416,7 +418,7 @@ export default function Completion({
                                     {summary.length > 0 ? (
                                         summary.map((item, idx) => (
                                             <tr key={idx} className="hover:bg-muted/50">
-                                                <td className="px-4 py-3 text-center">{totalinstitutes}</td>
+                                                <td className="px-4 py-3 text-center">{totalInstitutes}</td>
                                                 {status == 'completed' || status == '' ? <td className="px-4 py-3 text-center text-green-600 font-bold">{item.completed}</td> : null}
                                                 {status == 'greater_than_50' || status == '' ? <td className="px-4 py-3 text-center text-green-600 font-bold">
                                                     {item.greater_than_50}</td> : null}
@@ -498,7 +500,7 @@ export default function Completion({
                             size="sm"
                             className='mr-2 text-white bg-green-500 hover:bg-green-600'
                         >
-                            Greater than 50%
+                            Above 50%
                         </Button> <Button
                             onClick={() => {
                                 setStatus('less_than_50');
@@ -508,7 +510,7 @@ export default function Completion({
                             size="sm"
                             className='mr-2 text-white bg-red-500 hover:bg-red-600'
                         >
-                            Less than 50%
+                            Below 50%
                         </Button>
                         <Button
                             onClick={() => {
@@ -535,10 +537,10 @@ export default function Completion({
                                                     status == 'completed' || status == '' ? <th className="px-4 py-3 text-center">Comp.</th> : null
                                                 }
                                                 {
-                                                    status == 'greater_than_50' || status == '' ? <th className="px-4 py-3 text-center">Greater than 50%</th> : null
+                                                    status == 'greater_than_50' || status == '' ? <th className="px-4 py-3 text-center">Above 50%</th> : null
                                                 }
                                                 {
-                                                    status == 'less_than_50' || status == '' ? <th className="px-4 py-3 text-center">Less than 50%</th> : null
+                                                    status == 'less_than_50' || status == '' ? <th className="px-4 py-3 text-center">Below 50%</th> : null
                                                 }
                                                 {
                                                     status == 'zero' || status == '' ? <th className="px-4 py-3 text-center">Zero (0%)</th> : null
