@@ -164,6 +164,7 @@ Route::resource('rooms', RoomController::class);
 
 // Assets
 Route::resource('asset-categories', AssetCategoryController::class);
+Route::post('/asset/import', [AssetController::class, 'import'])->name('asset.import');
 Route::resource('asset', AssetController::class);
 Route::resource('institute-assets', InstituteAssetController::class);
 Route::resource('asset-transactions', AssetTransactionController::class);

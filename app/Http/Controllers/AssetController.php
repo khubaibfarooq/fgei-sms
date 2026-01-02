@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 use App\Models\AssetCategory;
 use App\Models\Asset;
+use App\Imports\AssetsImport;
+use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -69,4 +71,44 @@ class AssetController extends Controller
 
         return redirect()->back()->with('success', 'Asset deleted successfully.');
     }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls|max:10240', // 10MB max
+        ]);
+
+        try {
+            $import = new AssetsImport();
+            Excel::import($import, $request->file('file'));
+
+            $importedCount = $import->getImportedCount();
+            $failures = $import->failures();
+            $errorCount = count($failures);
+
+            $errors = [];
+            foreach ($failures->take(5) as $failure) {
+                $errors[] = "Row {$failure->row()}: " . implode(', ', $failure->errors());
+            }
+
+            if ($errorCount > 5) {
+                $errors[] = "...and " . ($errorCount - 5) . " more errors";
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => "{$importedCount} asset(s) imported successfully.",
+                'imported_count' => $importedCount,
+                'error_count' => $errorCount,
+                'errors' => $errors,
+                'available_categories' => $import->getAvailableCategories(),
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Import failed: ' . $e->getMessage(),
+            ], 422);
+        }
+    }
 }
+
