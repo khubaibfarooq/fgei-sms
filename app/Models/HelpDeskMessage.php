@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class HelpDeskMessage extends Model
 {
-    protected $fillable = ['help_desk_id', 'user_id', 'message', 'is_read'];
+    protected $fillable = ['help_desk_id', 'user_id', 'message', 'attachment', 'is_read'];
 
     public function helpDesk(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {

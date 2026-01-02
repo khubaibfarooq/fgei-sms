@@ -6,6 +6,8 @@ use App\Models\HelpDeskMessage;
 use App\Events\MessageSent;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Intervention\Image\ImageManager;
+use Intervention\Image\Drivers\Gd\Driver;
 
 class HelpDeskController extends Controller
 {
@@ -51,8 +53,28 @@ if($type=="School"||$type=="College"){
     
 
     ]);
-      if ($request->hasFile('attachment')) {
-            $data['attachment'] = $request->file('attachment')->store('attachment', 'public');
+      $attachmentName = null;
+        if ($request->hasFile('attachment')) {
+            $attachment = $request->file('attachment');
+            $extension = $attachment->getClientOriginalExtension();
+            $attachmentName = time() . '-' . uniqid() . '.' . $extension;
+            
+            $destinationPath = public_path('assets/helpdesk_attachments');
+            if (!file_exists($destinationPath)) {
+                mkdir($destinationPath, 0755, true);
+            }
+
+            // Check if it's an image to optimize
+            $imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+            if (in_array(strtolower($extension), $imageExtensions)) {
+                (new ImageManager(new Driver()))->read($attachment->getPathname())
+                    ->scale(width: 1280)
+                    ->save($destinationPath . '/' . $attachmentName, quality: 60);
+            } else {
+                $attachment->move($destinationPath, $attachmentName);
+            }
+
+            $data['attachment'] = 'assets/helpdesk_attachments/' . $attachmentName;
         } else {
             unset($data['attachment']);
         }  
@@ -114,13 +136,39 @@ if($type=="School"||$type=="College"){
     public function sendMessage(Request $request, HelpDesk $helpDesk)
     {
         $request->validate([
-            'message' => 'required|string',
+            'message' => 'required_without:attachment|string|nullable',
+            'attachment' => 'nullable|file|max:10240', // Max 10MB
         ]);
 
-        $message = $helpDesk->messages()->create([
+        $data = [
             'user_id' => auth()->id(),
-            'message' => $request->message,
-        ]);
+            'message' => $request->message ?? '',
+        ];
+
+        if ($request->hasFile('attachment')) {
+            $attachment = $request->file('attachment');
+            $extension = $attachment->getClientOriginalExtension();
+            $attachmentName = time() . '-' . uniqid() . '.' . $extension;
+            
+            $destinationPath = public_path('assets/chat_attachments');
+            if (!file_exists($destinationPath)) {
+                mkdir($destinationPath, 0755, true);
+            }
+
+            // Check if it's an image to optimize
+            $imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+            if (in_array(strtolower($extension), $imageExtensions)) {
+                (new ImageManager(new Driver()))->read($attachment->getPathname())
+                    ->scale(width: 1280)
+                    ->save($destinationPath . '/' . $attachmentName, quality: 60);
+            } else {
+                $attachment->move($destinationPath, $attachmentName);
+            }
+
+            $data['attachment'] = 'assets/chat_attachments/' . $attachmentName;
+        }
+
+        $message = $helpDesk->messages()->create($data);
 
         broadcast(new MessageSent($message))->toOthers();
 

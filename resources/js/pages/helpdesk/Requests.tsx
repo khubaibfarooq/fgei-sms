@@ -357,10 +357,10 @@ export default function HelpDeskIndex({ helpDesk, filters, institutes, auth }: P
                           {isImageAttachment(selectedHelpDesk.attachment) ? (
                             <div className="relative group max-w-sm rounded-xl overflow-hidden border-2 border-muted shadow-lg">
                               <img
-                                src={`/storage/${selectedHelpDesk.attachment}`}
+                                src={`/${selectedHelpDesk.attachment}`}
                                 alt="Ticket attachment"
                                 className="w-full h-48 object-cover hover:scale-105 transition-transform cursor-pointer"
-                                onClick={() => window.open(`/storage/${selectedHelpDesk.attachment}`, '_blank')}
+                                onClick={() => window.open(`/${selectedHelpDesk.attachment}`, '_blank')}
                               />
                               <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                                 <Button variant="secondary" size="sm" className="font-bold text-[10px]">View Full Image</Button>
@@ -370,7 +370,7 @@ export default function HelpDeskIndex({ helpDesk, filters, institutes, auth }: P
                             <Button
                               variant="outline"
                               className="font-bold text-xs flex gap-2 h-10 px-4"
-                              onClick={() => window.open(`/storage/${selectedHelpDesk.attachment}`, '_blank')}
+                              onClick={() => window.open(`/${selectedHelpDesk.attachment}`, '_blank')}
                             >
                               📄 Download Attached File
                             </Button>

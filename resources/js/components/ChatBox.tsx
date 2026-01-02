@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import Echo from 'laravel-echo';
 import Pusher from 'pusher-js';
+import { Paperclip, X, FileText, Image as ImageIcon, Download } from 'lucide-react';
 
 // @ts-ignore
 window.Pusher = Pusher;
@@ -13,6 +14,7 @@ window.Pusher = Pusher;
 interface Message {
     id: number;
     message: string;
+    attachment?: string | null;
     user: {
         id: number;
         name: string;
@@ -33,8 +35,17 @@ export default function ChatBox({ helpDeskId, status }: ChatBoxProps) {
     const [respondentId, setRespondentId] = useState<number | null>(null);
     const [respondentName, setRespondentName] = useState<string>('');
     const [newMessage, setNewMessage] = useState('');
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [isSending, setIsSending] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
     const echoRef = useRef<any>(null);
+
+    const isImageFile = (filename: string | null | undefined) => {
+        if (!filename) return false;
+        const ext = filename.split('.').pop()?.toLowerCase();
+        return ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext || '');
+    };
 
     useEffect(() => {
         // Fetch existing messages
@@ -75,20 +86,50 @@ export default function ChatBox({ helpDeskId, status }: ChatBoxProps) {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
 
+    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            setSelectedFile(file);
+        }
+    };
+
+    const clearSelectedFile = () => {
+        setSelectedFile(null);
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
+    };
+
     const handleSendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!newMessage.trim()) return;
+        if (!newMessage.trim() && !selectedFile) return;
 
-        const content = newMessage;
+        setIsSending(true);
+        const formData = new FormData();
+        if (newMessage.trim()) {
+            formData.append('message', newMessage);
+        }
+        if (selectedFile) {
+            formData.append('attachment', selectedFile);
+        }
+
         setNewMessage('');
+        setSelectedFile(null);
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
 
         try {
-            const response = await axios.post(`/helpdesk/${helpDeskId}/messages`, {
-                message: content,
+            const response = await axios.post(`/helpdesk/${helpDeskId}/messages`, formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
             });
             setMessages((prev) => [...prev, response.data]);
         } catch (error) {
             console.error('Failed to send message', error);
+        } finally {
+            setIsSending(false);
         }
     };
 
@@ -129,8 +170,8 @@ export default function ChatBox({ helpDeskId, status }: ChatBoxProps) {
                             >
                                 <div
                                     className={`relative px-4 py-3 rounded-2xl max-w-[85%] md:max-w-[75%] shadow-sm ${isMe
-                                            ? 'bg-primary text-primary-foreground rounded-tr-none'
-                                            : 'bg-card border border-primary/5 rounded-tl-none'
+                                        ? 'bg-primary text-primary-foreground rounded-tr-none'
+                                        : 'bg-card border border-primary/5 rounded-tl-none'
                                         }`}
                                 >
                                     <div className="flex items-center justify-between gap-4 mb-1 border-b border-current/10 pb-1">
@@ -142,7 +183,34 @@ export default function ChatBox({ helpDeskId, status }: ChatBoxProps) {
                                         </span>
                                     </div>
                                     <p className="text-[11px] font-black mb-1.5 opacity-90 uppercase tracking-tight">{msg.user.name}</p>
-                                    <p className="text-sm leading-relaxed font-medium">{msg.message}</p>
+                                    {msg.message && <p className="text-sm leading-relaxed font-medium">{msg.message}</p>}
+                                    {msg.attachment && (
+                                        <div className="mt-2">
+                                            {isImageFile(msg.attachment) ? (
+                                                <div className="relative group">
+                                                    <img
+                                                        src={`/${msg.attachment}`}
+                                                        alt="Attachment"
+                                                        className="max-w-[200px] max-h-[150px] rounded-lg border cursor-pointer hover:opacity-90 transition-opacity object-cover"
+                                                        onClick={() => window.open(`/${msg.attachment}`, '_blank')}
+                                                    />
+                                                    <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-lg pointer-events-none">
+                                                        <span className="text-white text-xs font-bold">Click to view</span>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <Button
+                                                    variant={isMe ? "secondary" : "outline"}
+                                                    size="sm"
+                                                    className="text-xs gap-1.5"
+                                                    onClick={() => window.open(`/${msg.attachment}`, '_blank')}
+                                                >
+                                                    <Download className="h-3 w-3" />
+                                                    Download File
+                                                </Button>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         );
@@ -151,8 +219,43 @@ export default function ChatBox({ helpDeskId, status }: ChatBoxProps) {
                 <div ref={messagesEndRef} />
             </CardContent>
             {status !== 'Resolved' && (
-                <CardFooter className="p-3 md:p-4 bg-card/30 backdrop-blur-md rounded-b-xl border-t mt-auto">
+                <CardFooter className="p-3 md:p-4 bg-card/30 backdrop-blur-md rounded-b-xl border-t mt-auto flex-col gap-2">
+                    {selectedFile && (
+                        <div className="w-full flex items-center gap-2 px-2 py-1.5 bg-primary/10 rounded-lg border border-primary/20">
+                            {selectedFile.type.startsWith('image/') ? (
+                                <ImageIcon className="h-4 w-4 text-primary shrink-0" />
+                            ) : (
+                                <FileText className="h-4 w-4 text-primary shrink-0" />
+                            )}
+                            <span className="text-xs font-medium truncate flex-1">{selectedFile.name}</span>
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6 shrink-0"
+                                onClick={clearSelectedFile}
+                            >
+                                <X className="h-3 w-3" />
+                            </Button>
+                        </div>
+                    )}
                     <form onSubmit={handleSendMessage} className="flex w-full gap-2 items-center">
+                        <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept="image/*,.pdf,.doc,.docx,.txt,.xls,.xlsx"
+                            onChange={handleFileSelect}
+                            className="hidden"
+                        />
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-11 w-11 md:h-10 md:w-10 shrink-0 text-muted-foreground hover:text-primary"
+                            onClick={() => fileInputRef.current?.click()}
+                        >
+                            <Paperclip className="h-5 w-5" />
+                        </Button>
                         <Input
                             value={newMessage}
                             onChange={(e) => setNewMessage(e.target.value)}
@@ -164,8 +267,17 @@ export default function ChatBox({ helpDeskId, status }: ChatBoxProps) {
                                 }
                             }}
                         />
-                        <Button type="submit" size="icon" className="h-11 w-11 md:h-10 md:w-10 shadow-lg shadow-primary/20 shrink-0">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-send-horizontal"><path d="M3.714 3.048a.498.498 0 0 0-.683.627l2.854 8.325a.5.5 0 0 1 0 .3l-2.854 8.325a.498.498 0 0 0 .683.627l18-9a.5.5 0 0 0 0-.894Z" /><path d="M6.5 12h13.5" /></svg>
+                        <Button
+                            type="submit"
+                            size="icon"
+                            className="h-11 w-11 md:h-10 md:w-10 shadow-lg shadow-primary/20 shrink-0"
+                            disabled={isSending || (!newMessage.trim() && !selectedFile)}
+                        >
+                            {isSending ? (
+                                <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                            ) : (
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-send-horizontal"><path d="M3.714 3.048a.498.498 0 0 0-.683.627l2.854 8.325a.5.5 0 0 1 0 .3l-2.854 8.325a.498.498 0 0 0 .683.627l18-9a.5.5 0 0 0 0-.894Z" /><path d="M6.5 12h13.5" /></svg>
+                            )}
                         </Button>
                     </form>
                 </CardFooter>
