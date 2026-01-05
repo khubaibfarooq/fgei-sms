@@ -18,11 +18,20 @@ class AssetController extends Controller
             $query->where('name', 'like', '%' . $request->search . '%');
         }
 
+        if ($request->asset_category_id) {
+            $query->where('asset_category_id', $request->asset_category_id);
+        }
+
         $assets = $query->paginate(10)->withQueryString();
+        $assetCategories = AssetCategory::all();
 
         return Inertia::render('assets/Index', [
             'assets' => $assets,
-            'filters' => ['search' => $request->search ?? ''],
+            'assetCategories' => $assetCategories,
+            'filters' => [
+                'search' => $request->search ?? '',
+                'asset_category_id' => $request->asset_category_id ?? '',
+            ],
         ]);
     }
 
@@ -83,31 +92,25 @@ class AssetController extends Controller
             Excel::import($import, $request->file('file'));
 
             $importedCount = $import->getImportedCount();
-            $failures = $import->failures();
-            $errorCount = count($failures);
+            $failures = collect($import->failures());
+            $errorCount = $failures->count();
 
-            $errors = [];
-            foreach ($failures->take(5) as $failure) {
-                $errors[] = "Row {$failure->row()}: " . implode(', ', $failure->errors());
+            $importErrors = [];
+            foreach ($failures->slice(0, 5) as $failure) {
+                $importErrors[] = "Row {$failure->row()}: " . implode(', ', $failure->errors());
             }
 
             if ($errorCount > 5) {
-                $errors[] = "...and " . ($errorCount - 5) . " more errors";
+                $importErrors[] = "...and " . ($errorCount - 5) . " more errors";
             }
 
-            return response()->json([
-                'success' => true,
-                'message' => "{$importedCount} asset(s) imported successfully.",
-                'imported_count' => $importedCount,
+            return redirect()->back()->with([
+                'success' => "{$importedCount} asset(s) imported successfully.",
                 'error_count' => $errorCount,
-                'errors' => $errors,
-                'available_categories' => $import->getAvailableCategories(),
+                'import_errors' => $importErrors,
             ]);
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Import failed: ' . $e->getMessage(),
-            ], 422);
+            return redirect()->back()->with('error', 'Import failed: ' . $e->getMessage());
         }
     }
 }

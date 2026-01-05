@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { type BreadcrumbItem } from '@/types';
 import { Plus, Edit, Trash2, Upload, Loader2 } from 'lucide-react';
 import {
@@ -32,6 +33,11 @@ interface Asset {
   };
 }
 
+interface AssetCategory {
+  id: number;
+  name: string;
+}
+
 interface Props {
   assets: {
     data: Asset[];
@@ -39,8 +45,10 @@ interface Props {
     last_page: number;
     links: { url: string | null; label: string; active: boolean }[];
   };
+  assetCategories: AssetCategory[];
   filters: {
     search: string;
+    asset_category_id: string;
   };
 }
 
@@ -48,8 +56,9 @@ const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Assets', href: '/asset' },
 ];
 
-export default function AssetIndex({ assets, filters }: Props) {
+export default function AssetIndex({ assets, assetCategories, filters }: Props) {
   const [search, setSearch] = useState(filters.search || '');
+  const [selectedCategory, setSelectedCategory] = useState(filters.asset_category_id || '');
   const [isImporting, setIsImporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -62,15 +71,21 @@ export default function AssetIndex({ assets, filters }: Props) {
 
   const handleSearchKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
-      router.get('/asset', { ...filters, search }, { preserveScroll: true });
+      router.get('/asset', { ...filters, search, asset_category_id: selectedCategory }, { preserveScroll: true });
     }
+  };
+
+  const handleCategoryChange = (value: string) => {
+    const categoryId = value === 'all' ? '' : value;
+    setSelectedCategory(categoryId);
+    router.get('/asset', { ...filters, search, asset_category_id: categoryId }, { preserveScroll: true });
   };
 
   const handleImportClick = () => {
     fileInputRef.current?.click();
   };
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -88,37 +103,30 @@ export default function AssetIndex({ assets, filters }: Props) {
 
     setIsImporting(true);
 
-    const formData = new FormData();
-    formData.append('file', file);
-
-    try {
-      const response = await fetch('/asset/import', {
-        method: 'POST',
-        body: formData,
-        headers: {
-          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-        },
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        toast.success(data.message);
-        if (data.error_count > 0) {
-          toast.warning(`${data.error_count} row(s) had errors and were skipped.`, {
-            description: data.errors?.join('\n'),
+    router.post('/asset/import', { file }, {
+      forceFormData: true,
+      onSuccess: (page) => {
+        const flash = (page.props as { flash?: { success?: string; error?: string; warning?: string; error_count?: number; import_errors?: string[] } }).flash;
+        if (flash?.success) {
+          toast.success(flash.success);
+        }
+        if (flash?.error_count && flash.error_count > 0) {
+          toast.warning(`${flash.error_count} row(s) had errors and were skipped.`, {
+            description: flash.import_errors?.join('\n'),
           });
         }
-        // Refresh the page to show new assets
-        router.visit(window.location.pathname, { preserveScroll: true });
-      } else {
-        toast.error(data.message || 'Import failed');
-      }
-    } catch (error) {
-      toast.error('Failed to import assets. Please try again.');
-    } finally {
-      setIsImporting(false);
-    }
+        if (flash?.error) {
+          toast.error(flash.error);
+        }
+      },
+      onError: (errors) => {
+        const errorMessage = Object.values(errors).flat().join('\n');
+        toast.error(errorMessage || 'Failed to import assets. Please try again.');
+      },
+      onFinish: () => {
+        setIsImporting(false);
+      },
+    });
   };
 
   return (
@@ -171,7 +179,21 @@ export default function AssetIndex({ assets, filters }: Props) {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 onKeyDown={handleSearchKey}
+                className="md:w-1/2"
               />
+              <Select value={selectedCategory || 'all'} onValueChange={handleCategoryChange}>
+                <SelectTrigger className="md:w-1/4">
+                  <SelectValue placeholder="Filter by Category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  {assetCategories.map((category) => (
+                    <SelectItem key={category.id} value={String(category.id)}>
+                      {category.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-3">

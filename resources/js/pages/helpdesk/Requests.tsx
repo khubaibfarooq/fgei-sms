@@ -21,7 +21,7 @@ import {
 import { toast } from 'sonner';
 import { formatDateTime } from '@/utils/dateFormatter';
 import ChatBox from '@/components/ChatBox';
-
+import { ImagePreview } from '@/components/ui/image-preview2';
 interface HelpDesk {
   id: number;
   token: string;
@@ -356,15 +356,10 @@ export default function HelpDeskIndex({ helpDesk, filters, institutes, auth }: P
                         <div className="pt-2">
                           {isImageAttachment(selectedHelpDesk.attachment) ? (
                             <div className="relative group max-w-sm rounded-xl overflow-hidden border-2 border-muted shadow-lg">
-                              <img
-                                src={`/${selectedHelpDesk.attachment}`}
-                                alt="Ticket attachment"
+                              <ImagePreview
+                                dataImg={selectedHelpDesk.attachment}
                                 className="w-full h-48 object-cover hover:scale-105 transition-transform cursor-pointer"
-                                onClick={() => window.open(`/${selectedHelpDesk.attachment}`, '_blank')}
                               />
-                              <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                <Button variant="secondary" size="sm" className="font-bold text-[10px]">View Full Image</Button>
-                              </div>
                             </div>
                           ) : (
                             <Button
