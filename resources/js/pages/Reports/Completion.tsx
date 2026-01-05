@@ -155,6 +155,7 @@ export default function Completion({
             { header: 'Completed', key: 'completed', width: 20 },
             { header: 'Above 50%', key: 'greater', width: 20 },
             { header: 'Below 50%', key: 'less', width: 20 },
+            { header: 'Zero (0%)', key: 'zero', width: 20 },
         ];
         summary.forEach(item => {
             wsSummary.addRow({
@@ -162,7 +163,8 @@ export default function Completion({
                 total: item.total_institutes,
                 completed: item.completed,
                 greater: item.greater_than_50,
-                less: item.less_than_50
+                less: item.less_than_50,
+                zero: item.zero
             });
         });
 
@@ -187,6 +189,7 @@ export default function Completion({
                 { header: 'Completed', key: 'completed', width: 20 },
                 { header: 'Above 50%', key: 'greater', width: 20 },
                 { header: 'Below 50%', key: 'less', width: 20 },
+                { header: 'Zero (0%)', key: 'zero', width: 20 },
             ];
             details.forEach(item => {
                 wsDetails.addRow({
@@ -203,7 +206,8 @@ export default function Completion({
                     total: item.total_institutes,
                     completed: item.completed,
                     greater: item.greater_than_50,
-                    less: item.less_than_50
+                    less: item.less_than_50,
+                    zero: item.zero
                 });
             });
         } else {
@@ -249,8 +253,8 @@ export default function Completion({
         // Summary
         doc.text('Completion Report - Summary', 14, 15);
         autoTable(doc, {
-            head: [['Region', 'Total Institutes', 'Completed', 'Above 50%', 'Below 50%']],
-            body: summary.map(s => [s.region, s.total_institutes, s.completed, s.greater_than_50, s.less_than_50]),
+            head: [['Region', 'Total Institutes', 'Completed', 'Above 50%', 'Below 50%', 'Zero (0%)']],
+            body: summary.map(s => [s.region, s.total_institutes, s.completed, s.greater_than_50, s.less_than_50, s.zero]),
             startY: 20,
         });
 
@@ -262,13 +266,14 @@ export default function Completion({
 
         if (isRegionView) {
             autoTable(doc, {
-                head: [['Region', 'Total Inst.', 'Comp.', 'Above 50%', 'Below 50%']],
+                head: [['Region', 'Total Inst.', 'Comp.', 'Above 50%', 'Below 50%', 'Zero (0%)']],
                 body: details.map(d => [
                     d.name,
                     d.total_institutes || 0,
                     d.completed || 0,
                     d.greater_than_50 || 0,
-                    d.less_than_50 || 0
+                    d.less_than_50 || 0,
+                    d.zero || 0
                 ]),
                 startY: 20,
                 styles: { fontSize: 8 },

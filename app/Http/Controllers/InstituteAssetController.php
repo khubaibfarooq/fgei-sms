@@ -113,7 +113,7 @@ if($request->filled('asset')){
     }
 
     public function store(Request $request)
-    {
+    {try{
         $data = $request->validate([
             'room_id' => 'required|exists:rooms,id',
             'added_date' => 'required|date',
@@ -157,7 +157,14 @@ if($request->filled('asset')){
         }
 
         return redirect()->route('institute-assets.create')->with('success', 'Institute assets saved successfully.');
+    } catch (ValidationException $e) {
+        return response()->json(['errors' => $e->errors()], 422);
+    } catch (\Exception $e) {
+        \Log::error('Institute assets add failed: ' . $e->getMessage());
+        return response()->json(['message' => 'Failed to add Institute assets'], 409);
     }
+}
+    
     public function edit(InstituteAsset $instituteAsset)
     {if (!auth()->user()->can('inst-assets-edit')) {
         abort(403, 'You do not have permission to edit a Asset.');
@@ -178,7 +185,7 @@ if($request->filled('asset')){
         ]);
     }
     public function update(Request $request, InstituteAsset $instituteAsset)
-    {
+    {try{
         $data = $request->validate([
             'details' => 'required|string|max:255',
             'asset_id' => 'required|exists:assets,id',
@@ -191,7 +198,12 @@ if($request->filled('asset')){
         $data['institute_id'] = session('sms_inst_id');
         $instituteAsset->update($data);
         
-        return redirect()->route('institute-assets.index')->with('success', 'Institute asset updated successfully.');
+        return redirect()->route('institute-assets.index')->with('success', 'Institute asset updated successfully.');   } catch (ValidationException $e) {
+        return response()->json(['errors' => $e->errors()], 422);
+    } catch (\Exception $e) {
+        \Log::error('Institute assets update failed: ' . $e->getMessage());
+        return response()->json(['message' => 'Failed to update Institute assets'], 409);
+    }
     }
     public function destroy(InstituteAsset $instituteAsset)
     {if (!auth()->user()->can('inst-assets-delete')) {
