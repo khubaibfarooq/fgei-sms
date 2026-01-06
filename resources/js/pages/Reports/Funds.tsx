@@ -401,7 +401,7 @@ export default function Funds({
                               }
                             }}
                           >
-                            <td className="sticky left-0 z-10 bg-background text-wrap px-6 py-4 font-medium text-base border-r  ">
+                            <td className="sticky left-0 z-10 bg-background text-wrap px-6 py-4 font-medium text-base border-r  min-w-[200px]">
                               <div className="flex items-center gap-2">
                                 {row.institute_name || (
                                   <>
