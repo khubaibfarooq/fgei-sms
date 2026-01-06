@@ -113,57 +113,56 @@ if($request->filled('asset')){
     }
 
     public function store(Request $request)
-    {try{
-        $data = $request->validate([
-            'room_id' => 'required|exists:rooms,id',
-            'added_date' => 'required|date',
-            'assets' => 'required|array|min:1',
-            'assets.*.asset_id' => 'required|exists:assets,id',
-            'assets.*.current_qty' => 'required|integer|min:1',
-            'assets.*.details' => 'required|string|max:255',
-        ]);
+    {
+        try {
+            $data = $request->validate([
+                'room_id' => 'required|exists:rooms,id',
+                'added_date' => 'required|date',
+                'assets' => 'required|array|min:1',
+                'assets.*.asset_id' => 'required|exists:assets,id',
+                'assets.*.current_qty' => 'required|integer|min:1',
+                'assets.*.details' => 'required|string|max:255',
+            ]);
 
-        $addedBy = auth()->id();
-        $instituteId = session('sms_inst_id');
+            $addedBy = auth()->id();
+            $instituteId = session('sms_inst_id');
 
-        // Loop through each asset and create or update record
-        foreach ($data['assets'] as $asset) {
-            // Check if asset already exists in the same room for this institute
-            $existingAsset = InstituteAsset::where('asset_id', $asset['asset_id'])
-                ->where('room_id', $data['room_id'])
-                ->where('institute_id', $instituteId)
-                ->first();
+            // Loop through each asset and create or update record
+            foreach ($data['assets'] as $asset) {
+                // Check if asset already exists in the same room for this institute
+                $existingAsset = InstituteAsset::where('asset_id', $asset['asset_id'])
+                    ->where('room_id', $data['room_id'])
+                    ->where('institute_id', $instituteId)
+                    ->first();
 
-            if ($existingAsset) {
-                // Add quantity to existing asset
-                $existingAsset->update([
-                    'current_qty' => $existingAsset->current_qty + $asset['current_qty'],
-                    'details' => $asset['details'],
-                    'added_date' => $data['added_date'],
-                    'added_by' => $addedBy,
-                ]);
-            } else {
-                // Create new record
-                InstituteAsset::create([
-                    'asset_id' => $asset['asset_id'],
-                    'current_qty' => $asset['current_qty'],
-                    'details' => $asset['details'],
-                    'room_id' => $data['room_id'],
-                    'added_date' => $data['added_date'],
-                    'added_by' => $addedBy,
-                    'institute_id' => $instituteId,
-                ]);
+                if ($existingAsset) {
+                    // Add quantity to existing asset
+                    $existingAsset->update([
+                        'current_qty' => $existingAsset->current_qty + $asset['current_qty'],
+                        'details' => $asset['details'],
+                        'added_date' => $data['added_date'],
+                        'added_by' => $addedBy,
+                    ]);
+                } else {
+                    // Create new record
+                    InstituteAsset::create([
+                        'asset_id' => $asset['asset_id'],
+                        'current_qty' => $asset['current_qty'],
+                        'details' => $asset['details'],
+                        'room_id' => $data['room_id'],
+                        'added_date' => $data['added_date'],
+                        'added_by' => $addedBy,
+                        'institute_id' => $instituteId,
+                    ]);
+                }
             }
-        }
 
-        return redirect()->route('institute-assets.create')->with('success', 'Institute assets saved successfully.');
-    } catch (ValidationException $e) {
-        return response()->json(['errors' => $e->errors()], 422);
-    } catch (\Exception $e) {
-        \Log::error('Institute assets add failed: ' . $e->getMessage());
-        return response()->json(['message' => 'Failed to add Institute assets'], 409);
+            return redirect()->route('institute-assets.create')->with('success', 'Institute assets saved successfully.');
+        } catch (\Exception $e) {
+            \Log::error('Institute assets add failed: ' . $e->getMessage());
+            return redirect()->back()->withErrors(['assets' => 'Failed to add Institute assets: ' . $e->getMessage()]);
+        }
     }
-}
     
     public function edit(InstituteAsset $instituteAsset)
     {if (!auth()->user()->can('inst-assets-edit')) {
@@ -185,25 +184,24 @@ if($request->filled('asset')){
         ]);
     }
     public function update(Request $request, InstituteAsset $instituteAsset)
-    {try{
-        $data = $request->validate([
-            'details' => 'required|string|max:255',
-            'asset_id' => 'required|exists:assets,id',
-            'current_qty' => 'required|integer|min:1',
-            'added_date' => 'required|date',
-            'room_id' => 'required|exists:rooms,id',
-        ]);
-        $data['added_by'] = auth()->id();
+    {
+        try {
+            $data = $request->validate([
+                'details' => 'required|string|max:255',
+                'asset_id' => 'required|exists:assets,id',
+                'current_qty' => 'required|integer|min:1',
+                'added_date' => 'required|date',
+                'room_id' => 'required|exists:rooms,id',
+            ]);
+            $data['added_by'] = auth()->id();
+            $data['institute_id'] = session('sms_inst_id');
+            $instituteAsset->update($data);
 
-        $data['institute_id'] = session('sms_inst_id');
-        $instituteAsset->update($data);
-        
-        return redirect()->route('institute-assets.index')->with('success', 'Institute asset updated successfully.');   } catch (ValidationException $e) {
-        return response()->json(['errors' => $e->errors()], 422);
-    } catch (\Exception $e) {
-        \Log::error('Institute assets update failed: ' . $e->getMessage());
-        return response()->json(['message' => 'Failed to update Institute assets'], 409);
-    }
+            return redirect()->route('institute-assets.index')->with('success', 'Institute asset updated successfully.');
+        } catch (\Exception $e) {
+            \Log::error('Institute assets update failed: ' . $e->getMessage());
+            return redirect()->back()->withErrors(['error' => 'Failed to update Institute assets: ' . $e->getMessage()]);
+        }
     }
     public function destroy(InstituteAsset $instituteAsset)
     {if (!auth()->user()->can('inst-assets-delete')) {
