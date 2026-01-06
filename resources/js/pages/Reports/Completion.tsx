@@ -419,7 +419,7 @@ export default function Completion({
                                     {/* Total Institutions Card */}
                                     <div className="relative overflow-hidden rounded-xl border bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 p-4 md:p-5 shadow-sm hover:shadow-md transition-all duration-300 group">
                                         <div className="absolute top-0 right-0 w-20 h-20 bg-slate-200/50 dark:bg-slate-700/30 rounded-full -translate-y-1/2 translate-x-1/2"></div>
-                                        <p className="text-sm md:text-base lg:text-lg font-semibold text-muted-foreground uppercase tracking-wider mb-2">Total Institutions</p>
+                                        <p className="text-base md:text-lg lg:text-xl font-semibold text-muted-foreground uppercase tracking-wider mb-2">Total Institutions</p>
                                         <p className="text-2xl md:text-3xl lg:text-4xl font-black text-slate-700 dark:text-slate-200 group-hover:scale-105 transition-transform">{totalInstitutes}</p>
                                     </div>
 
@@ -427,7 +427,7 @@ export default function Completion({
                                     {(status === 'completed' || status === '') && summary.map((item, idx) => (
                                         <div key={`completed-${idx}`} className="relative overflow-hidden rounded-xl border border-emerald-200 dark:border-emerald-900 bg-gradient-to-br from-emerald-50 to-green-100 dark:from-emerald-950 dark:to-green-900 p-4 md:p-5 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer group hover:border-emerald-400">
                                             <div className="absolute top-0 right-0 w-20 h-20 bg-emerald-200/50 dark:bg-emerald-800/30 rounded-full -translate-y-1/2 translate-x-1/2"></div>
-                                            <p className="text-sm md:text-base lg:text-lg font-semibold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider mb-2">✓ Completed</p>
+                                            <p className="text-base md:text-lg lg:text-xl font-semibold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider mb-2">✓ Completed</p>
                                             <p className="text-2xl md:text-3xl lg:text-4xl font-black text-emerald-600 dark:text-emerald-400 group-hover:scale-105 transition-transform">{item.completed}</p>
                                         </div>
                                     ))}
@@ -436,7 +436,7 @@ export default function Completion({
                                     {(status === 'greater_than_50' || status === '') && summary.map((item, idx) => (
                                         <div key={`above50-${idx}`} className="relative overflow-hidden rounded-xl border border-blue-200 dark:border-blue-900 bg-gradient-to-br from-blue-50 to-cyan-100 dark:from-blue-950 dark:to-cyan-900 p-4 md:p-5 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer group hover:border-blue-400">
                                             <div className="absolute top-0 right-0 w-20 h-20 bg-blue-200/50 dark:bg-blue-800/30 rounded-full -translate-y-1/2 translate-x-1/2"></div>
-                                            <p className="text-sm md:text-base lg:text-lg font-semibold text-blue-700 dark:text-blue-400 uppercase tracking-wider mb-2">↑ Above 50%</p>
+                                            <p className="text-base md:text-lg lg:text-xl font-semibold text-blue-700 dark:text-blue-400 uppercase tracking-wider mb-2">↑ Above 50%</p>
                                             <p className="text-2xl md:text-3xl lg:text-4xl font-black text-blue-600 dark:text-blue-400 group-hover:scale-105 transition-transform">{item.greater_than_50}</p>
                                         </div>
                                     ))}
@@ -445,7 +445,7 @@ export default function Completion({
                                     {(status === 'less_than_50' || status === '') && summary.map((item, idx) => (
                                         <div key={`below50-${idx}`} className="relative overflow-hidden rounded-xl border border-amber-200 dark:border-amber-900 bg-gradient-to-br from-amber-50 to-orange-100 dark:from-amber-950 dark:to-orange-900 p-4 md:p-5 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer group hover:border-amber-400">
                                             <div className="absolute top-0 right-0 w-20 h-20 bg-amber-200/50 dark:bg-amber-800/30 rounded-full -translate-y-1/2 translate-x-1/2"></div>
-                                            <p className="text-sm md:text-base lg:text-lg font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wider mb-2">↓ Below 50%</p>
+                                            <p className="text-base md:text-lg lg:text-xl font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wider mb-2">↓ Below 50%</p>
                                             <p className="text-2xl md:text-3xl lg:text-4xl font-black text-amber-600 dark:text-amber-400 group-hover:scale-105 transition-transform">{item.less_than_50}</p>
                                         </div>
                                     ))}
@@ -499,7 +499,7 @@ export default function Completion({
                                         }}
                                         variant="outline"
                                         size="sm"
-                                        className="rounded-full px-4 hover:bg-primary hover:text-primary-foreground transition-colors"
+                                        className="rounded-full px-4 text-base hover:bg-primary hover:text-primary-foreground transition-colors"
                                     >
                                         ← Show All Institutes
                                     </Button>
@@ -517,28 +517,28 @@ export default function Completion({
                                 <Button
                                     onClick={() => { setStatus('completed'); fetchData({ status: 'completed' }); }}
                                     size="sm"
-                                    className={`rounded-full px-4 transition-all ${status === 'completed' ? 'bg-emerald-600 text-white shadow-md' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950 dark:text-emerald-400'}`}
+                                    className={`rounded-full px-4 text-base transition-all ${status === 'completed' ? 'bg-emerald-600 text-white shadow-md' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950 dark:text-emerald-400'}`}
                                 >
                                     ✓ Completed
                                 </Button>
                                 <Button
                                     onClick={() => { setStatus('greater_than_50'); fetchData({ status: 'greater_than_50' }); }}
                                     size="sm"
-                                    className={`rounded-full px-4 transition-all ${status === 'greater_than_50' ? 'bg-blue-600 text-white shadow-md' : 'bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-950 dark:text-blue-400'}`}
+                                    className={`rounded-full px-4 text-base transition-all ${status === 'greater_than_50' ? 'bg-blue-600 text-white shadow-md' : 'bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-950 dark:text-blue-400'}`}
                                 >
                                     ↑ Above 50%
                                 </Button>
                                 <Button
                                     onClick={() => { setStatus('less_than_50'); fetchData({ status: 'less_than_50' }); }}
                                     size="sm"
-                                    className={`rounded-full px-4 transition-all ${status === 'less_than_50' ? 'bg-amber-600 text-white shadow-md' : 'bg-amber-50 text-amber-700 hover:bg-amber-100 dark:bg-amber-950 dark:text-amber-400'}`}
+                                    className={`rounded-full px-4 text-base transition-all ${status === 'less_than_50' ? 'bg-amber-600 text-white shadow-md' : 'bg-amber-50 text-amber-700 hover:bg-amber-100 dark:bg-amber-950 dark:text-amber-400'}`}
                                 >
                                     ↓ Below 50%
                                 </Button>
                                 <Button
                                     onClick={() => { setStatus('zero'); fetchData({ status: 'zero' }); }}
                                     size="sm"
-                                    className={`rounded-full px-4 transition-all ${status === 'zero' ? 'bg-red-600 text-white shadow-md' : 'bg-red-50 text-red-700 hover:bg-red-100 dark:bg-red-950 dark:text-red-400'}`}
+                                    className={`rounded-full px-4 text-base transition-all ${status === 'zero' ? 'bg-red-600 text-white shadow-md' : 'bg-red-50 text-red-700 hover:bg-red-100 dark:bg-red-950 dark:text-red-400'}`}
                                 >
                                     ✕ Zero
                                 </Button>
@@ -549,30 +549,30 @@ export default function Completion({
                                 <table className="w-full text-sm md:text-base">
                                     <thead>
                                         <tr className="bg-gradient-to-r from-slate-100 to-slate-50 dark:from-slate-800 dark:to-slate-900 border-b">
-                                            <th className="px-4 md:px-6 py-4 text-left font-semibold text-slate-700 dark:text-slate-300 uppercase text-xs md:text-sm tracking-wider min-w-[200px]">
+                                            <th className="px-4 md:px-6 py-4 text-left font-semibold text-slate-700 dark:text-slate-300  text-base md:text-lg lg:text-xl tracking-wider min-w-[200px]">
                                                 {isRegionView ? 'Region' : 'Institute'}
                                             </th>
 
                                             {isRegionView ? (
                                                 <>
-                                                    {status === '' && <th className="px-3 md:px-4 py-4 text-center font-semibold text-slate-700 dark:text-slate-300 uppercase text-xs md:text-sm tracking-wider">Total</th>}
-                                                    {(status === 'completed' || status === '') && <th className="px-3 md:px-4 py-4 text-center font-semibold text-emerald-700 dark:text-emerald-400 uppercase text-xs md:text-sm tracking-wider">Comp.</th>}
-                                                    {(status === 'greater_than_50' || status === '') && <th className="px-3 md:px-4 py-4 text-center font-semibold text-blue-700 dark:text-blue-400 uppercase text-xs md:text-sm tracking-wider">&gt;50%</th>}
-                                                    {(status === 'less_than_50' || status === '') && <th className="px-3 md:px-4 py-4 text-center font-semibold text-amber-700 dark:text-amber-400 uppercase text-xs md:text-sm tracking-wider">&lt;50%</th>}
-                                                    {(status === 'zero' || status === '') && <th className="px-3 md:px-4 py-4 text-center font-semibold text-red-700 dark:text-red-400 uppercase text-xs md:text-sm tracking-wider">Zero</th>}
+                                                    {status === '' && <th className="px-3 md:px-4 py-4 text-center font-semibold text-slate-700 dark:text-slate-300  text-base md:text-lg lg:text-xl tracking-wider">Total</th>}
+                                                    {(status === 'completed' || status === '') && <th className="px-3 md:px-4 py-4 text-center font-semibold text-emerald-700 dark:text-emerald-400  text-base md:text-lg lg:text-xl tracking-wider">Completed</th>}
+                                                    {(status === 'greater_than_50' || status === '') && <th className="px-3 md:px-4 py-4 text-center font-semibold text-blue-700 dark:text-blue-400  text-base md:text-lg lg:text-xl tracking-wider">Above 50%</th>}
+                                                    {(status === 'less_than_50' || status === '') && <th className="px-3 md:px-4 py-4 text-center font-semibold text-amber-700 dark:text-amber-400  text-base md:text-lg lg:text-xl tracking-wider">Below 50%</th>}
+                                                    {(status === 'zero' || status === '') && <th className="px-3 md:px-4 py-4 text-center font-semibold text-red-700 dark:text-red-400  text-base md:text-lg lg:text-xl tracking-wider">Zero(0%)</th>}
                                                 </>
                                             ) : (
                                                 <>
-                                                    <th className="px-2 md:px-3 py-4 text-center font-semibold text-slate-600 dark:text-slate-400 uppercase text-xs tracking-wider">Shifts</th>
-                                                    <th className="px-2 md:px-3 py-4 text-center font-semibold text-slate-600 dark:text-slate-400 uppercase text-xs tracking-wider">Blocks</th>
-                                                    <th className="px-2 md:px-3 py-4 text-center font-semibold text-slate-600 dark:text-slate-400 uppercase text-xs tracking-wider">Rooms</th>
-                                                    <th className="px-2 md:px-3 py-4 text-center font-semibold text-slate-600 dark:text-slate-400 uppercase text-xs tracking-wider">Assets</th>
-                                                    <th className="px-2 md:px-3 py-4 text-center font-semibold text-slate-600 dark:text-slate-400 uppercase text-xs tracking-wider">Plants</th>
-                                                    <th className="px-2 md:px-3 py-4 text-center font-semibold text-slate-600 dark:text-slate-400 uppercase text-xs tracking-wider">Trans.</th>
-                                                    <th className="px-2 md:px-3 py-4 text-center font-semibold text-slate-600 dark:text-slate-400 uppercase text-xs tracking-wider">Fund</th>
-                                                    <th className="px-2 md:px-3 py-4 text-center font-semibold text-slate-600 dark:text-slate-400 uppercase text-xs tracking-wider">Proj.</th>
-                                                    <th className="px-2 md:px-3 py-4 text-center font-semibold text-slate-600 dark:text-slate-400 uppercase text-xs tracking-wider">Upg.</th>
-                                                    <th className="px-3 md:px-4 py-4 text-center font-semibold text-slate-700 dark:text-slate-300 uppercase text-xs md:text-sm tracking-wider bg-slate-200/50 dark:bg-slate-700/50">Score</th>
+                                                    <th className="px-2 md:px-3 py-4 text-center font-semibold text-slate-600 dark:text-slate-400 uppercase text-base md:text-lg lg:text-xl tracking-wider">Shifts</th>
+                                                    <th className="px-2 md:px-3 py-4 text-center font-semibold text-slate-600 dark:text-slate-400 uppercase text-base md:text-lg lg:text-xl tracking-wider">Blocks</th>
+                                                    <th className="px-2 md:px-3 py-4 text-center font-semibold text-slate-600 dark:text-slate-400 uppercase text-base md:text-lg lg:text-xl tracking-wider">Rooms</th>
+                                                    <th className="px-2 md:px-3 py-4 text-center font-semibold text-slate-600 dark:text-slate-400 uppercase text-base md:text-lg lg:text-xl tracking-wider">Assets</th>
+                                                    <th className="px-2 md:px-3 py-4 text-center font-semibold text-slate-600 dark:text-slate-400 uppercase text-base md:text-lg lg:text-xl tracking-wider">Plants</th>
+                                                    <th className="px-2 md:px-3 py-4 text-center font-semibold text-slate-600 dark:text-slate-400 uppercase text-base md:text-lg lg:text-xl tracking-wider">Trans.</th>
+                                                    <th className="px-2 md:px-3 py-4 text-center font-semibold text-slate-600 dark:text-slate-400 uppercase text-base md:text-lg lg:text-xl tracking-wider">Fund</th>
+                                                    <th className="px-2 md:px-3 py-4 text-center font-semibold text-slate-600 dark:text-slate-400 uppercase text-base md:text-lg lg:text-xl tracking-wider">Proj.</th>
+                                                    <th className="px-2 md:px-3 py-4 text-center font-semibold text-slate-600 dark:text-slate-400 uppercase text-base md:text-lg lg:text-xl tracking-wider">Upg.</th>
+                                                    <th className="px-3 md:px-4 py-4 text-center font-semibold text-slate-700 dark:text-slate-300 uppercase text-base md:text-lg lg:text-xl tracking-wider bg-slate-200/50 dark:bg-slate-700/50">Score</th>
                                                 </>
                                             )}
                                         </tr>

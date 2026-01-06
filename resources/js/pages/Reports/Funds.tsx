@@ -401,12 +401,12 @@ export default function Funds({
                               }
                             }}
                           >
-                            <td className="sticky left-0 z-10 bg-background text-wrap px-6 py-4 font-medium border-r  ">
+                            <td className="sticky left-0 z-10 bg-background text-wrap px-6 py-4 font-medium text-base border-r  ">
                               <div className="flex items-center gap-2">
                                 {row.institute_name || (
                                   <>
                                     {/* Optional visual indicator that this is a clickable region */}
-                                    <span className="text-blue-600 dark:text-blue-400 font-semibold   ">
+                                    <span className="text-blue-600 dark:text-blue-400 font-semibold text-base   ">
                                       {row.region_name.split(' ').pop() || row.region_name}
                                     </span>
 
