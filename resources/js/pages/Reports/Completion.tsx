@@ -402,252 +402,284 @@ export default function Completion({
                     </CardContent>
                 </Card>
 
-                {/* Summary Table */}
+                {/* Combined Summary & Details Card */}
                 <Card>
                     <CardHeader>
-                        <CardTitle className="text-lg">Summary</CardTitle>
+                        <CardTitle className="text-lg md:text-xl lg:text-2xl font-bold">Summary & Institute Details</CardTitle>
                     </CardHeader>
-                    <CardContent>
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-sm text-left">
-                                <thead className="bg-muted/50 text-muted-foreground uppercase">
-                                    <tr>
-                                        <th className="px-4 py-3 text-center">Total Institutes</th>
-                                        {status == 'completed' || status == '' ? <th className="px-4 py-3 text-center">Completed Data</th> : null}
-                                        {status == 'greater_than_50' || status == '' ? <th className="px-4 py-3 text-center">Above 50%</th> : null}
-                                        {status == 'less_than_50' || status == '' ? <th className="px-4 py-3 text-center">Below 50%</th> : null}
-                                        {status == 'zero' || status == '' ? <th className="px-4 py-3 text-center">Zero (0%)</th> : null}
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y">
-                                    {summary.length > 0 ? (
-                                        summary.map((item, idx) => (
-                                            <tr key={idx} className="hover:bg-muted/50">
-                                                <td className="px-4 py-3 text-center">{totalInstitutes}</td>
-                                                {status == 'completed' || status == '' ? <td className="px-4 py-3 text-center text-green-600 font-bold">{item.completed}</td> : null}
-                                                {status == 'greater_than_50' || status == '' ? <td className="px-4 py-3 text-center text-green-600 font-bold">
-                                                    {item.greater_than_50}</td> : null}
-                                                {status == 'less_than_50' || status == '' ? <td className="px-4 py-3 text-center text-red-600 font-bold">{item.less_than_50}</td> : null}
-                                                {status == 'zero' || status == '' ? <td className="px-4 py-3 text-center text-red-600 font-bold">{item.zero}</td> : null}
-                                            </tr>
-                                        ))
-                                    ) : (
-                                        <tr>
-                                            <td colSpan={4} className="px-4 py-8 text-center text-muted-foreground">
-                                                No summary data available
-                                            </td>
-                                        </tr>
-                                    )}
-                                </tbody>
-                            </table>
+                    <CardContent className="space-y-6">
+                        {/* Summary Section - Modern Stat Cards */}
+                        <div>
+                            <h3 className="text-base md:text-lg lg:text-xl font-semibold mb-4 flex items-center gap-2">
+                                <span className="w-1 h-6 bg-primary rounded-full"></span>
+                                Summary Overview
+                            </h3>
+                            {summary.length > 0 ? (
+                                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4">
+                                    {/* Total Institutes Card */}
+                                    <div className="relative overflow-hidden rounded-xl border bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 p-4 md:p-5 shadow-sm hover:shadow-md transition-all duration-300 group">
+                                        <div className="absolute top-0 right-0 w-20 h-20 bg-slate-200/50 dark:bg-slate-700/30 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+                                        <p className="text-xs md:text-sm font-medium text-muted-foreground uppercase tracking-wider mb-2">Total Institutes</p>
+                                        <p className="text-2xl md:text-3xl lg:text-4xl font-black text-slate-700 dark:text-slate-200 group-hover:scale-105 transition-transform">{totalInstitutes}</p>
+                                    </div>
+
+                                    {/* Completed Card */}
+                                    {(status === 'completed' || status === '') && summary.map((item, idx) => (
+                                        <div key={`completed-${idx}`} className="relative overflow-hidden rounded-xl border border-emerald-200 dark:border-emerald-900 bg-gradient-to-br from-emerald-50 to-green-100 dark:from-emerald-950 dark:to-green-900 p-4 md:p-5 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer group hover:border-emerald-400">
+                                            <div className="absolute top-0 right-0 w-20 h-20 bg-emerald-200/50 dark:bg-emerald-800/30 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+                                            <p className="text-xs md:text-sm font-medium text-emerald-700 dark:text-emerald-400 uppercase tracking-wider mb-2">✓ Completed</p>
+                                            <p className="text-2xl md:text-3xl lg:text-4xl font-black text-emerald-600 dark:text-emerald-400 group-hover:scale-105 transition-transform">{item.completed}</p>
+                                        </div>
+                                    ))}
+
+                                    {/* Above 50% Card */}
+                                    {(status === 'greater_than_50' || status === '') && summary.map((item, idx) => (
+                                        <div key={`above50-${idx}`} className="relative overflow-hidden rounded-xl border border-blue-200 dark:border-blue-900 bg-gradient-to-br from-blue-50 to-cyan-100 dark:from-blue-950 dark:to-cyan-900 p-4 md:p-5 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer group hover:border-blue-400">
+                                            <div className="absolute top-0 right-0 w-20 h-20 bg-blue-200/50 dark:bg-blue-800/30 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+                                            <p className="text-xs md:text-sm font-medium text-blue-700 dark:text-blue-400 uppercase tracking-wider mb-2">↑ Above 50%</p>
+                                            <p className="text-2xl md:text-3xl lg:text-4xl font-black text-blue-600 dark:text-blue-400 group-hover:scale-105 transition-transform">{item.greater_than_50}</p>
+                                        </div>
+                                    ))}
+
+                                    {/* Below 50% Card */}
+                                    {(status === 'less_than_50' || status === '') && summary.map((item, idx) => (
+                                        <div key={`below50-${idx}`} className="relative overflow-hidden rounded-xl border border-amber-200 dark:border-amber-900 bg-gradient-to-br from-amber-50 to-orange-100 dark:from-amber-950 dark:to-orange-900 p-4 md:p-5 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer group hover:border-amber-400">
+                                            <div className="absolute top-0 right-0 w-20 h-20 bg-amber-200/50 dark:bg-amber-800/30 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+                                            <p className="text-xs md:text-sm font-medium text-amber-700 dark:text-amber-400 uppercase tracking-wider mb-2">↓ Below 50%</p>
+                                            <p className="text-2xl md:text-3xl lg:text-4xl font-black text-amber-600 dark:text-amber-400 group-hover:scale-105 transition-transform">{item.less_than_50}</p>
+                                        </div>
+                                    ))}
+
+                                    {/* Zero Card */}
+                                    {(status === 'zero' || status === '') && summary.map((item, idx) => (
+                                        <div key={`zero-${idx}`} className="relative overflow-hidden rounded-xl border border-red-200 dark:border-red-900 bg-gradient-to-br from-red-50 to-rose-100 dark:from-red-950 dark:to-rose-900 p-4 md:p-5 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer group hover:border-red-400">
+                                            <div className="absolute top-0 right-0 w-20 h-20 bg-red-200/50 dark:bg-red-800/30 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+                                            <p className="text-xs md:text-sm font-medium text-red-700 dark:text-red-400 uppercase tracking-wider mb-2">✕ Zero (0%)</p>
+                                            <p className="text-2xl md:text-3xl lg:text-4xl font-black text-red-600 dark:text-red-400 group-hover:scale-105 transition-transform">{item.zero}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-center py-8 text-muted-foreground bg-muted/20 rounded-xl border-2 border-dashed">
+                                    No summary data available
+                                </div>
+                            )}
                         </div>
-                    </CardContent>
-                </Card>
 
-                {/* Details Table */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="text-lg">Institute Details</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        {!isRegionView && regions.length > 0 ? (
-                            <Button
-                                onClick={() => {
-                                    setRegion('');
-                                    setInstitute('');
-                                    fetchData({ region_id: '', institute_id: '' });
-                                }}
-                                variant="outline"
-                                size="sm"
+                        <Separator />
 
-                            >
-                                Show All Regions
-                            </Button>) : (
-                            <Button
-                                onClick={() => {
-                                    setRegion('');
-                                    setInstitute('');
-                                    fetchData({ region_id: '', institute_id: '' });
-                                }}
-                                variant="outline"
-                                size="sm"
+                        {/* Details Section */}
+                        <div>
+                            <h3 className="text-base md:text-lg lg:text-xl font-semibold mb-4 flex items-center gap-2">
+                                <span className="w-1 h-6 bg-primary rounded-full"></span>
+                                Institute Details
+                            </h3>
 
-                            >
-                                Show All Institutes
-                            </Button>
-                        )}
-                        <Button
-                            onClick={() => {
-                                setStatus('');
-                                fetchData({ status: '' });
-                            }}
-                            variant="outline"
-                            size="sm"
-                            className='mr-2 text-white bg-blue-500 hover:bg-blue-600'
-                        >
-                            All Statuses
-                        </Button>  <Button
-                            onClick={() => {
-                                setStatus('completed');
-                                fetchData({ status: 'completed' });
-                            }}
-                            variant="outline"
-                            size="sm"
-                            className='mr-2 text-white bg-green-500 hover:bg-green-600'
-                        >
-                            Completed (100%)
-                        </Button> <Button
-                            onClick={() => {
-                                setStatus('greater_than_50');
-                                fetchData({ status: 'greater_than_50' });
-                            }}
-                            variant="outline"
-                            size="sm"
-                            className='mr-2 text-white bg-green-500 hover:bg-green-600'
-                        >
-                            Above 50%
-                        </Button> <Button
-                            onClick={() => {
-                                setStatus('less_than_50');
-                                fetchData({ status: 'less_than_50' });
-                            }}
-                            variant="outline"
-                            size="sm"
-                            className='mr-2 text-white bg-red-500 hover:bg-red-600'
-                        >
-                            Below 50%
-                        </Button>
-                        <Button
-                            onClick={() => {
-                                setStatus('zero');
-                                fetchData({ status: 'zero' });
-                            }}
-                            variant="outline"
-                            size="sm"
-                            className='mr-2 text-white bg-red-500 hover:bg-red-600'
-                        >
-                            Zero (0%)
-                        </Button>
-                        <div className="overflow-x-auto">
+                            {/* Filter Buttons - Modern Pill Style */}
+                            <div className="flex flex-wrap gap-2 mb-5">
+                                {!isRegionView && regions.length > 0 ? (
+                                    <Button
+                                        onClick={() => {
+                                            setRegion('');
+                                            setInstitute('');
+                                            fetchData({ region_id: '', institute_id: '' });
+                                        }}
+                                        variant="outline"
+                                        size="sm"
+                                        className="rounded-full px-4 hover:bg-primary hover:text-primary-foreground transition-colors"
+                                    >
+                                        ← Show All Regions
+                                    </Button>
+                                ) : (
+                                    <Button
+                                        onClick={() => {
+                                            setRegion('');
+                                            setInstitute('');
+                                            fetchData({ region_id: '', institute_id: '' });
+                                        }}
+                                        variant="outline"
+                                        size="sm"
+                                        className="rounded-full px-4 hover:bg-primary hover:text-primary-foreground transition-colors"
+                                    >
+                                        ← Show All Institutes
+                                    </Button>
+                                )}
 
-                            <table className="w-full text-sm text-left">
-                                <thead className="bg-muted/50 text-muted-foreground uppercase">
-                                    <tr>
-                                        <th className="px-4 py-3 min-w-[200px]">{isRegionView ? 'Region' : 'Institute'}</th>
+                                <div className="h-6 w-px bg-border mx-1 hidden sm:block"></div>
 
-                                        {isRegionView ? (
-                                            <>
-                                                {status == '' ? <th className="px-4 py-3 text-center">Total Inst.</th> : null}
-                                                {
-                                                    status == 'completed' || status == '' ? <th className="px-4 py-3 text-center">Comp.</th> : null
-                                                }
-                                                {
-                                                    status == 'greater_than_50' || status == '' ? <th className="px-4 py-3 text-center">Above 50%</th> : null
-                                                }
-                                                {
-                                                    status == 'less_than_50' || status == '' ? <th className="px-4 py-3 text-center">Below 50%</th> : null
-                                                }
-                                                {
-                                                    status == 'zero' || status == '' ? <th className="px-4 py-3 text-center">Zero (0%)</th> : null
-                                                }
-                                            </>
-                                        ) : (<>
-                                            <th className="px-4 py-3 text-center">Shifts</th>
-                                            <th className="px-4 py-3 text-center">Blocks</th>
-                                            <th className="px-4 py-3 text-center">Rooms</th>
-                                            <th className="px-4 py-3 text-center">Assets</th>
-                                            <th className="px-4 py-3 text-center">Plants</th>
-                                            <th className="px-4 py-3 text-center">Transports</th>
-                                            <th className="px-4 py-3 text-center">Fund</th>
-                                            <th className="px-4 py-3 text-center">Projects</th>
-                                            <th className="px-4 py-3 text-center">Upgrad.</th>
-                                            <th className="px-4 py-3 text-center">Total %</th>
-                                        </>
-                                        )}
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y">
-                                    {details.length > 0 ? (
-                                        details.map((item) => (
-                                            <tr
-                                                key={item.id}
-                                                className={`hover:bg-muted/50 ${isRegionView ? 'cursor-pointer' : ''}`}
-                                                onClick={() => isRegionView ? handleRegionClick(item.id) : handleInstituteClick(item.id)}
-                                            >
-                                                <td className={`px-4 py-3 font-medium ${isRegionView ? 'text-blue-600' : ''}`}>
-                                                    {isRegionView ? item.name.split(' ').pop() || item.name : item.name}
-                                                </td>
+                                <Button
+                                    onClick={() => { setStatus(''); fetchData({ status: '' }); }}
+                                    size="sm"
+                                    className={`rounded-full px-4 transition-all ${status === '' || status === 'all' ? 'bg-slate-700 text-white shadow-md' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300'}`}
+                                >
+                                    All
+                                </Button>
+                                <Button
+                                    onClick={() => { setStatus('completed'); fetchData({ status: 'completed' }); }}
+                                    size="sm"
+                                    className={`rounded-full px-4 transition-all ${status === 'completed' ? 'bg-emerald-600 text-white shadow-md' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950 dark:text-emerald-400'}`}
+                                >
+                                    ✓ Completed
+                                </Button>
+                                <Button
+                                    onClick={() => { setStatus('greater_than_50'); fetchData({ status: 'greater_than_50' }); }}
+                                    size="sm"
+                                    className={`rounded-full px-4 transition-all ${status === 'greater_than_50' ? 'bg-blue-600 text-white shadow-md' : 'bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-950 dark:text-blue-400'}`}
+                                >
+                                    ↑ Above 50%
+                                </Button>
+                                <Button
+                                    onClick={() => { setStatus('less_than_50'); fetchData({ status: 'less_than_50' }); }}
+                                    size="sm"
+                                    className={`rounded-full px-4 transition-all ${status === 'less_than_50' ? 'bg-amber-600 text-white shadow-md' : 'bg-amber-50 text-amber-700 hover:bg-amber-100 dark:bg-amber-950 dark:text-amber-400'}`}
+                                >
+                                    ↓ Below 50%
+                                </Button>
+                                <Button
+                                    onClick={() => { setStatus('zero'); fetchData({ status: 'zero' }); }}
+                                    size="sm"
+                                    className={`rounded-full px-4 transition-all ${status === 'zero' ? 'bg-red-600 text-white shadow-md' : 'bg-red-50 text-red-700 hover:bg-red-100 dark:bg-red-950 dark:text-red-400'}`}
+                                >
+                                    ✕ Zero
+                                </Button>
+                            </div>
 
+                            {/* Modern Table Design */}
+                            <div className="overflow-x-auto rounded-xl border shadow-sm">
+                                <table className="w-full text-sm md:text-base">
+                                    <thead>
+                                        <tr className="bg-gradient-to-r from-slate-100 to-slate-50 dark:from-slate-800 dark:to-slate-900 border-b">
+                                            <th className="px-4 md:px-6 py-4 text-left font-semibold text-slate-700 dark:text-slate-300 uppercase text-xs md:text-sm tracking-wider min-w-[200px]">
+                                                {isRegionView ? 'Region' : 'Institute'}
+                                            </th>
 
-                                                {isRegionView ? (
-                                                    <>
-                                                        {status == '' ? <td className="px-4 py-3 text-center">{item.total_institutes}</td> : null}
-                                                        {
-                                                            status == 'completed' || status == '' ? <td className="px-4 py-3 text-center text-green-600 font-bold" onClick={() => {
-                                                                setStatus('completed');
-
-                                                                handleRegionClick(item.id);
-                                                            }} >{item.completed}</td> : null
-                                                        }
-                                                        {
-                                                            status == 'greater_than_50' || status == '' ? <td className="px-4 py-3 text-center text-green-600 font-bold" onClick={() => {
-                                                                setStatus('greater_than_50');
-                                                                handleRegionClick(item.id);
-                                                            }} >{item.greater_than_50}</td> : null
-                                                        }
-                                                        {
-                                                            status == 'less_than_50' || status == '' ? <td className="px-4 py-3 text-center text-red-600 font-bold" onClick={() => {
-                                                                setStatus('less_than_50');
-                                                                handleRegionClick(item.id);
-                                                            }} >{item.less_than_50}</td> : null
-                                                        }
-                                                        {
-                                                            status == 'zero' || status == '' ? <td className="px-4 py-3 text-center text-red-600 font-bold" onClick={() => {
-                                                                setStatus('zero');
-                                                                handleRegionClick(item.id);
-
-                                                            }} >{item.zero}</td> : null
-                                                        }
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <td className="px-4 py-3 text-center">{item.shifts}</td>
-                                                        <td className="px-4 py-3 text-center">{item.blocks}</td>
-                                                        <td className="px-4 py-3 text-center">{item.rooms}</td>
-                                                        <td className="px-4 py-3 text-center">{item.assets}</td>
-                                                        <td className="px-4 py-3 text-center">{item.plants}</td>
-                                                        <td className="px-4 py-3 text-center">{item.transports}</td>
-                                                        <td className="px-4 py-3 text-center">{item.funds}</td>
-                                                        <td className="px-4 py-3 text-center">{item.projects}</td>
-                                                        <td className="px-4 py-3 text-center">{item.upgradations}</td>
-                                                        <td className="px-4 py-3 text-center font-bold">
-                                                            <span className={
-                                                                item.percentage === 100 ? 'text-green-600' :
-                                                                    item.percentage < 50 ? 'text-red-600' : 'text-yellow-600'
-                                                            }
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    handleShowDetails(item.id);
-                                                                }}
-                                                                style={{ cursor: 'pointer', textDecoration: 'underline' }}
-                                                                title="Click to see breakdown"
-                                                            >
-                                                                {item.percentage}%
-                                                            </span>
-                                                        </td>
-                                                    </>
-                                                )}
-                                            </tr>
-                                        ))
-                                    ) : (
-                                        <tr>
-                                            <td colSpan={isRegionView ? 14 : 11} className="px-4 py-8 text-center text-muted-foreground">
-                                                No details available
-                                            </td>
+                                            {isRegionView ? (
+                                                <>
+                                                    {status === '' && <th className="px-3 md:px-4 py-4 text-center font-semibold text-slate-700 dark:text-slate-300 uppercase text-xs md:text-sm tracking-wider">Total</th>}
+                                                    {(status === 'completed' || status === '') && <th className="px-3 md:px-4 py-4 text-center font-semibold text-emerald-700 dark:text-emerald-400 uppercase text-xs md:text-sm tracking-wider">Comp.</th>}
+                                                    {(status === 'greater_than_50' || status === '') && <th className="px-3 md:px-4 py-4 text-center font-semibold text-blue-700 dark:text-blue-400 uppercase text-xs md:text-sm tracking-wider">&gt;50%</th>}
+                                                    {(status === 'less_than_50' || status === '') && <th className="px-3 md:px-4 py-4 text-center font-semibold text-amber-700 dark:text-amber-400 uppercase text-xs md:text-sm tracking-wider">&lt;50%</th>}
+                                                    {(status === 'zero' || status === '') && <th className="px-3 md:px-4 py-4 text-center font-semibold text-red-700 dark:text-red-400 uppercase text-xs md:text-sm tracking-wider">Zero</th>}
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <th className="px-2 md:px-3 py-4 text-center font-semibold text-slate-600 dark:text-slate-400 uppercase text-xs tracking-wider">Shifts</th>
+                                                    <th className="px-2 md:px-3 py-4 text-center font-semibold text-slate-600 dark:text-slate-400 uppercase text-xs tracking-wider">Blocks</th>
+                                                    <th className="px-2 md:px-3 py-4 text-center font-semibold text-slate-600 dark:text-slate-400 uppercase text-xs tracking-wider">Rooms</th>
+                                                    <th className="px-2 md:px-3 py-4 text-center font-semibold text-slate-600 dark:text-slate-400 uppercase text-xs tracking-wider">Assets</th>
+                                                    <th className="px-2 md:px-3 py-4 text-center font-semibold text-slate-600 dark:text-slate-400 uppercase text-xs tracking-wider">Plants</th>
+                                                    <th className="px-2 md:px-3 py-4 text-center font-semibold text-slate-600 dark:text-slate-400 uppercase text-xs tracking-wider">Trans.</th>
+                                                    <th className="px-2 md:px-3 py-4 text-center font-semibold text-slate-600 dark:text-slate-400 uppercase text-xs tracking-wider">Fund</th>
+                                                    <th className="px-2 md:px-3 py-4 text-center font-semibold text-slate-600 dark:text-slate-400 uppercase text-xs tracking-wider">Proj.</th>
+                                                    <th className="px-2 md:px-3 py-4 text-center font-semibold text-slate-600 dark:text-slate-400 uppercase text-xs tracking-wider">Upg.</th>
+                                                    <th className="px-3 md:px-4 py-4 text-center font-semibold text-slate-700 dark:text-slate-300 uppercase text-xs md:text-sm tracking-wider bg-slate-200/50 dark:bg-slate-700/50">Score</th>
+                                                </>
+                                            )}
                                         </tr>
-                                    )}
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody>
+                                        {details.length > 0 ? (
+                                            details.map((item, index) => (
+                                                <tr
+                                                    key={item.id}
+                                                    className={`
+                                                        ${index % 2 === 0 ? 'bg-white dark:bg-slate-900' : 'bg-slate-50/50 dark:bg-slate-800/30'}
+                                                        hover:bg-primary/5 dark:hover:bg-primary/10 transition-colors
+                                                        ${isRegionView ? 'cursor-pointer' : ''}
+                                                        border-b border-slate-100 dark:border-slate-800 last:border-0
+                                                    `}
+                                                    onClick={() => isRegionView ? handleRegionClick(item.id) : handleInstituteClick(item.id)}
+                                                >
+                                                    <td className={`px-4 md:px-6 py-4 font-medium text-sm md:text-base ${isRegionView ? 'text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300' : 'text-slate-800 dark:text-slate-200'}`}>
+                                                        {isRegionView ? item.name.split(' ').pop() || item.name : item.name}
+                                                    </td>
+
+                                                    {isRegionView ? (
+                                                        <>
+                                                            {status === '' && <td className="px-3 md:px-4 py-4 text-center font-bold text-base md:text-lg lg:text-xl text-slate-700 dark:text-slate-300">{item.total_institutes}</td>}
+                                                            {(status === 'completed' || status === '') && (
+                                                                <td className="px-3 md:px-4 py-4 text-center" onClick={(e) => { e.stopPropagation(); setStatus('completed'); handleRegionClick(item.id); }}>
+                                                                    <span className="inline-flex items-center justify-center min-w-[2.5rem] px-3 py-1.5 rounded-full text-sm md:text-base lg:text-lg font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400">
+                                                                        {item.completed}
+                                                                    </span>
+                                                                </td>
+                                                            )}
+                                                            {(status === 'greater_than_50' || status === '') && (
+                                                                <td className="px-3 md:px-4 py-4 text-center" onClick={(e) => { e.stopPropagation(); setStatus('greater_than_50'); handleRegionClick(item.id); }}>
+                                                                    <span className="inline-flex items-center justify-center min-w-[2.5rem] px-3 py-1.5 rounded-full text-sm md:text-base lg:text-lg font-bold bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-400">
+                                                                        {item.greater_than_50}
+                                                                    </span>
+                                                                </td>
+                                                            )}
+                                                            {(status === 'less_than_50' || status === '') && (
+                                                                <td className="px-3 md:px-4 py-4 text-center" onClick={(e) => { e.stopPropagation(); setStatus('less_than_50'); handleRegionClick(item.id); }}>
+                                                                    <span className="inline-flex items-center justify-center min-w-[2.5rem] px-3 py-1.5 rounded-full text-sm md:text-base lg:text-lg font-bold bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-400">
+                                                                        {item.less_than_50}
+                                                                    </span>
+                                                                </td>
+                                                            )}
+                                                            {(status === 'zero' || status === '') && (
+                                                                <td className="px-3 md:px-4 py-4 text-center" onClick={(e) => { e.stopPropagation(); setStatus('zero'); handleRegionClick(item.id); }}>
+                                                                    <span className="inline-flex items-center justify-center min-w-[2.5rem] px-3 py-1.5 rounded-full text-sm md:text-base lg:text-lg font-bold bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-400">
+                                                                        {item.zero}
+                                                                    </span>
+                                                                </td>
+                                                            )}
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <td className="px-2 md:px-3 py-4 text-center text-base md:text-lg lg:text-xl font-semibold text-slate-700 dark:text-slate-300">{item.shifts || 0}</td>
+                                                            <td className="px-2 md:px-3 py-4 text-center text-base md:text-lg lg:text-xl font-semibold text-slate-700 dark:text-slate-300">{item.blocks || 0}</td>
+                                                            <td className="px-2 md:px-3 py-4 text-center text-base md:text-lg lg:text-xl font-semibold text-slate-700 dark:text-slate-300">{item.rooms || 0}</td>
+                                                            <td className="px-2 md:px-3 py-4 text-center text-base md:text-lg lg:text-xl font-semibold text-slate-700 dark:text-slate-300">{item.assets || 0}</td>
+                                                            <td className="px-2 md:px-3 py-4 text-center text-base md:text-lg lg:text-xl font-semibold text-slate-700 dark:text-slate-300">{item.plants || 0}</td>
+                                                            <td className="px-2 md:px-3 py-4 text-center text-base md:text-lg lg:text-xl font-semibold text-slate-700 dark:text-slate-300">{item.transports || 0}</td>
+                                                            <td className="px-2 md:px-3 py-4 text-center text-base md:text-lg lg:text-xl font-semibold text-slate-700 dark:text-slate-300">{item.funds || 0}</td>
+                                                            <td className="px-2 md:px-3 py-4 text-center text-base md:text-lg lg:text-xl font-semibold text-slate-700 dark:text-slate-300">{item.projects || 0}</td>
+                                                            <td className="px-2 md:px-3 py-4 text-center text-base md:text-lg lg:text-xl font-semibold text-slate-700 dark:text-slate-300">{item.upgradations || 0}</td>
+                                                            <td className="px-3 md:px-4 py-4 text-center bg-slate-50/50 dark:bg-slate-800/30">
+                                                                <span
+                                                                    className={`
+                                                                        inline-flex items-center justify-center min-w-[4rem] px-4 py-2 rounded-full text-base md:text-lg lg:text-xl font-bold cursor-pointer
+                                                                        transition-all hover:scale-105 hover:shadow-md
+                                                                        ${item.percentage === 100
+                                                                            ? 'bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-emerald-200 dark:shadow-emerald-900'
+                                                                            : item.percentage >= 50
+                                                                                ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-blue-200 dark:shadow-blue-900'
+                                                                                : item.percentage > 0
+                                                                                    ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-amber-200 dark:shadow-amber-900'
+                                                                                    : 'bg-gradient-to-r from-red-500 to-rose-500 text-white shadow-red-200 dark:shadow-red-900'
+                                                                        }
+                                                                    `}
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        handleShowDetails(item.id);
+                                                                    }}
+                                                                    title="Click to see breakdown"
+                                                                >
+                                                                    {item.percentage}%
+                                                                </span>
+                                                            </td>
+                                                        </>
+                                                    )}
+                                                </tr>
+                                            ))
+                                        ) : (
+                                            <tr>
+                                                <td colSpan={isRegionView ? 6 : 11} className="px-6 py-12 text-center">
+                                                    <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                                                        <div className="w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center">
+                                                            <span className="text-2xl">📊</span>
+                                                        </div>
+                                                        <p className="font-medium">No details available</p>
+                                                        <p className="text-sm">Try adjusting your filters</p>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </CardContent>
                 </Card>
