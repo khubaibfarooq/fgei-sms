@@ -101,7 +101,7 @@ export default function Combobox({
             <CommandEmpty>{notFoundMsg}</CommandEmpty>
             <CommandGroup>
               {includeAllOption && (
-                <CommandItem className="hover:bg-gray-200 data-[selected=true]:bg-gray-200"
+                <CommandItem className="cursor-pointer hover:bg-gray-200 data-[selected=true]:bg-gray-200"
                   value="0"
                   onSelect={() => {
                     onChange("0");
@@ -118,7 +118,7 @@ export default function Combobox({
                 </CommandItem>
               )}
               {options.map((item) => (
-                <CommandItem className="hover:bg-primary/80 hover:text-white data-[selected=true]:bg-primary/80 data-[selected=true]:text-white my-1 flex flex-row"
+                <CommandItem className="cursor-pointer hover:bg-primary/80 hover:text-white data-[selected=true]:bg-primary/80 data-[selected=true]:text-white my-1 flex flex-row"
                   key={item.id}
                   value={item.name}
                   onSelect={() => {

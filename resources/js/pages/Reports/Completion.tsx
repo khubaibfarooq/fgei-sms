@@ -377,7 +377,7 @@ export default function Completion({
                             <Combobox
                                 entity="institute"
                                 value={institute}
-                                onChange={setInstitute}
+                                onChange={(val) => { setInstitute(val); fetchData({ institute_id: val }); }}
                                 options={institutesList.map(i => ({ id: i.id.toString(), name: i.name }))}
                                 includeAllOption={true}
                                 placeholder="Select Institute"
@@ -417,7 +417,7 @@ export default function Completion({
                             {summary.length > 0 ? (
                                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4">
                                     {/* Total Institutions Card */}
-                                    <div className="relative overflow-hidden rounded-xl border bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 p-4 md:p-5 shadow-sm hover:shadow-md transition-all duration-300 group">
+                                    <div className="relative overflow-hidden rounded-xl border bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 p-4 md:p-5 shadow-sm hover:shadow-md transition-all duration-300 group" onClick={() => { setStatus(''); fetchData({ status: '' }); }}>
                                         <div className="absolute top-0 right-0 w-20 h-20 bg-slate-200/50 dark:bg-slate-700/30 rounded-full -translate-y-1/2 translate-x-1/2"></div>
                                         <p className="text-base md:text-lg lg:text-xl font-semibold text-muted-foreground uppercase tracking-wider mb-2">Total Institutions</p>
                                         <p className="text-2xl md:text-3xl lg:text-4xl font-black text-slate-700 dark:text-slate-200 group-hover:scale-105 transition-transform">{totalInstitutes}</p>
@@ -425,7 +425,7 @@ export default function Completion({
 
                                     {/* Completed Card */}
                                     {(status === 'completed' || status === '') && summary.map((item, idx) => (
-                                        <div key={`completed-${idx}`} className="relative overflow-hidden rounded-xl border border-emerald-200 dark:border-emerald-900 bg-gradient-to-br from-emerald-50 to-green-100 dark:from-emerald-950 dark:to-green-900 p-4 md:p-5 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer group hover:border-emerald-400">
+                                        <div key={`completed-${idx}`} className="relative overflow-hidden rounded-xl border border-emerald-200 dark:border-emerald-900 bg-gradient-to-br from-emerald-50 to-green-100 dark:from-emerald-950 dark:to-green-900 p-4 md:p-5 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer group hover:border-emerald-400" onClick={() => { setStatus('completed'); fetchData({ status: 'completed' }); }}>
                                             <div className="absolute top-0 right-0 w-20 h-20 bg-emerald-200/50 dark:bg-emerald-800/30 rounded-full -translate-y-1/2 translate-x-1/2"></div>
                                             <p className="text-base md:text-lg lg:text-xl font-semibold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider mb-2">✓ Completed</p>
                                             <p className="text-2xl md:text-3xl lg:text-4xl font-black text-emerald-600 dark:text-emerald-400 group-hover:scale-105 transition-transform">{item.completed}</p>
@@ -434,7 +434,7 @@ export default function Completion({
 
                                     {/* Above 50% Card */}
                                     {(status === 'greater_than_50' || status === '') && summary.map((item, idx) => (
-                                        <div key={`above50-${idx}`} className="relative overflow-hidden rounded-xl border border-blue-200 dark:border-blue-900 bg-gradient-to-br from-blue-50 to-cyan-100 dark:from-blue-950 dark:to-cyan-900 p-4 md:p-5 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer group hover:border-blue-400">
+                                        <div key={`above50-${idx}`} className="relative overflow-hidden rounded-xl border border-blue-200 dark:border-blue-900 bg-gradient-to-br from-blue-50 to-cyan-100 dark:from-blue-950 dark:to-cyan-900 p-4 md:p-5 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer group hover:border-blue-400" onClick={() => { setStatus('greater_than_50'); fetchData({ status: 'greater_than_50' }); }}>
                                             <div className="absolute top-0 right-0 w-20 h-20 bg-blue-200/50 dark:bg-blue-800/30 rounded-full -translate-y-1/2 translate-x-1/2"></div>
                                             <p className="text-base md:text-lg lg:text-xl font-semibold text-blue-700 dark:text-blue-400 uppercase tracking-wider mb-2">↑ Above 50%</p>
                                             <p className="text-2xl md:text-3xl lg:text-4xl font-black text-blue-600 dark:text-blue-400 group-hover:scale-105 transition-transform">{item.greater_than_50}</p>
@@ -443,7 +443,7 @@ export default function Completion({
 
                                     {/* Below 50% Card */}
                                     {(status === 'less_than_50' || status === '') && summary.map((item, idx) => (
-                                        <div key={`below50-${idx}`} className="relative overflow-hidden rounded-xl border border-amber-200 dark:border-amber-900 bg-gradient-to-br from-amber-50 to-orange-100 dark:from-amber-950 dark:to-orange-900 p-4 md:p-5 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer group hover:border-amber-400">
+                                        <div key={`below50-${idx}`} className="relative overflow-hidden rounded-xl border border-amber-200 dark:border-amber-900 bg-gradient-to-br from-amber-50 to-orange-100 dark:from-amber-950 dark:to-orange-900 p-4 md:p-5 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer group hover:border-amber-400" onClick={() => { setStatus('less_than_50'); fetchData({ status: 'less_than_50' }); }}>
                                             <div className="absolute top-0 right-0 w-20 h-20 bg-amber-200/50 dark:bg-amber-800/30 rounded-full -translate-y-1/2 translate-x-1/2"></div>
                                             <p className="text-base md:text-lg lg:text-xl font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wider mb-2">↓ Below 50%</p>
                                             <p className="text-2xl md:text-3xl lg:text-4xl font-black text-amber-600 dark:text-amber-400 group-hover:scale-105 transition-transform">{item.less_than_50}</p>
@@ -452,7 +452,7 @@ export default function Completion({
 
                                     {/* Zero Card */}
                                     {(status === 'zero' || status === '') && summary.map((item, idx) => (
-                                        <div key={`zero-${idx}`} className="relative overflow-hidden rounded-xl border border-red-200 dark:border-red-900 bg-gradient-to-br from-red-50 to-rose-100 dark:from-red-950 dark:to-rose-900 p-4 md:p-5 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer group hover:border-red-400">
+                                        <div key={`zero-${idx}`} className="relative overflow-hidden rounded-xl border border-red-200 dark:border-red-900 bg-gradient-to-br from-red-50 to-rose-100 dark:from-red-950 dark:to-rose-900 p-4 md:p-5 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer group hover:border-red-400" onClick={() => { setStatus('zero'); fetchData({ status: 'zero' }); }}>
                                             <div className="absolute top-0 right-0 w-20 h-20 bg-red-200/50 dark:bg-red-800/30 rounded-full -translate-y-1/2 translate-x-1/2"></div>
                                             <p className="text-sm md:text-base lg:text-lg font-semibold text-red-700 dark:text-red-400 uppercase tracking-wider mb-2">✕ Zero (0%)</p>
                                             <p className="text-2xl md:text-3xl lg:text-4xl font-black text-red-600 dark:text-red-400 group-hover:scale-105 transition-transform">{item.zero}</p>
@@ -478,31 +478,30 @@ export default function Completion({
                             {/* Filter Buttons - Modern Pill Style */}
                             <div className="flex flex-wrap gap-2 mb-5">
                                 {!isRegionView && regions.length > 0 ? (
-                                    <Button
-                                        onClick={() => {
-                                            setRegion('');
-                                            setInstitute('');
-                                            fetchData({ region_id: '', institute_id: '' });
-                                        }}
-                                        variant="outline"
-                                        size="sm"
-                                        className="rounded-full px-4 hover:bg-primary hover:text-primary-foreground transition-colors"
-                                    >
-                                        ← Show All Regions
-                                    </Button>
+                                    <>
+                                        <Combobox
+                                            entity="institute"
+                                            value={institute}
+                                            onChange={(val) => { setInstitute(val); fetchData({ institute_id: val }); }}
+                                            options={institutesList.map(i => ({ id: i.id.toString(), name: i.name }))}
+                                            includeAllOption={true}
+                                            placeholder="Select Institute"
+                                        />
+                                        <Button
+                                            onClick={() => {
+                                                setRegion('');
+                                                setInstitute('');
+                                                fetchData({ region_id: '', institute_id: '' });
+                                            }}
+                                            variant="outline"
+                                            size="sm"
+                                            className="rounded-full px-4 hover:bg-primary hover:text-primary-foreground transition-colors"
+                                        >
+                                            ← Show All Regions
+                                        </Button>
+                                    </>
                                 ) : (
-                                    <Button
-                                        onClick={() => {
-                                            setRegion('');
-                                            setInstitute('');
-                                            fetchData({ region_id: '', institute_id: '' });
-                                        }}
-                                        variant="outline"
-                                        size="sm"
-                                        className="rounded-full px-4 text-base hover:bg-primary hover:text-primary-foreground transition-colors"
-                                    >
-                                        ← Show All Institutes
-                                    </Button>
+                                    ''
                                 )}
 
                                 <div className="h-6 w-px bg-border mx-1 hidden sm:block"></div>

@@ -2252,7 +2252,13 @@ $institutesFilter = [];
 if($type=="Regional Office"){
     $institutesFilter = Institute::whereIn('type', ['School', 'College'])->where('region_id', $regionid)->get();
 }else{
-    $institutesFilter = Institute::whereIn('type', ['School', 'College'])->get();
+    if ($request->filled('region_id') && is_numeric($request->region_id) && $request->region_id > 0) {
+       
+              
+        $institutesFilter = Institute::where('region_id', $request->region_id)->get();
+    }else{
+        $institutesFilter = Institute::whereIn('type', ['School', 'College'])->get();
+    }
 }
 
 
