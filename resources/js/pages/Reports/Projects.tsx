@@ -23,6 +23,16 @@ import { Badge } from "@/components/ui/badge";
 import ApprovalModal from '../projects/ApprovalModal'; // Adjust import path if needed
 import FundHeadSelectModal from './FundHeadSelectModal';
 import { ImagePreview } from '@/components/ui/image-preview2';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Percent } from 'lucide-react';
 declare module 'jspdf' {
   interface jsPDF {
     autoTable: (options: any) => jsPDF;
@@ -53,11 +63,12 @@ interface ProjectProp {
     level: string;
     stage_name: string;
   };
-  fund_head?: {
-    id: number;
+  fundhead?: {
+
     name: string;
   };
   final_comments?: string;
+  completion_per?: number;
 }
 
 interface Item {
@@ -212,6 +223,12 @@ export default function Projects({ projects: initialProjects, institutes, region
   const [projectPayments, setProjectPayments] = useState<Payment[]>([]);
   const [loadingPanelData, setLoadingPanelData] = useState(false);
 
+  // Completion Percentage Modal State
+  const [completionModalOpen, setCompletionModalOpen] = useState(false);
+  const [selectedProjectForCompletion, setSelectedProjectForCompletion] = useState<ProjectProp | null>(null);
+  const [completionPercentage, setCompletionPercentage] = useState('');
+  const [updatingCompletion, setUpdatingCompletion] = useState(false);
+
   // Memoized dropdown options
   const memoizedInstitutes = useMemo(() => {
     return Array.isArray(filteredInstitutes) ? filteredInstitutes.filter(isValidItem) : [];
@@ -283,6 +300,42 @@ export default function Projects({ projects: initialProjects, institutes, region
     setRegion(value);
     fetchInstitutes(value);
     //debouncedApplyFilters();
+  };
+
+  // Handle completion percentage update
+  const handleOpenCompletionModal = (project: ProjectProp) => {
+    setSelectedProjectForCompletion(project);
+    setCompletionPercentage(parseFloat((project.completion_per || 0).toString()).toString());
+    setCompletionModalOpen(true);
+  };
+
+  const handleUpdateCompletion = async () => {
+    if (!selectedProjectForCompletion) return;
+
+    const percentage = parseFloat(completionPercentage);
+    if (isNaN(percentage) || percentage < 0 || percentage > 100) {
+      toast.error('Please enter a valid percentage (0-100)');
+      return;
+    }
+
+    setUpdatingCompletion(true);
+    try {
+      const response = await axios.post(`/projects/${selectedProjectForCompletion.id}/update-completion`, {
+        completion_per: percentage,
+      });
+      if (response.data.success) {
+        toast.success('Completion percentage updated successfully');
+        setCompletionModalOpen(false);
+        // Refresh projects
+        debouncedApplyFilters();
+      } else {
+        toast.error(response.data.message || 'Failed to update');
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to update completion percentage');
+    } finally {
+      setUpdatingCompletion(false);
+    }
   };
 
   // Export to Excel
@@ -489,6 +542,7 @@ export default function Projects({ projects: initialProjects, institutes, region
                         <th className="border p-2 font-medium">Approval Status</th>
                         <th className="border p-2 font-medium">Final Comments</th>
                         <th className="border p-2 font-medium">Current Stage</th>
+                        <th className="border p-2 font-medium">Completion %</th>
 
                         <th className="border p-2 font-medium">Type</th>
                         <th className="border p-2 font-medium">Institute</th>
@@ -512,7 +566,7 @@ export default function Projects({ projects: initialProjects, institutes, region
                             <td className="border p-2 font-medium">{project.name}</td>
                             <td className="border p-2 text-right">{project.estimated_cost}</td>
                             <td className="border p-2 text-right">{project.actual_cost}</td>
-                            <td className="border p-2 text-center">{project.fund_head?.name}</td>
+                            <td className="border p-2 text-center">{project.fundhead?.name}</td>
                             <td className="border p-2 text-center">
                               <span className={`px-2 py-1 rounded-full text-xs font-medium ${project.status === 'completed' ? 'bg-green-100 text-green-800' :
                                 project.status === 'inprogress' ? 'bg-yellow-100 text-yellow-800' :
@@ -531,6 +585,7 @@ export default function Projects({ projects: initialProjects, institutes, region
                             </td>
                             <td className="border p-2 text-center">{project.final_comments || '-'}</td>
                             <td className="border p-2 text-center">{project.current_stage?.stage_name || '-'}</td>
+                            <td className="border p-2 text-center">{project.completion_per ? parseFloat(project.completion_per.toString()) : '-'}</td>
                             <td className="border p-2 text-center">{project.projecttype?.name || '-'}</td>
                             <td className="border p-2">{project.institute?.name || '-'}</td>
                             <td className="border p-2 text-center" onClick={(e) => e.stopPropagation()}>
@@ -563,6 +618,21 @@ export default function Projects({ projects: initialProjects, institutes, region
                                   }}
                                 >
                                   Select Head
+                                </Button>
+                              )}
+
+                              {user.type === 'Regional Office' && project.status === 'inprogress' && (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  title={`Update Completion (${project.completion_per || 0}%)`}
+                                  className="text-purple-600 hover:text-purple-700"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleOpenCompletionModal(project);
+                                  }}
+                                >
+                                  <Percent className="h-4 w-4" />
                                 </Button>
                               )}
                             </td>
@@ -822,6 +892,56 @@ export default function Projects({ projects: initialProjects, institutes, region
             debouncedApplyFilters();
           }}
         />
+
+        {/* Completion Percentage Modal */}
+        <Dialog open={completionModalOpen} onOpenChange={setCompletionModalOpen}>
+          <DialogContent className="sm:max-w-[400px]">
+            <DialogHeader>
+              <DialogTitle>Update Completion Percentage</DialogTitle>
+              <DialogDescription>
+                Update the completion percentage for <strong>{selectedProjectForCompletion?.name}</strong>.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="completion_per" className="text-right">
+                  Percentage
+                </Label>
+                <div className="col-span-3 flex items-center gap-2">
+                  <Input
+                    id="completion_per"
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="1"
+                    placeholder="0-100"
+                    className="flex-1"
+                    value={completionPercentage}
+                    onChange={(e) => setCompletionPercentage(e.target.value)}
+                  />
+                  <span className="text-muted-foreground">%</span>
+                </div>
+              </div>
+              {(parseFloat(completionPercentage) < 0 || parseFloat(completionPercentage) > 100) && (
+                <div className="text-red-500 text-sm text-center">
+                  Percentage must be between 0 and 100
+                </div>
+              )}
+            </div>
+            <DialogFooter>
+              <Button variant="secondary" onClick={() => setCompletionModalOpen(false)}>
+                Cancel
+              </Button>
+              <Button
+                onClick={handleUpdateCompletion}
+                disabled={updatingCompletion || parseFloat(completionPercentage) < 0 || parseFloat(completionPercentage) > 100}
+              >
+                {updatingCompletion ? 'Updating...' : 'Save'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
         {
           selectedPanelProject && (
             <div

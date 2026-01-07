@@ -376,54 +376,70 @@ public function update(Request $request, Project $project)
         ]);
     }
 
-    public function requestPayment(Project $project)
+    public function requestPayment(Request $request, Project $project)
     {
         if (!$project->actual_cost) {
             return response()->json(['success' => false, 'message' => 'Actual cost not set.'], 400);
         }
 
+        // Validate request
+        $request->validate([
+            'stage_name' => 'required|string|max:255',
+            'amount' => 'required|numeric|min:0.01',
+        ]);
+
+        $stageName = $request->stage_name;
+        $requestedAmount = $request->amount;
+
         $existingFunds = Fund::where('trans_type', 'project')
             ->where('tid', $project->id)
             ->get();
 
-        $count = $existingFunds->count();
-        $totalPaid = $existingFunds->sum('amount');
+        $totalPaid = $existingFunds->where('status', 'Approved')->sum('amount');
+        $remainingAmount = $project->actual_cost - $totalPaid;
 
-        
-
-        $amount = 0;
-        $percentage = 0;
-        if ($count == 1) {
-            $amount = $project->actual_cost * 0.25;
-            $percentage = 25;
-        } elseif ($count == 2) {
-            $amount = $project->actual_cost * 0.30;
-            $percentage = 30;
-        } elseif ($count == 3) {
-            $project->load('currentStage');
-            if ($project->currentStage && $project->currentStage->is_last) {
-                $amount = $project->actual_cost - $totalPaid;
-            } else {
-                return response()->json(['success' => false, 'message' => 'Final payment only allowed at the last stage.'], 400);
-            }
-        } else {
-            return response()->json(['success' => false, 'message' => 'Invalid payment stage.'], 400);
+        // Validate amount doesn't exceed remaining
+        if ($requestedAmount > $remainingAmount) {
+            return response()->json([
+                'success' => false, 
+                'message' => "Amount exceeds remaining budget. Maximum allowed: " . number_format($remainingAmount, 2)
+            ], 400);
         }
-     $regionid=Institute::where("region_id",$project->institute->region_id)->where("type","Regional Office")->first()->id;
+
+        $regionid = Institute::where("region_id", $project->institute->region_id)
+            ->where("type", "Regional Office")
+            ->first()->id;
+
         Fund::create([
             'fund_head_id' => $project->fund_head_id,
             'institute_id' => $regionid,
-            'amount' => round($amount, 2),
+            'amount' => round($requestedAmount, 2),
             'added_by' => auth()->id(),
             'added_date' => now(),
             'status' => 'Pending',
             'type' => 'out',
             'trans_type' => 'project',
             'tid' => $project->id,
-            'description' => "Payment request for stage " . ($count + 1) . " (" . $percentage . "% of total cost)",
+            'description' => "Payment request for: " . $stageName . " (" . $project->name . ")",
         ]);
 
         return response()->json(['success' => true, 'message' => 'Payment request created successfully.']);
+    }
+
+    public function updateCompletion(Request $request, Project $project)
+    {
+        $request->validate([
+            'completion_per' => 'required|numeric|min:0|max:100',
+        ]);
+
+        $project->update([
+            'completion_per' => $request->completion_per,
+        ]);
+
+        return response()->json([
+            'success' => true, 
+            'message' => 'Completion percentage updated successfully.'
+        ]);
     }
 }
  

@@ -143,6 +143,15 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
   });
   const [showCostHigherWarning, setShowCostHigherWarning] = useState(false);
 
+  // Payment Request Modal State
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [paymentForm, setPaymentForm] = useState({
+    stage_name: '',
+    amount: '',
+  });
+  const [requestingPayment, setRequestingPayment] = useState(false);
+  const [remainingAmount, setRemainingAmount] = useState(0);
+
   const canShowInstitutionalApprove = (project: Project) => {
     return project.current_stage?.level?.toLowerCase() === 'institutional' && project.status !== 'completed';
   };
@@ -317,12 +326,49 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
     };
   };
 
+  const handleOpenPaymentModal = () => {
+    if (!selectedPanelProject) return;
+
+    // Calculate remaining amount - properly parse values
+    const actualCost = parseFloat(selectedPanelProject.actual_cost?.toString() || '0') || 0;
+    const totalPaid = projectPayments
+      .filter(p => p.status === 'Approved')
+      .reduce((sum, p) => sum + (parseFloat(p.amount?.toString() || '0') || 0), 0);
+    const remaining = actualCost - totalPaid;
+
+    setRemainingAmount(remaining);
+    setPaymentForm({ stage_name: '', amount: '' });
+    setPaymentModalOpen(true);
+  };
+
   const handleRequestPayment = async () => {
     if (!selectedPanelProject) return;
+
+    const amount = parseFloat(paymentForm.amount);
+    if (isNaN(amount) || amount <= 0) {
+      toast.error('Please enter a valid amount');
+      return;
+    }
+
+    if (amount > remainingAmount) {
+      toast.error(`Amount cannot exceed remaining amount (${remainingAmount.toLocaleString()})`);
+      return;
+    }
+
+    if (!paymentForm.stage_name.trim()) {
+      toast.error('Please enter a stage name');
+      return;
+    }
+
+    setRequestingPayment(true);
     try {
-      const response = await axios.post(`/projects/${selectedPanelProject.id}/request-payment`);
+      const response = await axios.post(`/projects/${selectedPanelProject.id}/request-payment`, {
+        stage_name: paymentForm.stage_name,
+        amount: amount,
+      });
       if (response.data.success) {
         toast.success(response.data.message);
+        setPaymentModalOpen(false);
         // Refresh payments
         const res = await axios.get(`/projects/${selectedPanelProject.id}/payments`);
         setProjectPayments(res.data.payments);
@@ -331,6 +377,8 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
       }
     } catch (error: any) {
       toast.error(error.response?.data?.message || "Failed to request payment");
+    } finally {
+      setRequestingPayment(false);
     }
   };
 
@@ -708,7 +756,19 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
                   ) : projectPayments.length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground border rounded-lg border-dashed">
                       No payments found.
+                      {selectedPanelProject.actual_cost &&
+                        selectedPanelProject.approval_status === 'approved' && (
+                          <div className="pt-2">
+                            <Button
+                              className="w-full bg-blue-600 hover:bg-blue-700"
+                              onClick={handleOpenPaymentModal}
+                            >
+                              Request Next Payment
+                            </Button>
+                          </div>
+                        )}
                     </div>
+
                   ) : (
                     <div className="space-y-4">
                       {projectPayments.map((payment) => (
@@ -740,21 +800,27 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
                         </Card>
                       ))}
 
-                      {selectedPanelProject.actual_cost &&
-                        projectPayments.length > 0 &&
-                        projectPayments[projectPayments.length - 1].status === 'Approved' &&
-                        ((projectPayments.length === 1) ||
-                          (projectPayments.length === 2) ||
-                          (projectPayments.length === 3 && selectedPanelProject.current_stage?.is_last)) && (
+                      {(() => {
+                        const actualCost = parseFloat(selectedPanelProject.actual_cost?.toString() || '0') || 0;
+                        const totalPaid = projectPayments
+                          .filter(p => p.status === 'Approved')
+                          .reduce((sum, p) => sum + (parseFloat(p.amount?.toString() || '0') || 0), 0);
+                        const remaining = actualCost - totalPaid;
+
+                        return (selectedPanelProject.actual_cost &&
+                          projectPayments[projectPayments.length - 1]?.status === 'Approved' &&
+                          remaining > 0 &&
+                          (projectPayments.length === 1 || projectPayments.length === 2 || projectPayments.length === 3 || projectPayments.length === 4 || selectedPanelProject.current_stage?.is_last)) ? (
                           <div className="pt-2">
                             <Button
                               className="w-full bg-blue-600 hover:bg-blue-700"
-                              onClick={handleRequestPayment}
+                              onClick={handleOpenPaymentModal}
                             >
                               Request Next Payment
                             </Button>
                           </div>
-                        )}
+                        ) : null;
+                      })()}
                     </div>
                   )}
                 </TabsContent>
@@ -951,6 +1017,67 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Payment Request Modal */}
+      <Dialog open={paymentModalOpen} onOpenChange={setPaymentModalOpen}>
+        <DialogContent className="sm:max-w-[450px]">
+          <DialogHeader>
+            <DialogTitle>Request Payment</DialogTitle>
+            <DialogDescription>
+              Enter the stage name and amount for the payment request.
+              <br />
+              <span className="text-sm font-medium mt-2 inline-block">
+                Remaining Amount: <span className="text-green-600 font-bold">{remainingAmount.toLocaleString()}</span>
+              </span>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="stage_name" className="text-right">
+                Stage Name
+              </Label>
+              <Input
+                id="stage_name"
+                placeholder="e.g., Foundation Work"
+                className="col-span-3"
+                value={paymentForm.stage_name}
+                onChange={(e) => setPaymentForm({ ...paymentForm, stage_name: e.target.value })}
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="payment_amount" className="text-right">
+                Amount
+              </Label>
+              <Input
+                id="payment_amount"
+                type="number"
+                step="0.01"
+                max={remainingAmount}
+                placeholder={`Max: ${remainingAmount.toLocaleString()}`}
+                className="col-span-3"
+                value={paymentForm.amount}
+                onChange={(e) => setPaymentForm({ ...paymentForm, amount: e.target.value })}
+              />
+            </div>
+            {parseFloat(paymentForm.amount) > remainingAmount && (
+              <div className="text-red-500 text-sm text-center">
+                Amount exceeds remaining balance!
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="secondary" onClick={() => setPaymentModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleRequestPayment}
+              disabled={requestingPayment || !paymentForm.stage_name || !paymentForm.amount || parseFloat(paymentForm.amount) > remainingAmount}
+            >
+              {requestingPayment ? 'Requesting...' : 'Confirm Request'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AppLayout >
 
   );

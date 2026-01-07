@@ -197,21 +197,21 @@ if($request->actual_cost > $project->estimated_cost){
             ]);
 
             // 2. Transaction for the Region (20% of actual cost)
-            if ($project->institute && $project->institute->region_id) {
-                $regionid=Institute::where("region_id",$project->institute->region_id)->where("type","Regional Office")->first()->id;
-                Fund::create([
-                    'fund_head_id' => $project->fund_head_id,
-                    'institute_id' => $regionid,
-                    'amount'       => $project->actual_cost * 0.20,
-                    'added_by'     => auth()->id(),
-                    'added_date'   => now(),
-                    'status'       => 'Pending',
-                    'type'         => 'out',
-                    'description'  => 'Region share (20%) for project: ' . $project->name,
-                    'trans_type'   => 'project',
-                    'tid'          => $project->id,
-                ]);
-            }
+            // if ($project->institute && $project->institute->region_id) {
+            //     $regionid=Institute::where("region_id",$project->institute->region_id)->where("type","Regional Office")->first()->id;
+            //     Fund::create([
+            //         'fund_head_id' => $project->fund_head_id,
+            //         'institute_id' => $regionid,
+            //         'amount'       => $project->actual_cost * 0.20,
+            //         'added_by'     => auth()->id(),
+            //         'added_date'   => now(),
+            //         'status'       => 'Pending',
+            //         'type'         => 'out',
+            //         'description'  => 'Region share (20%) for project: ' . $project->name,
+            //         'trans_type'   => 'project',
+            //         'tid'          => $project->id,
+            //     ]);
+            // }
         });
         return redirect()->back()->with('success', 'Actual cost updated successfully.');
     }

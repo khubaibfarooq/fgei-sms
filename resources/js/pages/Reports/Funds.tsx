@@ -205,7 +205,7 @@ export default function Funds({
                 value={institute}
                 onChange={setInstitute}
                 options={filteredInstitutes.map(i => ({ id: i.id.toString(), name: i.name }))}
-                includeAllOption={false}
+                includeAllOption={true}
                 placeholder="Select Institute"
               />
               <Select value={fundHead} onValueChange={setFundHead}>
@@ -237,7 +237,15 @@ export default function Funds({
 
           {/* Total Balance Summary */}
           <CardContent className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-900 py-6">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6" onClick={() => {
+              setFundHead('');
+              const params = new URLSearchParams({
+                institute_id: institute || '',
+                region_id: region || '',
+                fund_head_id: '',
+              });
+              applyFilters(`/reports/funds/getfunds?${params.toString()}`);
+            }}>
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Total Balance</p>
                 <p className="text-4xl font-bold text-primary mt-2">
@@ -425,13 +433,15 @@ export default function Funds({
 
                                   if (!isRegionRow) {
                                     return (
-                                      <Link
+                                      <a
                                         href={`/reports/fundstrans?institute_id=${row.institute_id}&fund_head_id=${selectedFundHead?.id}&region_id=${region}`}
                                         className="text-blue-600 hover:underline"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
                                         onClick={(e) => e.stopPropagation()}
                                       >
                                         {formatCurrency(amount)}
-                                      </Link>
+                                      </a>
                                     );
                                   }
                                   return formatCurrency(amount);
@@ -441,15 +451,17 @@ export default function Funds({
                               // Show all fund heads
                               <>
                                 {fundheads.map(fh => (
-                                  <td key={fh.id} className="px-4 py-4 text-right font-medium tabular-nums">
+                                  <td key={fh.id} className="px-2 py-2 text-right font-medium tabular-nums">
                                     {!isRegionRow ? (
-                                      <Link
+                                      <a
                                         href={`/reports/fundstrans?institute_id=${row.institute_id}&fund_head_id=${fh.id}&region_id=${region}`}
                                         className="text-blue-600 hover:underline"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
                                         onClick={(e) => e.stopPropagation()}
                                       >
                                         {formatCurrency(row.fund_heads[fh.name])}
-                                      </Link>
+                                      </a>
                                     ) : (
                                       formatCurrency(row.fund_heads[fh.name])
                                     )}
@@ -460,7 +472,7 @@ export default function Funds({
 
                             {/* Total Balance - Outside the conditional */}
                             {fundHead == '0' || fundHead == '' ? (
-                              <td className="sticky right-0 z-10 bg-green-50 dark:bg-green-900/30 px-6 py-4 text-right font-bold text-green-700 dark:text-green-400  tabular-nums border-l">
+                              <td className="sticky right-0 z-10 bg-green-50 dark:bg-green-900/30 px-3 py-2 text-right font-bold text-green-700 dark:text-green-400  tabular-nums border-l">
                                 {formatCurrency(row.total_balance)}
                               </td>
                             ) : (
