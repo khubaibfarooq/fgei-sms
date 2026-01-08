@@ -8,7 +8,7 @@ import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { type BreadcrumbItem } from '@/types';
-import { Building, ClipboardCheck, X, CheckCircle2, XCircle, Clock } from 'lucide-react';
+import { Building, ClipboardCheck, X, CheckCircle2, XCircle, Clock, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 import { debounce } from 'lodash';
 import ExcelJS from 'exceljs';
@@ -47,6 +47,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 interface ProjectProp {
   id: number;
   name: string;
+  description?: string | null;
   estimated_cost: string | number;
   actual_cost: string | number;
 
@@ -64,7 +65,6 @@ interface ProjectProp {
     stage_name: string;
   };
   fundhead?: {
-
     name: string;
   };
   final_comments?: string;
@@ -228,6 +228,10 @@ export default function Projects({ projects: initialProjects, institutes, region
   const [selectedProjectForCompletion, setSelectedProjectForCompletion] = useState<ProjectProp | null>(null);
   const [completionPercentage, setCompletionPercentage] = useState('');
   const [updatingCompletion, setUpdatingCompletion] = useState(false);
+
+  // Description Modal State
+  const [descriptionModalOpen, setDescriptionModalOpen] = useState(false);
+  const [selectedDescriptionProject, setSelectedDescriptionProject] = useState<ProjectProp | null>(null);
 
   // Memoized dropdown options
   const memoizedInstitutes = useMemo(() => {
@@ -533,7 +537,11 @@ export default function Projects({ projects: initialProjects, institutes, region
                   <table className="w-full border-collapse text-sm">
                     <thead className="sticky top-0 z-10">
                       <tr className="bg-primary text-white text-center">
-                        <th className="border p-2 font-medium">Name</th>
+                        <th className="border p-2 font-medium">Institute</th>
+
+                        <th className="border p-2 font-medium">Type</th>
+                        <th className="border p-2 font-medium">Project</th>
+                        <th className="border p-2 font-medium">Description</th>
                         <th className="border p-2 font-medium">Estimated Cost</th>
                         <th className="border p-2 font-medium">Actual Cost</th>
                         <th className="border p-2 font-medium">Fund Head</th>
@@ -544,8 +552,7 @@ export default function Projects({ projects: initialProjects, institutes, region
                         <th className="border p-2 font-medium">Current Stage</th>
                         <th className="border p-2 font-medium">Completion %</th>
 
-                        <th className="border p-2 font-medium">Type</th>
-                        <th className="border p-2 font-medium">Institute</th>
+
                         <th className="border p-2 font-medium">Action</th>
                       </tr>
                     </thead>
@@ -563,7 +570,29 @@ export default function Projects({ projects: initialProjects, institutes, region
                             className={`hover:bg-primary/10 dark:hover:bg-gray-700 cursor-pointer transition-colors ${selectedPanelProject?.id === project.id ? 'bg-primary/5 dark:bg-gray-700 border-l-4 border-l-primary' : ''}`}
                             onClick={() => setSelectedPanelProject(project)}
                           >
+                            <td className="border p-2">{project.institute?.name || '-'}</td>
+
+                            <td className="border p-2 text-center">{project.projecttype?.name || '-'}</td>
                             <td className="border p-2 font-medium">{project.name}</td>
+                            <td className="border p-2 text-center" onClick={(e) => e.stopPropagation()}>
+                              {project.description ? (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="text-blue-600 hover:text-blue-700"
+                                  title="View Description"
+                                  onClick={() => {
+                                    setSelectedDescriptionProject(project);
+                                    setDescriptionModalOpen(true);
+                                  }}
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                              ) : (
+                                <span className="text-muted-foreground">-</span>
+                              )}
+                            </td>
+
                             <td className="border p-2 text-right">{project.estimated_cost}</td>
                             <td className="border p-2 text-right">{project.actual_cost}</td>
                             <td className="border p-2 text-center">{project.fundhead?.name}</td>
@@ -586,8 +615,7 @@ export default function Projects({ projects: initialProjects, institutes, region
                             <td className="border p-2 text-center">{project.final_comments || '-'}</td>
                             <td className="border p-2 text-center">{project.current_stage?.stage_name || '-'}</td>
                             <td className="border p-2 text-center">{project.completion_per ? parseFloat(project.completion_per.toString()) : '-'}</td>
-                            <td className="border p-2 text-center">{project.projecttype?.name || '-'}</td>
-                            <td className="border p-2">{project.institute?.name || '-'}</td>
+
                             <td className="border p-2 text-center" onClick={(e) => e.stopPropagation()}>
                               {canShowApproveButton(project) && (
                                 <Button
@@ -937,6 +965,28 @@ export default function Projects({ projects: initialProjects, institutes, region
                 disabled={updatingCompletion || parseFloat(completionPercentage) < 0 || parseFloat(completionPercentage) > 100}
               >
                 {updatingCompletion ? 'Updating...' : 'Save'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Description Modal */}
+        <Dialog open={descriptionModalOpen} onOpenChange={setDescriptionModalOpen}>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>Project Description</DialogTitle>
+              <DialogDescription>
+                {selectedDescriptionProject?.name}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="py-4">
+              <div className="bg-muted/30 p-4 rounded-lg border text-sm leading-relaxed whitespace-pre-wrap">
+                {selectedDescriptionProject?.description || 'No description available.'}
+              </div>
+            </div>
+            <DialogFooter>
+              <Button onClick={() => setDescriptionModalOpen(false)}>
+                Close
               </Button>
             </DialogFooter>
           </DialogContent>

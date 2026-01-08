@@ -18,7 +18,7 @@ class ProjectController extends Controller
     public function index(Request $request)
     {
 
-        $query = Project::with('institute','fundHead');
+        $query = Project::with('institute','fundHead','projecttype');
 $inst_id = session('sms_inst_id');
 $type=session('type');
 

@@ -266,8 +266,7 @@ export default function Dashboard() {
 
         </div>
 
-        {/* Summary Cards */}
-        {/* Summary Cards */}
+
         {/* Summary Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {(loading ? fallbackSummaryData : summaryData).map((item, index) => {
@@ -290,7 +289,7 @@ export default function Dashboard() {
               >
                 <Card
                   redirectLink={!item.redirectlink?.includes('/dashboard/completion') ? item.redirectlink : undefined}
-                  number={loading ? '...' : item.value}
+                  number={loading ? '...' : (item.label === 'Funds' ? `${(item.value / 1000000).toFixed(2)}M` : item.value)}
                   title={item.label}
                   icon={iconName}
                   iconBgColor={item.color}

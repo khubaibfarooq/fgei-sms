@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { type BreadcrumbItem } from '@/types';
-import { Plus, Edit, Trash2, Building, ClipboardCheck, X, CheckCircle2, XCircle, Clock } from 'lucide-react';
+import { Plus, Edit, Trash2, Building, ClipboardCheck, X, CheckCircle2, XCircle, Clock, Eye } from 'lucide-react';
 
 import {
   AlertDialog,
@@ -40,6 +40,7 @@ import { ImagePreview } from '@/components/ui/image-preview2';
 interface Project {
   id: number;
   name: string;
+  description?: string | null;
   estimated_cost: number;
   actual_cost: number | null;
   final_comments: string | null;
@@ -51,6 +52,9 @@ interface Project {
     name: string;
   };
   fund_head?: {
+    name: string;
+  }
+  projecttype?: {
     name: string;
   }
   rooms_count?: number;
@@ -151,6 +155,10 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
   });
   const [requestingPayment, setRequestingPayment] = useState(false);
   const [remainingAmount, setRemainingAmount] = useState(0);
+
+  // Description Modal State
+  const [descriptionModalOpen, setDescriptionModalOpen] = useState(false);
+  const [selectedDescriptionProject, setSelectedDescriptionProject] = useState<Project | null>(null);
 
   const canShowInstitutionalApprove = (project: Project) => {
     return project.current_stage?.level?.toLowerCase() === 'institutional' && project.status !== 'completed';
@@ -440,7 +448,9 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
                 <table className="w-full border-collapse border-1 rounded-md overflow-hidden shadow-sm">
                   <thead className="sticky top-0 z-10">
                     <tr className="bg-primary dark:bg-gray-800 text-center" >
-                      <th className="border p-2 text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Name</th>
+                      <th className="border p-2 text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Project</th>
+                      <th className="border p-2 text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Type</th>
+                      <th className="border p-2 text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Description</th>
                       <th className="border p-2 text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Fund Head</th>
                       <th className="border p-2 text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Estimated Cost</th>
                       <th className="border p-2 text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Actual Cost</th>
@@ -469,6 +479,26 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
 
                           <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
                             {project.name}
+                          </td>
+                          <td className="border p-2 text-center">{project.projecttype?.name || '-'}</td>
+
+                          <td className="border text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100 text-center" onClick={(e) => e.stopPropagation()}>
+                            {project.description ? (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-blue-600 hover:text-blue-700"
+                                title="View Description"
+                                onClick={() => {
+                                  setSelectedDescriptionProject(project);
+                                  setDescriptionModalOpen(true);
+                                }}
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                            ) : (
+                              <span className="text-muted-foreground">-</span>
+                            )}
                           </td>
                           <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
                             {project.fund_head?.name}
@@ -1074,6 +1104,28 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
               disabled={requestingPayment || !paymentForm.stage_name || !paymentForm.amount || parseFloat(paymentForm.amount) > remainingAmount}
             >
               {requestingPayment ? 'Requesting...' : 'Confirm Request'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Description Modal */}
+      <Dialog open={descriptionModalOpen} onOpenChange={setDescriptionModalOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Project Description</DialogTitle>
+            <DialogDescription>
+              {selectedDescriptionProject?.name}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <div className="bg-muted/30 p-4 rounded-lg border text-sm leading-relaxed whitespace-pre-wrap">
+              {selectedDescriptionProject?.description || 'No description available.'}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setDescriptionModalOpen(false)}>
+              Close
             </Button>
           </DialogFooter>
         </DialogContent>
