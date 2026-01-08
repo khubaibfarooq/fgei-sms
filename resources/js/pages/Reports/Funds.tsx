@@ -73,12 +73,13 @@ export default function Funds({
 
   const formatCurrency = (amount: any): string => {
     const num = toNumber(amount);
-    return new Intl.NumberFormat('ur-PK', {
-      style: 'currency',
-      currency: 'PKR',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(num);
+    // If less than 1 million, show in Rs format
+    if (num < 1000000) {
+      return `Rs ${num.toLocaleString()}`;
+    }
+    // Otherwise show in millions
+    const millions = num / 1000000;
+    return `${millions.toFixed(2)}M`;
   };
 
   const totalBalance = useMemo(() => {

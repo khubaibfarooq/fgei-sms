@@ -121,6 +121,15 @@ export default function FundsTran({ fundheld, fundtrans, filters }: Props) {
   const [toDate, setToDate] = useState(filters.to || '');
   const [region, setRegion] = useState(filters.region_id || '');
   console.log(fundtrans);
+
+  // Format currency - show in millions if >= 1M, otherwise in Rs
+  const formatCurrency = (amount: number): string => {
+    if (amount < 1000000) {
+      return `Rs ${amount.toLocaleString()}`;
+    }
+    const millions = amount / 1000000;
+    return `${millions.toFixed(2)}M`;
+  };
   // Modal state
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedTx, setSelectedTx] = useState<FundTransaction | null>(null);
@@ -229,7 +238,7 @@ export default function FundsTran({ fundheld, fundtrans, filters }: Props) {
               </div>
               <div className="text-right">
                 <p className="text-2xl font-bold text-green-600">
-                  {fundheld.balance.toLocaleString()}
+                  {formatCurrency(fundheld.balance)}
                 </p>
                 <p className="text-sm text-muted-foreground">Current Balance</p>
               </div>
@@ -247,7 +256,7 @@ export default function FundsTran({ fundheld, fundtrans, filters }: Props) {
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Total In</p>
                       <p className="text-2xl font-bold text-green-600">
-                        {calculateTotalIn().toLocaleString()}
+                        {formatCurrency(calculateTotalIn())}
                       </p>
                     </div>
                     <Badge variant="default" className="bg-green-100 text-green-800">IN</Badge>
@@ -261,7 +270,7 @@ export default function FundsTran({ fundheld, fundtrans, filters }: Props) {
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Total Out</p>
                       <p className="text-2xl font-bold text-red-600">
-                        {calculateTotalOut().toLocaleString()}
+                        {formatCurrency(calculateTotalOut())}
                       </p>
                     </div>
                     <Badge variant="destructive" className="bg-red-100 text-red-800">OUT</Badge>
@@ -345,7 +354,7 @@ export default function FundsTran({ fundheld, fundtrans, filters }: Props) {
                         <td className="border p-3 text-right text-sm font-medium">
                           <span className={transaction.type === 'in' ? 'text-green-600' : 'text-red-600'}>
                             {transaction.type === 'in' ? '+' : '-'}
-                            {transaction.amount.toLocaleString()}
+                            {formatCurrency(Number(transaction.amount))}
                           </span>
                         </td>
                         <td className="border p-3 text-center">{getStatusBadge(transaction.status)}</td>

@@ -2298,8 +2298,8 @@ if($buildingTypeId!=null){
             $status = $request->status;
             $institutes = $institutes->filter(function ($item) use ($status) {
                 if ($status === 'completed') return $item['percentage'] == 100;
-                if ($status === 'less_than_50') return $item['percentage'] < 50;
-                if ($status === 'greater_than_50') return $item['percentage'] > 50;
+                if ($status === 'less_than_50') return $item['percentage'] < 50 && $item['percentage'] > 0;
+                if ($status === 'greater_than_50') return $item['percentage'] >= 50 && $item['percentage'] < 100;
                 if ($status === 'zero') return $item['percentage'] == 0;
                 return true;
             });
@@ -2313,8 +2313,8 @@ if($buildingTypeId!=null){
                 'region' => $regionName,
                 'total_institutes' => $group->count(),
                 'completed' => $group->where('percentage', 100)->count(),
-                'less_than_50' => $group->where('percentage', '<', 50)->count(),
-                'greater_than_50' => $group->where('percentage', '>', 50)->count(),
+                'less_than_50' => $group->where('percentage', '<', 50)->where('percentage', '>', 0)->count(),
+                'greater_than_50' => $group->where('percentage', '>=', 50)->where('percentage', '<', 100)->count(),
                 'zero' => $group->where('percentage', 0)->count(),
             ];
         })->values();
@@ -2332,8 +2332,8 @@ if($buildingTypeId!=null){
                      'is_region' => true,
                      'total_institutes' => $group->count(),
                      'completed' => $group->where('percentage', 100)->count(),
-                     'less_than_50' => $group->where('percentage', '<', 50)->count(),
-                     'greater_than_50' => $group->where('percentage', '>', 50)->count(),
+                     'less_than_50' => $group->where('percentage', '<', 50)->where('percentage', '>', 0)->count(),
+                     'greater_than_50' => $group->where('percentage', '>=', 50)->where('percentage', '<', 100)->count(),
                      'zero' => $group->where('percentage', 0)->count(),
                      'shifts' => $group->sum('shifts'),
                      'blocks' => $group->sum('blocks'),
