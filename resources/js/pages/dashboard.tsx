@@ -289,7 +289,7 @@ export default function Dashboard() {
               >
                 <Card
                   redirectLink={!item.redirectlink?.includes('/dashboard/completion') ? item.redirectlink : undefined}
-                  number={loading ? '...' : (item.label === 'Funds' ? `${(item.value / 1000000).toFixed(2)}M` : item.value)}
+                  number={loading ? '...' : (item.label === 'Funds' || item.label === 'Institutes Funds' ? `${(item.value / 1000000).toFixed(2)}M` : item.value)}
                   title={item.label}
                   icon={iconName}
                   iconBgColor={item.color}
