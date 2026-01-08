@@ -176,6 +176,8 @@ class SSORedirectController extends Controller
                 return 'Region';
             case 'admin':
                 return 'admin';
+         case 'sms_tech_approval':
+                return 'sms_tech_approval';
             default:
                 return 'user';
         }
