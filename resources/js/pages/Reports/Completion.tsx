@@ -132,11 +132,11 @@ export default function Completion({
         }
     }, [region]);
 
-    const handleRegionClick = (regionId: number) => {
+    const handleRegionClick = (regionId: number, status: string) => {
         const newRegionId = regionId.toString();
         setRegion(newRegionId);
         setInstitute('');
-        fetchData({ region_id: newRegionId, institute_id: '' });
+        fetchData({ region_id: newRegionId, institute_id: '', status: status });
     };
     const handleInstituteClick = (instituteId: number) => {
         const newInstituteId = instituteId.toString();
@@ -304,6 +304,7 @@ export default function Completion({
     };
 
     const fetchData = async (overrides?: { region_id?: string; institute_id?: string; status?: string }) => {
+        console.log(overrides);
         setLoading(true);
         try {
             const params = new URLSearchParams({
@@ -311,6 +312,7 @@ export default function Completion({
                 institute_id: overrides?.institute_id ?? institute ?? '',
                 status: overrides?.status ?? status ?? '',
             });
+            console.log(params.toString());
             const res = await fetch(`/reports/completion/getData?${params.toString()}`);
             if (!res.ok) throw new Error();
             const data = await res.json();
@@ -587,7 +589,7 @@ export default function Completion({
                                                         ${isRegionView ? 'cursor-pointer' : ''}
                                                         border-b border-slate-100 dark:border-slate-800 last:border-0
                                                     `}
-                                                    onClick={() => isRegionView ? handleRegionClick(item.id) : handleInstituteClick(item.id)}
+                                                    onClick={() => isRegionView ? handleRegionClick(item.id, 'all') : handleInstituteClick(item.id)}
                                                 >
                                                     <td className={`px-4 md:px-6 py-4 font-semibold text-base md:text-lg lg:text-xl ${isRegionView ? 'text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300' : 'text-slate-800 dark:text-slate-200'}`}>
                                                         {isRegionView ? item.name.split(' ').pop() || item.name : item.name}
@@ -597,28 +599,28 @@ export default function Completion({
                                                         <>
                                                             {status === '' && <td className="px-3 md:px-4 py-4 text-center font-bold text-base md:text-lg lg:text-xl text-slate-700 dark:text-slate-300">{item.total_institutes}</td>}
                                                             {(status === 'completed' || status === '') && (
-                                                                <td className="px-3 md:px-4 py-4 text-center" onClick={(e) => { e.stopPropagation(); setStatus('completed'); handleRegionClick(item.id); }}>
+                                                                <td className="px-3 md:px-4 py-4 text-center" onClick={(e) => { e.stopPropagation(); setStatus('completed'); handleRegionClick(item.id, 'completed'); }}>
                                                                     <span className="inline-flex items-center justify-center min-w-[2.5rem] px-3 py-1.5 rounded-full text-sm md:text-base lg:text-lg font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400">
                                                                         {item.completed}
                                                                     </span>
                                                                 </td>
                                                             )}
                                                             {(status === 'greater_than_50' || status === '') && (
-                                                                <td className="px-3 md:px-4 py-4 text-center" onClick={(e) => { e.stopPropagation(); setStatus('greater_than_50'); handleRegionClick(item.id); }}>
+                                                                <td className="px-3 md:px-4 py-4 text-center" onClick={(e) => { e.stopPropagation(); setStatus('greater_than_50'); handleRegionClick(item.id, 'greater_than_50'); }}>
                                                                     <span className="inline-flex items-center justify-center min-w-[2.5rem] px-3 py-1.5 rounded-full text-sm md:text-base lg:text-lg font-bold bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-400">
                                                                         {item.greater_than_50}
                                                                     </span>
                                                                 </td>
                                                             )}
                                                             {(status === 'less_than_50' || status === '') && (
-                                                                <td className="px-3 md:px-4 py-4 text-center" onClick={(e) => { e.stopPropagation(); setStatus('less_than_50'); handleRegionClick(item.id); }}>
+                                                                <td className="px-3 md:px-4 py-4 text-center" onClick={(e) => { e.stopPropagation(); setStatus('less_than_50'); handleRegionClick(item.id, 'less_than_50'); }}>
                                                                     <span className="inline-flex items-center justify-center min-w-[2.5rem] px-3 py-1.5 rounded-full text-sm md:text-base lg:text-lg font-bold bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-400">
                                                                         {item.less_than_50}
                                                                     </span>
                                                                 </td>
                                                             )}
                                                             {(status === 'zero' || status === '') && (
-                                                                <td className="px-3 md:px-4 py-4 text-center" onClick={(e) => { e.stopPropagation(); setStatus('zero'); handleRegionClick(item.id); }}>
+                                                                <td className="px-3 md:px-4 py-4 text-center" onClick={(e) => { e.stopPropagation(); setStatus('zero'); handleRegionClick(item.id, 'zero'); }}>
                                                                     <span className="inline-flex items-center justify-center min-w-[2.5rem] px-3 py-1.5 rounded-full text-sm md:text-base lg:text-lg font-bold bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-400">
                                                                         {item.zero}
                                                                     </span>
