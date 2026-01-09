@@ -27,7 +27,7 @@ import {
 } from '@/components/ui/dialog';
 import { format } from 'date-fns';
 import axios from 'axios';
-
+import { formatDate } from '@/utils/dateFormatter';
 // -----------------------------------------------------------------------------
 // Types
 // -----------------------------------------------------------------------------
@@ -346,7 +346,7 @@ export default function FundsTran({ fundheld, fundtrans, filters }: Props) {
                         <td className="border p-3 text-sm">
                           <div className="flex items-center gap-2">
                             <Calendar className="h-4 w-4 text-muted-foreground" />
-                            {new Date(transaction.added_date).toLocaleDateString()}
+                            {formatDate(transaction.added_date)}
                           </div>
                         </td>
                         <td className="border p-3 text-sm">{transaction.description}</td>

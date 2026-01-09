@@ -2123,7 +2123,7 @@ public function getFund(Request $request)
         $fundheadid =$request->fund_head_id;
         $hrInstituteId = $request->institute_id;
         // ---- Find FundHeld -------------------------------------------------
-        $fundheld = FundHeld::with('institute', 'fundHead')->where('fund_head_id', $fundheadid)->first();
+        $fundheld = FundHeld::with('institute', 'fundHead')->where('institute_id', $hrInstituteId)->where('fund_head_id', $fundheadid)->first();
 
         if (!$fundheld) {
             return response()->json(['error' => 'Fund held record not found'], 404);
