@@ -589,7 +589,7 @@ export default function Completion({
                                                         ${isRegionView ? 'cursor-pointer' : ''}
                                                         border-b border-slate-100 dark:border-slate-800 last:border-0
                                                     `}
-                                                    onClick={() => isRegionView ? handleRegionClick(item.id, 'all') : handleInstituteClick(item.id)}
+                                                    onClick={() => isRegionView ? handleRegionClick(item.id, status) : handleInstituteClick(item.id)}
                                                 >
                                                     <td className={`px-4 md:px-6 py-4 font-semibold text-base md:text-lg lg:text-xl ${isRegionView ? 'text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300' : 'text-slate-800 dark:text-slate-200'}`}>
                                                         {isRegionView ? item.name.split(' ').pop() || item.name : item.name}
