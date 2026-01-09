@@ -351,7 +351,7 @@ export default function Funds({
                     No institute data found. Try adjusting filters.
                   </div>
                 ) : (
-                  <table className="w-full table-auto border-collapse text-sm">
+                  <table className="w-full  border-collapse text-sm">
                     <thead>
                       <tr className="bg-primary text-white">
                         <th className="sticky left-0 z-20 bg-primary px-6 py-4 text-left font-semibold">
@@ -427,7 +427,7 @@ export default function Funds({
                             {/* Show only selected fund head or all if none selected */}
                             {fundHead && fundHead !== '0' ? (
                               // Show only the selected fund head value
-                              <td className="px-4 py-4 text-right font-medium tabular-nums">
+                              <td className="px-4 py-4 text-right font-medium tabular-nums  whitespace-nowrap">
                                 {(() => {
                                   const selectedFundHead = fundheads.find(fh => fh.id.toString() === fundHead);
                                   const amount = row.fund_heads[selectedFundHead?.name || ''] || 0;
@@ -452,7 +452,7 @@ export default function Funds({
                               // Show all fund heads
                               <>
                                 {fundheads.map(fh => (
-                                  <td key={fh.id} className="px-2 py-2 text-right font-medium tabular-nums">
+                                  <td key={fh.id} className="px-2 py-2 text-right font-medium tabular-nums whitespace-nowrap">
                                     {!isRegionRow ? (
                                       <a
                                         href={`/reports/fundstrans?institute_id=${row.institute_id}&fund_head_id=${fh.id}&region_id=${region}`}
@@ -473,7 +473,7 @@ export default function Funds({
 
                             {/* Total Balance - Outside the conditional */}
                             {fundHead == '0' || fundHead == '' ? (
-                              <td className="sticky right-0 z-10 bg-green-50 dark:bg-green-900/30 px-3 py-2 text-right font-bold text-green-700 dark:text-green-400  tabular-nums border-l">
+                              <td className="sticky right-0 z-10 bg-green-50 dark:bg-green-900/30 px-3 py-2 text-right font-bold text-green-700 dark:text-green-400 tabular-nums border-l whitespace-nowrap">
                                 {formatCurrency(row.total_balance)}
                               </td>
                             ) : (
