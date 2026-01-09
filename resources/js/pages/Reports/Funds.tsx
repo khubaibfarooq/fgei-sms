@@ -309,10 +309,10 @@ export default function Funds({
                       }}
                       className="bg-muted/50 dark:bg-gray-800 p-4 rounded-lg border hover:shadow-md transition-shadow"
                     >
-                      <p className="text-xs font-medium text-muted-foreground truncate">
+                      <p className="text-xs font-medium text-muted-foreground lg:text-base text-sm truncate">
                         {b.fund_head?.name && b.fund_head.name !== 'N/A' ? b.fund_head.name : fundheads.find(fh => fh.id.toString() === fundHead)?.name}
                       </p>
-                      <p className="text-xl font-bold text-green-600 dark:text-green-400 mt-2">
+                      <p className="text-lg font-bold lg:text-xl text-green-600 dark:text-green-400 mt-2">
                         {formatCurrency(b.balance)}
                       </p>
                     </div>
@@ -410,12 +410,12 @@ export default function Funds({
                               }
                             }}
                           >
-                            <td className="sticky left-0 z-10 bg-background text-wrap px-6 py-4 font-medium text-base border-r  min-w-[200px]">
+                            <td className="sticky left-0 z-10 bg-background text-wrap px-6 py-4 font-medium lg:text-base   text-sm border-r  min-w-[200px]">
                               <div className="flex items-center gap-2">
                                 {row.institute_name || (
                                   <>
                                     {/* Optional visual indicator that this is a clickable region */}
-                                    <span className="text-blue-600 dark:text-blue-400 font-semibold text-base   ">
+                                    <span className="text-blue-600 dark:text-blue-400 font-semibold lg:text-base text-sm   ">
                                       {row.region_name.split(' ').pop() || row.region_name}
                                     </span>
 
@@ -427,7 +427,7 @@ export default function Funds({
                             {/* Show only selected fund head or all if none selected */}
                             {fundHead && fundHead !== '0' ? (
                               // Show only the selected fund head value
-                              <td className="px-4 py-4 text-right font-medium tabular-nums  whitespace-nowrap">
+                              <td className="px-4 py-4 text-right font-medium lg:text-base text-sm tabular-nums  whitespace-nowrap">
                                 {(() => {
                                   const selectedFundHead = fundheads.find(fh => fh.id.toString() === fundHead);
                                   const amount = row.fund_heads[selectedFundHead?.name || ''] || 0;
@@ -452,7 +452,7 @@ export default function Funds({
                               // Show all fund heads
                               <>
                                 {fundheads.map(fh => (
-                                  <td key={fh.id} className="px-2 py-2 text-right font-medium tabular-nums whitespace-nowrap">
+                                  <td key={fh.id} className="px-2 py-2 text-right font-medium lg:text-base text-sm tabular-nums whitespace-nowrap">
                                     {!isRegionRow ? (
                                       <a
                                         href={`/reports/fundstrans?institute_id=${row.institute_id}&fund_head_id=${fh.id}&region_id=${region}`}
@@ -473,7 +473,7 @@ export default function Funds({
 
                             {/* Total Balance - Outside the conditional */}
                             {fundHead == '0' || fundHead == '' ? (
-                              <td className="sticky right-0 z-10 bg-green-50 dark:bg-green-900/30 px-3 py-2 text-right font-bold text-green-700 dark:text-green-400 tabular-nums border-l whitespace-nowrap">
+                              <td className="sticky right-0 z-10 bg-green-50 dark:bg-green-900/30 px-3 py-2 lg:text-base text-sm text-right font-bold text-green-700 dark:text-green-400 tabular-nums border-l whitespace-nowrap">
                                 {formatCurrency(row.total_balance)}
                               </td>
                             ) : (
@@ -490,7 +490,7 @@ export default function Funds({
                         </td>
                         {fundHead && fundHead !== '0' ? (
                           // Show only the selected fund head total
-                          <td className="px-4 py-4 text-right font-mono tabular-nums">
+                          <td className="px-4 py-4 text-right font-mono lg:text-base text-sm tabular-nums">
                             {(() => {
                               const selectedFundHead = fundheads.find(fh => fh.id.toString() === fundHead);
                               const sum = funds.reduce((acc, row) => acc + toNumber(row.fund_heads[selectedFundHead?.name || ''] || 0), 0);
@@ -502,14 +502,14 @@ export default function Funds({
                           fundheads.map(fh => {
                             const sum = funds.reduce((acc, row) => acc + toNumber(row.fund_heads[fh.name]), 0);
                             return (
-                              <td key={fh.id} className="px-4 py-4 text-right font-mono tabular-nums">
+                              <td key={fh.id} className="px-4 py-4 text-right font-mono lg:text-base text-sm tabular-nums">
                                 {formatCurrency(sum)}
                               </td>
                             );
                           })
                         )}
                         {fundHead == '0' || fundHead == '' ? (
-                          <td className="sticky right-0 z-10 bg-emerald-100 dark:bg-emerald-900/50 px-6 py-4 text-right font-bold text-emerald-700 dark:text-emerald-400 font-mono tabular-nums border-l">
+                          <td className="sticky right-0 z-10 bg-emerald-100 dark:bg-emerald-900/50 px-6 py-4 text-right font-bold text-emerald-700 dark:text-emerald-400 font-mono tabular-nums border-l lg:text-base text-sm">
                             {formatCurrency(totalBalance)}
                           </td>
                         ) : (''
