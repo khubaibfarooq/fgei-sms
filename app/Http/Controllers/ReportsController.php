@@ -1890,6 +1890,7 @@ private function buildFundsForInstitutes($institutes, $fundheads, $regionid)
             DB::raw('SUM(fund_helds.balance) as balance')
         ])
         ->groupBy('fund_helds.institute_id', 'fund_helds.fund_head_id', 'fund_heads.name')
+        ->orderByRaw('ISNULL(`institutes.order`) ASC, `institutes.order` ASC, institutes.id DESC')
         ->get();
 
     return $institutes->map(function ($institute) use ($fundheads, $fundBalancesByInstitute) {
@@ -1918,7 +1919,7 @@ private function buildFundsForInstitutes($institutes, $fundheads, $regionid)
 
 private function getFilteredRegions($request)
 {
-    return Institute::where('region_id', $request->region_id)
+    return Institute::where('region_id', $request->region_id)->orderByRaw('ISNULL(`order`) ASC, `order` ASC, id DESC')
         ->get()
         ->filter(fn($i) => is_numeric($i->id) && $i->id > 0 && !empty(trim($i->name)))
         ->values();
