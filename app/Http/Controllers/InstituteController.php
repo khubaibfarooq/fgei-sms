@@ -187,6 +187,12 @@ $data['type'] = $type;
 
         $resultImageName = null;
             if ($request->hasFile('img_layout')) {
+                if ($institute->img_layout) {
+            $oldPath = public_path('assets/img_layout/' . $institute->img_layout);
+            if (File::exists($oldPath)) {
+                File::delete($oldPath);
+            }
+        }
                 $resultImage = $request->file('img_layout');
                 $resultImageName = time() . '-' . uniqid() . '.' . $resultImage->getClientOriginalExtension();
 
@@ -210,6 +216,12 @@ $data['type'] = $type;
 //         }  
 $resultImageName = null;
         if ($request->hasFile('img_3d')) {
+            if ($institute->img_3d) {
+            $oldPath = public_path('assets/img_3d/' . $institute->img_3d);
+            if (File::exists($oldPath)) {
+                File::delete($oldPath);
+            }
+        }
             $resultImage = $request->file('img_3d');
             $resultImageName = time() . '-' . uniqid() . '.' . $resultImage->getClientOriginalExtension();
 
@@ -228,6 +240,12 @@ $resultImageName = null;
         }
         $resultImageName = null;
           if ($request->hasFile('video')) {
+            if ($institute->video) {
+            $oldPath = public_path('assets/video/' . $institute->video);
+            if (File::exists($oldPath)) {
+                File::delete($oldPath);
+            }
+        }
            $resultImage = $request->file('video');
                 $resultImageName = time() . '-' . uniqid() . '.' . $resultImage->getClientOriginalExtension();
                 // $resultImage->move(public_path('Assets/Uploads/ACR/acr17to18/results'), $resultImageName);

@@ -25,7 +25,8 @@ class Project extends Model
         'current_stage_id',
         'approval_status',
         'priority',
-        'completion_per'
+        'completion_per',
+        'pdf',
     ];
 
     public function fundHead()

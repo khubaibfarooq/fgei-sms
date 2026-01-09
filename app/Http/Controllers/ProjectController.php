@@ -71,6 +71,7 @@ public function store(Request $request)
         'priority'         => 'nullable|string',
         'description'      => 'nullable|string',
         'actual_cost'      => 'required_if:status,completed|nullable|numeric',
+        'pdf'              => 'nullable|file|max:10240',
 
         'final_comments'   => 'required_if:status,completed|nullable|string',
 
@@ -79,9 +80,10 @@ public function store(Request $request)
         'milestones.*.days'           => 'required_with:milestones.*.name|integer',
         'milestones.*.status'         => 'nullable|string',
         'milestones.*.completed_date' => 'nullable|date',
-        'milestones.*.img'            => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
-        'milestones.*.pdf'            => 'nullable|mimes:pdf|max:10240',
+        'milestones.*.img'            => 'nullable|file|max:5120',
+        'milestones.*.pdf'            => 'nullable|file|max:10240',
     ]);
+
 
     $project = Project::create([
         'name'             => $request->name,
@@ -97,9 +99,14 @@ public function store(Request $request)
         'submitted_by'     => auth()->id(),
         'approval_status'   => 'waiting',
     ]);
-
-   
-
+   if ($request->hasFile("pdf")) {
+                $file = $request->file("pdf");
+                $FILENAME = time() . '-' . uniqid() . '.' . $file->getClientOriginalExtension();
+                $file->move(public_path('assets/projects'), $FILENAME);
+                $project->pdf = 'projects/' . $FILENAME;
+                $project->save();
+            }
+  
     if ($request->has('milestones')) {
         foreach ($request->input('milestones', []) as $index => $m) {
             if (empty($m['name']) || empty($m['days'])) {
@@ -222,7 +229,7 @@ public function update(Request $request, Project $project)
         'priority'         => 'nullable|string',
         'description'      => 'nullable|string',
         'actual_cost'      => 'required_if:status,completed|nullable|numeric',
-
+        'pdf'              => 'nullable|file|max:10240',
         'final_comments'   => 'required_if:status,completed|nullable|string',
 
         'milestones.*.id'             => 'nullable|integer|exists:milestones,id,project_id,' . $project->id,
@@ -231,17 +238,31 @@ public function update(Request $request, Project $project)
         'milestones.*.days'           => 'required_with:milestones.*.name|integer',
         'milestones.*.status'         => 'nullable|string',
         'milestones.*.completed_date' => 'nullable|date',
-        'milestones.*.img'            => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
-        'milestones.*.pdf'            => 'nullable|mimes:pdf|max:10240',
+        'milestones.*.img'            => 'nullable|file|max:5120',
+        'milestones.*.pdf'            => 'nullable|file|max:10240',
     ]);
 
+    if ($request->hasFile("pdf")) {
+        // Delete old PDF if exists
+        if ($project->pdf) {
+            $oldPdfPath = public_path('assets/' . $project->pdf);
+            if (File::exists($oldPdfPath)) {
+                File::delete($oldPdfPath);
+            }
+        }
+        
+        $file = $request->file("pdf");
+        $FILENAME = time() . '-' . uniqid() . '.' . $file->getClientOriginalExtension();
+        $file->move(public_path('assets/projects'), $FILENAME);
+        $project->pdf = 'projects/' . $FILENAME;
+    }
     // Update main project
     $project->update([
         'name'             => $request->name,
         'estimated_cost'   => $request->estimated_cost,
         'project_type_id'  => $request->project_type_id,
         'actual_cost'      => $request->actual_cost,
-
+        'pdf'              =>  $project->pdf,
         'final_comments'   => $request->final_comments,
         'priority'         => $request->priority,
         'description'      => $request->description,

@@ -40,7 +40,7 @@ interface ProjectFormProps {
     name: string;
     estimated_cost: number;
     actual_cost: number | null;
-
+    pdf: string | null;
     final_comments: string | null;
     project_type_id: number | null;
     description: string | null;
@@ -71,6 +71,8 @@ export default function ProjectForm({ project, projectTypes }: ProjectFormProps)
   const [projectTypeId, setProjectTypeId] = useState((project?.project_type_id || '').toString());
   const [description, setDescription] = useState(project?.description || '');
   const [priority, setPriority] = useState(project?.priority || 'Medium');
+  const [projectPdf, setProjectPdf] = useState<File | null>(null);
+  const [existingPdf, setExistingPdf] = useState(project?.pdf || null);
 
 
   const [milestones, setMilestones] = useState<MilestoneRow[]>(
@@ -151,6 +153,9 @@ export default function ProjectForm({ project, projectTypes }: ProjectFormProps)
     fd.append('project_type_id', projectTypeId);
     fd.append('description', description);
     fd.append('priority', priority);
+    if (projectPdf) {
+      fd.append('pdf', projectPdf);
+    }
 
     if (isEdit) {
       fd.append('_method', 'PUT');
@@ -244,6 +249,26 @@ export default function ProjectForm({ project, projectTypes }: ProjectFormProps)
                 <div className="space-y-2 md:col-span-2">
                   <Label>Description</Label>
                   <Input value={description} onChange={e => setDescription(e.target.value)} />
+                </div>
+                <div className="space-y-2 md:col-span-2">
+                  <Label>Project PDF Document</Label>
+                  <Input
+                    type="file"
+                    accept=".pdf"
+                    onChange={e => setProjectPdf(e.target.files?.[0] || null)}
+                  />
+                  {existingPdf && !projectPdf && (
+                    <a
+                      href={`/assets/${existingPdf}`}
+                      target="_blank"
+                      className="text-sm text-blue-600 hover:underline"
+                    >
+                      View Current PDF
+                    </a>
+                  )}
+                  {projectPdf && (
+                    <p className="text-sm text-green-600">New PDF selected: {projectPdf.name}</p>
+                  )}
                 </div>
               </div>
 

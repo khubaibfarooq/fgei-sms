@@ -108,6 +108,12 @@ $permissions = [
         $data['institute_id'] = session('sms_inst_id');
         $resultImageName = null;
         if ($request->hasFile('img')) {
+                 if ($block->img) {
+            $oldPath = public_path('assets/block_img/' . $block->img);
+            if (File::exists($oldPath)) {
+                File::delete($oldPath);
+            }
+        }
             $resultImage = $request->file('img');
             $resultImageName = time() . '-' . uniqid() . '.' . $resultImage->getClientOriginalExtension();
             

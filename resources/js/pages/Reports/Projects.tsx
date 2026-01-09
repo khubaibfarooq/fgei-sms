@@ -8,7 +8,7 @@ import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { type BreadcrumbItem } from '@/types';
-import { Building, ClipboardCheck, X, CheckCircle2, XCircle, Clock, Eye } from 'lucide-react';
+import { Building, ClipboardCheck, X, CheckCircle2, XCircle, Clock, Eye, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import { debounce } from 'lodash';
 import ExcelJS from 'exceljs';
@@ -50,7 +50,7 @@ interface ProjectProp {
   description?: string | null;
   estimated_cost: string | number;
   actual_cost: string | number;
-
+  pdf?: string | null;
   status: string;
   approval_status: string;
   priority: string;
@@ -544,6 +544,7 @@ export default function Projects({ projects: initialProjects, institutes, region
                         <th className="border p-2 font-medium">Description</th>
                         <th className="border p-2 font-medium">Estimated Cost</th>
                         <th className="border p-2 font-medium">Actual Cost</th>
+                        <th className="border p-2 font-medium">PDF</th>
                         <th className="border p-2 font-medium">Fund Head</th>
 
                         <th className="border p-2 font-medium">Overall Status</th>
@@ -595,6 +596,21 @@ export default function Projects({ projects: initialProjects, institutes, region
 
                             <td className="border p-2 text-right">{project.estimated_cost}</td>
                             <td className="border p-2 text-right">{project.actual_cost}</td>
+                            <td className="border p-2 text-center" onClick={(e) => e.stopPropagation()}>
+                              {project.pdf ? (
+                                <a
+                                  href={`/assets/${project.pdf}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center justify-center text-blue-600 hover:text-blue-700"
+                                  title="View PDF"
+                                >
+                                  <FileText className="h-5 w-5" />
+                                </a>
+                              ) : (
+                                <span className="text-muted-foreground">-</span>
+                              )}
+                            </td>
                             <td className="border p-2 text-center">{project.fundhead?.name}</td>
                             <td className="border p-2 text-center">
                               <span className={`px-2 py-1 rounded-full text-xs font-medium ${project.status === 'completed' ? 'bg-green-100 text-green-800' :

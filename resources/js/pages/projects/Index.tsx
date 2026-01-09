@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { type BreadcrumbItem } from '@/types';
-import { Plus, Edit, Trash2, Building, ClipboardCheck, X, CheckCircle2, XCircle, Clock, Eye } from 'lucide-react';
+import { Plus, Edit, Trash2, Building, ClipboardCheck, X, CheckCircle2, XCircle, Clock, Eye, FileText } from 'lucide-react';
 
 import {
   AlertDialog,
@@ -43,6 +43,7 @@ interface Project {
   description?: string | null;
   estimated_cost: number;
   actual_cost: number | null;
+  pdf: string | null;
   final_comments: string | null;
   status: string;
   approval_status: string;
@@ -454,6 +455,7 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
                       <th className="border p-2 text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Fund Head</th>
                       <th className="border p-2 text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Estimated Cost</th>
                       <th className="border p-2 text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Actual Cost</th>
+                      <th className="border p-2 text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">PDF</th>
 
                       <th className="border p-2 text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Priority</th>
 
@@ -526,6 +528,21 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
                                 </Button>
                               )}
                             </div>
+                          </td>
+                          <td className="border text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100 text-center" onClick={(e) => e.stopPropagation()}>
+                            {project.pdf ? (
+                              <a
+                                href={`/assets/${project.pdf}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center justify-center text-blue-600 hover:text-blue-700"
+                                title="View PDF"
+                              >
+                                <FileText className="h-5 w-5" />
+                              </a>
+                            ) : (
+                              <span className="text-muted-foreground">-</span>
+                            )}
                           </td>
 
                           <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">

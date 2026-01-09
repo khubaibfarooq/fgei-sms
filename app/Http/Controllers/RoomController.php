@@ -144,6 +144,12 @@ $data['institute_id'] = session('sms_inst_id');
         ]);
            $resultImageName = null;
         if ($request->hasFile('img')) {
+                 if ($room->img) {
+            $oldPath = public_path('assets/room_img/' . $room->img);
+            if (File::exists($oldPath)) {
+                File::delete($oldPath);
+            }
+        }
             $resultImage = $request->file('img');
             $resultImageName = time() . '-' . uniqid() . '.' . $resultImage->getClientOriginalExtension();
             
