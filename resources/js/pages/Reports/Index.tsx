@@ -863,7 +863,7 @@ export default function InstitutionalReportIndex({ institute: initialInstitute =
                       <tbody>
                         {blocks.map((block) => (
                           <tr key={block.id} className="hover:bg-primary/10  dark:hover:bg-gray-700">
-                            <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">  <div className='flex flex-column gap-2 align-middle'> <ImagePreview dataImg={block.img} size="h-20 w-20" />  <span className='font-bold'>{block.name}</span></div> </td>
+                            <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">  <div className='flex flex-column gap-2 align-middle'> <ImagePreview dataImg={block.img} size="h-20 w-20 object-contain" />  <span className='font-bold'>{block.name}</span></div> </td>
                             <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{block.area}</td>
                             <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{formatDate(block.establish_date)}</td>
 
@@ -916,7 +916,7 @@ export default function InstitutionalReportIndex({ institute: initialInstitute =
                           <tr key={room.id} className="hover:bg-primary/10  dark:hover:bg-gray-700">
                             <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{room.block?.name}</td>
 
-                            <td className="border p-2 text-sm text-gray-900 dark:text-gray-100"><div className='flex flex-column gap-2 align-middle'> <ImagePreview dataImg={room.img} size="h-20 w-20" />  <span className='font-bold'>{room.name}</span></div></td>
+                            <td className="border p-2 text-sm text-gray-900 dark:text-gray-100"><div className='flex flex-column gap-2 align-middle'> <ImagePreview dataImg={room.img} size="h-20 w-20 object-contain" />  <span className='font-bold'>{room.name}</span></div></td>
                             <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{room.area}</td>
                           </tr>
                         ))}

@@ -520,7 +520,7 @@ export default function Rooms({ rooms: roomsProp, institutes, roomtypes, regions
                                         rooms.data?.map((room: RoomProp) => (
                                             <tr key={room.id} className="hover:bg-primary/10 dark:hover:bg-gray-700">
                                                 <td className="border p-2 text-left font-bold dark:text-gray-100">
-                                                    <div className='flex flex-column gap-2 align-middle'> <ImagePreview dataImg={room.img} size="h-20" />  <span className='font-bold'>{room.name}</span></div>
+                                                    <div className='flex flex-column gap-2 align-middle'> <ImagePreview dataImg={room.img} size="h-20 w-20 object-contain" />  <span className='font-bold'>{room.name}</span></div>
                                                 </td>
                                                 <td className="border p-2 text-left text-gray-900 dark:text-gray-100">
                                                     {room.type?.name || '—'}

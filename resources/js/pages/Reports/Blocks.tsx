@@ -453,7 +453,7 @@ export default function Blocks({ blocks: blocksProp, institutes, blocktypes, reg
                       blocks.data?.map((block: BlockProp) => (
                         <tr key={block.id} className="hover:bg-primary/10 dark:hover:bg-gray-700">
                           <td className="border p-2 text-left font-bold dark:text-gray-100">
-                            <div className='flex flex-row gap-2 align-middle'> <ImagePreview dataImg={block.img} size="h-20 w-20" />  <span className='font-bold'>{block.name}</span></div>
+                            <div className='flex flex-row gap-2 align-middle'> <ImagePreview dataImg={block.img} size="h-20 w-20 object-contain" />  <span className='font-bold'>{block.name}</span></div>
                           </td>
                           <td className="border p-2 text-left text-gray-900 dark:text-gray-100">
                             {block.block_type?.name || '—'}
