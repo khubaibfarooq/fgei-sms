@@ -7,7 +7,7 @@ use Inertia\Inertia;
 use App\Models\BlockType;
 use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver;
-
+use Illuminate\Support\Facades\File;
 
 class BlockController extends Controller
 {

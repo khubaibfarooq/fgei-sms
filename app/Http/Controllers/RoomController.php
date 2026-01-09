@@ -10,7 +10,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver;
-
+use Illuminate\Support\Facades\File;
 class RoomController extends Controller
 {
  public function index(Request $request)
