@@ -546,14 +546,14 @@ export default function Projects({ projects: initialProjects, institutes, region
                         <th className="border p-2 font-medium">Actual Cost</th>
                         <th className="border p-2 font-medium">PDF</th>
                         <th className="border p-2 font-medium">Fund Head</th>
-
-                        <th className="border p-2 font-medium">Overall Status</th>
-                        <th className="border p-2 font-medium">Approval Status</th>
-                        <th className="border p-2 font-medium">Final Comments</th>
                         <th className="border p-2 font-medium">Current Stage</th>
+
+                        <th className="border p-2 font-medium">Approval Status</th>
+
+
                         <th className="border p-2 font-medium">Completion %</th>
-
-
+                        <th className="border p-2 font-medium">Project Status</th>
+                        <th className="border p-2 font-medium">Final Comments</th>
                         <th className="border p-2 font-medium">Action</th>
                       </tr>
                     </thead>
@@ -612,6 +612,20 @@ export default function Projects({ projects: initialProjects, institutes, region
                               )}
                             </td>
                             <td className="border p-2 text-center">{project.fundhead?.name}</td>
+                            <td className="border p-2 text-center">{project.current_stage?.stage_name || 'Request Initiated'}</td>
+                            <td className="border p-2 text-center">
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${project.approval_status === 'completed' ? 'bg-green-100 text-green-800' :
+                                project.approval_status === 'inprogress' ? 'bg-yellow-100 text-yellow-800' :
+                                  'bg-blue-100 text-blue-800'
+                                }`}>
+                                {project.approval_status.charAt(0).toUpperCase() + project.approval_status.slice(1)}<br />
+
+                              </span>
+                              {project.approval_status === 'waiting' ? project.current_stage?.level || 'Regional Office' : ''}
+                            </td>
+
+
+                            <td className="border p-2 text-center">{project.completion_per ? parseFloat(project.completion_per.toString()) : '-'}</td>
                             <td className="border p-2 text-center">
                               <span className={`px-2 py-1 rounded-full text-xs font-medium ${project.status === 'completed' ? 'bg-green-100 text-green-800' :
                                 project.status === 'inprogress' ? 'bg-yellow-100 text-yellow-800' :
@@ -619,19 +633,7 @@ export default function Projects({ projects: initialProjects, institutes, region
                                 }`}>
                                 {project.status.charAt(0).toUpperCase() + project.status.slice(1)}
                               </span>
-                            </td>
-                            <td className="border p-2 text-center">
-                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${project.approval_status === 'completed' ? 'bg-green-100 text-green-800' :
-                                project.approval_status === 'inprogress' ? 'bg-yellow-100 text-yellow-800' :
-                                  'bg-blue-100 text-blue-800'
-                                }`}>
-                                {project.approval_status.charAt(0).toUpperCase() + project.approval_status.slice(1)}
-                              </span>
-                            </td>
-                            <td className="border p-2 text-center">{project.final_comments || '-'}</td>
-                            <td className="border p-2 text-center">{project.current_stage?.stage_name || '-'}</td>
-                            <td className="border p-2 text-center">{project.completion_per ? parseFloat(project.completion_per.toString()) : '-'}</td>
-
+                            </td>                   <td className="border p-2 text-center">{project.final_comments || '-'}</td>
                             <td className="border p-2 text-center" onClick={(e) => e.stopPropagation()}>
                               {canShowApproveButton(project) && (
                                 <Button

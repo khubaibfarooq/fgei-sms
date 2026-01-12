@@ -319,14 +319,15 @@ export default function Upgradations({ upgradations: upgradationProp, institutes
               <div className="space-y-3">
                 <table className="w-full border-collapse border-1 rounded-md overflow-hidden shadow-sm">
                   <thead>
-                    <tr className="bg-primary dark:bg-gray-800 text-center">
-                      <th className="border p-2 text-sm font-medium text-white dark:text-gray-200">Details</th>
-                      <th className="border p-2 text-sm font-medium text-white dark:text-gray-200">From</th>
-                      <th className="border p-2 text-sm font-medium text-white dark:text-gray-200">To</th>
-                      <th className="border p-2 text-sm font-medium text-white dark:text-gray-200">Level From</th>
-                      <th className="border p-2 text-sm font-medium text-white dark:text-gray-200">Level To</th>
-                      <th className="border p-2 text-sm font-medium text-white dark:text-gray-200">Status</th>
-                      <th className="border p-2 text-sm font-medium text-white dark:text-gray-200">Institute</th>
+                    <tr className="bg-primary dark:bg-gray-800 text-center text-sm md:text-md lg:text-lg  ">
+                      <th className="border p-2  font-medium text-white dark:text-gray-200">Institute</th>
+                      <th className="border p-2 font-medium text-white dark:text-gray-200">Details</th>
+                      <th className="border p-2 font-medium text-white dark:text-gray-200">From</th>
+                      <th className="border p-2 font-medium text-white dark:text-gray-200">To</th>
+                      <th className="border p-2 font-medium text-white dark:text-gray-200">Level From</th>
+                      <th className="border p-2 font-medium text-white dark:text-gray-200">Level To</th>
+                      <th className="border p-2 font-medium text-white dark:text-gray-200">Status</th>
+
                     </tr>
                   </thead>
                   <tbody>
@@ -338,8 +339,10 @@ export default function Upgradations({ upgradations: upgradationProp, institutes
                       </tr>
                     ) : (
                       upgradations.data.map((upgradation) => (
-                        <tr key={upgradation.id} className="hover:bg-primary/10 dark:hover:bg-gray-700 text-center">
-                          <td className="border p-2 text-sm md:text-md lg:text-lg border-r-1 font-bold text-gray-900 dark:text-gray-100">
+                        <tr key={upgradation.id} className="hover:bg-primary/10 dark:hover:bg-gray-700 ">
+                          <td className="border p-2 text-sm md:text-md lg:text-lg border-r-1  text-gray-900 dark:text-gray-100">
+                            {upgradation.institute?.name || 'N/A'}
+                          </td>   <td className="border p-2 text-sm md:text-md lg:text-lg border-r-1 font-semibold text-gray-900 dark:text-gray-100">
                             {upgradation.details}
                           </td>
                           <td className="border p-2 text-sm md:text-md lg:text-lg border-r-1  text-gray-900 dark:text-gray-100">
@@ -351,15 +354,13 @@ export default function Upgradations({ upgradations: upgradationProp, institutes
                           <td className="border p-2 text-sm md:text-md lg:text-lg border-r-1  text-gray-900 dark:text-gray-100">
                             {upgradation.levelfrom}
                           </td>
-                          <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">
+                          <td className="border p-2 text-sm md:text-md lg:text-lg border-r-1  text-gray-900 dark:text-gray-100">
                             {upgradation.levelto}
                           </td>
-                          <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">
+                          <td className="border p-2 text-sm md:text-md lg:text-lg border-r-1  text-gray-900 dark:text-gray-100">
                             {upgradation.status}
                           </td>
-                          <td className="border p-2 text-sm md:text-md lg:text-lg border-r-1  text-gray-900 dark:text-gray-100">
-                            {upgradation.institute?.name || 'N/A'}
-                          </td>
+
                         </tr>
                       ))
                     )}

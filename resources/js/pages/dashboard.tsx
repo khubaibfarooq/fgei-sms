@@ -113,30 +113,37 @@ const getColumnsFromData = (data: TableRow[]): string[] => {
 };
 
 // Helper function to format cell value
-const formatCellValue = (value: any, columnName?: string): string => {
+const formatCellValue = (value: any, columnName?: string, colIndex?: number): string => {
   if (value === null || value === undefined) return '-';
 
+  // Check if it's a currency column (using column name for detection)
+  const currencyColumns = ['balance', 'cost', 'amount', 'price', 'value', 'total_cost', 'total_amount', 'estimated_cost', 'actual_cost'];
+  const isCurrencyColumn = currencyColumns.some(currencyCol =>
+    columnName?.toLowerCase().includes(currencyCol)
+  );
+
   if (typeof value === 'number') {
+    if (isCurrencyColumn && value >= 1000000) {
+      return `${(value / 1000000).toFixed(2)} Mn`;
+    }
     return value.toLocaleString();
   }
 
   if (typeof value === 'string') {
-    // Check if it's a currency value (using column name for better detection)
-    const currencyColumns = ['balance', 'cost', 'amount', 'price', 'value', 'total_cost', 'total_amount'];
-    const isCurrencyColumn = currencyColumns.some(currencyCol =>
-      columnName?.toLowerCase().includes(currencyCol)
-    );
-
     if (isCurrencyColumn) {
       const num = parseFloat(value);
       if (!isNaN(num)) {
+        if (num >= 1000000) {
+          return `${(num / 1000000).toFixed(2)} Mn`;
+        }
         return `${num.toLocaleString()}`;
       }
     }
+    // Capitalize first letter for the first column
+    if (colIndex === 1) {
+      return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
+    }
     return value;
-
-    // Capitalize first letter of the string
-    //return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
   }
 
   return String(value);
@@ -285,7 +292,7 @@ export default function Dashboard() {
                     router.visit(item.redirectlink);
                   }
                 }}
-                className="cursor-pointer"
+                className={item.redirectlink ? "cursor-pointer" : ""}
               >
                 <Card
                   redirectLink={!item.redirectlink?.includes('/dashboard/completion') ? item.redirectlink : undefined}
@@ -329,7 +336,7 @@ export default function Dashboard() {
                                 column !== 'Key' && (
                                   <th
                                     key={colIndex}
-                                    className="text-left py-3 px-4 text-sm font-medium dark:text-gray-200"
+                                    className="text-left py-3 px-4 text-sm md:text-lg font-medium dark:text-gray-200"
                                     style={{ color: theme.header.replace('bg-', 'text-') + '900' }}
                                   >
                                     {formatColumnName(column)}
@@ -353,7 +360,7 @@ export default function Dashboard() {
                                 {table.columns.map((column, colIndex) => (
                                   column !== 'Key' && (
                                     <td key={colIndex} className={`py-3 px-4 text-sm md:text-lg ${theme.text}`}>
-                                      {formatCellValue(row[column], column)}
+                                      {formatCellValue(row[column], column, colIndex)}
                                     </td>
                                   )
                                 ))}

@@ -493,18 +493,21 @@ export default function Rooms({ rooms: roomsProp, institutes, roomtypes, regions
                                 <thead>
                                     <tr className="bg-primary dark:bg-gray-800">
                                         <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">
-                                            Room Name
-                                        </th>
-                                        <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">
-                                            Room Type
+                                            Institute
                                         </th>
                                         <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">
                                             Block
                                         </th>
                                         <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">
+                                            Room Type
+                                        </th>
+                                        <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">
+                                            Room Name
+                                        </th>
+
+
+                                        <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">
                                             Area
-                                        </th>  <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">
-                                            Institute
                                         </th>
 
                                     </tr>
@@ -519,21 +522,24 @@ export default function Rooms({ rooms: roomsProp, institutes, roomtypes, regions
                                     ) : (
                                         rooms.data?.map((room: RoomProp) => (
                                             <tr key={room.id} className="hover:bg-primary/10 dark:hover:bg-gray-700">
-                                                <td className="border p-2 text-left font-bold dark:text-gray-100">
-                                                    <div className='flex flex-column gap-2 align-middle'> <ImagePreview dataImg={room.img} size="h-20 w-20 object-contain" />  <span className='font-bold'>{room.name}</span></div>
-                                                </td>
                                                 <td className="border p-2 text-left text-gray-900 dark:text-gray-100">
-                                                    {room.type?.name || '—'}
+                                                    {room.block?.institute?.name || '—'}
                                                 </td>
                                                 <td className="border p-2 text-left text-gray-900 dark:text-gray-100">
                                                     {room.block?.name || '—'}
                                                 </td>
                                                 <td className="border p-2 text-left text-gray-900 dark:text-gray-100">
+                                                    {room.type?.name || '—'}
+                                                </td>
+                                                <td className="border p-2 text-left font-bold dark:text-gray-100">
+                                                    <div className='flex flex-column gap-2 align-middle'> <ImagePreview dataImg={room.img} size="h-20 w-20 object-contain" />  <span className='font-bold'>{room.name}</span></div>
+                                                </td>
+
+
+                                                <td className="border p-2 text-left text-gray-900 dark:text-gray-100">
                                                     {room.area || '—'}
                                                 </td>
-                                                <td className="border p-2 text-left text-gray-900 dark:text-gray-100">
-                                                    {room.block?.institute?.name || '—'}
-                                                </td>
+
                                             </tr>
                                         ))
                                     )}
