@@ -44,6 +44,17 @@ const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Projects', href: '/reports/projects' },
 ];
 
+// Helper function to format currency amounts
+const formatAmount = (value: string | number | null | undefined): string => {
+  if (value === null || value === undefined) return '-';
+  const num = typeof value === 'string' ? parseFloat(value) : value;
+  if (isNaN(num)) return '-';
+  if (num >= 1000000) {
+    return `${(num / 1000000).toFixed(2)} Mn`;
+  }
+  return num.toLocaleString();
+};
+
 interface ProjectProp {
   id: number;
   name: string;
@@ -594,8 +605,8 @@ export default function Projects({ projects: initialProjects, institutes, region
                               )}
                             </td>
 
-                            <td className="border p-2 text-right">{project.estimated_cost}</td>
-                            <td className="border p-2 text-right">{project.actual_cost}</td>
+                            <td className="border p-2 text-right">{formatAmount(project.estimated_cost)}</td>
+                            <td className="border p-2 text-right">{formatAmount(project.actual_cost)}</td>
                             <td className="border p-2 text-center" onClick={(e) => e.stopPropagation()}>
                               {project.pdf ? (
                                 <a
