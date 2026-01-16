@@ -119,6 +119,14 @@ const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Fund Transactions', href: '#' },
 ];
 
+// Format amount: show in millions with "Mn" suffix if >= 1 million, otherwise show with locale formatting
+const formatAmount = (amount: number): string => {
+  if (amount >= 1000000) {
+    return `${(amount / 1000000).toFixed(2)} Mn`;
+  }
+  return amount.toLocaleString();
+};
+
 export default function FundsTran({ fundheld, fundtrans, filters }: Props) {
   const [search, setSearch] = useState(filters.search || '');
   const [fromDate, setFromDate] = useState(filters.from || '');
@@ -258,7 +266,7 @@ export default function FundsTran({ fundheld, fundtrans, filters }: Props) {
               </div>
               <div className="text-right">
                 <p className="text-2xl font-bold text-green-600">
-                  {fundheld.balance.toLocaleString()}
+                  {formatAmount(fundheld.balance)}
                 </p>
                 <p className="text-sm text-muted-foreground">Current Balance</p>
               </div>
@@ -276,7 +284,7 @@ export default function FundsTran({ fundheld, fundtrans, filters }: Props) {
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Total In</p>
                       <p className="text-2xl font-bold text-green-600">
-                        {calculateTotalIn().toLocaleString()}
+                        {formatAmount(calculateTotalIn())}
                       </p>
                     </div>
                     <Badge variant="default" className="bg-green-100 text-green-800">IN</Badge>
@@ -290,7 +298,7 @@ export default function FundsTran({ fundheld, fundtrans, filters }: Props) {
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Total Out</p>
                       <p className="text-2xl font-bold text-red-600">
-                        {calculateTotalOut().toLocaleString()}
+                        {formatAmount(calculateTotalOut())}
                       </p>
                     </div>
                     <Badge variant="destructive" className="bg-red-100 text-red-800">OUT</Badge>
@@ -375,7 +383,7 @@ export default function FundsTran({ fundheld, fundtrans, filters }: Props) {
                         <td className="border p-3 text-right text-sm font-medium">
                           <span className={transaction.type === 'in' ? 'text-green-600' : 'text-red-600'}>
                             {transaction.type === 'in' ? '+' : '-'}
-                            {transaction.amount.toLocaleString()}
+                            {formatAmount(Number(transaction.amount))}
                           </span>
                         </td>
                         <td className="border p-3 text-sm">

@@ -70,9 +70,14 @@ $data['institute_id'] = session('sms_inst_id');
         $plant->update($data);
         return redirect()->back()->with('success', 'Plant updated successfully.');  }
     public function destroy(Plant $plant)
-    {if (!auth()->user()->can('plant-delete')) {
+    {
+        try{
+        if (!auth()->user()->can('plant-delete')) {
         abort(403, 'You do not have permission to delete a plant.');
     }
         $plant->delete();
-        return redirect()->back()->with('success', 'Plant deleted successfully.');}
+        return redirect()->back()->with('success', 'Plant deleted successfully.');
+    }catch(Exception $e){
+            return redirect()->back()->with('error', 'Plant deleted failed.'.$e->getMessage());
+        }}
 }

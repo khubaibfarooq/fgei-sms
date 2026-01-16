@@ -443,6 +443,9 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
                     Waiting
                   </option>
                 </select>
+                <Button onClick={() => updateFilters({ search, status: selectedStatus })}>
+                  Fetch
+                </Button>
               </div>
 
               <div className="space-y-3 flex-1 overflow-auto">
@@ -510,7 +513,7 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
                           </td>
                           <td className="border text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
                             <div className="flex items-center justify-center gap-2">
-                              {project.actual_cost || '-'}
+                              {project.actual_cost || ''}
                               {project.current_stage?.can_change_cost && !project.actual_cost && (
                                 <Button
                                   variant="ghost"
@@ -810,7 +813,7 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
                               className="w-full bg-blue-600 hover:bg-blue-700"
                               onClick={handleOpenPaymentModal}
                             >
-                              Request Next Payment
+                              Request Payment
                             </Button>
                           </div>
                         )}

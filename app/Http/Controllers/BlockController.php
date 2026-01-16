@@ -135,10 +135,14 @@ $permissions = [
         return redirect()->back()->with('success', 'Block updated successfully.');
     }
     public function destroy(Block $block)
-    {if (!auth()->user()->can('block-delete')) {
+    {
+        try{
+        if (!auth()->user()->can('block-delete')) {
         abort(403, 'You do not have permission to delete a block.');
     }
         $block->delete();   
         return redirect()->back()->with('success', 'Block deleted successfully.');
-    }
+    }catch(Exception $e){
+            return redirect()->back()->with('error', 'Block deleted failed.'.$e->getMessage());
+        }}
 }

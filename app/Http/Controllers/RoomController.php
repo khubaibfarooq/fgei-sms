@@ -171,9 +171,13 @@ $data['institute_id'] = session('sms_inst_id');
         return redirect()->back()->with('success', 'Room updated successfully.');}
     public function destroy(Room $room)
     { 
+        try{
         if (!auth()->user()->can('rooms-delete')) {
         abort(403, 'You do not have permission to delete Room.');
     }
         $room->delete();
-        return redirect()->back()->with('success', 'Room deleted successfully.');}
+        return redirect()->back()->with('success', 'Room deleted successfully.');
+        }catch(Exception $e){
+            return redirect()->back()->with('error', 'Room deleted failed.'.$e->getMessage());
+        }}
 }

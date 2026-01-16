@@ -45,6 +45,8 @@ interface ProjectFormProps {
     project_type_id: number | null;
     description: string | null;
     priority: string | null;
+    status: string | null;
+    approval_status: string | null;
     milestones?: Array<{
       id: number;
       name: string;
@@ -66,6 +68,8 @@ export default function ProjectForm({ project, projectTypes }: ProjectFormProps)
   const [name, setName] = useState(project?.name || '');
   const [estimatedCost, setEstimatedCost] = useState(project?.estimated_cost?.toString() || '');
   const [actualCost, setActualCost] = useState(project?.actual_cost?.toString() || '');
+  const [approvalStatus, setApprovalStatus] = useState(project?.approval_status || '');
+  const [status, setStatus] = useState(project?.status || '');
 
   const [finalComments, setFinalComments] = useState(project?.final_comments || '');
   const [projectTypeId, setProjectTypeId] = useState((project?.project_type_id || '').toString());
@@ -220,7 +224,7 @@ export default function ProjectForm({ project, projectTypes }: ProjectFormProps)
                 </div>
                 <div className="space-y-2">
                   <Label>Estimated Cost <span className="text-red-500">*</span></Label>
-                  <Input type="number" value={estimatedCost} onChange={e => setEstimatedCost(e.target.value)} required />
+                  <Input type="number" disabled={isEdit} value={estimatedCost} onChange={e => setEstimatedCost(e.target.value)} required />
                 </div>
 
                 <div className="space-y-2">
@@ -252,11 +256,18 @@ export default function ProjectForm({ project, projectTypes }: ProjectFormProps)
                 </div>
                 <div className="space-y-2 md:col-span-2">
                   <Label>Project PDF Document</Label>
-                  <Input
-                    type="file"
-                    accept=".pdf"
-                    onChange={e => setProjectPdf(e.target.files?.[0] || null)}
-                  />
+                  {
+                    (approvalStatus !== 'approved' || !existingPdf) && (
+
+                      <Input
+                        type="file"
+                        accept=".pdf"
+                        onChange={e => setProjectPdf(e.target.files?.[0] || null)}
+                      />
+
+                    )
+                  }
+
                   {existingPdf && !projectPdf && (
                     <a
                       href={`/assets/${existingPdf}`}
@@ -347,25 +358,28 @@ export default function ProjectForm({ project, projectTypes }: ProjectFormProps)
                           )}
                           {isEdit && (
                             <>
-                              <div className="space-y-2">
-                                <Label>Proof Image</Label>
-                                <Input
-                                  type="file"
-                                  accept="image/*"
-                                  onChange={e => handleImageChange(m.key, e.target.files?.[0] || null)}
-                                />
-                                {m.existingImg && !m.preview && (
-                                  <p className="text-xs text-muted-foreground mt-1">Has existing image</p>
-                                )}
-                              </div>
-
+                              {(m.status !== 'completed' || !m.existingPdf) && (
+                                <div className="space-y-2">
+                                  <Label>Proof Image</Label>
+                                  <Input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={e => handleImageChange(m.key, e.target.files?.[0] || null)}
+                                  />
+                                  {m.existingImg && !m.preview && (
+                                    <p className="text-xs text-muted-foreground mt-1">Has existing image</p>
+                                  )}
+                                </div>
+                              )}
                               <div className="space-y-2">
                                 <Label>Signed Document (PDF)</Label>
-                                <Input
-                                  type="file"
-                                  accept=".pdf"
-                                  onChange={e => updateMilestone(m.key, 'pdf', e.target.files?.[0] || null)}
-                                />
+                                {(m.status !== 'completed' || !m.existingPdf) && (
+                                  <Input
+                                    type="file"
+                                    accept=".pdf"
+                                    onChange={e => updateMilestone(m.key, 'pdf', e.target.files?.[0] || null)}
+                                  />
+                                )}
                                 {m.existingPdf && (
                                   <a href={`/${m.existingPdf}`} target="_blank" className="text-xs text-blue-500 underline mt-1 block">
                                     View PDF
@@ -385,15 +399,15 @@ export default function ProjectForm({ project, projectTypes }: ProjectFormProps)
                                     <span className="text-[10px] text-muted-foreground italic">No image</span>
                                   )}
                                 </div>
-
-                                <Button
-                                  type="button"
-                                  variant="destructive"
-                                  size="icon"
-                                  onClick={() => removeMilestone(m.key)}
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </Button>
+                                {m.status !== 'completed' && (
+                                  <Button
+                                    type="button"
+                                    variant="destructive"
+                                    size="icon"
+                                    onClick={() => removeMilestone(m.key)}
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </Button>)}
                               </div>
                             </>
                           )}

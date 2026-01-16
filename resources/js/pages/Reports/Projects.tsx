@@ -74,6 +74,7 @@ interface ProjectProp {
     id: number;
     level: string;
     stage_name: string;
+    users_can_approve: string;
   };
   fundhead?: {
     name: string;
@@ -211,10 +212,11 @@ export default function Projects({ projects: initialProjects, institutes, region
     // Normalize logic
     const userRole = (user.roles[0].name || '').toLowerCase(); // Assuming type/role property
     const level = stageLevel.toLowerCase();
+    const usercanApprove = project.current_stage?.users_can_approve ?? "";
 
     // Specific user requests
     if (level === 'regional' && userRole === 'region' && status !== "approved") return true;
-    if (level === 'dte' && (userRole === 'dirhrm' || userRole === 'directorate') && status !== "approved") return true;
+    if (level === 'dte' && (userRole === 'dirhrm' || userRole === 'directorate') && status !== "approved" && usercanApprove.includes(user.id)) return true;
 
 
     return false;

@@ -229,6 +229,7 @@ $projects = ProjectType::whereHas('projects', function($query) use ($request) {
         $regions = [];
         if($type == 'Regional Office'){
             // Fetch and filter institutes
+            if($request->institute_id && is_numeric($request->institute_id) && $request->institute_id > 0){
             $institutes = Institute::where('region_id', $regionid)
                 ->select('id', 'name')
                 ->get()
@@ -236,6 +237,16 @@ $projects = ProjectType::whereHas('projects', function($query) use ($request) {
                     return is_numeric($institute->id) && $institute->id > 0 && !empty(trim($institute->name));
                 })
                 ->values();
+            }
+            else{
+                $institutes = Institute::where('region_id', $regionid)
+                ->select('id', 'name')
+                ->get()
+                ->filter(function ($institute) {
+                    return is_numeric($institute->id) && $institute->id > 0 && !empty(trim($institute->name));
+                })
+                ->values();
+            }
         } else {
             $regions = Institute::select('region_id as id', 'name')
                 ->where('type', 'Regional Office')

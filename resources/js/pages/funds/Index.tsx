@@ -81,6 +81,14 @@ const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Funds', href: '/funds' },
 ];
 
+// Format amount: show in millions with "Mn" suffix if >= 1 million, otherwise show with locale formatting
+const formatAmount = (amount: number): string => {
+  if (amount >= 1000000) {
+    return `${(amount / 1000000).toFixed(2)} Mn`;
+  }
+  return amount.toLocaleString();
+};
+
 export default function FundIndex({ funds, filters, permissions }: Props) {
   const [search, setSearch] = useState(filters.search || '');
   const [selectedFund, setSelectedFund] = useState<Fund | null>(null);
@@ -160,7 +168,7 @@ export default function FundIndex({ funds, filters, permissions }: Props) {
                           {fund.fund_head.name}
                         </td>
                         <td className="border p-3  text-gray-900 dark:text-gray-100">
-                          {fund.balance.toLocaleString()}
+                          {formatAmount(fund.balance)}
                         </td>
                         <td className="border p-3  text-gray-900 dark:text-gray-100">
                           <div className="flex justify-center items-center gap-1">

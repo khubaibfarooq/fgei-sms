@@ -113,7 +113,7 @@ const getColumnsFromData = (data: TableRow[]): string[] => {
 };
 
 // Helper function to format cell value
-const formatCellValue = (value: any, columnName?: string, colIndex?: number): string => {
+const formatCellValue = (value: any, columnName?: string, colIndex?: number, tableName?: string): string => {
   if (value === null || value === undefined) return '-';
 
   // Check if it's a currency column (using column name for detection)
@@ -139,8 +139,8 @@ const formatCellValue = (value: any, columnName?: string, colIndex?: number): st
         return `${num.toLocaleString()}`;
       }
     }
-    // Capitalize first letter for the first column
-    if (colIndex === 1) {
+    // Capitalize first letter for the first column (skip for Funds table)
+    if (colIndex === 1 && tableName !== 'Funds') {
       return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
     }
     return value;
@@ -296,7 +296,7 @@ export default function Dashboard() {
               >
                 <Card
                   redirectLink={!item.redirectlink?.includes('/dashboard/completion') ? item.redirectlink : undefined}
-                  number={loading ? '...' : (item.label === 'Funds' || item.label === 'Institutes Funds' ? `${(item.value / 1000000).toFixed(2)}M` : item.value)}
+                  number={loading ? '...' : (item.label === 'Funds' || item.label === 'Institutes Funds' ? `${(item.value / 1000000).toFixed(2)}Mn` : item.value)}
                   title={item.label}
                   icon={iconName}
                   iconBgColor={item.color}
@@ -360,7 +360,7 @@ export default function Dashboard() {
                                 {table.columns.map((column, colIndex) => (
                                   column !== 'Key' && (
                                     <td key={colIndex} className={`py-3 px-4 text-sm md:text-lg ${theme.text}`}>
-                                      {formatCellValue(row[column], column, colIndex)}
+                                      {formatCellValue(row[column], column, colIndex, table.title)}
                                     </td>
                                   )
                                 ))}

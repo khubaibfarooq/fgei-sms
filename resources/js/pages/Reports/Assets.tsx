@@ -203,7 +203,7 @@ export default function Assets({ instituteAssets: instituteAssetsProp, institute
   useEffect(() => {
     if (institute) {
       setIsLoadingBlocks(true);
-      fetch(`/reports/blocks?institute_id=${institute}`)
+      fetch(`/reports/blocks/getBlocks?institute_id=${institute}&all=true`)
         .then((response) => response.json())
         .then((data) => {
           if (Array.isArray(data)) {
@@ -237,7 +237,7 @@ export default function Assets({ instituteAssets: instituteAssetsProp, institute
   useEffect(() => {
     if (block) {
       setIsLoadingRooms(true);
-      fetch(`/reports/rooms?block_id=${block}`)
+      fetch(`/reports/rooms/getRoomsReport?block_id=${block}&all=true`)
         .then((response) => response.json())
         .then((data) => {
           if (Array.isArray(data)) {
