@@ -561,7 +561,7 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
                           </td>
                           <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
                             {/* Pending Stage Logic Placeholder */}
-                            {project.current_stage?.stage_name || 'Waiting'}
+                            {project.current_stage?.stage_name || 'Held with Regional Office'}
                           </td>
                           <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
                             {project.final_comments || '-'}

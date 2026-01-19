@@ -216,7 +216,7 @@ export default function Projects({ projects: initialProjects, institutes, region
 
     // Specific user requests
     if (level === 'regional' && userRole === 'region' && status !== "approved") return true;
-    if (level === 'dte' && (userRole === 'dirhrm' || userRole === 'directorate') && status !== "approved" && usercanApprove.includes(user.id)) return true;
+    if (level === 'dte' && (userRole === 'dirhrm' || userRole === 'directorate' || userRole === 'sms_tech_approval') && status !== "approved" && usercanApprove.includes(user.id)) return true;
 
 
     return false;
