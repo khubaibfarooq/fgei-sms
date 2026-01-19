@@ -190,6 +190,19 @@ export default function PendingTrans({ transactions, summary, fundHeads, balance
         }).format(num);
     };
 
+    const formatBalance = (amount: any): string => {
+        const num = typeof amount === 'number' ? amount : parseFloat(String(amount).replace(/,/g, '')) || 0;
+        if (num >= 1000000) {
+            return `${(num / 1000000).toFixed(2)} Mn`;
+        }
+        return new Intl.NumberFormat('ur-PK', {
+            style: 'currency',
+            currency: 'PKR',
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0,
+        }).format(num);
+    };
+
     const [search, setSearch] = useState(filters.search || '');
     const [fromDate, setFromDate] = useState(filters.from || '');
     const [toDate, setToDate] = useState(filters.to || '');
@@ -450,7 +463,7 @@ export default function PendingTrans({ transactions, summary, fundHeads, balance
                                                 {b.fund_head.name}
                                             </p>
                                             <p className="text-xl font-bold text-green-600 dark:text-green-400 mt-2">
-                                                {formatCurrency(b.balance)}
+                                                {formatBalance(b.balance)}
                                             </p>
                                         </div>
                                     ))}
@@ -544,7 +557,7 @@ export default function PendingTrans({ transactions, summary, fundHeads, balance
                                                 <td className="border p-3 text-right text-sm font-medium">
                                                     <span className={transaction.type === 'in' ? 'text-green-600' : 'text-red-600'}>
                                                         {transaction.type === 'in' ? '+' : '-'}
-                                                        {transaction.amount.toLocaleString()}
+                                                        {formatBalance(transaction.amount)}
                                                     </span>
                                                 </td>
                                                 <td className="border p-3 text-sm">

@@ -62,6 +62,7 @@ Route::middleware(['auth', 'menu.permission'])->group(function () {
 //Dashboard API routes
     Route::get('/api/getcompeletion', [DashboardController::class, 'getProfilePercentage']);
     Route::get('/api/getregions', [DashboardController::class, 'getRegions']);
+    Route::get('/api/getpendingrequests', [DashboardController::class, 'getPendingRequests']);
 
     // Notification routes
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
