@@ -8,7 +8,7 @@ use App\Models\BlockType;
 use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver;
 use Illuminate\Support\Facades\File;
-
+use Illuminate\Support\Facades\DB;
 class BlockController extends Controller
 {
     public function index(Request $request)
@@ -139,6 +139,21 @@ $permissions = [
         try{
         if (!auth()->user()->can('block-delete')) {
         abort(403, 'You do not have permission to delete a block.');
+    }
+    $rooms=DB::table('rooms')->where('block_id', $block->id)->get();
+    $trans=DB::table('transaction_details')->where('block_id', $block->id)->get();
+
+    if($rooms->count()>0){
+        return redirect()->back()->with('error', 'Block has rooms. Please delete the rooms first.');
+    }
+       if($trans->count()>0){
+            return redirect()->back()->with('error', 'Block has transactions. Please delete the transactions first.');
+           }
+    if ($block->img) {
+        $oldPath = public_path('assets/block_img/' . $block->img);
+        if (File::exists($oldPath)) {
+            File::delete($oldPath);
+        }
     }
         $block->delete();   
         return redirect()->back()->with('success', 'Block deleted successfully.');

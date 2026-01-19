@@ -11,6 +11,7 @@ use Inertia\Inertia;
 use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\DB;
 class RoomController extends Controller
 {
  public function index(Request $request)
@@ -172,8 +173,23 @@ $data['institute_id'] = session('sms_inst_id');
     public function destroy(Room $room)
     { 
         try{
+         
         if (!auth()->user()->can('rooms-delete')) {
         abort(403, 'You do not have permission to delete Room.');
+    }
+   $assets=DB::table('institute_assets')->where('room_id', $room->id)->get();
+            $trans=DB::table('transaction_details')->where('room_id', $room->id)->get();
+           if($assets->count()>0){
+            return redirect()->back()->with('error', 'Room has assets. Please delete the assets first.');
+           }
+           if($trans->count()>0){
+            return redirect()->back()->with('error', 'Room has transactions. Please delete the transactions first.');
+           }
+    if ($room->img) {
+        $oldPath = public_path('assets/room_img/' . $room->img);
+        if (File::exists($oldPath)) {
+            File::delete($oldPath);
+        }
     }
         $room->delete();
         return redirect()->back()->with('success', 'Room deleted successfully.');

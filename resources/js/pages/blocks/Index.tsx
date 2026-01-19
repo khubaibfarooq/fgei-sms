@@ -60,7 +60,7 @@ export default function BlockIndex({ blocks, filters, permissions }: Props) {
 
   const handleDelete = (id: number) => {
     router.delete(`/blocks/${id}`, {
-      onSuccess: () => toast.success('Block deleted successfully'),
+
       onError: () => toast.error('Failed to delete block'),
     });
   };
@@ -132,7 +132,7 @@ export default function BlockIndex({ blocks, filters, permissions }: Props) {
                       <tr key={block.id} className="hover:bg-primary/10 dark:hover:bg-gray-700 text-center
                     ">
                         <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
-                          <div className='flex flex-col gap-2 align-middle'> <ImagePreview dataImg={block.img} size="h-20" />  <span className='font-bold'>{block.name}</span></div>
+                          <div className='flex flex-row gap-2 align-middle'> <ImagePreview dataImg={block.img} size="h-20 w-20" />  <span className='font-bold'>{block.name}</span></div>
                         </td>
                         <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
                           {block.establish_date || 'N/A'}

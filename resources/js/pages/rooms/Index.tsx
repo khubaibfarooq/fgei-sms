@@ -101,7 +101,6 @@ export default function RoomIndex({ rooms, filters, blocks, roomtypes, permissio
 
   const handleDelete = (id: number) => {
     router.delete(`/rooms/${id}`, {
-      onSuccess: () => toast.success('Room deleted successfully'),
       onError: () => toast.error('Failed to delete room'),
     });
   };
