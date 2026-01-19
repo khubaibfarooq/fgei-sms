@@ -223,6 +223,13 @@ export default function FundIndex({ funds, filters, permissions }: Props) {
                     ))
                   )}
                 </tbody>
+                <tfoot>
+                  <tr className="bg-primary dark:bg-gray-800 text-center text-sm md:text-md lg:text-lg ">
+                    <th className="border p-2  font-medium text-white dark:text-gray-200">Total</th>
+                    <th className="border p-2  font-medium text-white dark:text-gray-200">{formatAmount(funds.data.reduce((total, fund) => Number(total) + Number(fund.balance), 0))}</th>
+                    <th className="border p-2  font-medium text-white dark:text-gray-200"></th>
+                  </tr>
+                </tfoot>
               </table>
             </div>
 
