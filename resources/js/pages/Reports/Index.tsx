@@ -185,7 +185,18 @@ export default function InstitutionalReportIndex({ institute: initialInstitute =
   const [projectsOpen, setProjectsOpen] = useState(false);
   const [transports, setTransports] = useState<Transport[]>(initialTransports);
   const [transportsOpen, setTransportsOpen] = useState(false);
-
+  const formatBalance = (amount: any): string => {
+    const num = typeof amount === 'number' ? amount : parseFloat(String(amount).replace(/,/g, '')) || 0;
+    if (num >= 1000000) {
+      return `${(num / 1000000).toFixed(2)} Mn`;
+    }
+    return new Intl.NumberFormat('ur-PK', {
+      style: 'currency',
+      currency: 'PKR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(num);
+  };
 
   const memoizedInstitutes = useMemo(() => institutes.filter(isValidItem), [institutes]);
   const memoizedRegions = useMemo(() => regions.filter(isValidItem), [regions]);
@@ -808,7 +819,7 @@ export default function InstitutionalReportIndex({ institute: initialInstitute =
                   <div className="overflow-x-auto">
                     <table className="w-full border-collapse rounded-md overflow-hidden shadow-sm border-1">
                       <thead>
-                        <tr className="bg-[#0b431b] dark:bg-gray-800">
+                        <tr className="bg-primary dark:bg-gray-800">
                           <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Name</th>
                           <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Building Name</th>
                           <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Building Type</th>
@@ -853,7 +864,7 @@ export default function InstitutionalReportIndex({ institute: initialInstitute =
                   <div className="overflow-x-auto">
                     <table className="w-full border-collapse rounded-md overflow-hidden shadow-sm border-1">
                       <thead>
-                        <tr className="bg-[#0b431b] dark:bg-gray-800">
+                        <tr className="bg-primary dark:bg-gray-800">
                           <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Name</th>
                           <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Area (sq ft)</th>
                           <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Establish Date</th>
@@ -904,7 +915,7 @@ export default function InstitutionalReportIndex({ institute: initialInstitute =
                   <div className="overflow-x-auto">
                     <table className="w-full border-collapse rounded-md overflow-hidden shadow-sm border-1">
                       <thead>
-                        <tr className="bg-[#0b431b] dark:bg-gray-800">
+                        <tr className="bg-primary dark:bg-gray-800">
                           <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Block</th>
                           <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Name</th>
                           <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Area (sq ft)</th>
@@ -952,7 +963,7 @@ export default function InstitutionalReportIndex({ institute: initialInstitute =
                   <div className="overflow-x-auto">
                     <table className="w-full border-collapse rounded-md overflow-hidden shadow-sm border-1">
                       <thead>
-                        <tr className="bg-[#0b431b] dark:bg-gray-800">
+                        <tr className="bg-primary dark:bg-gray-800">
                           <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Asset Name</th>
 
                           <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Total Quantity</th>
@@ -1003,7 +1014,7 @@ export default function InstitutionalReportIndex({ institute: initialInstitute =
                   <div className="overflow-x-auto">
                     <table className="w-full border-collapse rounded-md overflow-hidden shadow-sm border-1">
                       <thead>
-                        <tr className="bg-[#0b431b] dark:bg-gray-800">
+                        <tr className="bg-primary dark:bg-gray-800">
                           <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Details</th>
                           <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Date from</th>
                           <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Date to</th>
@@ -1054,7 +1065,7 @@ export default function InstitutionalReportIndex({ institute: initialInstitute =
                   <div className="overflow-x-auto">
                     <table className="w-full border-collapse rounded-md overflow-hidden shadow-sm border-1">
                       <thead>
-                        <tr className="bg-[#0b431b] dark:bg-gray-800">
+                        <tr className="bg-primary dark:bg-gray-800">
                           <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Project Type</th>
                           <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Completed</th>
                           <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">In Progress</th>
@@ -1105,7 +1116,7 @@ export default function InstitutionalReportIndex({ institute: initialInstitute =
                   <div className="overflow-x-auto">
                     <table className="w-full border-collapse rounded-md overflow-hidden shadow-sm border-1">
                       <thead>
-                        <tr className="bg-[#0b431b] dark:bg-gray-800">
+                        <tr className="bg-primary dark:bg-gray-800">
                           <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Fund Head</th>
                           <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Balance</th>
                         </tr>
@@ -1114,12 +1125,12 @@ export default function InstitutionalReportIndex({ institute: initialInstitute =
                         {funds.map((f) => (
                           <tr key={f.id} className="hover:bg-primary/10  dark:hover:bg-gray-700">
                             <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{f.fund_head?.name}</td>
-                            <td className="border p-2 text-sm text-gray-900 dark:text-gray-100 font-bold">{f.balance}</td>
+                            <td className="border p-2 text-sm text-gray-900 dark:text-gray-100 font-bold">{formatBalance(f.balance)}</td>
                           </tr>
                         ))}
                         <tr>
-                          <td className="border p-2 text-sm text-gray-900 font-bold dark:text-gray-100">Total</td>
-                          <td className="border p-2 text-sm text-gray-900 font-bold dark:text-gray-100">{funds.reduce((total, f) => Number(total) + Number(f.balance), 0)}</td>
+                          <td className="border p-2 text-md text-gray-900 font-bold dark:text-gray-100">Total</td>
+                          <td className="border p-2 text-md text-gray-900 font-bold dark:text-gray-100">{formatBalance(funds.reduce((total, f) => Number(total) + Number(f.balance), 0))}</td>
                         </tr>
                       </tbody>
                     </table>
@@ -1152,7 +1163,7 @@ export default function InstitutionalReportIndex({ institute: initialInstitute =
                   <div className="overflow-x-auto">
                     <table className="w-full border-collapse rounded-md overflow-hidden shadow-sm border-1">
                       <thead>
-                        <tr className="bg-[#0b431b] dark:bg-gray-800">
+                        <tr className="bg-primary dark:bg-gray-800">
                           <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Vehicle No</th>
                           <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Vehicle Type</th>
                         </tr>
