@@ -129,6 +129,7 @@ interface ProjectDetails {
         approval_status: string;
         priority: string;
         institute: { name: string };
+        description: string;
     };
     history: ApprovalHistory[];
     milestones: Milestone[];
@@ -263,7 +264,8 @@ export default function PendingTrans({ transactions, summary, fundHeads, balance
                     status: tx.status,
                     approval_status: tx.status,
                     priority: '',
-                    institute: tx.institute
+                    institute: tx.institute,
+                    description: tx.description,
                 },
                 history: historyRes.data,
                 milestones: milestonesRes.data,
@@ -822,6 +824,10 @@ export default function PendingTrans({ transactions, summary, fundHeads, balance
                         </DialogTitle>
                         <DialogDescription>
                             {projectDetails?.project.institute.name}
+                            <p className="text-sm text-muted-foreground">Description: {projectDetails?.project.description}</p>
+                            <p className="text-sm text-muted-foreground">Estimated Cost: {projectDetails?.project.estimated_cost}</p>
+                            <p className="text-sm text-muted-foreground">Actual Cost: {projectDetails?.project.actual_cost}</p>
+
                         </DialogDescription>
                     </DialogHeader>
 
