@@ -499,8 +499,9 @@ $link3="/reports/projects?status=";
     
      $tab2 = DB::table('fund_helds')->join('institutes', 'fund_helds.institute_id', '=', 'institutes.id')
      ->where('institutes.region_id', $regionId)
-    ->select( 'fund_heads.id as Key','fund_heads.name as Head','fund_helds.balance',)
+    ->select( 'fund_heads.id as Key','fund_heads.name as Head',   DB::raw('SUM(fund_helds.balance) as balance'))
             ->join('fund_heads', 'fund_heads.id', '=', 'fund_helds.fund_head_id')
+            ->groupBy('fund_heads.id')
             ->get();
         $tab3 = DB::table('projects')->join('institutes', 'projects.institute_id', '=', 'institutes.id')
     ->where('institutes.region_id', $regionId)
