@@ -26,6 +26,17 @@ else{
 }
         return response()->json(['count' => $count]);
     }
+    public function getPendingRequests()
+    { $regionId = session('region_id');
+        $inst_id=session('sms_inst_id');
+$role_type=session('type');
+if($role_type=="Regional Office")
+        $count =  DB::table('funds')->where('institute_id',$inst_id)->where('status','Pending')->count();
+else{
+     $count =  DB::table('funds')->where('status','Pending')->count();
+}
+        return response()->json(['count' => $count]);
+    }
      public function getUsers()
     { 
         $count =  DB::table('users')->count();
