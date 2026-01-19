@@ -91,6 +91,7 @@ interface Payment {
     amount: number;
     status: string;
     added_date: string;
+    img: string;
     description: string | null;
     fund_head?: {
         name: string;
@@ -130,6 +131,7 @@ interface ProjectDetails {
         priority: string;
         institute: { name: string };
         description: string;
+        pdf: string | null;
     };
     history: ApprovalHistory[];
     milestones: Milestone[];
@@ -249,23 +251,25 @@ export default function PendingTrans({ transactions, summary, fundHeads, balance
         setProjectModalOpen(true);
         setLoadingDetails(true);
         try {
-            const [historyRes, milestonesRes, paymentsRes] = await Promise.all([
+            const [projectDetailsRes, historyRes, milestonesRes, paymentsRes] = await Promise.all([
+                axios.get(`/projects/${projectId}/project-details`),
                 axios.get(`/projects/${projectId}/history`),
                 axios.get(`/projects/${projectId}/milestones`),
                 axios.get(`/projects/${projectId}/payments`)
             ]);
-
+            //  console.log(milestonesRes.data);
             setProjectDetails({
                 project: {
                     id: projectId,
-                    name: tx.description,
-                    estimated_cost: tx.amount,
-                    actual_cost: null,
-                    status: tx.status,
-                    approval_status: tx.status,
-                    priority: '',
-                    institute: tx.institute,
-                    description: tx.description,
+                    name: projectDetailsRes.data.name,
+                    estimated_cost: projectDetailsRes.data.estimated_cost,
+                    actual_cost: projectDetailsRes.data.actual_cost,
+                    status: projectDetailsRes.data.status,
+                    approval_status: projectDetailsRes.data.approval_status,
+                    priority: projectDetailsRes.data.priority,
+                    institute: projectDetailsRes.data.institute,
+                    description: projectDetailsRes.data.description,
+                    pdf: projectDetailsRes.data.pdf,
                 },
                 history: historyRes.data,
                 milestones: milestonesRes.data,
@@ -820,14 +824,23 @@ export default function PendingTrans({ transactions, summary, fundHeads, balance
                     <DialogHeader className="p-6 pb-0">
                         <DialogTitle className="text-xl font-bold flex items-center gap-2">
                             <Building className="h-5 w-5 text-primary" />
-                            {projectDetails?.project.name}
+                            Request for {selectedTxDetail?.amount} RS
+                            ({projectDetails?.project.name})
                         </DialogTitle>
                         <DialogDescription>
                             {projectDetails?.project.institute.name}
 
-                            {/* <p className="text-sm text-muted-foreground">Estimated Cost: {projectDetails?.project.estimated_cost}</p>
-                            <p className="text-sm text-muted-foreground">Actual Cost: {projectDetails?.project.actual_cost}</p> */}
-
+                            <p className="text-sm text-muted-foreground">Estimated Cost: {projectDetails?.project.estimated_cost}</p>
+                            <p className="text-sm text-muted-foreground">Actual Cost: {projectDetails?.project.actual_cost}</p>
+                            {projectDetails?.project.pdf && (
+                                <a
+                                    href={`/${projectDetails?.project.pdf}`}
+                                    target="_blank"
+                                    className="mt-1 text-blue-600 underline text-xs flex items-center gap-1"
+                                >
+                                    View PDF
+                                </a>
+                            )}
                         </DialogDescription>
                     </DialogHeader>
 
@@ -860,6 +873,23 @@ export default function PendingTrans({ transactions, summary, fundHeads, balance
                                                             </div>
                                                             <p className="text-xs text-muted-foreground flex items-center gap-1"><User className="h-3 w-3" /> {record.approver?.name} • <Clock className="h-3 w-3 ml-1" /> {new Date(record.action_date).toLocaleString()}</p>
                                                             {record.comments && <p className="text-sm bg-muted/50 p-2 rounded mt-2 border italic">"{record.comments}"</p>}
+                                                            {record.pdf && (
+                                                                <a
+                                                                    href={`/${record.pdf}`}
+                                                                    target="_blank"
+                                                                    className="mt-1 text-blue-600 underline text-xs flex items-center gap-1"
+                                                                >
+                                                                    View PDF
+                                                                </a>)}
+                                                            {record.img && (
+                                                                <div className="mt-2">
+                                                                    <ImagePreview
+                                                                        dataImg={record.img}
+                                                                        size="h-20"
+                                                                        className="rounded border"
+                                                                    />
+                                                                </div>
+                                                            )}
                                                         </div>
                                                     </div>
                                                 </Card>
@@ -879,6 +909,24 @@ export default function PendingTrans({ transactions, summary, fundHeads, balance
                                                         <p className="font-semibold text-sm">{milestone.name}</p>
                                                         <Badge variant={milestone.status === 'completed' ? 'default' : 'outline'} className="text-[10px]">{milestone.status}</Badge>
                                                     </div>
+                                                    {milestone.img && (
+                                                        <div className="mb-2">
+                                                            <ImagePreview
+                                                                dataImg={milestone.img}
+                                                                size="h-32"
+                                                                className="w-full object-cover rounded-md"
+                                                            />
+                                                        </div>
+                                                    )}
+                                                    {milestone.pdf && (
+                                                        <a
+                                                            href={`/${milestone.pdf}`}
+                                                            target="_blank"
+                                                            className="mb-2 text-blue-600 underline text-xs flex items-center gap-1"
+                                                        >
+                                                            View Document (PDF)
+                                                        </a>
+                                                    )}
                                                     <div className="text-[10px] text-muted-foreground space-y-1">
                                                         <p className="flex items-center gap-1"><Calendar className="h-3 w-3" /> Due in: {milestone.days} days</p>
                                                         {milestone.completed_date && <p className="flex items-center gap-1 text-green-600"><CheckCircle className="h-3 w-3" /> Done: {new Date(milestone.completed_date).toLocaleDateString()}</p>}
@@ -902,6 +950,15 @@ export default function PendingTrans({ transactions, summary, fundHeads, balance
                                                         <p className="text-xs text-muted-foreground">{payment.fund_head?.name || 'General Fund'} • {new Date(payment.added_date).toLocaleDateString()}</p>
                                                     </div>
                                                     <Badge variant={payment.status === 'Approved' ? 'default' : 'outline'}>{payment.status}</Badge>
+                                                    {payment.img && (
+                                                        <div className="mt-2">
+                                                            <ImagePreview
+                                                                dataImg={payment.img}
+                                                                size="h-20"
+                                                                className="rounded border"
+                                                            />
+                                                        </div>
+                                                    )}
                                                 </div>
                                             ))}
                                         </div>

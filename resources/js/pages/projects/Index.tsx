@@ -96,6 +96,8 @@ interface Payment {
   amount: number;
   status: string;
   added_date: string;
+  img: string | null;
+
   description: string | null;
   fund_head?: {
     name: string;
@@ -846,6 +848,16 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
                                 "{payment.description}"
                               </p>
                             )}
+
+                            {payment.img && (
+                              <div className="mt-2">
+                                <ImagePreview
+                                  dataImg={payment.img}
+                                  size="h-20"
+                                  className="rounded border"
+                                />
+                              </div>
+                            )}
                           </CardContent>
                         </Card>
                       ))}
@@ -866,7 +878,7 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
                               className="w-full bg-blue-600 hover:bg-blue-700"
                               onClick={handleOpenPaymentModal}
                             >
-                              Request Next Payment
+                              Request  Payment
                             </Button>
                           </div>
                         ) : null;

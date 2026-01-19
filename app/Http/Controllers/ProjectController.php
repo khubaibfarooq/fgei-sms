@@ -381,7 +381,7 @@ public function update(Request $request, Project $project)
 
     public function milestones(Project $project)
     {
-        return response()->json($project->milestones()->orderBy('days')->get());
+        return response()->json($project->milestones()->get());
     }
 
     public function payments(Project $project)
@@ -446,7 +446,10 @@ public function update(Request $request, Project $project)
 
         return response()->json(['success' => true, 'message' => 'Payment request created successfully.']);
     }
-
+public function projectDetails(Project $project)
+{$project->load('institute');
+    return response()->json($project);
+}
     public function updateCompletion(Request $request, Project $project)
     {
         $request->validate([
