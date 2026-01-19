@@ -834,7 +834,7 @@ export default function PendingTrans({ transactions, summary, fundHeads, balance
                             <p className="text-sm text-muted-foreground">Actual Cost: {projectDetails?.project.actual_cost}</p>
                             {projectDetails?.project.pdf && (
                                 <a
-                                    href={`/${projectDetails?.project.pdf}`}
+                                    href={`/assets/${projectDetails?.project.pdf}`}
                                     target="_blank"
                                     className="mt-1 text-blue-600 underline text-xs flex items-center gap-1"
                                 >
