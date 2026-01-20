@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { type BreadcrumbItem } from '@/types';
 import { toast } from 'sonner';
 import Combobox from '@/components/ui/combobox';
@@ -12,7 +13,7 @@ import ExcelJS from 'exceljs';
 import FileSaver from 'file-saver';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { DollarSign } from 'lucide-react';
+import { DollarSign, FileText } from 'lucide-react';
 
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -63,6 +64,8 @@ export default function Funds({
   const [funds, setFunds] = useState<FundItem[]>(initialFunds);
   const [balances, setBalances] = useState<BalanceItem[]>(initialBalances);
   const [filteredInstitutes, setFilteredInstitutes] = useState<Item[]>(initialInstitutes);
+  const [selectedRegions, setSelectedRegions] = useState<number[]>([]);
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
 
   // Convert any string/number → number safely
   const toNumber = (value: any): number => {
@@ -159,6 +162,185 @@ export default function Funds({
     doc.save('Funds_Report.pdf');
   };
 
+  // Toggle region selection for PDF report
+  const toggleRegionSelection = (regionId: number) => {
+    setSelectedRegions(prev =>
+      prev.includes(regionId)
+        ? prev.filter(id => id !== regionId)
+        : [...prev, regionId]
+    );
+  };
+
+  // Select/Deselect all regions
+  const toggleAllRegions = () => {
+    if (selectedRegions.length === regions.length) {
+      setSelectedRegions([]);
+    } else {
+      setSelectedRegions(regions.map(r => r.id));
+    }
+  };
+
+  // Format number for PDF (compact)
+  const formatPDFNumber = (num: number): string => {
+    if (num >= 1000000) {
+      return (num / 1000000).toFixed(2) + 'M';
+    }
+    return num.toLocaleString();
+  };
+
+  // Generate PDF Report with 3 tables
+  const generatePDFReport = async (regionIds?: number[]) => {
+    const regionsToUse = regionIds || selectedRegions;
+    if (regionsToUse.length === 0) {
+      toast.error('Please select at least one region');
+      return;
+    }
+
+    setIsGeneratingPDF(true);
+    try {
+      const params = new URLSearchParams();
+      regionsToUse.forEach(id => params.append('region_ids[]', id.toString()));
+
+      const res = await fetch(`/reports/funds/regional-pdf-data?${params.toString()}`);
+      if (!res.ok) throw new Error('Failed to fetch data');
+
+      const data = await res.json();
+      const { fundHeads, table1, table2, table3, reportDate } = data;
+
+      const doc = new jsPDF('l', 'mm', 'a4');
+      const pageWidth = doc.internal.pageSize.getWidth();
+      let yPos = 15;
+
+      // ========== TABLE 1: Present Balance Held With Regional Office (Anx-A) ==========
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Anx-A', pageWidth - 20, yPos, { align: 'right' });
+      doc.text(`Present Balance Held With Regional Office as on ${reportDate}`, pageWidth / 2, yPos, { align: 'center' });
+      yPos += 5;
+
+      const t1Headers = ['Detail', ...fundHeads.map((fh: Item) => fh.name), 'Remarks'];
+      const t1Rows = table1.map((row: any) => [
+        row.region_name,
+        ...fundHeads.map((fh: Item) => formatPDFNumber(row.fund_heads[fh.name] || 0)),
+        ''
+      ]);
+
+      // Calculate totals for Table 1
+      const t1Totals = ['G. Total'];
+      fundHeads.forEach((fh: Item) => {
+        const sum = table1.reduce((acc: number, row: any) => acc + (row.fund_heads[fh.name] || 0), 0);
+        t1Totals.push(formatPDFNumber(sum));
+      });
+      t1Totals.push('');
+      t1Rows.push(t1Totals);
+
+      autoTable(doc, {
+        head: [t1Headers],
+        body: t1Rows,
+        startY: yPos,
+        theme: 'grid',
+        styles: { fontSize: 9, cellPadding: 2 },
+        headStyles: { fillColor: [66, 66, 66], textColor: 255 },
+        columnStyles: { 0: { fontStyle: 'bold' } },
+      });
+
+      yPos = (doc as any).lastAutoTable.finalY + 15;
+
+      // ========== TABLE 2: Balance Held With Institutions (Anx-B) ==========
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Anx-B', pageWidth - 20, yPos, { align: 'right' });
+      doc.text('Balance Held With Institutions (Still Not deposit to RO)', pageWidth / 2, yPos, { align: 'center' });
+      yPos += 5;
+
+      const t2Headers = ['Detail', ...fundHeads.map((fh: Item) => fh.name)];
+      const t2Rows = table2.map((row: any) => [
+        row.region_name,
+        ...fundHeads.map((fh: Item) => formatPDFNumber(row.fund_heads[fh.name] || 0)),
+      ]);
+
+      // Calculate totals for Table 2
+      const t2Totals = ['G.Total'];
+      fundHeads.forEach((fh: Item) => {
+        const sum = table2.reduce((acc: number, row: any) => acc + (row.fund_heads[fh.name] || 0), 0);
+        t2Totals.push(formatPDFNumber(sum));
+      });
+      t2Rows.push(t2Totals);
+
+      autoTable(doc, {
+        head: [t2Headers],
+        body: t2Rows,
+        startY: yPos,
+        theme: 'grid',
+        styles: { fontSize: 9, cellPadding: 2 },
+        headStyles: { fillColor: [66, 66, 66], textColor: 255 },
+        columnStyles: { 0: { fontStyle: 'bold' } },
+      });
+
+      yPos = (doc as any).lastAutoTable.finalY + 15;
+
+      // Check if we need a new page
+      if (yPos > doc.internal.pageSize.getHeight() - 60) {
+        doc.addPage();
+        yPos = 15;
+      }
+
+      // ========== TABLE 3: Combined Summary with Exp Approved (Anx-C) ==========
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Anx-C', pageWidth - 20, yPos, { align: 'right' });
+      yPos += 5;
+
+      const t3Headers = ['Detail', ...fundHeads.map((fh: Item) => fh.name), 'Exp Approved'];
+      const t3Rows = table3.map((row: any) => {
+        const expApprovedItems = fundHeads.map((fh: Item) => {
+          const expData = row.exp_approved[fh.name];
+          if (!expData || expData.total === 0) return '';
+
+          // Format: "Fund Head: Total - Paid, Remaining"
+          const total = formatPDFNumber(expData.total);
+          const paid = formatPDFNumber(expData.paid);
+          const remaining = formatPDFNumber(expData.remaining);
+
+          return `${fh.name}: Rs.${total} - Rs.${paid}, Rs.${remaining}`;
+        }).filter(Boolean);
+
+        return [
+          row.region_name,
+          ...fundHeads.map((fh: Item) => formatPDFNumber(row.fund_heads[fh.name] || 0)),
+          expApprovedItems.join('\n') || '-'
+        ];
+      });
+
+      // Calculate totals for Table 3
+      const t3Totals = ['G.Total'];
+      fundHeads.forEach((fh: Item) => {
+        const sum = table3.reduce((acc: number, row: any) => acc + (row.fund_heads[fh.name] || 0), 0);
+        t3Totals.push(formatPDFNumber(sum));
+      });
+      t3Totals.push('');
+      t3Rows.push(t3Totals);
+
+      autoTable(doc, {
+        head: [t3Headers],
+        body: t3Rows,
+        startY: yPos,
+        theme: 'grid',
+        styles: { fontSize: 9, cellPadding: 2 },
+        headStyles: { fillColor: [66, 66, 66], textColor: 255 },
+        columnStyles: { 0: { fontStyle: 'bold' } },
+      });
+
+      doc.save(`Regional_Fund_Report_${reportDate.replace(/ /g, '_')}.pdf`);
+      toast.success('PDF report generated successfully');
+    } catch (error) {
+      console.error(error);
+      toast.error('Failed to generate PDF report');
+    } finally {
+      setIsGeneratingPDF(false);
+    }
+  };
+
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Funds Report" />
@@ -235,6 +417,86 @@ export default function Funds({
           </CardContent>
 
           <Separator />
+
+          {/* Region Selection for PDF Report - Only show when regions are available */}
+          {regions.length > 0 && (
+            <>
+              <CardContent className="pt-6 pb-4">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold flex items-center gap-2">
+                      <FileText className="h-5 w-5" />
+                      Generate Regional Fund Report
+                      {region && region !== '0' && (
+                        <span className="text-sm font-normal text-muted-foreground">
+                          ({regions.find(r => r.id.toString() === region)?.name.split(' ').pop() || 'Selected Region'})
+                        </span>
+                      )}
+                    </h3>
+                    <div className="flex items-center gap-4">
+                      {/* Show Select All only when no specific region is selected */}
+                      {(!region || region === '0') && (
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <Checkbox
+                            checked={selectedRegions.length === regions.length && regions.length > 0}
+                            onCheckedChange={toggleAllRegions}
+                          />
+                          <span className="text-sm font-medium">Select All</span>
+                        </label>
+                      )}
+                      <Button
+                        onClick={() => {
+                          // If a region is selected, generate report for that region only
+                          if (region && region !== '0') {
+                            generatePDFReport([parseInt(region)]);
+                          } else {
+                            generatePDFReport();
+                          }
+                        }}
+                        disabled={((!region || region === '0') && selectedRegions.length === 0) || isGeneratingPDF}
+                        className="gap-2"
+                      >
+                        <FileText className="h-4 w-4" />
+                        {isGeneratingPDF ? 'Generating...' : 'Create Report'}
+                      </Button>
+                    </div>
+                  </div>
+                  {/* Show checkboxes only when no specific region is selected */}
+                  {(!region || region === '0') && (
+                    <>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                        {regions.map(r => {
+                          const shortName = r.name.split(' ').pop() || r.name;
+                          return (
+                            <label
+                              key={r.id}
+                              className={`flex items-center gap-2 p-3 rounded-lg border cursor-pointer transition-all ${selectedRegions.includes(r.id)
+                                ? 'bg-primary/10 border-primary'
+                                : 'hover:bg-muted/50 border-border'
+                                }`}
+                            >
+                              <Checkbox
+                                checked={selectedRegions.includes(r.id)}
+                                onCheckedChange={() => toggleRegionSelection(r.id)}
+                              />
+                              <span className="text-sm font-medium">{shortName}</span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                      {selectedRegions.length > 0 && (
+                        <p className="text-sm text-muted-foreground">
+                          {selectedRegions.length} region(s) selected for report
+                        </p>
+                      )}
+                    </>
+                  )}
+                </div>
+              </CardContent>
+              <Separator />
+            </>
+          )}
+
 
           {/* Total Balance Summary */}
           <CardContent className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-900 py-6">

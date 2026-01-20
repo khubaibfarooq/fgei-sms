@@ -2546,4 +2546,170 @@ if($type=="Regional Office"){
             'criteria' => $criteria
         ]);
     }
+
+    // --------------------------------------------------------------------- //
+    // REGIONAL PDF REPORT DATA
+    // --------------------------------------------------------------------- //
+    public function getRegionalPDFReport(Request $request)
+    {
+        $regionIds = $request->input('region_ids', []);
+        
+        if (empty($regionIds)) {
+            return response()->json(['error' => 'No regions selected'], 400);
+        }
+
+        // Get regional fund heads only
+        $regionalFundHeads = FundHead::where('type', 'regional')
+            ->select('id', 'name')
+            ->orderBy('id')
+            ->get();
+
+        // Get region names for the selected regions
+        $regions = Institute::whereIn('region_id', $regionIds)
+            ->where('type', 'Regional Office')
+            ->select('region_id', 'name')
+            ->get()
+            ->keyBy('region_id');
+
+        // Table 1: Present Balance Held With Regional Office (fund_helds from Regional Office type institutes)
+        $table1Query = FundHeld::query()
+            ->join('fund_heads', 'fund_helds.fund_head_id', '=', 'fund_heads.id')
+            ->join('institutes', 'fund_helds.institute_id', '=', 'institutes.id')
+            ->where('fund_heads.type', 'regional')
+            ->where('institutes.type', 'Regional Office')
+            ->whereIn('institutes.region_id', $regionIds)
+            ->select([
+                'institutes.region_id',
+                'fund_helds.fund_head_id',
+                'fund_heads.name as fund_head_name',
+                DB::raw('SUM(fund_helds.balance) as balance')
+            ])
+            ->groupBy('institutes.region_id', 'fund_helds.fund_head_id', 'fund_heads.name')
+            ->get();
+
+        // Table 2: Balance Held With Institutions (non-Regional Office institutes)
+        $table2Query = FundHeld::query()
+            ->join('fund_heads', 'fund_helds.fund_head_id', '=', 'fund_heads.id')
+            ->join('institutes', 'fund_helds.institute_id', '=', 'institutes.id')
+            ->where('fund_heads.type', 'regional')
+            ->where('institutes.type', '!=', 'Regional Office')
+            ->whereIn('institutes.region_id', $regionIds)
+            ->select([
+                'institutes.region_id',
+                'fund_helds.fund_head_id',
+                'fund_heads.name as fund_head_name',
+                DB::raw('SUM(fund_helds.balance) as balance')
+            ])
+            ->groupBy('institutes.region_id', 'fund_helds.fund_head_id', 'fund_heads.name')
+            ->get();
+
+        // Table 3: Approved project expenses grouped by region and fund head
+        $approvedProjects = Project::query()
+            ->join('institutes', 'projects.institute_id', '=', 'institutes.id')
+            ->join('fund_heads', 'projects.fund_head_id', '=', 'fund_heads.id')
+            ->where('projects.approval_status', 'approved')
+            ->where('fund_heads.type', 'regional')
+            ->whereIn('institutes.region_id', $regionIds)
+            ->select([
+                'institutes.region_id',
+                'projects.fund_head_id',
+                'fund_heads.name as fund_head_name',
+                DB::raw('SUM(projects.estimated_cost) as approved_amount')
+            ])
+            ->groupBy('institutes.region_id', 'projects.fund_head_id', 'fund_heads.name')
+            ->get();
+
+        // Get paid amounts from funds table (trans_type=project, status=Approved)
+        $paidAmounts = Fund::query()
+            ->join('institutes', 'funds.institute_id', '=', 'institutes.id')
+            ->join('fund_heads', 'funds.fund_head_id', '=', 'fund_heads.id')
+            ->where('funds.trans_type', 'project')
+            ->where('funds.status', 'Approved')
+            ->where('fund_heads.type', 'regional')
+            ->whereIn('institutes.region_id', $regionIds)
+            ->select([
+                'institutes.region_id',
+                'funds.fund_head_id',
+                'fund_heads.name as fund_head_name',
+                DB::raw('SUM(funds.amount) as paid_amount')
+            ])
+            ->groupBy('institutes.region_id', 'funds.fund_head_id', 'fund_heads.name')
+            ->get();
+
+        // Format data for each table
+        $table1Data = [];
+        $table2Data = [];
+        $table3Data = [];
+
+        foreach ($regionIds as $regionId) {
+            $regionName = $regions->get($regionId)?->name ?? "Region $regionId";
+            $shortName = last(explode(' ', $regionName));
+
+            // Table 1 row
+            $table1Row = ['region_id' => $regionId, 'region_name' => $shortName, 'fund_heads' => []];
+            foreach ($regionalFundHeads as $fh) {
+                $balance = $table1Query
+                    ->where('region_id', $regionId)
+                    ->where('fund_head_id', $fh->id)
+                    ->first()?->balance ?? 0;
+                $table1Row['fund_heads'][$fh->name] = (float) $balance;
+            }
+            $table1Data[] = $table1Row;
+
+            // Table 2 row
+            $table2Row = ['region_id' => $regionId, 'region_name' => $shortName, 'fund_heads' => []];
+            foreach ($regionalFundHeads as $fh) {
+                $balance = $table2Query
+                    ->where('region_id', $regionId)
+                    ->where('fund_head_id', $fh->id)
+                    ->first()?->balance ?? 0;
+                $table2Row['fund_heads'][$fh->name] = (float) $balance;
+            }
+            $table2Data[] = $table2Row;
+
+            // Table 3 row (combined + approved expenses with paid and remaining)
+            $table3Row = ['region_id' => $regionId, 'region_name' => $shortName, 'fund_heads' => [], 'exp_approved' => []];
+            foreach ($regionalFundHeads as $fh) {
+                $t1Balance = $table1Query
+                    ->where('region_id', $regionId)
+                    ->where('fund_head_id', $fh->id)
+                    ->first()?->balance ?? 0;
+                $t2Balance = $table2Query
+                    ->where('region_id', $regionId)
+                    ->where('fund_head_id', $fh->id)
+                    ->first()?->balance ?? 0;
+                $table3Row['fund_heads'][$fh->name] = (float) $t1Balance + (float) $t2Balance;
+
+                // Approved project total (estimated_cost) for this fund head and region
+                $totalAmount = (float) ($approvedProjects
+                    ->where('region_id', $regionId)
+                    ->where('fund_head_id', $fh->id)
+                    ->first()?->approved_amount ?? 0);
+
+                // Paid amount from funds table
+                $paidAmount = (float) ($paidAmounts
+                    ->where('region_id', $regionId)
+                    ->where('fund_head_id', $fh->id)
+                    ->first()?->paid_amount ?? 0);
+
+                // Remaining amount
+                $remainingAmount = $totalAmount - $paidAmount;
+
+                $table3Row['exp_approved'][$fh->name] = [
+                    'total' => $totalAmount,
+                    'paid' => $paidAmount,
+                    'remaining' => $remainingAmount,
+                ];
+            }
+            $table3Data[] = $table3Row;
+        }
+
+        return response()->json([
+            'fundHeads' => $regionalFundHeads,
+            'table1' => $table1Data,  // Regional Office balances
+            'table2' => $table2Data,  // Institute balances
+            'table3' => $table3Data,  // Combined + Exp Approved
+            'reportDate' => now()->format('d M Y'),
+        ]);
+    }
 }

@@ -228,6 +228,9 @@ Route::get('/reports/funds', [ReportsController::class, 'Funds'])->name('reports
     Route::get('/reports/funds/getfunds', [ReportsController::class, 'getFunds'])
          ->name('reports.funds.get');
 
+    Route::get('/reports/funds/regional-pdf-data', [ReportsController::class, 'getRegionalPDFReport'])
+         ->name('reports.funds.regional-pdf');
+
 
          Route::get('/reports/transactions', [ReportsController::class, 'Transactions'])->name('reports.transactions');
          Route::get('/reports/transactions/approve', [ReportsController::class, 'ApproveTransaction'])->name('reports.ApproveTransaction');
