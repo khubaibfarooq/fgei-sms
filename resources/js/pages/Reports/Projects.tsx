@@ -530,50 +530,42 @@ export default function Projects({ projects: initialProjects, institutes, region
                     </div>
                   </div>
 
-                  <div className="flex gap-2 justify-end">
+                  <div className="flex flex-wrap gap-2 justify-end">
                     <Button onClick={debouncedApplyFilters} size="sm">
                       Apply Filters
                     </Button>
                     <Button onClick={exportToPDF} size="sm" variant="outline">
-                      Export PDF
+                      PDF
                     </Button>
                     <Button onClick={exportToExcel} size="sm" variant="outline">
-                      Export Excel
+                      Excel
                     </Button>
                   </div>
                 </CardContent>
               </Card>
 
-              {/* Table Area */}
-              <Card className="flex-1 min-h-0 flex flex-col">
+              {/* Table Area - Desktop View */}
+              <Card className="flex-1 min-h-0 flex-col hidden md:flex">
                 <CardContent className="p-0 flex-1 overflow-auto">
-                  <table className="w-full border-collapse text-sm">
+                  <table className="w-full border-collapse text-sm min-w-[900px]">
                     <thead className="sticky top-0 z-10">
                       <tr className="bg-primary text-white text-center">
                         <th className="border p-2 font-medium">Institute</th>
-
-                        <th className="border p-2 font-medium">Type</th>
+                        <th className="border p-2 font-medium hidden lg:table-cell">Type</th>
                         <th className="border p-2 font-medium">Project</th>
-                        <th className="border p-2 font-medium">Description</th>
-                        <th className="border p-2 font-medium">Estimated Cost</th>
-                        <th className="border p-2 font-medium">Actual Cost</th>
-                        <th className="border p-2 font-medium">PDF</th>
-                        <th className="border p-2 font-medium">Fund Head</th>
-                        <th className="border p-2 font-medium">Current Stage</th>
-
-                        <th className="border p-2 font-medium">Approval Status</th>
-
-
-                        <th className="border p-2 font-medium">Completion %</th>
-                        <th className="border p-2 font-medium">Project Status</th>
-                        <th className="border p-2 font-medium">Final Comments</th>
+                        <th className="border p-2 font-medium">Est. Cost</th>
+                        <th className="border p-2 font-medium">Act. Cost</th>
+                        <th className="border p-2 font-medium hidden xl:table-cell">Fund Head</th>
+                        <th className="border p-2 font-medium hidden lg:table-cell">Stage</th>
+                        <th className="border p-2 font-medium">Status</th>
+                        <th className="border p-2 font-medium hidden xl:table-cell">Comments</th>
                         <th className="border p-2 font-medium">Action</th>
                       </tr>
                     </thead>
                     <tbody>
                       {projects.data.length === 0 ? (
                         <tr>
-                          <td colSpan={6} className="text-center p-4 text-muted-foreground">
+                          <td colSpan={10} className="text-center p-4 text-muted-foreground">
                             No projects found.
                           </td>
                         </tr>
@@ -585,11 +577,41 @@ export default function Projects({ projects: initialProjects, institutes, region
                             onClick={() => setSelectedPanelProject(project)}
                           >
                             <td className="border p-2">{project.institute?.name || '-'}</td>
-
-                            <td className="border p-2 text-center">{project.projecttype?.name || '-'}</td>
+                            <td className="border p-2 text-center hidden lg:table-cell">{project.projecttype?.name || '-'}</td>
                             <td className="border p-2 font-medium">{project.name}</td>
+                            <td className="border p-2 text-right whitespace-nowrap">{formatAmount(project.estimated_cost)}</td>
+                            <td className="border p-2 text-right whitespace-nowrap">{formatAmount(project.actual_cost)}</td>
+                            <td className="border p-2 text-center hidden xl:table-cell">{project.fundhead?.name}</td>
+                            <td className="border p-2 text-center hidden lg:table-cell">{project.current_stage?.stage_name || 'Request Initiated'}</td>
+                            <td className="border p-2 text-center">
+                              <div className="flex flex-col gap-1">
+                                <div className="flex items-center justify-center gap-1">
+                                  <span className="text-xs">App:</span>
+                                  <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${project.approval_status === 'completed' ? 'bg-green-100 text-green-800' :
+                                    project.approval_status === 'inprogress' ? 'bg-yellow-100 text-yellow-800' :
+                                      'bg-blue-100 text-blue-800'
+                                    }`}>
+                                    {project.approval_status.charAt(0).toUpperCase() + project.approval_status.slice(1)}
+                                  </span>
+                                </div>
+                                {project.approval_status === 'waiting' && (
+                                  <span className="text-xs text-muted-foreground">{project.current_stage?.level || 'Regional Office'}</span>
+                                )}
+                                <div className="flex items-center justify-center gap-1">
+                                  <span className="text-xs">Proj:</span>
+                                  <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${project.status === 'completed' ? 'bg-green-100 text-green-800' :
+                                    project.status === 'inprogress' ? 'bg-yellow-100 text-yellow-800' :
+                                      'bg-blue-100 text-blue-800'
+                                    }`}>
+                                    {project.status.charAt(0).toUpperCase() + project.status.slice(1)}
+                                  </span>
+                                </div>
+                                <span className="text-xs">{project.completion_per ? parseFloat(project.completion_per.toString()) : '-'}%</span>
+                              </div>
+                            </td>
+                            <td className="border p-2 text-center hidden xl:table-cell">{project.final_comments || '-'}</td>
                             <td className="border p-2 text-center" onClick={(e) => e.stopPropagation()}>
-                              {project.description ? (
+                              {project.description && (
                                 <Button
                                   variant="ghost"
                                   size="sm"
@@ -602,15 +624,9 @@ export default function Projects({ projects: initialProjects, institutes, region
                                 >
                                   <Eye className="h-4 w-4" />
                                 </Button>
-                              ) : (
-                                <span className="text-muted-foreground">-</span>
                               )}
-                            </td>
 
-                            <td className="border p-2 text-right">{formatAmount(project.estimated_cost)}</td>
-                            <td className="border p-2 text-right">{formatAmount(project.actual_cost)}</td>
-                            <td className="border p-2 text-center" onClick={(e) => e.stopPropagation()}>
-                              {project.pdf ? (
+                              {project.pdf && (
                                 <a
                                   href={`/assets/${project.pdf}`}
                                   target="_blank"
@@ -620,34 +636,7 @@ export default function Projects({ projects: initialProjects, institutes, region
                                 >
                                   <FileText className="h-5 w-5" />
                                 </a>
-                              ) : (
-                                <span className="text-muted-foreground">-</span>
                               )}
-                            </td>
-                            <td className="border p-2 text-center">{project.fundhead?.name}</td>
-                            <td className="border p-2 text-center">{project.current_stage?.stage_name || 'Request Initiated'}</td>
-                            <td className="border p-2 text-center">
-                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${project.approval_status === 'completed' ? 'bg-green-100 text-green-800' :
-                                project.approval_status === 'inprogress' ? 'bg-yellow-100 text-yellow-800' :
-                                  'bg-blue-100 text-blue-800'
-                                }`}>
-                                {project.approval_status.charAt(0).toUpperCase() + project.approval_status.slice(1)}<br />
-
-                              </span>
-                              {project.approval_status === 'waiting' ? project.current_stage?.level || 'Regional Office' : ''}
-                            </td>
-
-
-                            <td className="border p-2 text-center">{project.completion_per ? parseFloat(project.completion_per.toString()) : '-'}</td>
-                            <td className="border p-2 text-center">
-                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${project.status === 'completed' ? 'bg-green-100 text-green-800' :
-                                project.status === 'inprogress' ? 'bg-yellow-100 text-yellow-800' :
-                                  'bg-blue-100 text-blue-800'
-                                }`}>
-                                {project.status.charAt(0).toUpperCase() + project.status.slice(1)}
-                              </span>
-                            </td>                   <td className="border p-2 text-center">{project.final_comments || '-'}</td>
-                            <td className="border p-2 text-center" onClick={(e) => e.stopPropagation()}>
                               {canShowApproveButton(project) && (
                                 <Button
                                   variant="ghost"
@@ -730,12 +719,172 @@ export default function Projects({ projects: initialProjects, institutes, region
                 )}
               </Card>
 
+              {/* Mobile Card View */}
+              <Card className="flex-1 min-h-0 flex flex-col md:hidden">
+                <CardContent className="p-2 flex-1 overflow-auto">
+                  {projects.data.length === 0 ? (
+                    <div className="text-center p-4 text-muted-foreground">
+                      No projects found.
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {projects.data.map((project) => (
+                        <div
+                          key={project.id}
+                          className={`p-3 rounded-lg border bg-card shadow-sm cursor-pointer transition-all hover:shadow-md ${selectedPanelProject?.id === project.id ? 'ring-2 ring-primary' : ''}`}
+                          onClick={() => setSelectedPanelProject(project)}
+                        >
+                          {/* Header */}
+                          <div className="flex justify-between items-start mb-2">
+                            <div className="flex-1">
+                              <h3 className="font-semibold text-sm">{project.name}</h3>
+                              <p className="text-xs text-muted-foreground">{project.institute?.name || '-'}</p>
+                            </div>
+                            <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                              {project.description && (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-7 w-7 text-blue-600"
+                                  onClick={() => {
+                                    setSelectedDescriptionProject(project);
+                                    setDescriptionModalOpen(true);
+                                  }}
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                              )}
+                              {project.pdf && (
+                                <a
+                                  href={`/assets/${project.pdf}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center justify-center h-7 w-7 text-blue-600 hover:text-blue-700"
+                                >
+                                  <FileText className="h-4 w-4" />
+                                </a>
+                              )}
+                              {canShowApproveButton(project) && (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-7 w-7 text-blue-600"
+                                  onClick={() => {
+                                    setSelectedProject(project);
+                                    setApprovalModalOpen(true);
+                                  }}
+                                >
+                                  <ClipboardCheck className="h-4 w-4" />
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Cost Row */}
+                          <div className="flex gap-4 text-xs mb-2">
+                            <div>
+                              <span className="text-muted-foreground">Est: </span>
+                              <span className="font-medium">{formatAmount(project.estimated_cost)}</span>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">Act: </span>
+                              <span className="font-medium">{formatAmount(project.actual_cost)}</span>
+                            </div>
+                          </div>
+
+                          {/* Status Row */}
+                          <div className="flex flex-wrap gap-2 items-center">
+                            <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${project.approval_status === 'completed' ? 'bg-green-100 text-green-800' :
+                              project.approval_status === 'inprogress' ? 'bg-yellow-100 text-yellow-800' :
+                                'bg-blue-100 text-blue-800'
+                              }`}>
+                              App: {project.approval_status.charAt(0).toUpperCase() + project.approval_status.slice(1)}
+                            </span>
+                            <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${project.status === 'completed' ? 'bg-green-100 text-green-800' :
+                              project.status === 'inprogress' ? 'bg-yellow-100 text-yellow-800' :
+                                'bg-blue-100 text-blue-800'
+                              }`}>
+                              Proj: {project.status.charAt(0).toUpperCase() + project.status.slice(1)}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              {project.completion_per ? parseFloat(project.completion_per.toString()) : '-'}%
+                            </span>
+                          </div>
+
+                          {/* Additional Info */}
+                          <div className="mt-2 pt-2 border-t flex flex-wrap gap-2 text-xs text-muted-foreground">
+                            {project.projecttype?.name && <span className="bg-muted px-2 py-0.5 rounded">{project.projecttype.name}</span>}
+                            {project.fundhead?.name && <span className="bg-muted px-2 py-0.5 rounded">{project.fundhead.name}</span>}
+                            <span className="bg-muted px-2 py-0.5 rounded">{project.current_stage?.stage_name || 'Request Initiated'}</span>
+                          </div>
+
+                          {/* Action Buttons for Mobile */}
+                          <div className="mt-2 flex gap-2" onClick={(e) => e.stopPropagation()}>
+                            {user.roles[0]?.name.toLowerCase() === 'region' && !project.fund_head_id && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="text-xs h-7 text-orange-600 border-orange-300"
+                                onClick={() => {
+                                  setSelectedProjectForFundHead(project);
+                                  setFundHeadModalOpen(true);
+                                }}
+                              >
+                                Select Head
+                              </Button>
+                            )}
+                            {user.type === 'Regional Office' && project.status === 'inprogress' && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="text-xs h-7 text-purple-600 border-purple-300"
+                                onClick={() => handleOpenCompletionModal(project)}
+                              >
+                                <Percent className="h-3 w-3 mr-1" /> Update
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+                {/* Mobile Pagination */}
+                {projects.links.length > 1 && (
+                  <div className="p-3 border-t flex justify-center flex-wrap gap-1 shrink-0">
+                    {projects.links.map((link, i) => (
+                      <Button
+                        key={i}
+                        disabled={!link.url}
+                        variant={link.active ? 'default' : 'outline'}
+                        size="sm"
+                        className="h-8 text-xs px-2"
+                        onClick={() => {
+                          if (link.url) {
+                            fetch(link.url)
+                              .then((response) => response.json())
+                              .then((data) => {
+                                setProjects(data);
+                              })
+                              .catch((error) => {
+                                console.error('Error:', error);
+                              });
+                          }
+                        }}
+                      >
+                        <span dangerouslySetInnerHTML={{ __html: link.label }} />
+                      </Button>
+                    ))}
+                  </div>
+                )}
+              </Card>
+
             </div>
           </div>
 
           {/* Right Side Panel */}
           {selectedPanelProject && (
-            <div className="w-full lg:w-1/3 border-l bg-background p-4 md:p-6 shadow-xl overflow-y-auto flex flex-col h-full transition-all duration-300 ease-in-out z-20 absolute lg:relative right-0 top-0 lg:top-auto bottom-0 lg:bottom-auto">
+            <div className="w-2/3  lg:w-1/3 border-l bg-background p-3 sm:p-4 md:p-6 shadow-xl overflow-y-auto flex flex-col transition-all duration-300 ease-in-out z-20 fixed lg:relative inset-0 lg:inset-auto h-full lg:h-auto rounded-none lg:rounded-l-lg">
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h2 className="text-xl font-bold">{selectedPanelProject.name}</h2>

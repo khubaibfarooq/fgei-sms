@@ -205,7 +205,8 @@ export default function Funds({
       if (!res.ok) throw new Error('Failed to fetch data');
 
       const data = await res.json();
-      const { fundHeads, table1, table2, table3, reportDate } = data;
+      console.log(data);
+      const { fundHeads, table2FundHeads, table1, table2, table3, reportDate } = data;
 
       const doc = new jsPDF('l', 'mm', 'a4');
       const pageWidth = doc.internal.pageSize.getWidth();
@@ -246,22 +247,24 @@ export default function Funds({
 
       yPos = (doc as any).lastAutoTable.finalY + 15;
 
-      // ========== TABLE 2: Balance Held With Institutions (Anx-B) ==========
+      // ========== TABLE 2: Balance Held With Institutions (Anx-B) - Uses table2FundHeads (includes IDF) ==========
       doc.setFontSize(12);
       doc.setFont('helvetica', 'bold');
       doc.text('Anx-B', pageWidth - 20, yPos, { align: 'right' });
       doc.text('Balance Held With Institutions (Still Not deposit to RO)', pageWidth / 2, yPos, { align: 'center' });
       yPos += 5;
 
-      const t2Headers = ['Detail', ...fundHeads.map((fh: Item) => fh.name)];
+      // Use table2FundHeads which includes IDF
+      const t2FundHeadsToUse = table2FundHeads || fundHeads;
+      const t2Headers = ['Detail', ...t2FundHeadsToUse.map((fh: Item) => fh.name)];
       const t2Rows = table2.map((row: any) => [
         row.region_name,
-        ...fundHeads.map((fh: Item) => formatPDFNumber(row.fund_heads[fh.name] || 0)),
+        ...t2FundHeadsToUse.map((fh: Item) => formatPDFNumber(row.fund_heads[fh.name] || 0)),
       ]);
 
       // Calculate totals for Table 2
       const t2Totals = ['G.Total'];
-      fundHeads.forEach((fh: Item) => {
+      t2FundHeadsToUse.forEach((fh: Item) => {
         const sum = table2.reduce((acc: number, row: any) => acc + (row.fund_heads[fh.name] || 0), 0);
         t2Totals.push(formatPDFNumber(sum));
       });
@@ -302,7 +305,7 @@ export default function Funds({
           const paid = formatPDFNumber(expData.paid);
           const remaining = formatPDFNumber(expData.remaining);
 
-          return `${fh.name}: Rs.${total} - Rs.${paid}, Rs.${remaining}`;
+          return `${fh.name}: Rs.${total} - Rs.${paid}= Rs.${remaining}`;
         }).filter(Boolean);
 
         return [

@@ -2564,6 +2564,15 @@ if($type=="Regional Office"){
             ->orderBy('id')
             ->get();
 
+        // Get fund heads for Table 2 (regional + IDF) - IDF should be last
+        $table2FundHeads = FundHead::where(function($q) {
+                $q->where('type', 'regional')
+                  ->orWhere('name', 'IDF');
+            })
+            ->select('id', 'name')
+            ->orderByRaw("CASE WHEN name = 'IDF' THEN 1 ELSE 0 END, id ASC")
+            ->get();
+
         // Get region names for the selected regions
         $regions = Institute::whereIn('region_id', $regionIds)
             ->where('type', 'Regional Office')
@@ -2587,11 +2596,14 @@ if($type=="Regional Office"){
             ->groupBy('institutes.region_id', 'fund_helds.fund_head_id', 'fund_heads.name')
             ->get();
 
-        // Table 2: Balance Held With Institutions (non-Regional Office institutes)
+        // Table 2: Balance Held With Institutions (non-Regional Office institutes) - includes IDF
         $table2Query = FundHeld::query()
             ->join('fund_heads', 'fund_helds.fund_head_id', '=', 'fund_heads.id')
             ->join('institutes', 'fund_helds.institute_id', '=', 'institutes.id')
-            ->where('fund_heads.type', 'regional')
+            ->where(function($q) {
+                $q->where('fund_heads.type', 'regional')
+                  ->orWhere('fund_heads.name', 'IDF');
+            })
             ->where('institutes.type', '!=', 'Regional Office')
             ->whereIn('institutes.region_id', $regionIds)
             ->select([
@@ -2656,9 +2668,9 @@ if($type=="Regional Office"){
             }
             $table1Data[] = $table1Row;
 
-            // Table 2 row
+            // Table 2 row (includes IDF)
             $table2Row = ['region_id' => $regionId, 'region_name' => $shortName, 'fund_heads' => []];
-            foreach ($regionalFundHeads as $fh) {
+            foreach ($table2FundHeads as $fh) {
                 $balance = $table2Query
                     ->where('region_id', $regionId)
                     ->where('fund_head_id', $fh->id)
@@ -2706,8 +2718,9 @@ if($type=="Regional Office"){
 
         return response()->json([
             'fundHeads' => $regionalFundHeads,
+            'table2FundHeads' => $table2FundHeads,  // Fund heads for Table 2 (includes IDF)
             'table1' => $table1Data,  // Regional Office balances
-            'table2' => $table2Data,  // Institute balances
+            'table2' => $table2Data,  // Institute balances (includes IDF)
             'table3' => $table3Data,  // Combined + Exp Approved
             'reportDate' => now()->format('d M Y'),
         ]);
