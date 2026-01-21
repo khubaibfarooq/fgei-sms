@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { type BreadcrumbItem } from '@/types';
 import { Building, ClipboardCheck, X, CheckCircle2, XCircle, Clock, Eye, FileText } from 'lucide-react';
 import { toast } from 'sonner';
@@ -213,7 +214,8 @@ export default function Projects({ projects: initialProjects, institutes, region
     const userRole = (user.roles[0].name || '').toLowerCase(); // Assuming type/role property
     const level = stageLevel.toLowerCase();
     const usercanApprove = project.current_stage?.users_can_approve ?? "";
-
+    console.log(usercanApprove);
+    console.log(user.id);
     // Specific user requests
     if (level === 'regional' && userRole === 'region' && status !== "approved") return true;
     if (level === 'dte' && (userRole === 'dirhrm' || userRole === 'directorate' || userRole === 'sms_tech_approval') && status !== "approved" && usercanApprove.includes(user.id)) return true;
@@ -246,6 +248,9 @@ export default function Projects({ projects: initialProjects, institutes, region
   const [descriptionModalOpen, setDescriptionModalOpen] = useState(false);
   const [selectedDescriptionProject, setSelectedDescriptionProject] = useState<ProjectProp | null>(null);
 
+  // Need Approval Filter State
+  const [needApproval, setNeedApproval] = useState(false);
+
   // Memoized dropdown options
   const memoizedInstitutes = useMemo(() => {
     return Array.isArray(filteredInstitutes) ? filteredInstitutes.filter(isValidItem) : [];
@@ -258,6 +263,12 @@ export default function Projects({ projects: initialProjects, institutes, region
   const memoizedProjectTypes = useMemo(() => {
     return Array.isArray(projectTypes) ? projectTypes.filter(isValidItem) : [];
   }, [projectTypes]);
+
+  // Filtered projects based on needApproval checkbox
+  const filteredProjects = useMemo(() => {
+    if (!needApproval) return projects.data;
+    return projects.data.filter(project => canShowApproveButton(project));
+  }, [projects.data, needApproval, user]);
 
   // Fetch Panel Data
   useEffect(() => {
@@ -530,16 +541,27 @@ export default function Projects({ projects: initialProjects, institutes, region
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap gap-2 justify-end">
-                    <Button onClick={debouncedApplyFilters} size="sm">
-                      Apply Filters
-                    </Button>
-                    <Button onClick={exportToPDF} size="sm" variant="outline">
-                      PDF
-                    </Button>
-                    <Button onClick={exportToExcel} size="sm" variant="outline">
-                      Excel
-                    </Button>
+                  <div className="flex flex-wrap gap-2 justify-between items-center">
+                    {/* Need Approval Checkbox */}
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <Checkbox
+                        checked={needApproval}
+                        onCheckedChange={(checked) => setNeedApproval(checked === true)}
+                      />
+                      <span className="text-sm font-medium">Need Approval</span>
+                    </label>
+
+                    <div className="flex flex-wrap gap-2">
+                      <Button onClick={debouncedApplyFilters} size="sm">
+                        Apply Filters
+                      </Button>
+                      <Button onClick={exportToPDF} size="sm" variant="outline">
+                        PDF
+                      </Button>
+                      <Button onClick={exportToExcel} size="sm" variant="outline">
+                        Excel
+                      </Button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -563,14 +585,14 @@ export default function Projects({ projects: initialProjects, institutes, region
                       </tr>
                     </thead>
                     <tbody>
-                      {projects.data.length === 0 ? (
+                      {filteredProjects.length === 0 ? (
                         <tr>
                           <td colSpan={10} className="text-center p-4 text-muted-foreground">
                             No projects found.
                           </td>
                         </tr>
                       ) : (
-                        projects.data.map((project) => (
+                        filteredProjects.map((project) => (
                           <tr
                             key={project.id}
                             className={`hover:bg-primary/10 dark:hover:bg-gray-700 cursor-pointer transition-colors ${selectedPanelProject?.id === project.id ? 'bg-primary/5 dark:bg-gray-700 border-l-4 border-l-primary' : ''}`}
@@ -634,7 +656,7 @@ export default function Projects({ projects: initialProjects, institutes, region
                                   className="inline-flex items-center justify-center text-blue-600 hover:text-blue-700"
                                   title="View PDF"
                                 >
-                                  <FileText className="h-5 w-5" />
+                                  PDF
                                 </a>
                               )}
                               {canShowApproveButton(project) && (
@@ -722,13 +744,13 @@ export default function Projects({ projects: initialProjects, institutes, region
               {/* Mobile Card View */}
               <Card className="flex-1 min-h-0 flex flex-col md:hidden">
                 <CardContent className="p-2 flex-1 overflow-auto">
-                  {projects.data.length === 0 ? (
+                  {filteredProjects.length === 0 ? (
                     <div className="text-center p-4 text-muted-foreground">
                       No projects found.
                     </div>
                   ) : (
                     <div className="space-y-3">
-                      {projects.data.map((project) => (
+                      {filteredProjects.map((project) => (
                         <div
                           key={project.id}
                           className={`p-3 rounded-lg border bg-card shadow-sm cursor-pointer transition-all hover:shadow-md ${selectedPanelProject?.id === project.id ? 'ring-2 ring-primary' : ''}`}
@@ -761,7 +783,7 @@ export default function Projects({ projects: initialProjects, institutes, region
                                   rel="noopener noreferrer"
                                   className="inline-flex items-center justify-center h-7 w-7 text-blue-600 hover:text-blue-700"
                                 >
-                                  <FileText className="h-4 w-4" />
+                                  PDF
                                 </a>
                               )}
                               {canShowApproveButton(project) && (
