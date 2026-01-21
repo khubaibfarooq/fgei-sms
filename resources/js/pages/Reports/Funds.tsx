@@ -183,7 +183,7 @@ export default function Funds({
   // Format number for PDF (compact)
   const formatPDFNumber = (num: number): string => {
     if (num >= 1000000) {
-      return (num / 1000000).toFixed(2) + 'M';
+      return (num / 1000000).toFixed(2) + ' Mn';
     }
     return num.toLocaleString();
   };
