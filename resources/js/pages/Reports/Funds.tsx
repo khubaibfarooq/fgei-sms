@@ -78,7 +78,7 @@ export default function Funds({
     const num = toNumber(amount);
     // If less than 1 million, show in Rs format
     if (num < 1000000) {
-      return `Rs ${num.toLocaleString()}`;
+      return `${num.toLocaleString()}`;
     }
     // Otherwise show in millions
     const millions = num / 1000000;
