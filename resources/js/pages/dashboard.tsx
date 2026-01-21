@@ -140,7 +140,7 @@ const formatCellValue = (value: any, columnName?: string, colIndex?: number, tab
       }
     }
     // Capitalize first letter for the first column (skip for Funds table)
-    if (colIndex === 1 && tableName !== 'Funds') {
+    if (colIndex === 1 && tableName !== 'Funds' && tableName !== 'Total Funds') {
       return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
     }
     return value;

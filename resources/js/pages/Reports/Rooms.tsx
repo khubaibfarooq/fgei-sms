@@ -439,44 +439,30 @@ export default function Rooms({ rooms: roomsProp, institutes, roomtypes, regions
                                 />
 
                                 {/* Block Filter */}
-                                <Select value={block} onValueChange={(value) => { setBlock(value); }} disabled={isLoadingBlocks}>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select Block" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="0">All Blocks</SelectItem>
-                                        {isLoadingBlocks ? (
-                                            <div className="text-muted-foreground text-sm p-2">Loading blocks...</div>
-                                        ) : memoizedBlocks.length > 0 ? (
-                                            memoizedBlocks.map((b) => (
-                                                <SelectItem key={b.id} value={b.id.toString()}>
-                                                    {b.name}
-                                                </SelectItem>
-                                            ))
-                                        ) : (
-                                            <div className="text-muted-foreground text-sm p-2">No blocks available</div>
-                                        )}
-                                    </SelectContent>
-                                </Select>
+                                <Combobox
+                                    entity="block"
+                                    value={block}
+                                    onChange={(value) => setBlock(value)}
+                                    options={memoizedBlocks.map((block) => ({
+                                        id: block.id.toString(),
+                                        name: block.name,
+                                    }))}
+                                    includeAllOption={true}
+                                />
+
 
                                 {/* Room Type Filter */}
-                                <Select value={roomtype} onValueChange={(value) => { setRoomtype(value); }}>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select Room Type" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="0">All Room Types</SelectItem>
-                                        {memoizedRoomtypes.length > 0 ? (
-                                            memoizedRoomtypes.map((type) => (
-                                                <SelectItem key={type.id} value={type.id.toString()}>
-                                                    {type.name}
-                                                </SelectItem>
-                                            ))
-                                        ) : (
-                                            <div className="text-muted-foreground text-sm p-2">No room types available</div>
-                                        )}
-                                    </SelectContent>
-                                </Select>
+                                <Combobox
+                                    entity="roomtype"
+                                    value={roomtype}
+                                    onChange={(value) => setRoomtype(value)}
+                                    options={memoizedRoomtypes.map((type) => ({
+                                        id: type.id.toString(),
+                                        name: type.name,
+                                    }))}
+                                    includeAllOption={true}
+                                />
+
                                 <Button onClick={debouncedApplyFilters} className="w-fit">
                                     Apply Filters
                                 </Button>

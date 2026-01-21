@@ -82,7 +82,7 @@ export default function Funds({
     }
     // Otherwise show in millions
     const millions = num / 1000000;
-    return `${millions.toFixed(2)}M`;
+    return `${millions.toFixed(2)} Mn`;
   };
 
   const totalBalance = useMemo(() => {

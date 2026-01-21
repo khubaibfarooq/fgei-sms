@@ -8,6 +8,8 @@ import { Input } from '@/components/ui/input';
 import { type BreadcrumbItem } from '@/types';
 import { Plus, Edit, Trash2, Eye } from 'lucide-react';
 import { ImagePreview } from '@/components/ui/image-preview';
+import Combobox from '@/components/ui/combobox';
+
 import {
   AlertDialog,
   AlertDialogTrigger,
@@ -80,14 +82,13 @@ export default function RoomIndex({ rooms, filters, blocks, roomtypes, permissio
     if (e.key === 'Enter') handleSearch();
   };
 
-  const handleBlockChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = e.target.value;
+  const handleBlockChange = (value: string) => {
+
     setSelectedBlock(value);
     updateFilters({ block: value });
   };
 
-  const handleRoomTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = e.target.value;
+  const handleRoomTypeChange = (value: string) => {
     setSelectedRoomType(value);
     updateFilters({ roomtype: value });
   };
@@ -136,33 +137,25 @@ export default function RoomIndex({ rooms, filters, blocks, roomtypes, permissio
                 onChange={(e) => setSearch(e.target.value)}
                 onKeyDown={handleSearchKey}
                 className="w-full md:w-64"
-              />
+              /><div className="w-full md:w-auto px-4 py-2   focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <Combobox
+                  entity="block"
+                  value={selectedBlock}
+                  onChange={(value) => handleBlockChange(value)}
+                  options={blockOptions}
+                  includeAllOption={true}
 
-              <select
-                value={selectedBlock}
-                onChange={handleBlockChange}
-                className="w-full md:w-auto px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">All Blocks</option>
-                {blockOptions.map((block) => (
-                  <option key={block.id} value={block.id}>
-                    {block.name}
-                  </option>
-                ))}
-              </select>
+                />
+              </div>
+              <div className="w-full md:w-auto px-4 py-2  focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <Combobox
+                  entity="roomtype"
+                  value={selectedRoomType}
+                  onChange={(value) => handleRoomTypeChange(value)}
+                  options={roomTypeOptions}
+                  includeAllOption={true}
+                /></div>
 
-              <select
-                value={selectedRoomType}
-                onChange={handleRoomTypeChange}
-                className="w-full md:w-auto px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">All Room Types</option>
-                {roomTypeOptions.map((type) => (
-                  <option key={type.id} value={type.id}>
-                    {type.name}
-                  </option>
-                ))}
-              </select>
 
               <Button onClick={handleSearch} variant="outline" className="w-full md:w-auto">
                 Search

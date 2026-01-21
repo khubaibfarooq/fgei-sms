@@ -379,23 +379,17 @@ export default function Blocks({ blocks: blocksProp, institutes, blocktypes, reg
                 />
 
                 {/* Block Type Filter */}
-                <Select value={blocktype} onValueChange={(value) => { setBlocktype(value); }}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Block Type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="0">All Block Types</SelectItem>
-                    {memoizedBlocktypes.length > 0 ? (
-                      memoizedBlocktypes.map((type) => (
-                        <SelectItem key={type.id} value={type.id.toString()}>
-                          {type.name}
-                        </SelectItem>
-                      ))
-                    ) : (
-                      <div className="text-muted-foreground text-sm p-2">No block types available</div>
-                    )}
-                  </SelectContent>
-                </Select>
+                <Combobox
+                  entity="blocktype"
+                  value={blocktype}
+                  onChange={(value) => setBlocktype(value)}
+                  options={memoizedBlocktypes.map((type) => ({
+                    id: type.id.toString(),
+                    name: type.name,
+                  }))}
+                  includeAllOption={true}
+                />
+
 
                 {/* Search Input */}
                 <Input
