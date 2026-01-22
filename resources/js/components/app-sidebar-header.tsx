@@ -13,7 +13,7 @@ export function AppSidebarHeader({ breadcrumbs = [] }: { breadcrumbs?: Breadcrum
   const { can_view_notifications } = usePage<{ can_view_notifications: boolean }>().props;
 
   return (
-    <header className="bg-primary dark:bg-transparent border-sidebar-border/50 flex h-16 sticky top-0 z-[100] w-full
+    <header className="bg-primary dark:bg-sidebar-accent border-sidebar-border/50 flex h-16 sticky top-0 z-[100] w-full
      shrink-0 items-center justify-between px-4 md:px-6 border-b transition-all ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
       {/* Left: Sidebar + Breadcrumb */}
       <div className="flex items-center gap-2">

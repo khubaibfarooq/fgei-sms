@@ -93,9 +93,9 @@ const fallbackSummaryData: SummaryItem[] = [
 
 // Color themes for different tables
 const tableThemes = [
-  { bg: 'from-blue-50 to-blue-100', border: 'border-blue-200', header: 'bg-blue-500', text: 'text-blue-800', accent: 'bg-blue-200/50' },
-  { bg: 'from-green-50 to-green-100', border: 'border-green-200', header: 'bg-green-500', text: 'text-green-800', accent: 'bg-green-200/50' },
-  { bg: 'from-amber-50 to-amber-100', border: 'border-amber-200', header: 'bg-amber-500', text: 'text-amber-800', accent: 'bg-amber-200/50' },
+  { bg: 'from-blue-50 to-blue-100 dark:from-blue-950/20 dark:to-blue-900/30', border: 'border-blue-200', header: 'bg-blue-500', text: 'text-blue-800 dark:text-blue-200', accent: 'bg-blue-200/50' },
+  { bg: 'from-green-50 to-green-100 dark:from-blue-950/20 dark:to-blue-900/30', border: 'border-green-200', header: 'bg-green-500', text: 'text-green-800 dark:text-green-200', accent: 'bg-green-200/50' },
+  { bg: 'from-amber-50 to-amber-100 dark:from-blue-950/20 dark:to-blue-900/30', border: 'border-amber-200', header: 'bg-amber-500', text: 'text-amber-800 dark:text-amber-200', accent: 'bg-amber-200/50' },
 ];
 
 // Helper function to format column names
@@ -372,12 +372,12 @@ export default function Dashboard() {
 
                       {/* Show More / Show Less Buttons */}
                       {table.data.length > 5 && (
-                        <div className="p-4 text-center border-t border-gray-200 bg-gray-50 flex gap-2 justify-center">
+                        <div className="p-4 dark:bg-blue-950/20 text-center border-t border-gray-200 bg-gray-50 flex gap-2 justify-center">
                           {(visibleRows[index] || 5) < table.data.length && (
                             <button
                               type="button"
                               onClick={() => handleShowMore(index)}
-                              className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-md border border-transparent bg-blue-500 text-white shadow-sm hover:bg-blue-600 focus:outline-none transition-colors"
+                              className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-md border border-transparent bg-blue-500 dark:bg-blue-950 text-white shadow-sm hover:bg-blue-600 focus:outline-none transition-colors"
                             >
                               Show More ({table.data.length - (visibleRows[index] || 5)} remaining)
                             </button>
