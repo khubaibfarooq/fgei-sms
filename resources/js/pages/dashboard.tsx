@@ -256,14 +256,14 @@ export default function Dashboard() {
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Dashboard" />
-      <div className="flex flex-col gap-6 p-5">
+      <div className="flex flex-col gap-2 md:gap-6 sm:gap-4 p-2 md:p-5">
         {/* Hero Section */}
 
 
-        <div className="relative px-8 py-6 text-center">
-          <Card className="inline-block bg-primary/95 backdrop-blur-sm shadow-2xl border-0 max-w-3xl mx-auto mb-2 p-5" style={{ borderBottom: `6px solid rgba(0,0,255,0.7)` }}>
-            <CardContent className="pt-5 px-10" >
-              <h1 className="text-2xl md:text-4xl font-bold text-white">
+        <div className="relative px-2 sm:px-8 py-2 sm:py-6 text-center">
+          <Card className="inline-block bg-primary/95 backdrop-blur-sm shadow-2xl border-0 max-w-3xl mx-auto mb-2 p-2 md:p-5" style={{ borderBottom: `6px solid rgba(0,0,255,0.7)` }}>
+            <CardContent className=" pt-2 px-2 sm:pt-5 sm:px-10" >
+              <h1 className="text-md sm:text-xl  md:text-4xl sm:font-bold font-semibold text-white">
                 School Management System
               </h1>
 
@@ -275,7 +275,7 @@ export default function Dashboard() {
 
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 md:gap-4 lg:gap-6">
           {(loading ? fallbackSummaryData : summaryData).map((item, index) => {
             const cardData = cards[index];
             const iconName = (cardData?.icon || ['Users', 'HardDrive', 'LogIcon'][index % 3]) as keyof typeof LucideIcons;
@@ -301,7 +301,7 @@ export default function Dashboard() {
                   icon={iconName}
                   iconBgColor={item.color}
                   changeColorOnHover={true}
-                  className="shadow-lg p-5 hover:scale-110 hover:-translate-y-2 transition-all duration-300 ease-in-out active:scale-95"
+                  className="shadow-lg p-2 md:p-5 hover:scale-110 hover:-translate-y-2 transition-all duration-300 ease-in-out active:scale-95"
                 />
               </div>
             );
@@ -310,7 +310,7 @@ export default function Dashboard() {
 
 
         {/* Dynamic Table Cards */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 md:gap-6">
           {tableData.map((table, index) => {
             const theme = tableThemes[index % tableThemes.length];
 
@@ -319,7 +319,7 @@ export default function Dashboard() {
                 key={index}
                 className={`bg-gradient-to-br ${theme.bg} ${theme.border} shadow-lg rounded-xl overflow-hidden dark:bg-gray-800 dark:border-gray-700`}
               >
-                <CardHeader className={`${theme.header} text-white px-6 py-4 dark:bg-gray-700`}>
+                <CardHeader className={`${theme.header} text-white px-6 py-2 dark:bg-gray-700`}>
                   <CardTitle className="text-lg font-semibold flex items-center">
                     <span className="w-3 h-3 bg-white rounded-full mr-2"></span>
                     {table.title}
@@ -327,7 +327,7 @@ export default function Dashboard() {
                 </CardHeader>
                 <CardContent className="p-0">
                   {table.data.length > 0 ? (
-                    <div className="overflow-x-auto px-4 py-3">
+                    <div className="overflow-x-auto  py-3">
                       <div className="shadow-sm rounded-md overflow-hidden">
                         <table className="w-full table-fixed">
                           <thead className={`${theme.accent} dark:bg-gray-600`}>
@@ -336,7 +336,7 @@ export default function Dashboard() {
                                 column !== 'Key' && (
                                   <th
                                     key={colIndex}
-                                    className="text-left py-3 px-4 text-sm md:text-lg font-medium dark:text-gray-200"
+                                    className="text-left py-3 px-4 text-sm md:text-lg font-semibold dark:text-gray-200"
                                     style={{ color: theme.header.replace('bg-', 'text-') + '900' }}
                                   >
                                     {formatColumnName(column)}

@@ -591,91 +591,55 @@ export default function Assets({ instituteAssets: instituteAssetsProp, institute
                   includeAllOption={true}
 
                 />
+                <Combobox
+                  entity="block"
+                  value={block}
+                  onChange={(value) => setBlock(value)}
+                  options={memoizedBlocks.map((block) => ({
+                    id: block.id.toString(), // Convert ID to string to match prop type
+                    name: block.name,
+                  }))}
+                  includeAllOption={true}
+
+                />
 
 
-                <Select value={block} onValueChange={(value) => { setBlock(value); }} disabled={isLoadingBlocks}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Block" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="0">All Blocks</SelectItem>
-                    {isLoadingBlocks ? (
-                      <div className="text-muted-foreground text-sm p-2">Loading blocks...</div>
-                    ) : memoizedBlocks.length > 0 ? (
-                      memoizedBlocks.map((b) => {
-                        return (
-                          <SelectItem key={b.id} value={b.id.toString()}>
-                            {b.name}
-                          </SelectItem>
-                        );
-                      })
-                    ) : (
-                      <div className="text-muted-foreground text-sm p-2">No blocks available</div>
-                    )}
-                  </SelectContent>
-                </Select>
+                <Combobox
+                  entity="room"
+                  value={room}
+                  onChange={(value) => setRoom(value)}
+                  options={memoizedRooms.map((room) => ({
+                    id: room.id.toString(), // Convert ID to string to match prop type
+                    name: room.name,
+                  }))}
+                  includeAllOption={true}
 
-                <Select value={room} onValueChange={(value) => { setRoom(value); }} disabled={isLoadingRooms}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Room" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="0">All Rooms</SelectItem>
-                    {isLoadingRooms ? (
-                      <div className="text-muted-foreground text-sm p-2">Loading rooms...</div>
-                    ) : memoizedRooms.length > 0 ? (
-                      memoizedRooms.map((r) => {
-                        return (
-                          <SelectItem key={r.id} value={r.id.toString()}>
-                            {r.name.split(' ').pop() || r.name}
-                          </SelectItem>
-                        );
-                      })
-                    ) : (
-                      <div className="text-muted-foreground text-sm p-2">No rooms available</div>
-                    )}
-                  </SelectContent>
-                </Select>
+                />
+                <Combobox
+                  entity="asset_category"
+                  value={assetCategory}
+                  onChange={(value) => setAssetCategory(value)}
+                  options={memoizedAssetCategories.map((category) => ({
+                    id: category.id.toString(), // Convert ID to string to match prop type
+                    name: category.name,
+                  }))}
+                  includeAllOption={true}
 
-                <Select value={assetCategory} onValueChange={(value) => { setAssetCategory(value); }}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Asset Category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="0">All Asset Categories</SelectItem>
-                    {memoizedAssetCategories.length > 0 ? (
-                      memoizedAssetCategories.map((category) => {
-                        return (
-                          <SelectItem key={category.id} value={category.id.toString()}>
-                            {category.name}
-                          </SelectItem>
-                        );
-                      })
-                    ) : (
-                      <div className="text-muted-foreground text-sm p-2">No asset categories available</div>
-                    )}
-                  </SelectContent>
-                </Select>
+                />
 
-                <Select value={asset} onValueChange={(value) => { setAsset(value); }}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Asset" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="0">All Assets</SelectItem>
-                    {memoizedAssets.length > 0 ? (
-                      memoizedAssets.map((a) => {
-                        return (
-                          <SelectItem key={a.id} value={a.id.toString()}>
-                            {a.name}
-                          </SelectItem>
-                        );
-                      })
-                    ) : (
-                      <div className="text-muted-foreground text-sm p-2">No assets available</div>
-                    )}
-                  </SelectContent>
-                </Select>
+                <Combobox
+                  entity="asset"
+                  value={asset}
+                  onChange={(value) => setAsset(value)}
+                  options={memoizedAssets.map((asset) => ({
+                    id: asset.id.toString(), // Convert ID to string to match prop type
+                    name: asset.name,
+                  }))}
+                  includeAllOption={true}
+
+                />
+
+
 
               </div>
 
