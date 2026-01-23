@@ -552,16 +552,17 @@ export default function Assets({ instituteAssets: instituteAssetsProp, institute
     <ErrorBoundary>
       <AppLayout breadcrumbs={breadcrumbs}>
         <Head title="Assets Report" />
-        <div className="flex-1 p-2 md:p-2">
 
-          <Card>
+        <div className="flex-1 p-2 md:p-4 w-full overflow-x-hidden">
+
+          <Card className="w-full shadow-lg">
             <CardHeader>
               <CardTitle className="text-xl font-bold">Filters</CardTitle>
               <p className="text-muted-foreground text-sm">Refine your assets search</p>
             </CardHeader>
             <CardContent className="space-y-4">
               {/* Region Filter - Added based on Transport.tsx */}
-              <div className="flex flex-row gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
                 {memoizedRegions.length > 0 && (
                   <Combobox
                     entity="region"
@@ -644,7 +645,7 @@ export default function Assets({ instituteAssets: instituteAssetsProp, institute
               </div>
 
 
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row flex-wrap gap-2">
                 <div className="flex items-center gap-3 py-2">
                   <Input
                     type="checkbox"
@@ -674,152 +675,154 @@ export default function Assets({ instituteAssets: instituteAssetsProp, institute
                 onKeyDown={applyFilters}
               />
 
-              <table className="w-full border-collapse border-1 rounded-md overflow-hidden shadow-sm">
-                <thead>
-                  <tr className="bg-primary dark:bg-gray-800" >
+              <div className=" overflow-x-auto mx-2 sm:mx-0">
+                <table className=" w-full border-collapse border-1 rounded-md overflow-hidden shadow-sm  text-xs sm:text-sm">
+                  <thead>
+                    <tr className="bg-primary dark:bg-gray-800" >
 
 
-                    {!details ? (
-                      <>   <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">
-                        Asset
-                      </th>
-                        <th className="border p-2 text-center text-sm font-medium text-white dark:text-gray-200">
-                          Total Quantity
-                        </th>
-                        <th className="border p-2 text-center text-sm font-medium text-white dark:text-gray-200">
-                          Rooms
-                        </th>
-                      </>
-                    ) : (
-                      <>
-                        <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">
-                          Institute
-                        </th>
-                        <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">
-                          Category
-                        </th>
-                        <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">
+                      {!details ? (
+                        <>   <th className="border p-2 text-left text-xs sm:text-sm font-medium text-white dark:text-gray-200">
                           Asset
                         </th>
+                          <th className="border p-2 text-center text-xs sm:text-sm font-medium text-white dark:text-gray-200">
+                            Total Quantity
+                          </th>
+                          <th className="border p-2 text-center text-xs sm:text-sm font-medium text-white dark:text-gray-200">
+                            Rooms
+                          </th>
+                        </>
+                      ) : (
+                        <>
+                          <th className="border p-2 text-left text-xs sm:text-sm font-medium text-white dark:text-gray-200">
+                            Institute
+                          </th>
+                          <th className="border p-2 text-left text-xs sm:text-sm font-medium text-white dark:text-gray-200">
+                            Category
+                          </th>
+                          <th className="border p-2 text-left text-xs sm:text-sm font-medium text-white dark:text-gray-200">
+                            Asset
+                          </th>
 
-                        <th className="border p-2 text-center text-sm font-medium text-white dark:text-gray-200">
-                          Quantity
-                        </th>
-                        <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">
-                          Room / Block
-                        </th>
-                        <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">
-                          Added Date
-                        </th>
-                      </>
-                    )}
-                  </tr>
-                </thead>
-                <tbody>
-                  {instituteAssets.data?.length === 0 ? (
-                    <tr>
-                      <td colSpan={details ? 5 : 3} className="border p-2 text-center text-sm text-gray-900 dark:text-gray-100">
-                        No assets found.
-                      </td>
+                          <th className="border p-2 text-center text-xs sm:text-sm font-medium text-white dark:text-gray-200">
+                            Quantity
+                          </th>
+                          <th className="border p-2 text-left text-xs sm:text-sm font-medium text-white dark:text-gray-200">
+                            Room / Block
+                          </th>
+                          <th className="border p-2 text-left text-xs sm:text-sm font-medium text-white dark:text-gray-200">
+                            Added Date
+                          </th>
+                        </>
+                      )}
                     </tr>
-                  ) : (
-                    instituteAssets.data?.map((instAsset: any, index) => {
-                      // Summary Mode
-                      if (!details) {
-                        const handleRowClick = (assetId: number) => {
-                          // Update state first
-                          setIsRowClicked(true);
-                          setDetails(true);
-                          //  setAsset(assetId.toString());
+                  </thead>
+                  <tbody>
+                    {instituteAssets.data?.length === 0 ? (
+                      <tr>
+                        <td colSpan={details ? 5 : 3} className="border p-2 text-center text-xs sm:text-sm text-gray-900 dark:text-gray-100">
+                          No assets found.
+                        </td>
+                      </tr>
+                    ) : (
+                      instituteAssets.data?.map((instAsset: any, index) => {
+                        // Summary Mode
+                        if (!details) {
+                          const handleRowClick = (assetId: number) => {
+                            // Update state first
+                            setIsRowClicked(true);
+                            setDetails(true);
+                            //  setAsset(assetId.toString());
 
-                          // Use setTimeout to ensure state updates are processed
-                          setTimeout(() => {
-                            const params = new URLSearchParams({
-                              search: search || '',
-                              institute_id: institute || '',
-                              block_id: block || '',
-                              room_id: room || '',
-                              asset_category_id: assetCategory || '',
-                              asset_id: assetId.toString(),
-                              region_id: region || '',
-                              details: 'true',
-                            });
-
-                            fetch(`/reports/assets/institute-assets?${params.toString()}`)
-                              .then((response) => response.json())
-                              .then((data) => {
-                                setInstituteAssets(data);
-                              })
-                              .catch((error) => {
-                                console.error('Error fetching asset details:', error);
-                                toast.error('Failed to fetch asset details');
+                            // Use setTimeout to ensure state updates are processed
+                            setTimeout(() => {
+                              const params = new URLSearchParams({
+                                search: search || '',
+                                institute_id: institute || '',
+                                block_id: block || '',
+                                room_id: room || '',
+                                asset_category_id: assetCategory || '',
+                                asset_id: assetId.toString(),
+                                region_id: region || '',
+                                details: 'true',
                               });
-                          }, 0);
-                        };
+
+                              fetch(`/reports/assets/institute-assets?${params.toString()}`)
+                                .then((response) => response.json())
+                                .then((data) => {
+                                  setInstituteAssets(data);
+                                })
+                                .catch((error) => {
+                                  console.error('Error fetching asset details:', error);
+                                  toast.error('Failed to fetch asset details');
+                                });
+                            }, 0);
+                          };
+
+                          return (
+                            <tr
+                              key={`${instAsset.name}-${index}`}
+                              className="hover:bg-primary/10 dark:hover:bg-gray-700 cursor-pointer"
+                              onClick={() => handleRowClick(instAsset.id)}
+                            >
+                              <td className="border p-2 text-left font-bold dark:text-gray-100">
+                                {instAsset.name}
+                              </td>
+                              <td className="border p-1 sm:p-2 text-center text-sm sm:text-base font-bold text-green-600">
+                                {instAsset.total_qty}
+                              </td>
+                              <td className="border p-2 text-center text-amber-600">
+                                {instAsset.locations_count || '-'}
+                              </td>
+                            </tr>
+                          );
+                        }
+
+                        // Detailed Mode — safe fallback
+                        if (!instAsset.asset) {
+                          return (
+                            <tr key={index}>
+                              <td colSpan={5} className="text-center text-muted-foreground py-4">
+                                Loading details...
+                              </td>
+                            </tr>
+                          );
+                        }
 
                         return (
-                          <tr
-                            key={`${instAsset.name}-${index}`}
-                            className="hover:bg-primary/10 dark:hover:bg-gray-700 cursor-pointer"
-                            onClick={() => handleRowClick(instAsset.id)}
-                          >
+                          <tr key={instAsset.id} className="hover:bg-primary/10 dark:hover:bg-gray-700">
                             <td className="border p-2 text-left font-bold dark:text-gray-100">
-                              {instAsset.name}
+                              {instAsset.institute?.name}
                             </td>
-                            <td className="border p-2 text-center text-lg font-bold text-green-600">
-                              {instAsset.total_qty}
+                            <td className="border p-2 text-left font-bold dark:text-gray-100">
+                              {instAsset.asset?.category.name}
                             </td>
-                            <td className="border p-2 text-center text-amber-600">
-                              {instAsset.locations_count || '-'}
+                            <td className="border p-2 text-left font-bold dark:text-gray-100">
+                              {instAsset.asset?.name}
+                            </td>
+                            <td className="border p-1 sm:p-2 text-center font-bold text-sm sm:text-base text-green-600">
+                              {instAsset.current_qty}
+                            </td>
+                            <td className="border p-1 sm:p-2 text-xs sm:text-sm text-gray-900 dark:text-gray-100">
+                              {instAsset.room ? (
+                                <>
+                                  {instAsset.room.name}
+                                  {instAsset.room.block && <span className="text-muted-foreground"> ({instAsset.room.block.name})</span>}
+                                </>
+                              ) : '—'}
+                            </td>
+
+
+                            <td className="border p-1 sm:p-2 text-xs sm:text-sm text-gray-900 dark:text-gray-100">
+                              {instAsset.added_date ? new Date(instAsset.added_date).toLocaleDateString() : '—'}
                             </td>
                           </tr>
                         );
-                      }
-
-                      // Detailed Mode — safe fallback
-                      if (!instAsset.asset) {
-                        return (
-                          <tr key={index}>
-                            <td colSpan={5} className="text-center text-muted-foreground py-4">
-                              Loading details...
-                            </td>
-                          </tr>
-                        );
-                      }
-
-                      return (
-                        <tr key={instAsset.id} className="hover:bg-primary/10 dark:hover:bg-gray-700">
-                          <td className="border p-2 text-left font-bold dark:text-gray-100">
-                            {instAsset.institute?.name}
-                          </td>
-                          <td className="border p-2 text-left font-bold dark:text-gray-100">
-                            {instAsset.asset?.category.name}
-                          </td>
-                          <td className="border p-2 text-left font-bold dark:text-gray-100">
-                            {instAsset.asset?.name}
-                          </td>
-                          <td className="border p-2 text-center font-bold text-lg text-green-600">
-                            {instAsset.current_qty}
-                          </td>
-                          <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">
-                            {instAsset.room ? (
-                              <>
-                                {instAsset.room.name}
-                                {instAsset.room.block && <span className="text-muted-foreground"> ({instAsset.room.block.name})</span>}
-                              </>
-                            ) : '—'}
-                          </td>
-
-
-                          <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">
-                            {instAsset.added_date ? new Date(instAsset.added_date).toLocaleDateString() : '—'}
-                          </td>
-                        </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
 
               {/* Pagination */}
               {instituteAssets.links?.length > 1 && (

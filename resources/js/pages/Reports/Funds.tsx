@@ -348,13 +348,13 @@ export default function Funds({
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Funds Report" />
 
-      <div className="p-4 lg:p-6 max-w-full">
-        <Card className="w-full shadow-lg">
+      <div className="p-2 sm:p-4 lg:p-6 w-full overflow-x-hidden space-y-4 sm:space-y-6">
+        <Card className=" shadow-lg">
           <CardHeader className="pb-4">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
-                <CardTitle className="text-2xl font-bold">Funds Report</CardTitle>
-                <p className="text-sm text-muted-foreground mt-1">
+                <CardTitle className="text-lg sm:text-2xl font-bold">Funds Report</CardTitle>
+                <p className="text-xs sm:text-sm text-muted-foreground mt-1">
                   View fund balances by institute / fund head
                 </p>
               </div>
@@ -427,8 +427,8 @@ export default function Funds({
               <CardContent className="pt-6 pb-4">
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-semibold flex items-center gap-2">
-                      <FileText className="h-5 w-5" />
+                    <h3 className="text-sm sm:text-base lg:text-lg font-semibold flex items-center gap-2">
+                      <FileText className="h-4 w-4 sm:h-5 sm:w-5" />
                       Generate Regional Fund Report
                       {region && region !== '0' && (
                         <span className="text-sm font-normal text-muted-foreground">
@@ -444,7 +444,7 @@ export default function Funds({
                             checked={selectedRegions.length === regions.length && regions.length > 0}
                             onCheckedChange={toggleAllRegions}
                           />
-                          <span className="text-sm font-medium">Select All</span>
+                          <span className="text-xs sm:text-sm font-medium">Select All</span>
                         </label>
                       )}
                       <Button
@@ -482,13 +482,13 @@ export default function Funds({
                                 checked={selectedRegions.includes(r.id)}
                                 onCheckedChange={() => toggleRegionSelection(r.id)}
                               />
-                              <span className="text-sm font-medium">{shortName}</span>
+                              <span className="text-xs sm:text-sm font-medium">{shortName}</span>
                             </label>
                           );
                         })}
                       </div>
                       {selectedRegions.length > 0 && (
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-xs sm:text-sm text-muted-foreground">
                           {selectedRegions.length} region(s) selected for report
                         </p>
                       )}
@@ -503,7 +503,7 @@ export default function Funds({
 
           {/* Total Balance Summary */}
           <CardContent className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-900 py-6">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6" onClick={() => {
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-6" onClick={() => {
               setFundHead('');
               const params = new URLSearchParams({
                 institute_id: institute || '',
@@ -513,14 +513,14 @@ export default function Funds({
               applyFilters(`/reports/funds/getfunds?${params.toString()}`);
             }}>
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Total Balance</p>
-                <p className="text-4xl font-bold text-primary mt-2">
+                <p className="text-xs sm:text-sm font-medium text-muted-foreground">Total Balance</p>
+                <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-primary mt-2">
                   {formatCurrency(totalBalance)}
                 </p>
               </div>
               <div className="text-right">
-                <p className="text-sm text-muted-foreground">Active Fund Heads</p>
-                <p className="text-3xl font-bold text-muted-foreground mt-1">
+                <p className="text-xs sm:text-sm text-muted-foreground">Active Fund Heads</p>
+                <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-muted-foreground mt-1">
                   {balances.length}
                 </p>
               </div>
@@ -534,7 +534,7 @@ export default function Funds({
             <>
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold">Fund Head Balances</h3>
+                  <h3 className="text-base sm:text-lg font-semibold">Fund Head Balances</h3>
                   <Button
                     onClick={() => {
                       setFundHead('');
@@ -551,7 +551,7 @@ export default function Funds({
                     Show All
                   </Button>
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4">
                   {balances.map((b, i) => (
                     <div
                       key={i}
@@ -572,12 +572,12 @@ export default function Funds({
                         applyFilters(`/reports/funds/getfunds?${params.toString()}`);
 
                       }}
-                      className="bg-muted/50 dark:bg-gray-800 p-4 rounded-lg border hover:shadow-md transition-shadow"
+                      className="bg-muted/50 dark:bg-gray-800 p-3 sm:p-4 rounded-lg border hover:shadow-md transition-shadow cursor-pointer"
                     >
-                      <p className="text-xs font-medium text-muted-foreground lg:text-base text-sm truncate">
+                      <p className="text-xs sm:text-sm font-medium text-muted-foreground truncate">
                         {b.fund_head?.name && b.fund_head.name !== 'N/A' ? b.fund_head.name : fundheads.find(fh => fh.id.toString() === fundHead)?.name}
                       </p>
-                      <p className="text-lg font-bold lg:text-xl text-green-600 dark:text-green-400 mt-2">
+                      <p className="text-base sm:text-lg lg:text-xl font-bold text-green-600 dark:text-green-400 mt-1 sm:mt-2">
                         {formatCurrency(b.balance)}
                       </p>
                     </div>
@@ -592,7 +592,7 @@ export default function Funds({
           <CardContent className="p-0">
             <div className="overflow-x-auto">
 
-              <div className="max-w-[800px] lg:min-w-0">
+              <div className="max-w-full">
                 {funds[0].institute_name && regions.length > 0 ? (
                   <Button
                     onClick={() => {
@@ -612,176 +612,179 @@ export default function Funds({
                     Show All
                   </Button>) : ('')}
                 {funds.length === 0 ? (
-                  <div className="text-center py-16 text-muted-foreground">
+                  <div className="text-center py-16 text-muted-foreground ">
                     No institute data found. Try adjusting filters.
                   </div>
                 ) : (
-                  <table className="w-full  border-collapse text-sm">
-                    <thead>
-                      <tr className="bg-primary text-white">
-                        <th className="sticky left-0 z-20 bg-primary px-6 py-4 text-left font-semibold">
-                          {funds[0].institute_name ? 'Institute' : 'Region'}
-                        </th>
-                        {/* Show only selected fund head or all if none selected */}
-                        {fundHead && fundHead !== '0' ? (
-                          // Show only the selected fund head
-                          <th className="px-4 py-4 text-center font-medium whitespace-nowrap">
-                            {fundheads.find(fh => fh.id.toString() === fundHead)?.name}
+
+                  <div className=" overflow-x-auto mx-2 sm:mx-0">
+                    <table className="w-full border-collapse text-xs sm:text-sm">
+                      <thead>
+                        <tr className="bg-primary text-white">
+                          <th className="sticky left-0 z-20 bg-primary px-3 sm:px-6 py-3 sm:py-4 text-left font-semibold text-xs sm:text-sm">
+                            {funds[0].institute_name ? 'Institute' : 'Region'}
                           </th>
-                        ) : (
-                          // Show all fund heads
-                          fundheads.map(fh => (
-                            <th key={fh.id} className="px-4 py-4 text-center font-medium whitespace-nowrap">
-                              {fh.name}
+                          {/* Show only selected fund head or all if none selected */}
+                          {fundHead && fundHead !== '0' ? (
+                            // Show only the selected fund head
+                            <th className="px-4 py-4 text-center font-medium whitespace-nowrap">
+                              {fundheads.find(fh => fh.id.toString() === fundHead)?.name}
                             </th>
-                          ))
-                        )}
-                        {fundHead == '0' || fundHead == '' ? (
-                          <th className="sticky right-0 z-20 bg-primary px-6 py-4 text-right font-bold">
-                            Total
-                          </th>
-                        ) : (''
-                        )}
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                      {funds.map(row => {
-                        const isRegionRow = !row.institute_name && row.region_name;
+                          ) : (
+                            // Show all fund heads
+                            fundheads.map(fh => (
+                              <th key={fh.id} className="px-4 py-4 text-center font-medium whitespace-nowrap">
+                                {fh.name}
+                              </th>
+                            ))
+                          )}
+                          {fundHead == '0' || fundHead == '' ? (
+                            <th className="sticky right-0 z-20 bg-primary px-6 py-4 text-right font-bold">
+                              Total
+                            </th>
+                          ) : (''
+                          )}
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                        {funds.map(row => {
+                          const isRegionRow = !row.institute_name && row.region_name;
 
-                        return (
-                          <tr
-                            key={row.institute_id ?? row.region_id}
-                            className={`hover:bg-muted/50 ${isRegionRow ? 'cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20' : ''}`}
-                            onClick={() => {
-                              if (isRegionRow && row.region_id) {
-                                const regionId = row.region_id.toString();
+                          return (
+                            <tr
+                              key={row.institute_id ?? row.region_id}
+                              className={`hover:bg-muted/50 ${isRegionRow ? 'cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20' : ''}`}
+                              onClick={() => {
+                                if (isRegionRow && row.region_id) {
+                                  const regionId = row.region_id.toString();
 
-                                // Set region and load institutes
-                                setRegion(regionId);
-                                fetchInstitutes(regionId);
+                                  // Set region and load institutes
+                                  setRegion(regionId);
+                                  fetchInstitutes(regionId);
 
-                                // Clear institute selection and re-apply filters
-                                setInstitute('');
-                                // Re-apply filters with the selected fund head
-                                const params = new URLSearchParams({
-                                  institute_id: institute || '',
-                                  region_id: regionId,
-                                  fund_head_id: fundHead || '',
-                                });
+                                  // Clear institute selection and re-apply filters
+                                  setInstitute('');
+                                  // Re-apply filters with the selected fund head
+                                  const params = new URLSearchParams({
+                                    institute_id: institute || '',
+                                    region_id: regionId,
+                                    fund_head_id: fundHead || '',
+                                  });
 
-                                applyFilters(`/reports/funds/getfunds?${params.toString()}`);
+                                  applyFilters(`/reports/funds/getfunds?${params.toString()}`);
 
-                                // Optional: show toast feedback
-                              }
-                            }}
-                          >
-                            <td className="sticky left-0 z-10 bg-background text-wrap px-6 py-4 font-medium lg:text-base   text-sm border-r  min-w-[200px]">
-                              <div className="flex items-center gap-2">
-                                {row.institute_name || (
-                                  <>
-                                    {/* Optional visual indicator that this is a clickable region */}
-                                    <span className="text-blue-600 dark:text-blue-400 font-semibold lg:text-base text-sm   ">
-                                      {row.region_name.split(' ').pop() || row.region_name}
-                                    </span>
+                                  // Optional: show toast feedback
+                                }
+                              }}
+                            >
+                              <td className="sticky left-0 z-10 bg-background text-wrap px-3 sm:px-6 py-3 sm:py-4 font-medium text-xs sm:text-sm border-r ">
+                                <div className="flex items-center gap-2">
+                                  {row.institute_name || (
+                                    <>
+                                      {/* Optional visual indicator that this is a clickable region */}
+                                      <span className="text-blue-600 dark:text-blue-400 font-semibold text-xs sm:text-sm">
+                                        {row.region_name.split(' ').pop() || row.region_name}
+                                      </span>
 
-                                  </>
-                                )}
-                              </div>
+                                    </>
+                                  )}
+                                </div>
+                              </td>
+
+                              {/* Show only selected fund head or all if none selected */}
+                              {fundHead && fundHead !== '0' ? (
+                                // Show only the selected fund head value
+                                <td className="px-2 sm:px-4 py-2 sm:py-4 text-right font-medium text-xs sm:text-sm tabular-nums whitespace-nowrap">
+                                  {(() => {
+                                    const selectedFundHead = fundheads.find(fh => fh.id.toString() === fundHead);
+                                    const amount = row.fund_heads[selectedFundHead?.name || ''] || 0;
+
+                                    if (!isRegionRow) {
+                                      return (
+                                        <a
+                                          href={`/reports/fundstrans?institute_id=${row.institute_id}&fund_head_id=${selectedFundHead?.id}&region_id=${region}`}
+                                          className="text-blue-600 hover:underline"
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          onClick={(e) => e.stopPropagation()}
+                                        >
+                                          {formatCurrency(amount)}
+                                        </a>
+                                      );
+                                    }
+                                    return formatCurrency(amount);
+                                  })()}
+                                </td>
+                              ) : (
+                                // Show all fund heads
+                                <>
+                                  {fundheads.map(fh => (
+                                    <td key={fh.id} className="px-1 sm:px-2 py-2 text-right font-medium text-xs sm:text-sm tabular-nums whitespace-nowrap">
+                                      {!isRegionRow ? (
+                                        <a
+                                          href={`/reports/fundstrans?institute_id=${row.institute_id}&fund_head_id=${fh.id}&region_id=${region}`}
+                                          className="text-blue-600 hover:underline"
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          onClick={(e) => e.stopPropagation()}
+                                        >
+                                          {formatCurrency(row.fund_heads[fh.name])}
+                                        </a>
+                                      ) : (
+                                        formatCurrency(row.fund_heads[fh.name])
+                                      )}
+                                    </td>
+                                  ))}
+                                </>
+                              )}
+
+                              {/* Total Balance - Outside the conditional */}
+                              {fundHead == '0' || fundHead == '' ? (
+                                <td className="sticky right-0 z-10 bg-green-50 dark:bg-green-900/30 px-2 sm:px-3 py-2 text-xs sm:text-sm text-right font-bold text-green-700 dark:text-green-400 tabular-nums border-l whitespace-nowrap">
+                                  {formatCurrency(row.total_balance)}
+                                </td>
+                              ) : (
+                                ''
+                              )}
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                      <tfoot>
+                        <tr className="bg-gray-100 dark:bg-gray-800 font-bold">
+                          <td className="sticky left-0 z-10 bg-gray-100 dark:bg-gray-800 px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm">
+                            Grand Total
+                          </td>
+                          {fundHead && fundHead !== '0' ? (
+                            // Show only the selected fund head total
+                            <td className="px-2 sm:px-4 py-3 sm:py-4 text-right font-mono text-xs sm:text-sm tabular-nums">
+                              {(() => {
+                                const selectedFundHead = fundheads.find(fh => fh.id.toString() === fundHead);
+                                const sum = funds.reduce((acc, row) => acc + toNumber(row.fund_heads[selectedFundHead?.name || ''] || 0), 0);
+                                return formatCurrency(sum);
+                              })()}
                             </td>
-
-                            {/* Show only selected fund head or all if none selected */}
-                            {fundHead && fundHead !== '0' ? (
-                              // Show only the selected fund head value
-                              <td className="px-4 py-4 text-right font-medium lg:text-base text-sm tabular-nums  whitespace-nowrap">
-                                {(() => {
-                                  const selectedFundHead = fundheads.find(fh => fh.id.toString() === fundHead);
-                                  const amount = row.fund_heads[selectedFundHead?.name || ''] || 0;
-
-                                  if (!isRegionRow) {
-                                    return (
-                                      <a
-                                        href={`/reports/fundstrans?institute_id=${row.institute_id}&fund_head_id=${selectedFundHead?.id}&region_id=${region}`}
-                                        className="text-blue-600 hover:underline"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        onClick={(e) => e.stopPropagation()}
-                                      >
-                                        {formatCurrency(amount)}
-                                      </a>
-                                    );
-                                  }
-                                  return formatCurrency(amount);
-                                })()}
-                              </td>
-                            ) : (
-                              // Show all fund heads
-                              <>
-                                {fundheads.map(fh => (
-                                  <td key={fh.id} className="px-2 py-2 text-right font-medium lg:text-base text-sm tabular-nums whitespace-nowrap">
-                                    {!isRegionRow ? (
-                                      <a
-                                        href={`/reports/fundstrans?institute_id=${row.institute_id}&fund_head_id=${fh.id}&region_id=${region}`}
-                                        className="text-blue-600 hover:underline"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        onClick={(e) => e.stopPropagation()}
-                                      >
-                                        {formatCurrency(row.fund_heads[fh.name])}
-                                      </a>
-                                    ) : (
-                                      formatCurrency(row.fund_heads[fh.name])
-                                    )}
-                                  </td>
-                                ))}
-                              </>
-                            )}
-
-                            {/* Total Balance - Outside the conditional */}
-                            {fundHead == '0' || fundHead == '' ? (
-                              <td className="sticky right-0 z-10 bg-green-50 dark:bg-green-900/30 px-3 py-2 lg:text-base text-sm text-right font-bold text-green-700 dark:text-green-400 tabular-nums border-l whitespace-nowrap">
-                                {formatCurrency(row.total_balance)}
-                              </td>
-                            ) : (
-                              ''
-                            )}
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                    <tfoot>
-                      <tr className="bg-gray-100 dark:bg-gray-800 font-bold">
-                        <td className="sticky left-0 z-10 bg-gray-100 dark:bg-gray-800 px-6 py-4">
-                          Grand Total
-                        </td>
-                        {fundHead && fundHead !== '0' ? (
-                          // Show only the selected fund head total
-                          <td className="px-4 py-4 text-right font-mono lg:text-base text-sm tabular-nums">
-                            {(() => {
-                              const selectedFundHead = fundheads.find(fh => fh.id.toString() === fundHead);
-                              const sum = funds.reduce((acc, row) => acc + toNumber(row.fund_heads[selectedFundHead?.name || ''] || 0), 0);
-                              return formatCurrency(sum);
-                            })()}
-                          </td>
-                        ) : (
-                          // Show all fund head totals
-                          fundheads.map(fh => {
-                            const sum = funds.reduce((acc, row) => acc + toNumber(row.fund_heads[fh.name]), 0);
-                            return (
-                              <td key={fh.id} className="px-4 py-4 text-right font-mono lg:text-base text-sm tabular-nums">
-                                {formatCurrency(sum)}
-                              </td>
-                            );
-                          })
-                        )}
-                        {fundHead == '0' || fundHead == '' ? (
-                          <td className="sticky right-0 z-10 bg-emerald-100 dark:bg-emerald-900/50 px-6 py-4 text-right font-bold text-emerald-700 dark:text-emerald-400 font-mono tabular-nums border-l lg:text-base text-sm">
-                            {formatCurrency(totalBalance)}
-                          </td>
-                        ) : (''
-                        )}
-                      </tr>
-                    </tfoot>
-                  </table>
+                          ) : (
+                            // Show all fund head totals
+                            fundheads.map(fh => {
+                              const sum = funds.reduce((acc, row) => acc + toNumber(row.fund_heads[fh.name]), 0);
+                              return (
+                                <td key={fh.id} className="px-2 sm:px-4 py-3 sm:py-4 text-right font-mono text-xs sm:text-sm tabular-nums">
+                                  {formatCurrency(sum)}
+                                </td>
+                              );
+                            })
+                          )}
+                          {fundHead == '0' || fundHead == '' ? (
+                            <td className="sticky right-0 z-10 bg-emerald-100 dark:bg-emerald-900/50 px-3 sm:px-6 py-3 sm:py-4 text-right font-bold text-emerald-700 dark:text-emerald-400 font-mono tabular-nums border-l text-xs sm:text-sm">
+                              {formatCurrency(totalBalance)}
+                            </td>
+                          ) : (''
+                          )}
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
                 )}
               </div>
             </div>

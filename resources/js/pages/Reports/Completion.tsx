@@ -349,10 +349,10 @@ export default function Completion({
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Completion Report" />
 
-            <div className="p-4 lg:p-6 max-w-full space-y-6">
+            <div className="p-2 sm:p-4 w-full  overflow-x-hidden space-y-2 sm:space-y-3">
                 <Card className="w-full shadow-lg">
                     <CardHeader className="pb-4">
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2   sm:gap-3">
                             <div>
                                 <CardTitle className="text-2xl font-bold">Completion Report</CardTitle>
                                 <p className="text-sm text-muted-foreground mt-1">
@@ -409,28 +409,28 @@ export default function Completion({
                     <CardHeader>
                         <CardTitle className="text-lg md:text-xl lg:text-2xl font-bold">Summary & Institute Details</CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-6">
+                    <CardContent className="space-y-3">
                         {/* Summary Section - Modern Stat Cards */}
                         <div>
-                            <h3 className="text-base md:text-lg lg:text-xl font-semibold mb-4 flex items-center gap-2">
-                                <span className="w-1 h-6 bg-primary rounded-full"></span>
+                            <h3 className="text-base md:text-lg lg:text-xl font-semibold mb-2 flex items-center gap-2">
+                                <span className="w-1 h-4 bg-primary rounded-full"></span>
                                 Summary Overview
                             </h3>
                             {summary.length > 0 ? (
-                                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4">
+                                <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3 md:gap-4">
                                     {/* Total Institutions Card */}
                                     <div className="relative overflow-hidden rounded-xl border bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 p-4 md:p-5 shadow-sm hover:shadow-md transition-all duration-300 group" onClick={() => { setStatus(''); fetchData({ status: '' }); }}>
                                         <div className="absolute top-0 right-0 w-20 h-20 bg-slate-200/50 dark:bg-slate-700/30 rounded-full -translate-y-1/2 translate-x-1/2"></div>
-                                        <p className="text-base md:text-lg lg:text-xl font-semibold text-muted-foreground uppercase tracking-wider mb-2">Total Institutions</p>
-                                        <p className="text-2xl md:text-3xl lg:text-4xl font-black text-slate-700 dark:text-slate-200 group-hover:scale-105 transition-transform">{totalInstitutes}</p>
+                                        <p className="text-base md:text-lg  font-semibold text-muted-foreground uppercase tracking-wider mb-2">Institutions</p>
+                                        <p className="text-2xl md:text-3xl  font-black text-slate-700 dark:text-slate-200 group-hover:scale-105 transition-transform">{totalInstitutes}</p>
                                     </div>
 
                                     {/* Completed Card */}
                                     {(status === 'completed' || status === '') && summary.map((item, idx) => (
                                         <div key={`completed-${idx}`} className="relative overflow-hidden rounded-xl border border-emerald-200 dark:border-emerald-900 bg-gradient-to-br from-emerald-50 to-green-100 dark:from-emerald-950 dark:to-green-900 p-4 md:p-5 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer group hover:border-emerald-400" onClick={() => { setStatus('completed'); fetchData({ status: 'completed' }); }}>
                                             <div className="absolute top-0 right-0 w-20 h-20 bg-emerald-200/50 dark:bg-emerald-800/30 rounded-full -translate-y-1/2 translate-x-1/2"></div>
-                                            <p className="text-base md:text-lg lg:text-xl font-semibold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider mb-2">✓ Completed</p>
-                                            <p className="text-2xl md:text-3xl lg:text-4xl font-black text-emerald-600 dark:text-emerald-400 group-hover:scale-105 transition-transform">{item.completed}</p>
+                                            <p className="text-base md:text-lg  font-semibold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider mb-2">✓ Completed</p>
+                                            <p className="text-2xl md:text-3xl  font-black text-emerald-600 dark:text-emerald-400 group-hover:scale-105 transition-transform">{item.completed}</p>
                                         </div>
                                     ))}
 
@@ -438,8 +438,8 @@ export default function Completion({
                                     {(status === 'greater_than_50' || status === '') && summary.map((item, idx) => (
                                         <div key={`above50-${idx}`} className="relative overflow-hidden rounded-xl border border-blue-200 dark:border-blue-900 bg-gradient-to-br from-blue-50 to-cyan-100 dark:from-blue-950 dark:to-cyan-900 p-4 md:p-5 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer group hover:border-blue-400" onClick={() => { setStatus('greater_than_50'); fetchData({ status: 'greater_than_50' }); }}>
                                             <div className="absolute top-0 right-0 w-20 h-20 bg-blue-200/50 dark:bg-blue-800/30 rounded-full -translate-y-1/2 translate-x-1/2"></div>
-                                            <p className="text-base md:text-lg lg:text-xl font-semibold text-blue-700 dark:text-blue-400 uppercase tracking-wider mb-2">↑ Above 50%</p>
-                                            <p className="text-2xl md:text-3xl lg:text-4xl font-black text-blue-600 dark:text-blue-400 group-hover:scale-105 transition-transform">{item.greater_than_50}</p>
+                                            <p className="text-base md:text-lg  font-semibold text-blue-700 dark:text-blue-400 uppercase tracking-wider mb-2">↑ Above 50%</p>
+                                            <p className="text-2xl md:text-3xl  font-black text-blue-600 dark:text-blue-400 group-hover:scale-105 transition-transform">{item.greater_than_50}</p>
                                         </div>
                                     ))}
 
@@ -447,8 +447,8 @@ export default function Completion({
                                     {(status === 'less_than_50' || status === '') && summary.map((item, idx) => (
                                         <div key={`below50-${idx}`} className="relative overflow-hidden rounded-xl border border-amber-200 dark:border-amber-900 bg-gradient-to-br from-amber-50 to-orange-100 dark:from-amber-950 dark:to-orange-900 p-4 md:p-5 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer group hover:border-amber-400" onClick={() => { setStatus('less_than_50'); fetchData({ status: 'less_than_50' }); }}>
                                             <div className="absolute top-0 right-0 w-20 h-20 bg-amber-200/50 dark:bg-amber-800/30 rounded-full -translate-y-1/2 translate-x-1/2"></div>
-                                            <p className="text-base md:text-lg lg:text-xl font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wider mb-2">↓ Below 50%</p>
-                                            <p className="text-2xl md:text-3xl lg:text-4xl font-black text-amber-600 dark:text-amber-400 group-hover:scale-105 transition-transform">{item.less_than_50}</p>
+                                            <p className="text-base md:text-lg  font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wider mb-2">↓ Below 50%</p>
+                                            <p className="text-2xl md:text-3xl  font-black text-amber-600 dark:text-amber-400 group-hover:scale-105 transition-transform">{item.less_than_50}</p>
                                         </div>
                                     ))}
 
@@ -456,8 +456,8 @@ export default function Completion({
                                     {(status === 'zero' || status === '') && summary.map((item, idx) => (
                                         <div key={`zero-${idx}`} className="relative overflow-hidden rounded-xl border border-red-200 dark:border-red-900 bg-gradient-to-br from-red-50 to-rose-100 dark:from-red-950 dark:to-rose-900 p-4 md:p-5 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer group hover:border-red-400" onClick={() => { setStatus('zero'); fetchData({ status: 'zero' }); }}>
                                             <div className="absolute top-0 right-0 w-20 h-20 bg-red-200/50 dark:bg-red-800/30 rounded-full -translate-y-1/2 translate-x-1/2"></div>
-                                            <p className="text-sm md:text-base lg:text-lg font-semibold text-red-700 dark:text-red-400 uppercase tracking-wider mb-2">✕ Zero (0%)</p>
-                                            <p className="text-2xl md:text-3xl lg:text-4xl font-black text-red-600 dark:text-red-400 group-hover:scale-105 transition-transform">{item.zero}</p>
+                                            <p className="text-sm md:text-base  font-semibold text-red-700 dark:text-red-400 uppercase tracking-wider mb-2">✕ Zero (0%)</p>
+                                            <p className="text-2xl md:text-3xl  font-black text-red-600 dark:text-red-400 group-hover:scale-105 transition-transform">{item.zero}</p>
                                         </div>
                                     ))}
                                 </div>
@@ -478,7 +478,7 @@ export default function Completion({
                             </h3>
 
                             {/* Filter Buttons - Modern Pill Style */}
-                            <div className="flex flex-wrap gap-2 mb-5">
+                            <div className="flex gap-2 mb-4 sm:mb-5 overflow-x-auto pb-2 sm:pb-0 sm:flex-wrap scrollbar-thin">
                                 {!isRegionView && regions.length > 0 ? (
                                     <>
                                         <Combobox
@@ -546,11 +546,11 @@ export default function Completion({
                             </div>
 
                             {/* Modern Table Design */}
-                            <div className="overflow-x-auto rounded-xl border shadow-sm">
-                                <table className="w-full text-sm md:text-base">
+                            <div className="overflow-x-auto rounded-lg sm:rounded-xl border shadow-sm -mx-2 sm:mx-0">
+                                <table className="w-full text-xs sm:text-sm md:text-base min-w-[600px]">
                                     <thead>
                                         <tr className="bg-gradient-to-r from-slate-100 to-slate-50 dark:from-slate-800 dark:to-slate-900 border-b">
-                                            <th className="px-4 md:px-6 py-4 text-left font-semibold text-slate-700 dark:text-slate-300  text-base md:text-lg lg:text-xl tracking-wider min-w-[200px]">
+                                            <th className="px-4 md:px-6 py-4 text-left font-semibold text-slate-700 dark:text-slate-300  text-base md:text-lg lg:text-xl tracking-wider ">
                                                 {isRegionView ? 'Region' : 'Institute'}
                                             </th>
 
@@ -600,7 +600,7 @@ export default function Completion({
                                                             {status === '' && <td className="px-3 md:px-4 py-4 text-center font-bold text-base md:text-lg lg:text-xl text-slate-700 dark:text-slate-300">{item.total_institutes}</td>}
                                                             {(status === 'completed' || status === '') && (
                                                                 <td className="px-3 md:px-4 py-4 text-center" onClick={(e) => { e.stopPropagation(); setStatus('completed'); handleRegionClick(item.id, 'completed'); }}>
-                                                                    <span className="inline-flex items-center justify-center min-w-[2.5rem] px-3 py-1.5 rounded-full text-sm md:text-base lg:text-lg font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400">
+                                                                    <span className="inline-flex items-center justify-center min-w-[1rem] sm:min-w-[2.5rem] px-3 py-1.5 rounded-full text-sm md:text-base lg:text-lg font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400">
                                                                         {item.completed}
                                                                     </span>
                                                                 </td>
@@ -641,7 +641,7 @@ export default function Completion({
                                                             <td className="px-3 md:px-4 py-4 text-center bg-slate-50/50 dark:bg-slate-800/30">
                                                                 <span
                                                                     className={`
-                                                                        inline-flex items-center justify-center min-w-[4rem] px-4 py-2 rounded-full text-base md:text-lg lg:text-xl font-bold cursor-pointer
+                                                                        inline-flex items-center justify-center min-w-[2rem] sm:min-w-[4rem] px-4 py-2 rounded-full text-base md:text-lg lg:text-xl font-bold cursor-pointer
                                                                         transition-all hover:scale-105 hover:shadow-md
                                                                         ${item.percentage === 100
                                                                             ? 'bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-emerald-200 dark:shadow-emerald-900'
@@ -686,7 +686,7 @@ export default function Completion({
                 </Card>
 
                 <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-                    <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+                    <DialogContent className="max-w-[95vw] sm:max-w-3xl max-h-[90vh] overflow-y-auto">
                         <DialogHeader>
                             <DialogTitle className="text-xl">Completion Details: {selectedDetails?.institute || 'Loading...'}</DialogTitle>
                             <DialogDescription>

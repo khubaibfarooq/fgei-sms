@@ -123,12 +123,12 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
 Card.displayName = 'Card';
 
 const CardHeader = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn('flex flex-col space-y-1.5 p-6', className)} {...props} />
+  <div ref={ref} className={cn('flex flex-col space-y-0.5 sm:space-y-1.5 p-2 sm:p-4', className)} {...props} />
 ));
 CardHeader.displayName = 'CardHeader';
 
 const CardTitle = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn('text-2xl font-bold leading-none tracking-tight', className)} {...props} />
+  <div ref={ref} className={cn('text-lg sm:text-2xl font-bold leading-none tracking-tight', className)} {...props} />
 ));
 CardTitle.displayName = 'CardTitle';
 
