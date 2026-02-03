@@ -16,6 +16,7 @@ return new class extends Migration
         // ========================================
         
         // INSERT Trigger (with added_by tracking)
+        DB::unprepared('DROP TRIGGER IF EXISTS funds_after_insert');
         DB::unprepared('
             CREATE TRIGGER funds_after_insert
             AFTER INSERT ON funds
@@ -44,6 +45,7 @@ return new class extends Migration
         ');
 
         // UPDATE Trigger (with added_by tracking)
+        DB::unprepared('DROP TRIGGER IF EXISTS funds_after_update');
         DB::unprepared('
             CREATE TRIGGER funds_after_update
             AFTER UPDATE ON funds
@@ -83,6 +85,7 @@ return new class extends Migration
         ');
 
         // DELETE Trigger (with added_by tracking)
+        DB::unprepared('DROP TRIGGER IF EXISTS funds_after_delete');
         DB::unprepared('
             CREATE TRIGGER funds_after_delete
             AFTER DELETE ON funds
@@ -115,6 +118,7 @@ return new class extends Migration
         // ========================================
         
         // INSERT Trigger
+        DB::unprepared('DROP TRIGGER IF EXISTS fund_heads_after_insert');
         DB::unprepared('
             CREATE TRIGGER fund_heads_after_insert
             AFTER INSERT ON fund_heads
@@ -138,6 +142,7 @@ return new class extends Migration
         ');
 
         // UPDATE Trigger
+        DB::unprepared('DROP TRIGGER IF EXISTS fund_heads_after_update');
         DB::unprepared('
             CREATE TRIGGER fund_heads_after_update
             AFTER UPDATE ON fund_heads
@@ -168,6 +173,7 @@ return new class extends Migration
         ');
 
         // DELETE Trigger
+        DB::unprepared('DROP TRIGGER IF EXISTS fund_heads_after_delete');
         DB::unprepared('
             CREATE TRIGGER fund_heads_after_delete
             AFTER DELETE ON fund_heads
@@ -195,6 +201,7 @@ return new class extends Migration
         // ========================================
         
         // INSERT Trigger (with added_by tracking)
+        DB::unprepared('DROP TRIGGER IF EXISTS fund_helds_after_insert');
         DB::unprepared('
             CREATE TRIGGER fund_helds_after_insert
             AFTER INSERT ON fund_helds
@@ -221,6 +228,7 @@ return new class extends Migration
         ');
 
         // UPDATE Trigger (with added_by tracking)
+        DB::unprepared('DROP TRIGGER IF EXISTS fund_helds_after_update');
         DB::unprepared('
             CREATE TRIGGER fund_helds_after_update
             AFTER UPDATE ON fund_helds
@@ -256,6 +264,7 @@ return new class extends Migration
         ');
 
         // DELETE Trigger (with added_by tracking)
+        DB::unprepared('DROP TRIGGER IF EXISTS fund_helds_after_delete');
         DB::unprepared('
             CREATE TRIGGER fund_helds_after_delete
             AFTER DELETE ON fund_helds
@@ -286,6 +295,7 @@ return new class extends Migration
         // ========================================
         
         // INSERT Trigger (with added_by tracking)
+        DB::unprepared('DROP TRIGGER IF EXISTS transactions_after_insert');
         DB::unprepared('
             CREATE TRIGGER transactions_after_insert
             AFTER INSERT ON transactions
@@ -315,6 +325,7 @@ return new class extends Migration
         ');
 
         // UPDATE Trigger (with approved_by or added_by tracking)
+        DB::unprepared('DROP TRIGGER IF EXISTS transactions_after_update');
         DB::unprepared('
             CREATE TRIGGER transactions_after_update
             AFTER UPDATE ON transactions
@@ -356,6 +367,7 @@ return new class extends Migration
         ');
 
         // DELETE Trigger (with approved_by or added_by tracking)
+        DB::unprepared('DROP TRIGGER IF EXISTS transactions_after_delete');
         DB::unprepared('
             CREATE TRIGGER transactions_after_delete
             AFTER DELETE ON transactions
@@ -389,6 +401,7 @@ return new class extends Migration
         // ========================================
         
         // INSERT Trigger
+        DB::unprepared('DROP TRIGGER IF EXISTS donations_after_insert');
         DB::unprepared('
             CREATE TRIGGER donations_after_insert
             AFTER INSERT ON donations
@@ -415,6 +428,7 @@ return new class extends Migration
         ');
 
         // UPDATE Trigger
+        DB::unprepared('DROP TRIGGER IF EXISTS donations_after_update');
         DB::unprepared('
             CREATE TRIGGER donations_after_update
             AFTER UPDATE ON donations
@@ -451,6 +465,7 @@ return new class extends Migration
         ');
 
         // DELETE Trigger
+        DB::unprepared('DROP TRIGGER IF EXISTS donations_after_delete');
         DB::unprepared('
             CREATE TRIGGER donations_after_delete
             AFTER DELETE ON donations

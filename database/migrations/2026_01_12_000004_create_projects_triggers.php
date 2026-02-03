@@ -16,6 +16,7 @@ return new class extends Migration
         // ========================================
         
         // INSERT Trigger
+        DB::unprepared('DROP TRIGGER IF EXISTS projects_after_insert');
         DB::unprepared('
             CREATE TRIGGER projects_after_insert
             AFTER INSERT ON projects
@@ -30,7 +31,9 @@ return new class extends Migration
                         "id", NEW.id,
                         "name", NEW.name,
                         "project_type_id", NEW.project_type_id,
-                        "cost", NEW.cost,
+                        "estimated_cost", NEW.estimated_cost,
+                        "actual_cost", NEW.actual_cost,
+                        "changed_by", NEW.submitted_by,
                         "status", NEW.status,
                         "created_at", NEW.created_at,
                         "updated_at", NEW.updated_at
@@ -41,6 +44,7 @@ return new class extends Migration
         ');
 
         // UPDATE Trigger
+        DB::unprepared('DROP TRIGGER IF EXISTS projects_after_update');
         DB::unprepared('
             CREATE TRIGGER projects_after_update
             AFTER UPDATE ON projects
@@ -55,7 +59,9 @@ return new class extends Migration
                         "id", OLD.id,
                         "name", OLD.name,
                         "project_type_id", OLD.project_type_id,
-                        "cost", OLD.cost,
+                        "estimated_cost", OLD.estimated_cost,
+                        "actual_cost", OLD.actual_cost,
+                        "changed_by", OLD.submitted_by,
                         "status", OLD.status,
                         "created_at", OLD.created_at,
                         "updated_at", OLD.updated_at
@@ -64,7 +70,9 @@ return new class extends Migration
                         "id", NEW.id,
                         "name", NEW.name,
                         "project_type_id", NEW.project_type_id,
-                        "cost", NEW.cost,
+                        "estimated_cost", NEW.estimated_cost,
+                        "actual_cost", NEW.actual_cost,
+                        "changed_by", NEW.submitted_by,
                         "status", NEW.status,
                         "created_at", NEW.created_at,
                         "updated_at", NEW.updated_at
@@ -75,6 +83,7 @@ return new class extends Migration
         ');
 
         // DELETE Trigger
+        DB::unprepared('DROP TRIGGER IF EXISTS projects_after_delete');
         DB::unprepared('
             CREATE TRIGGER projects_after_delete
             AFTER DELETE ON projects
@@ -89,7 +98,9 @@ return new class extends Migration
                         "id", OLD.id,
                         "name", OLD.name,
                         "project_type_id", OLD.project_type_id,
-                        "cost", OLD.cost,
+                        "estimated_cost", OLD.estimated_cost,
+                        "actual_cost", OLD.actual_cost,
+                        "changed_by", OLD.submitted_by,
                         "status", OLD.status,
                         "created_at", OLD.created_at,
                         "updated_at", OLD.updated_at
@@ -104,6 +115,7 @@ return new class extends Migration
         // ========================================
         
         // INSERT Trigger
+        DB::unprepared('DROP TRIGGER IF EXISTS project_types_after_insert');
         DB::unprepared('
             CREATE TRIGGER project_types_after_insert
             AFTER INSERT ON project_types
@@ -126,6 +138,7 @@ return new class extends Migration
         ');
 
         // UPDATE Trigger
+        DB::unprepared('DROP TRIGGER IF EXISTS project_types_after_update');
         DB::unprepared('
             CREATE TRIGGER project_types_after_update
             AFTER UPDATE ON project_types
@@ -154,6 +167,7 @@ return new class extends Migration
         ');
 
         // DELETE Trigger
+        DB::unprepared('DROP TRIGGER IF EXISTS project_types_after_delete');
         DB::unprepared('
             CREATE TRIGGER project_types_after_delete
             AFTER DELETE ON project_types
@@ -180,6 +194,7 @@ return new class extends Migration
         // ========================================
         
         // INSERT Trigger (with added_by tracking)
+        DB::unprepared('DROP TRIGGER IF EXISTS milestones_after_insert');
         DB::unprepared('
             CREATE TRIGGER milestones_after_insert
             AFTER INSERT ON milestones
@@ -194,7 +209,7 @@ return new class extends Migration
                         "id", NEW.id,
                         "name", NEW.name,
                         "description", NEW.description,
-                        "due_date", NEW.due_date,
+                        "days", NEW.days,
                         "project_id", NEW.project_id,
                         "status", NEW.status,
                         "completed_date", NEW.completed_date,
@@ -211,6 +226,7 @@ return new class extends Migration
         ');
 
         // UPDATE Trigger (with added_by tracking)
+        DB::unprepared('DROP TRIGGER IF EXISTS milestones_after_update');
         DB::unprepared('
             CREATE TRIGGER milestones_after_update
             AFTER UPDATE ON milestones
@@ -225,7 +241,7 @@ return new class extends Migration
                         "id", OLD.id,
                         "name", OLD.name,
                         "description", OLD.description,
-                        "due_date", OLD.due_date,
+                        "days", OLD.days,
                         "project_id", OLD.project_id,
                         "status", OLD.status,
                         "completed_date", OLD.completed_date,
@@ -239,7 +255,7 @@ return new class extends Migration
                         "id", NEW.id,
                         "name", NEW.name,
                         "description", NEW.description,
-                        "due_date", NEW.due_date,
+                        "days", NEW.days,
                         "project_id", NEW.project_id,
                         "status", NEW.status,
                         "completed_date", NEW.completed_date,
@@ -256,6 +272,7 @@ return new class extends Migration
         ');
 
         // DELETE Trigger (with added_by tracking)
+        DB::unprepared('DROP TRIGGER IF EXISTS milestones_after_delete');
         DB::unprepared('
             CREATE TRIGGER milestones_after_delete
             AFTER DELETE ON milestones
@@ -270,7 +287,7 @@ return new class extends Migration
                         "id", OLD.id,
                         "name", OLD.name,
                         "description", OLD.description,
-                        "due_date", OLD.due_date,
+                        "days", OLD.days,
                         "project_id", OLD.project_id,
                         "status", OLD.status,
                         "completed_date", OLD.completed_date,
@@ -291,6 +308,7 @@ return new class extends Migration
         // ========================================
         
         // INSERT Trigger
+        DB::unprepared('DROP TRIGGER IF EXISTS approval_stages_after_insert');
         DB::unprepared('
             CREATE TRIGGER approval_stages_after_insert
             AFTER INSERT ON approval_stages
@@ -304,7 +322,7 @@ return new class extends Migration
                     JSON_OBJECT(
                         "id", NEW.id,
                         "stage_name", NEW.stage_name,
-                        "project_type_id", NEW.project_type_id,
+                        "fund_head_id", NEW.fund_head_id,
                         "stage_order", NEW.stage_order,
                         "description", NEW.description,
                         "is_mandatory", NEW.is_mandatory,
@@ -318,6 +336,7 @@ return new class extends Migration
         ');
 
         // UPDATE Trigger
+        DB::unprepared('DROP TRIGGER IF EXISTS approval_stages_after_update');
         DB::unprepared('
             CREATE TRIGGER approval_stages_after_update
             AFTER UPDATE ON approval_stages
@@ -331,7 +350,7 @@ return new class extends Migration
                     JSON_OBJECT(
                         "id", OLD.id,
                         "stage_name", OLD.stage_name,
-                        "project_type_id", OLD.project_type_id,
+                        "fund_head_id", OLD.fund_head_id,
                         "stage_order", OLD.stage_order,
                         "description", OLD.description,
                         "is_mandatory", OLD.is_mandatory,
@@ -342,7 +361,7 @@ return new class extends Migration
                     JSON_OBJECT(
                         "id", NEW.id,
                         "stage_name", NEW.stage_name,
-                        "project_type_id", NEW.project_type_id,
+                        "fund_head_id", NEW.fund_head_id,
                         "stage_order", NEW.stage_order,
                         "description", NEW.description,
                         "is_mandatory", NEW.is_mandatory,
@@ -356,6 +375,7 @@ return new class extends Migration
         ');
 
         // DELETE Trigger
+        DB::unprepared('DROP TRIGGER IF EXISTS approval_stages_after_delete');
         DB::unprepared('
             CREATE TRIGGER approval_stages_after_delete
             AFTER DELETE ON approval_stages
@@ -369,7 +389,7 @@ return new class extends Migration
                     JSON_OBJECT(
                         "id", OLD.id,
                         "stage_name", OLD.stage_name,
-                        "project_type_id", OLD.project_type_id,
+                        "fund_head_id", OLD.fund_head_id,
                         "stage_order", OLD.stage_order,
                         "description", OLD.description,
                         "is_mandatory", OLD.is_mandatory,
@@ -387,6 +407,7 @@ return new class extends Migration
         // ========================================
         
         // INSERT Trigger (with approver_id tracking)
+        DB::unprepared('DROP TRIGGER IF EXISTS project_approvals_after_insert');
         DB::unprepared('
             CREATE TRIGGER project_approvals_after_insert
             AFTER INSERT ON project_approvals
@@ -416,6 +437,7 @@ return new class extends Migration
         ');
 
         // UPDATE Trigger (with approver_id tracking)
+        DB::unprepared('DROP TRIGGER IF EXISTS project_approvals_after_update');
         DB::unprepared('
             CREATE TRIGGER project_approvals_after_update
             AFTER UPDATE ON project_approvals
@@ -457,6 +479,7 @@ return new class extends Migration
         ');
 
         // DELETE Trigger (with approver_id tracking)
+        DB::unprepared('DROP TRIGGER IF EXISTS project_approvals_after_delete');
         DB::unprepared('
             CREATE TRIGGER project_approvals_after_delete
             AFTER DELETE ON project_approvals

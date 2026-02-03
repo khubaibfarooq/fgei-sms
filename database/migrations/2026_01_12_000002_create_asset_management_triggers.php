@@ -16,6 +16,7 @@ return new class extends Migration
         // ========================================
         
         // INSERT Trigger
+        DB::unprepared('DROP TRIGGER IF EXISTS assets_after_insert');
         DB::unprepared('
             CREATE TRIGGER assets_after_insert
             AFTER INSERT ON assets
@@ -40,6 +41,7 @@ return new class extends Migration
         ');
 
         // UPDATE Trigger
+        DB::unprepared('DROP TRIGGER IF EXISTS assets_after_update');
         DB::unprepared('
             CREATE TRIGGER assets_after_update
             AFTER UPDATE ON assets
@@ -72,6 +74,7 @@ return new class extends Migration
         ');
 
         // DELETE Trigger
+        DB::unprepared('DROP TRIGGER IF EXISTS assets_after_delete');
         DB::unprepared('
             CREATE TRIGGER assets_after_delete
             AFTER DELETE ON assets
@@ -100,6 +103,7 @@ return new class extends Migration
         // ========================================
         
         // INSERT Trigger
+        DB::unprepared('DROP TRIGGER IF EXISTS asset_categories_after_insert');
         DB::unprepared('
             CREATE TRIGGER asset_categories_after_insert
             AFTER INSERT ON asset_categories
@@ -122,6 +126,7 @@ return new class extends Migration
         ');
 
         // UPDATE Trigger
+        DB::unprepared('DROP TRIGGER IF EXISTS asset_categories_after_update');
         DB::unprepared('
             CREATE TRIGGER asset_categories_after_update
             AFTER UPDATE ON asset_categories
@@ -150,6 +155,7 @@ return new class extends Migration
         ');
 
         // DELETE Trigger
+        DB::unprepared('DROP TRIGGER IF EXISTS asset_categories_after_delete');
         DB::unprepared('
             CREATE TRIGGER asset_categories_after_delete
             AFTER DELETE ON asset_categories
@@ -176,6 +182,7 @@ return new class extends Migration
         // ========================================
         
         // INSERT Trigger (with added_by tracking)
+        DB::unprepared('DROP TRIGGER IF EXISTS institute_assets_after_insert');
         DB::unprepared('
             CREATE TRIGGER institute_assets_after_insert
             AFTER INSERT ON institute_assets
@@ -204,6 +211,7 @@ return new class extends Migration
         ');
 
         // UPDATE Trigger (with added_by tracking)
+        DB::unprepared('DROP TRIGGER IF EXISTS institute_assets_after_update');
         DB::unprepared('
             CREATE TRIGGER institute_assets_after_update
             AFTER UPDATE ON institute_assets
@@ -243,6 +251,7 @@ return new class extends Migration
         ');
 
         // DELETE Trigger (with added_by tracking)
+        DB::unprepared('DROP TRIGGER IF EXISTS institute_assets_after_delete');
         DB::unprepared('
             CREATE TRIGGER institute_assets_after_delete
             AFTER DELETE ON institute_assets
@@ -275,6 +284,7 @@ return new class extends Migration
         // ========================================
         
         // INSERT Trigger (with added_by tracking)
+        DB::unprepared('DROP TRIGGER IF EXISTS asset_transactions_after_insert');
         DB::unprepared('
             CREATE TRIGGER asset_transactions_after_insert
             AFTER INSERT ON asset_transactions
@@ -306,6 +316,7 @@ return new class extends Migration
         ');
 
         // UPDATE Trigger (with approved_by or added_by tracking)
+        DB::unprepared('DROP TRIGGER IF EXISTS asset_transactions_after_update');
         DB::unprepared('
             CREATE TRIGGER asset_transactions_after_update
             AFTER UPDATE ON asset_transactions
@@ -351,6 +362,7 @@ return new class extends Migration
         ');
 
         // DELETE Trigger (with approved_by or added_by tracking)
+        DB::unprepared('DROP TRIGGER IF EXISTS asset_transactions_after_delete');
         DB::unprepared('
             CREATE TRIGGER asset_transactions_after_delete
             AFTER DELETE ON asset_transactions
