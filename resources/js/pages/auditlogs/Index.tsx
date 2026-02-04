@@ -47,6 +47,8 @@ interface Props {
     date_from?: string;
     date_to?: string;
   };
+  users_lookup: Record<number, string>;
+  fund_heads_lookup: Record<number, string>;
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -56,7 +58,7 @@ const breadcrumbs: BreadcrumbItem[] = [
   },
 ];
 
-export default function AuditLogIndex({ logs, tables, filters }: Props) {
+export default function AuditLogIndex({ logs, tables, filters, users_lookup, fund_heads_lookup }: Props) {
   const [expandedLogs, setExpandedLogs] = useState<number[]>([]);
   const [params, setParams] = useState({
     table: filters.table || '',
@@ -97,6 +99,54 @@ export default function AuditLogIndex({ logs, tables, filters }: Props) {
         return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
+
+  const formatLogValue = (key: string, value: any) => {
+    if (value === null || value === undefined) return <span className="text-gray-400 italic">null</span>;
+
+    // Check if it's a User ID
+    if (['changed_by', 'added_by', 'approver_id', 'user_id'].includes(key) && typeof value === 'number') {
+      const name = users_lookup[value];
+      return name ? <span>{value} <span className="text-blue-600 font-medium">({name})</span></span> : value;
+    }
+
+    // Check if it's a Fund Head ID
+    if (key === 'fund_head_id' && typeof value === 'number') {
+      const name = fund_heads_lookup[value];
+      return name ? <span>{value} <span className="text-indigo-600 font-medium">({name})</span></span> : value;
+    }
+
+    // Handle timestamps
+    if (['created_at', 'updated_at', 'action_date', 'deadline', 'completed_date'].includes(key) && typeof value === 'string') {
+      try {
+        return new Date(value).toLocaleString();
+      } catch (e) {
+        return value;
+      }
+    }
+
+    // Handle booleans
+    if (typeof value === 'boolean') {
+      return value ? <span className='text-green-600'>true</span> : <span className='text-red-600'>false</span>;
+    }
+
+    // Handle JSON objects recursively or stringify
+    if (typeof value === 'object') {
+      return JSON.stringify(value);
+    }
+
+    return value;
+  };
+
+  const LogChanges = ({ values }: { values: Record<string, any> }) => (
+    <div className="bg-background border rounded px-3 py-2 text-xs overflow-auto max-h-60 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1">
+      {Object.entries(values).map(([key, val]) => (
+        <React.Fragment key={key}>
+          <div className="font-medium text-muted-foreground">{key}:</div>
+          <div className="break-all">{formatLogValue(key, val)}</div>
+        </React.Fragment>
+      ))}
+    </div>
+  );
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
@@ -215,17 +265,13 @@ export default function AuditLogIndex({ logs, tables, filters }: Props) {
                         {log.old_values && (
                           <div>
                             <h4 className="font-semibold mb-1 text-red-600">Old Values</h4>
-                            <pre className="bg-background border rounded p-2 text-xs overflow-auto max-h-60">
-                              {JSON.stringify(log.old_values, null, 2)}
-                            </pre>
+                            <LogChanges values={log.old_values} />
                           </div>
                         )}
                         {log.new_values && (
                           <div>
                             <h4 className="font-semibold mb-1 text-green-600">New Values</h4>
-                            <pre className="bg-background border rounded p-2 text-xs overflow-auto max-h-60">
-                              {JSON.stringify(log.new_values, null, 2)}
-                            </pre>
+                            <LogChanges values={log.new_values} />
                           </div>
                         )}
                       </div>
