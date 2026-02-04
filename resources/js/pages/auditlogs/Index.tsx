@@ -49,6 +49,9 @@ interface Props {
   };
   users_lookup: Record<number, string>;
   fund_heads_lookup: Record<number, string>;
+  institutes_lookup: Record<number, string>;
+  assets_lookup: Record<number, string>;
+  rooms_lookup: Record<number, string>;
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -58,7 +61,7 @@ const breadcrumbs: BreadcrumbItem[] = [
   },
 ];
 
-export default function AuditLogIndex({ logs, tables, filters, users_lookup, fund_heads_lookup }: Props) {
+export default function AuditLogIndex({ logs, tables, filters, users_lookup, fund_heads_lookup, institutes_lookup, assets_lookup, rooms_lookup }: Props) {
   const [expandedLogs, setExpandedLogs] = useState<number[]>([]);
   const [params, setParams] = useState({
     table: filters.table || '',
@@ -113,6 +116,24 @@ export default function AuditLogIndex({ logs, tables, filters, users_lookup, fun
     if (key === 'fund_head_id' && typeof value === 'number') {
       const name = fund_heads_lookup[value];
       return name ? <span>{value} <span className="text-indigo-600 font-medium">({name})</span></span> : value;
+    }
+
+    // Check if it's an Institute ID
+    if (key === 'institute_id' && typeof value === 'number') {
+      const name = institutes_lookup[value];
+      return name ? <span>{value} <span className="text-orange-600 font-medium">({name})</span></span> : value;
+    }
+
+    // Check if it's an Asset ID
+    if (key === 'asset_id' && typeof value === 'number') {
+      const name = assets_lookup[value];
+      return name ? <span>{value} <span className="text-teal-600 font-medium">({name})</span></span> : value;
+    }
+
+    // Check if it's a Room ID
+    if (key === 'room_id' && typeof value === 'number') {
+      const name = rooms_lookup[value];
+      return name ? <span>{value} <span className="text-purple-600 font-medium">({name})</span></span> : value;
     }
 
     // Handle timestamps
