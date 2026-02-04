@@ -77,7 +77,7 @@ class AuditLogController extends Controller
         $fundHeadsLookup = \App\Models\FundHead::whereIn('id', $fundHeadIds->unique()->filter())->pluck('name', 'id');
         $institutesLookup = \App\Models\Institute::whereIn('id', $instituteIds->unique()->filter())->pluck('name', 'id');
         $assetsLookup = \App\Models\Asset::whereIn('id', $assetIds->unique()->filter())->pluck('name', 'id');
-        $roomsLookup = \App\Models\Room::whereIn('id', $roomIds->unique()->filter())->pluck('room_number', 'id');
+        $roomsLookup = \App\Models\Room::whereIn('id', $roomIds->unique()->filter())->pluck('name', 'id');
 
         return Inertia::render('auditlogs/Index', [
             'logs' => $logs,
