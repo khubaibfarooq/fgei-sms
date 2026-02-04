@@ -534,7 +534,7 @@ $title2 = "Tasks";
     
 
 }
-else if($role_type=='Directorate' || $role_type=='Director HRM'){
+else if($role_type=='Directorate' || $role_type=='Director HRM' || $role_type=='director_hrm'){
    $link1="/reports/funds?fund_head_id=";
 $link2="/reports/projects?status=";
 $link3="";
@@ -547,7 +547,7 @@ $tab1 = DB::table('fund_helds')
     ->select([
      'fund_heads.id as Key',
         'fund_heads.name as Head',
-        DB::raw('SUM(fund_helds.balance) as balance')
+        DB::raw('COALESCE(SUM(fund_helds.balance), 0) as balance')
     ])
     ->get();
 

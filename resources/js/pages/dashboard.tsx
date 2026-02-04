@@ -18,6 +18,16 @@ import type { LucideIcon } from 'lucide-react';
 import { CheckCircle2, XCircle } from 'lucide-react';
 import { router } from '@inertiajs/react';
 import { toast } from 'sonner';
+import {
+  FundsPieChart,
+  ProjectsCountChart,
+  AssetsBarChart,
+  InstituteDonutChart,
+  ProjectsCostChart,
+  DistributionPieChart,
+  TaskStatusChart,
+  RegionalFundsChart
+} from './DashboardCharts';
 // Define interface for card data from props.cards
 interface CardData {
   id: number;
@@ -309,8 +319,87 @@ export default function Dashboard() {
         </div>
 
 
+        {/* Analytics Overview Section */}
+        <div className="mb-1 md:mb-2">
+          <h2 className="text-xl md:text-2xl font-bold text-gray-800 dark:text-gray-100 mb-4 px-1">
+            Analytics Overview
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-4">
+            {/* Chart 1: Based on Title 1 */}
+            <Card className="shadow-lg p-1 sm:p-2">
+              <CardHeader className="pb-1 md:pb-2">
+                <CardTitle className="text-lg font-medium text-gray-700 dark:text-gray-200">
+                  {props.title1} Analysis
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="h-[200px] sm:h-[250px] md:h-[300px] pt-4">
+                {props.title1 === 'Funds' ? (
+                  <FundsPieChart data={props.tab1} />
+                ) : props.title1 === 'Institutes' ? (
+                  <InstituteDonutChart data={props.tab1} />
+                ) : props.title1 === 'Total Funds' ? (
+                  <FundsPieChart data={props.tab1} />
+                ) : props.title1 === 'Users' ? (
+                  <DistributionPieChart data={props.tab1} nameKey="type" valueKey="user_count" />
+                ) : (
+                  <div className="flex items-center justify-center h-full text-gray-400">No Chart Available</div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Chart 2: Based on Title 2 */}
+            <Card className="shadow-lg p-1 sm:p-2">
+              <CardHeader className="pb-1 md:pb-2">
+                <CardTitle className="text-lg font-medium text-gray-700 dark:text-gray-200">
+                  {props.title2} Analysis
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="h-[200px] sm:h-[250px] md:h-[300px] pt-4">
+                {props.title2 === 'Projects' ? (
+                  // If Regional/Directorate (has est/actual cost), use CostChart, else CountChart
+                  (props.tab2[0]?.estimated_cost !== undefined) ? (
+                    <ProjectsCostChart data={props.tab2} />
+                  ) : (
+                    <ProjectsCountChart data={props.tab2} />
+                  )
+                ) : props.title2 === 'Funds' ? (
+                  <RegionalFundsChart data={props.tab2} />
+                ) : props.title2 === 'Tasks' ? (
+                  <TaskStatusChart data={props.tab2} />
+                ) : (
+                  <div className="flex items-center justify-center h-full text-gray-400">No Chart Available</div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Chart 3: Based on Title 3 */}
+            {props.title3 && (
+              <Card className="shadow-lg p-1 sm:p-2">
+                <CardHeader className="pb-1 md:pb-2">
+                  <CardTitle className="text-lg font-medium text-gray-700 dark:text-gray-200">
+                    {props.title3} Analysis
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="h-[200px] sm:h-[250px] md:h-[300px] pt-4">
+                  {props.title3 === 'Assets' ? (
+                    <AssetsBarChart data={props.tab3} />
+                  ) : props.title3 === 'Projects' ? (
+                    <ProjectsCostChart data={props.tab3} />
+                  ) : props.title3 === 'Institutions' ? (
+                    // Directorate's Institution list
+                    <InstituteDonutChart data={props.tab3} />
+                  ) : (
+                    <div className="flex items-center justify-center h-full text-gray-400">No Chart Available</div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </div>
+
+
         {/* Dynamic Table Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 md:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 md:gap-4">
           {tableData.map((table, index) => {
             const theme = tableThemes[index % tableThemes.length];
 

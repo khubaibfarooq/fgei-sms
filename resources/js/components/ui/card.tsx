@@ -86,7 +86,7 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
 
             {/* Number */}
             {number !== undefined && (
-              <div className=" text-xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white">
+              <div className=" text-lg sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">
                 {number}
               </div>
             )}
@@ -98,7 +98,7 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
               className={cn(
                 'p-3 rounded-lg',
                 'flex items-center justify-center',
-                'text-white text-xl border-2',
+                'text-white text-lg border-2',
                 'flex-shrink-0',
                 'transition-all duration-300'
               )}
