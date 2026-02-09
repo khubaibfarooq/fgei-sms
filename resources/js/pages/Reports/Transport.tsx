@@ -316,9 +316,10 @@ export default function Transports({ transports: transportProp, institutes, vehi
               <table className="w-full border-collapse border-1 rounded-md overflow-hidden shadow-sm">
                 <thead>
                   <tr className="bg-primary dark:bg-gray-800 text-center">
+                    <th className="border p-2 text-sm font-medium text-white dark:text-gray-200">Institute</th>
                     <th className="border p-2 text-sm font-medium text-white dark:text-gray-200">Vehicle No</th>
                     <th className="border p-2 text-sm font-medium text-white dark:text-gray-200">Type</th>
-                    <th className="border p-2 text-sm font-medium text-white dark:text-gray-200">Institute</th>
+
 
                   </tr>
                 </thead>
@@ -332,15 +333,16 @@ export default function Transports({ transports: transportProp, institutes, vehi
                   ) : (
                     transports.data.map((trans) => (
                       <tr key={trans.id} className="hover:bg-primary/10 dark:hover:bg-gray-700 text-center">
+                        <td className="border p-2 text-left text-sm md:text-md lg:text-lg  text-gray-900 dark:text-gray-100">
+                          {trans.institute?.name || 'N/A'}
+                        </td>
                         <td className="border p-2 text-sm md:text-md lg:text-lg border-r-1 font-bold text-gray-900 dark:text-gray-100">
                           {trans.vehicle_no}
                         </td>
                         <td className="border p-2 text-sm md:text-md lg:text-lg  text-gray-900 dark:text-gray-100">
                           {trans.vehicle_type?.name || 'N/A'}
                         </td>
-                        <td className="border p-2 text-sm md:text-md lg:text-lg  text-gray-900 dark:text-gray-100">
-                          {trans.institute?.name || 'N/A'}
-                        </td>
+
                       </tr>
                     ))
                   )}

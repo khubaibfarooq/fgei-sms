@@ -16,7 +16,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import Combobox from '@/components/ui/combobox';
 import { ImagePreview } from '@/components/ui/image-preview';
-
+import { formatDate } from '@/utils/dateFormatter';
 declare module 'jspdf' {
   interface jsPDF {
     autoTable: (options: any) => jsPDF;
@@ -419,6 +419,9 @@ export default function Blocks({ blocks: blocksProp, institutes, blocktypes, reg
                   <thead>
                     <tr className="bg-primary dark:bg-gray-800">
                       <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">
+                        Institute
+                      </th>
+                      <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">
                         Block Name
                       </th>
                       <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">
@@ -431,9 +434,7 @@ export default function Blocks({ blocks: blocksProp, institutes, blocktypes, reg
                       <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">
                         Establish Date
                       </th>
-                      <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">
-                        Institute
-                      </th>
+
                     </tr>
                   </thead>
                   <tbody>
@@ -446,6 +447,9 @@ export default function Blocks({ blocks: blocksProp, institutes, blocktypes, reg
                     ) : (
                       blocks.data?.map((block: BlockProp) => (
                         <tr key={block.id} className="hover:bg-primary/10 dark:hover:bg-gray-700">
+                          <td className="border p-2 text-left text-gray-900 dark:text-gray-100">
+                            {block.institute?.name || '—'}
+                          </td>
                           <td className="border p-2 text-left font-bold dark:text-gray-100">
                             <div className='flex flex-row gap-2 align-middle'> <ImagePreview dataImg={block.img} size="h-20 w-20 object-contain" />  <span className='font-bold'>{block.name}</span></div>
                           </td>
@@ -456,11 +460,9 @@ export default function Blocks({ blocks: blocksProp, institutes, blocktypes, reg
                             {block.area || '—'}
                           </td>
                           <td className="border p-2 text-left text-gray-900 dark:text-gray-100">
-                            {block.establish_date || '—'}
+                            {formatDate(block.establish_date || '—')}
                           </td>
-                          <td className="border p-2 text-left text-gray-900 dark:text-gray-100">
-                            {block.institute?.name || '—'}
-                          </td>
+
                         </tr>
                       ))
                     )}
