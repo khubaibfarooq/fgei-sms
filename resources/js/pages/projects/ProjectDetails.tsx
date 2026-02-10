@@ -207,43 +207,41 @@ export default function ProjectDetails({ project }: Props) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`Project: ${project.name}`} />
-            <div className="h-[calc(100vh-4.5rem)] flex flex-col p-2 md:p-4 gap-2">
-                {/* Back Button */}
-                <div className="flex items-center gap-2">
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => window.history.back()}
-                        className="h-8 px-2"
-                    >
-                        <ArrowLeft className="h-4 w-4 mr-1" />
-                        Back
-                    </Button>
-                </div>
-
-                <Card className="shrink-0">
-                    <CardHeader className="p-4 pb-2">
-                        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-2">
-                            <div className="flex-2">
-                                <CardTitle className="text-xl font-bold mb-1">{project.name}</CardTitle>
-                                <p className="text-muted-foreground text-sm">{project.institute?.name}</p>
+            <Card className="flex-1 flex flex-col min-h-0 overflow-hidden">
+                <CardHeader className="p-3 pb-2 shrink-0">
+                    <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-2">
+                        <div className="flex-2 flex items-start gap-2">
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => window.history.back()}
+                                className="h-8 w-8 -ml-2 shrink-0"
+                                title="Back"
+                            >
+                                <ArrowLeft className="h-4 w-4" />
+                            </Button>
+                            <div>
+                                <CardTitle className="text-lg font-bold leading-tight">{project.name}</CardTitle>
+                                <p className="text-muted-foreground text-xs">{project.institute?.name}</p>
                             </div>
-                            {project.pdf && (
-                                <a
-                                    href={`/assets/${project.pdf}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                                >
-                                    <FileText className="h-4 w-4" />
-                                    View PDF
-                                </a>
-                            )}
                         </div>
-                    </CardHeader>
-                    <Separator />
-                    <CardContent className="p-3 pt-0 pb-2">
-                        <div className="flex flex-wrap gap-2 items-center text-xs mb-3">
+                        {project.pdf && (
+                            <a
+                                href={`/assets/${project.pdf}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-xs font-medium h-8"
+                            >
+                                <FileText className="h-3.5 w-3.5" />
+                                View PDF
+                            </a>
+                        )}
+                    </div>
+                </CardHeader>
+                <Separator />
+                <CardContent className="flex-1 flex flex-col p-0 min-h-0">
+                    <div className="p-3 pb-2 space-y-2 shrink-0">
+                        <div className="flex flex-wrap gap-2 items-center text-xs">
                             <Badge variant="outline" className={`h-5 px-2 text-[10px] ${project.status === 'completed' ? 'border-green-500 text-green-600 bg-green-50' :
                                 project.status === 'inprogress' ? 'border-blue-500 text-blue-600 bg-blue-50' :
                                     'border-gray-500 text-gray-600 bg-gray-50'
@@ -316,12 +314,10 @@ export default function ProjectDetails({ project }: Props) {
                                 </div>
                             )}
                         </div>
-                    </CardContent>
-                </Card>
+                    </div>
 
-                {/* Tabs Section */}
-                <Card className="flex-1 flex flex-col  ">
-                    <CardContent className="flex-1 p-0 flex flex-col h-full">
+                    {/* Tabs Section (Merged) */}
+                    <div className="flex-1 flex flex-col min-h-0 border-t">
                         <Tabs defaultValue="approvals" className="flex flex-col h-full w-full">
                             <div className="px-4 border-b bg-muted/20">
                                 <TabsList className="w-full justify-start h-auto p-0 bg-transparent">
@@ -507,9 +503,9 @@ export default function ProjectDetails({ project }: Props) {
                                 </TabsContent>
                             </div>
                         </Tabs>
-                    </CardContent>
-                </Card>
-            </div>
+                    </div>
+                </CardContent>
+            </Card>
 
             {/* Description Modal */}
             <Dialog open={descriptionModalOpen} onOpenChange={setDescriptionModalOpen}>
@@ -603,6 +599,6 @@ export default function ProjectDetails({ project }: Props) {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
-        </AppLayout>
+        </AppLayout >
     );
 }
