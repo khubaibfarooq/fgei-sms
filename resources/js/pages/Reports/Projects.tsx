@@ -470,7 +470,7 @@ export default function Projects({ projects: initialProjects, institutes, region
         <Head title="Projects Report" />
         <div className="flex flex-col lg:flex-row h-[calc(100vh-65px)] overflow-hidden">
           {/* Main Content Area (Filters + Table) */}
-          <div className={`flex-1 p-2 md:p-4 overflow-y-auto ${selectedPanelProject ? 'lg:w-2/3' : 'w-full'}`}>
+          <div className="flex-1 p-2 md:p-4 overflow-y-auto w-full min-w-0">
             <Card className="flex-1 flex flex-col min-h-0">
               <CardHeader className="p-1.5 pb-0 shrink-0">
                 <div className="flex justify-between items-center mb-1">
@@ -1163,6 +1163,199 @@ export default function Projects({ projects: initialProjects, institutes, region
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {selectedPanelProject && (
+          <div className="w-full lg:w-[350px] xl:w-[400px] border-l bg-background p-3 sm:p-4 md:p-6 shadow-xl overflow-y-auto flex flex-col transition-all duration-300 ease-in-out z-20 fixed lg:static inset-y-0 right-0 h-full lg:h-auto shrink-0">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="text-lg font-bold truncate max-w-[200px]" title={selectedPanelProject.name}>{selectedPanelProject.name}</h2>
+                <p className="text-xs text-muted-foreground truncate max-w-[200px]" title={selectedPanelProject.institute?.name}>{selectedPanelProject.institute?.name}</p>
+              </div>
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSelectedPanelProject(null)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+
+            <Tabs defaultValue="approvals" className="w-full flex-1 flex flex-col">
+              <TabsList className="grid w-full grid-cols-3 h-8">
+                <TabsTrigger value="approvals" className="text-xs">Approvals</TabsTrigger>
+                <TabsTrigger value="milestones" className="text-xs">Milestones</TabsTrigger>
+                <TabsTrigger value="payments" className="text-xs">Payments</TabsTrigger>
+              </TabsList>
+
+              <div className="flex-1 overflow-y-auto mt-4 px-1">
+                <TabsContent value="approvals" className="space-y-3 m-0 h-full">
+                  {loadingPanelData ? (
+                    <div className="flex justify-center py-8 text-muted-foreground text-xs">Loading history...</div>
+                  ) : approvalHistory.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground border rounded-lg border-dashed text-xs">
+                      No approval history found.
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {approvalHistory.map((record) => (
+                        <Card key={record.id} className="overflow-hidden border shadow-sm">
+                          <CardHeader className="p-2 bg-muted/30 pb-1 border-b">
+                            <div className="flex justify-between items-center">
+                              <div className="font-semibold text-xs">{record.stage?.stage_name || 'Stage'}</div>
+                              {record.status === 'approved' ? (
+                                <Badge variant="outline" className="h-4 border-green-500 text-green-600 bg-green-50 gap-1 px-1 py-0 text-[10px]">
+                                  <CheckCircle2 className="w-2.5 h-2.5" /> Approved
+                                </Badge>
+                              ) : record.status === 'rejected' ? (
+                                <Badge variant="outline" className="h-4 border-red-500 text-red-600 bg-red-50 gap-1 px-1 py-0 text-[10px]">
+                                  <XCircle className="w-2.5 h-2.5" /> Rejected
+                                </Badge>
+                              ) : (
+                                <Badge variant="outline" className="h-4 border-yellow-500 text-yellow-600 bg-yellow-50 gap-1 px-1 py-0 text-[10px]">
+                                  <Clock className="w-2.5 h-2.5" /> Pending
+                                </Badge>
+                              )}
+                            </div>
+                          </CardHeader>
+                          <CardContent className="p-2 text-xs">
+                            <div className="flex flex-wrap items-center justify-between gap-1 mb-1">
+                              <div className="text-[10px] text-muted-foreground flex items-center">
+                                <Clock className="w-2.5 h-2.5 mr-1" />
+                                {record.action_date ? new Date(record.action_date).toLocaleString() : ""}
+                              </div>
+                              <div className="text-[10px]">
+                                <span className="font-medium text-muted-foreground">Appr: </span>
+                                {record.approver?.name}
+                              </div>
+                            </div>
+                            {record.comments && (
+                              <div className="bg-muted/50 px-2 py-1 rounded text-[10px] italic border mt-1 line-clamp-2">
+                                "{record.comments}"
+                              </div>
+                            )}
+                            <div className="flex items-center gap-2 mt-1">
+                              {record.pdf && (
+                                <a
+                                  href={`/${record.pdf}`}
+                                  target="_blank"
+                                  className="text-blue-600 hover:underline text-[10px] flex items-center gap-1"
+                                >
+                                  <FileText className="h-3 w-3" /> PDF
+                                </a>
+                              )}
+                              {record.img && (
+                                <div className="flex items-center gap-1">
+                                  <ImagePreview
+                                    dataImg={record.img}
+                                    size="h-4 w-4"
+                                    className="rounded border object-cover"
+                                  />
+                                  <span className="text-[10px] text-muted-foreground">Image</span>
+                                </div>
+                              )}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </TabsContent>
+
+                <TabsContent value="milestones" className="space-y-3 m-0 h-full">
+                  {loadingPanelData ? (
+                    <div className="flex justify-center py-8 text-muted-foreground text-xs">Loading milestones...</div>
+                  ) : projectMilestones.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground border rounded-lg border-dashed text-xs">
+                      No milestones found.
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {projectMilestones.map((milestone) => (
+                        <Card
+                          key={milestone.id}
+                          className="border shadow-sm overflow-hidden"
+                        >
+                          <div className="flex items-start">
+                            {milestone.img && (
+                              <div className="w-16 h-full shrink-0">
+                                <ImagePreview
+                                  dataImg={milestone.img}
+                                  size="h-full w-full"
+                                  className="h-full w-full object-cover rounded-none"
+                                />
+                              </div>
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <CardHeader className="p-2 py-1.5 border-b bg-muted/10 flex flex-row items-center justify-between space-y-0">
+                                <div className="font-semibold text-xs truncate pr-2">{milestone.name}</div>
+                                <Badge variant={
+                                  milestone.status === 'completed' ? 'default' :
+                                    milestone.status === 'inprogress' ? 'secondary' : 'outline'
+                                } className="capitalize text-[10px] px-1 py-0 h-4 shrink-0">
+                                  {milestone.status}
+                                </Badge>
+                              </CardHeader>
+                              <CardContent className="p-2 text-xs space-y-1">
+                                <div className="flex justify-between text-[10px] text-muted-foreground">
+                                  <span>Due: {milestone.days} days</span>
+                                  {milestone.completed_date && (
+                                    <span className="text-green-600 dark:text-green-400">Done: {new Date(milestone.completed_date).toLocaleDateString()}</span>
+                                  )}
+                                </div>
+                                {milestone.description && (
+                                  <p className="text-muted-foreground text-[10px] line-clamp-1">
+                                    {milestone.description}
+                                  </p>
+                                )}
+                              </CardContent>
+                            </div>
+                          </div>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </TabsContent>
+
+                <TabsContent value="payments" className="space-y-3 m-0 h-full">
+                  {loadingPanelData ? (
+                    <div className="flex justify-center py-8 text-muted-foreground text-xs">Loading payments...</div>
+                  ) : projectPayments.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground border rounded-lg border-dashed text-xs">
+                      No payments found.
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {projectPayments.map((payment) => (
+                        <Card key={payment.id} className="border shadow-sm">
+                          <CardHeader className="p-2 py-1.5 border-b bg-muted/10 flex flex-row items-center justify-between space-y-0">
+                            <div className="font-semibold text-xs">Rs. {payment.amount.toLocaleString()}</div>
+                            <Badge variant="outline" className={`capitalize text-[10px] px-1 py-0 h-4 ${payment.status === 'Approved' ? 'border-green-500 text-green-600 bg-green-50' :
+                              payment.status === 'Rejected' ? 'border-red-500 text-red-600 bg-red-50' :
+                                'border-yellow-500 text-yellow-600 bg-yellow-50'
+                              }`}>
+                              {payment.status}
+                            </Badge>
+                          </CardHeader>
+                          <CardContent className="p-2 text-xs space-y-1">
+                            <div className="flex justify-between items-center text-[10px]">
+                              <div className="text-muted-foreground font-medium truncate max-w-[150px]" title={payment.fund_head?.name || 'General Fund'}>
+                                {payment.fund_head?.name || 'General Fund'}
+                              </div>
+                              <div className="text-muted-foreground">
+                                {new Date(payment.added_date).toLocaleDateString()}
+                              </div>
+                            </div>
+                            {payment.description && (
+                              <p className="text-muted-foreground text-[10px] italic bg-muted/30 px-1.5 py-0.5 rounded truncate">
+                                "{payment.description}"
+                              </p>
+                            )}
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </TabsContent>
+              </div>
+            </Tabs>
+          </div>
+        )}
 
         {
           selectedPanelProject && (

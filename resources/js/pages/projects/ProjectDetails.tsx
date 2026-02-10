@@ -213,7 +213,7 @@ export default function ProjectDetails({ project }: Props) {
                     <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => router.visit('/projects')}
+                        onClick={() => window.history.back()}
                         className="h-8 px-2"
                     >
                         <ArrowLeft className="h-4 w-4 mr-1" />
