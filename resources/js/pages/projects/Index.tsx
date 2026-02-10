@@ -398,9 +398,9 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
       <Head title="Project Management" />
       <div className="flex flex-col lg:flex-row h-[calc(100vh-65px)] overflow-hidden">
         {/* Main List Area */}
-        <div className={`flex-1 p-4 md:p-6 overflow-y-auto ${selectedPanelProject ? 'lg:w-2/3' : 'w-full'}`}>
+        <div className={`flex-1 p-2 md:p-4 lg:p-6 overflow-y-auto ${selectedPanelProject ? 'lg:w-2/3' : 'w-full'}`}>
           <Card className="h-full flex flex-col">
-            <CardHeader className="pb-3 flex flex-col md:flex-row md:items-center md:justify-between gap-4 shrink-0">
+            <CardHeader className="p-3 pb-2 md:pb-3 flex flex-col md:flex-row md:items-center md:justify-between gap-4 shrink-0">
               <div>
                 <CardTitle className="text-2xl font-bold">Projects</CardTitle>
                 <p className="text-muted-foreground text-sm md:text-md lg:text-lg">Manage institutional projects</p>
@@ -417,7 +417,7 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
 
             <Separator />
 
-            <CardContent className="pt-6 space-y-6 flex-1 flex flex-col min-h-0">
+            <CardContent className="p-2 pt-4 md:pt-6 space-y-4 md:space-y-6 flex-1 flex flex-col min-h-0">
               <div className="flex flex-col md:flex-row md:items-center gap-4 shrink-0">
                 <Input
                   type="text"
@@ -454,21 +454,21 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
                 <table className="w-full border-collapse border-1 rounded-md overflow-hidden shadow-sm">
                   <thead className="sticky top-0 z-10">
                     <tr className="bg-primary dark:bg-gray-800 text-center" >
-                      <th className="border p-2 text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Project</th>
-                      <th className="border p-2 text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Type</th>
-                      <th className="border p-2 text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Description</th>
-                      <th className="border p-2 text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Fund Head</th>
-                      <th className="border p-2 text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Estimated Cost</th>
-                      <th className="border p-2 text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Actual Cost</th>
-                      <th className="border p-2 text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">PDF</th>
+                      <th className="border p-2 text-xs md:text-sm font-medium text-white dark:text-gray-200 whitespace-nowrap sticky top-0 bg-primary dark:bg-gray-800 z-20">Project</th>
+                      <th className="border p-2 text-xs md:text-sm font-medium text-white dark:text-gray-200 whitespace-nowrap sticky top-0 bg-primary dark:bg-gray-800 z-20">Type</th>
 
-                      <th className="border p-2 text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Priority</th>
+                      <th className="border p-2 text-xs md:text-sm font-medium text-white dark:text-gray-200 whitespace-nowrap sticky top-0 bg-primary dark:bg-gray-800 z-20 hidden lg:table-cell">Fund Head</th>
+                      <th className="border p-2 text-xs md:text-sm font-medium text-white dark:text-gray-200 whitespace-nowrap sticky top-0 bg-primary dark:bg-gray-800 z-20">Est. Cost</th>
+                      <th className="border p-2 text-xs md:text-sm font-medium text-white dark:text-gray-200 whitespace-nowrap sticky top-0 bg-primary dark:bg-gray-800 z-20">Act. Cost</th>
 
-                      <th className="border p-2 text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Overall Status</th>
-                      <th className="border p-2 text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Approval Status</th>
-                      <th className="border p-2 text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Current Stage</th>
-                      <th className="border p-2 text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Final Comment</th>
-                      <th className="border p-2 text-sm md:text-md lg:text-lg font-medium text-white dark:text-gray-200">Action</th>
+
+                      <th className="border p-2 text-xs md:text-sm font-medium text-white dark:text-gray-200 whitespace-nowrap sticky top-0 bg-primary dark:bg-gray-800 z-20">Priority</th>
+
+                      <th className="border p-2 text-xs md:text-sm font-medium text-white dark:text-gray-200 whitespace-nowrap sticky top-0 bg-primary dark:bg-gray-800 z-20">Status</th>
+                      <th className="border p-2 text-xs md:text-sm font-medium text-white dark:text-gray-200 whitespace-nowrap sticky top-0 bg-primary dark:bg-gray-800 z-20 hidden sm:table-cell">Approval</th>
+                      <th className="border p-2 text-xs md:text-sm font-medium text-white dark:text-gray-200 whitespace-nowrap sticky top-0 bg-primary dark:bg-gray-800 z-20 hidden md:table-cell">Current Stage</th>
+                      <th className="border p-2 text-xs md:text-sm font-medium text-white dark:text-gray-200 whitespace-nowrap sticky top-0 bg-primary dark:bg-gray-800 z-20 hidden lg:table-cell">Comment</th>
+                      <th className="border p-2 text-xs md:text-sm font-medium text-white dark:text-gray-200 whitespace-nowrap sticky top-0 bg-primary dark:bg-gray-800 z-20">Action</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -484,43 +484,32 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
                           onClick={() => setSelectedPanelProject(project)}
                         >
 
-                          <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
-                            {project.name}
+                          <td className="border p-2 text-xs md:text-sm text-gray-900 dark:text-gray-100 font-medium whitespace-nowrap text-left">
+                            <Link
+                              href={`/projects/${project.id}/details`}
+                              className="text-blue-600 hover:text-blue-800 hover:underline"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              {project.name}
+                            </Link>
                           </td>
-                          <td className="border p-2 text-center">{project.projecttype?.name || '-'}</td>
+                          <td className="border p-2 text-xs md:text-sm text-center">{project.projecttype?.name || '-'}</td>
 
-                          <td className="border text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100 text-center" onClick={(e) => e.stopPropagation()}>
-                            {project.description ? (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="text-blue-600 hover:text-blue-700"
-                                title="View Description"
-                                onClick={() => {
-                                  setSelectedDescriptionProject(project);
-                                  setDescriptionModalOpen(true);
-                                }}
-                              >
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                            ) : (
-                              <span className="text-muted-foreground">-</span>
-                            )}
-                          </td>
-                          <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
+
+                          <td className="border p-2 text-xs md:text-sm text-gray-900 dark:text-gray-100 hidden lg:table-cell">
                             {project.fund_head?.name}
                           </td>
-                          <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
+                          <td className="border p-2 text-xs md:text-sm text-gray-900 dark:text-gray-100">
                             {project.estimated_cost}
                           </td>
-                          <td className="border text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
-                            <div className="flex items-center justify-center gap-2">
+                          <td className="border p-2 text-xs md:text-sm text-gray-900 dark:text-gray-100">
+                            <div className="flex items-center justify-center gap-1">
                               {project.actual_cost || ''}
                               {project.current_stage?.can_change_cost && !project.actual_cost && (
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  className="h-6 w-6 text-blue-600 hover:text-blue-700"
+                                  className="h-5 w-5 text-blue-600 hover:text-blue-700"
                                   title="Add/Update Actual Cost"
                                   onClick={(e) => {
                                     e.stopPropagation();
@@ -534,89 +523,105 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
                               )}
                             </div>
                           </td>
-                          <td className="border text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100 text-center" onClick={(e) => e.stopPropagation()}>
-                            {project.pdf ? (
-                              <a
-                                href={`/assets/${project.pdf}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center justify-center text-blue-600 hover:text-blue-700"
-                                title="View PDF"
-                              >
-                                <FileText className="h-5 w-5" />
-                              </a>
-                            ) : (
-                              <span className="text-muted-foreground">-</span>
-                            )}
-                          </td>
 
-                          <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
+
+                          <td className="border p-2 text-xs md:text-sm text-gray-900 dark:text-gray-100 capitalize">
                             {project.priority || '-'}
                           </td>
-                          <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
+                          <td className="border p-2 text-xs md:text-sm text-gray-900 dark:text-gray-100 capitalize">
                             {project.status}
                           </td>
-                          <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
+                          <td className="border p-2 text-xs md:text-sm text-gray-900 dark:text-gray-100 capitalize hidden sm:table-cell">
                             {project.approval_status}
                           </td>
-                          <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
+                          <td className="border p-2 text-xs md:text-sm text-gray-900 dark:text-gray-100 hidden md:table-cell">
                             {/* Pending Stage Logic Placeholder */}
                             {project.current_stage?.stage_name || 'Held with Regional Office'}
                           </td>
-                          <td className="border  text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100">
+                          <td className="border p-2 text-xs md:text-sm text-gray-900 dark:text-gray-100 hidden lg:table-cell truncate max-w-[150px]" title={project.final_comments || ''}>
                             {project.final_comments || '-'}
                           </td>
-                          <td className="border text-sm md:text-md lg:text-lg text-gray-900 dark:text-gray-100" onClick={(e) => e.stopPropagation()}>
-                            {permissions.can_edit &&
-                              <Link href={`/projects/${project.id}/edit`}>
-                                <Button variant="ghost" size="icon">
-                                  <Edit className="h-4 w-4" />
+                          <td className="border p-2 text-xs md:text-sm text-gray-900 dark:text-gray-100" onClick={(e) => e.stopPropagation()}>
+                            <div className="flex items-center justify-center gap-1">
+                              {project.pdf ? (
+                                <a
+                                  href={`/assets/${project.pdf}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center justify-center text-blue-600 hover:text-blue-700"
+                                  title="View PDF"
+                                >
+                                  PDF
+                                </a>
+                              ) : (
+                                <span className="text-muted-foreground">-</span>
+                              )}
+                              {project.description ? (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-6 w-6 text-blue-600 hover:text-blue-700"
+                                  title="View Description"
+                                  onClick={() => {
+                                    setSelectedDescriptionProject(project);
+                                    setDescriptionModalOpen(true);
+                                  }}
+                                >
+                                  <Eye className="h-3 w-3" />
                                 </Button>
-                              </Link>
-                            }
-                            {permissions.can_delete &&
-                              <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="text-destructive hover:text-red-600">
-                                    <Trash2 className="h-4 w-4" />
+                              ) : (
+                                <span className="text-muted-foreground">-</span>
+                              )}
+                              {permissions.can_edit &&
+                                <Link href={`/projects/${project.id}/edit`}>
+                                  <Button variant="ghost" size="icon" className="h-6 w-6">
+                                    <Edit className="h-3 w-3" />
                                   </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                  <AlertDialogHeader>
-                                    <AlertDialogTitle>Delete this project?</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                      Project <strong>{project.name}</strong> will be permanently deleted.
-                                    </AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                    <AlertDialogAction
-                                      className="bg-destructive hover:bg-destructive/90"
-                                      onClick={() => handleDelete(project.id)}
-                                    >
-                                      Delete
-                                    </AlertDialogAction>
-                                  </AlertDialogFooter>
-                                </AlertDialogContent>
-                              </AlertDialog>
-                            }
+                                </Link>
+                              }
+                              {permissions.can_delete &&
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="text-destructive hover:text-red-600 h-6 w-6">
+                                      <Trash2 className="h-3 w-3" />
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Delete this project?</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        Project <strong>{project.name}</strong> will be permanently deleted.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogAction
+                                        className="bg-destructive hover:bg-destructive/90"
+                                        onClick={() => handleDelete(project.id)}
+                                      >
+                                        Delete
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              }
 
-                            {canShowInstitutionalApprove(project) && (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                title="View/Approve"
-                                className="text-blue-600 hover:text-blue-700"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setSelectedProjectForApproval(project);
-                                  setApprovalModalOpen(true);
-                                }}
-                              >
-                                <ClipboardCheck className="h-4 w-4" />
-                              </Button>
-                            )}
-
+                              {canShowInstitutionalApprove(project) && (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  title="View/Approve"
+                                  className="text-blue-600 hover:text-blue-700 h-6 w-6"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedProjectForApproval(project);
+                                    setApprovalModalOpen(true);
+                                  }}
+                                >
+                                  <ClipboardCheck className="h-3 w-3" />
+                                </Button>
+                              )}
+                            </div>
                           </td>
 
                         </tr>
@@ -676,56 +681,61 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
                   ) : (
                     <div className="space-y-4">
                       {approvalHistory.map((record) => (
-                        <Card key={record.id} className="overflow-hidden">
-                          <CardHeader className="p-3 bg-muted/50 pb-2">
-                            <div className="flex justify-between items-start">
-                              <div className="font-semibold text-sm">{record.stage?.stage_name || 'Stage'}</div>
+                        <Card key={record.id} className="overflow-hidden border shadow-sm">
+                          <CardHeader className="p-2 bg-muted/30 pb-1 border-b">
+                            <div className="flex justify-between items-center">
+                              <div className="font-semibold text-xs">{record.stage?.stage_name || 'Stage'}</div>
                               {record.status === 'approved' ? (
-                                <Badge variant="outline" className="border-green-500 text-green-600 bg-green-50 gap-1">
-                                  <CheckCircle2 className="w-3 h-3" /> Approved
+                                <Badge variant="outline" className="h-4 border-green-500 text-green-600 bg-green-50 gap-1 px-1 py-0 text-[10px]">
+                                  <CheckCircle2 className="w-2.5 h-2.5" /> Approved
                                 </Badge>
                               ) : record.status === 'rejected' ? (
-                                <Badge variant="outline" className="border-red-500 text-red-600 bg-red-50 gap-1">
-                                  <XCircle className="w-3 h-3" /> Rejected
+                                <Badge variant="outline" className="h-4 border-red-500 text-red-600 bg-red-50 gap-1 px-1 py-0 text-[10px]">
+                                  <XCircle className="w-2.5 h-2.5" /> Rejected
                                 </Badge>
                               ) : (
-                                <Badge variant="outline" className="border-yellow-500 text-yellow-600 bg-yellow-50 gap-1">
-                                  <Clock className="w-3 h-3" /> Pending
+                                <Badge variant="outline" className="h-4 border-yellow-500 text-yellow-600 bg-yellow-50 gap-1 px-1 py-0 text-[10px]">
+                                  <Clock className="w-2.5 h-2.5" /> Pending
                                 </Badge>
                               )}
                             </div>
                           </CardHeader>
-                          <CardContent className="p-3 text-sm">
-                            <div className="flex items-center text-xs text-muted-foreground mb-2">
-                              <Clock className="w-3 h-3 mr-1" />
-                              {record.action_date ? new Date(record.action_date).toLocaleString() : ""}
-                            </div>
-                            <div className="mb-2">
-                              <span className="font-medium text-xs">Approver: </span>
-                              {record.approver?.name}
+                          <CardContent className="p-2 text-xs">
+                            <div className="flex flex-wrap items-center justify-between gap-1 mb-1">
+                              <div className="text-[10px] text-muted-foreground flex items-center">
+                                <Clock className="w-2.5 h-2.5 mr-1" />
+                                {record.action_date ? new Date(record.action_date).toLocaleString() : "-"}
+                              </div>
+                              <div className="text-[10px]">
+                                <span className="font-medium text-muted-foreground">Appr: </span>
+                                {record.approver?.name}
+                              </div>
                             </div>
                             {record.comments && (
-                              <div className="bg-muted/30 p-2 rounded text-xs italic border">
+                              <div className="bg-muted/50 px-2 py-1 rounded text-[10px] italic border mt-1 line-clamp-2">
                                 "{record.comments}"
                               </div>
                             )}
-                            {record.pdf && (
-                              <a
-                                href={`/${record.pdf}`}
-                                target="_blank"
-                                className="mt-1 text-blue-600 underline text-xs flex items-center gap-1"
-                              >
-                                View PDF
-                              </a>)}
-                            {record.img && (
-                              <div className="mt-2">
-                                <ImagePreview
-                                  dataImg={record.img}
-                                  size="h-20"
-                                  className="rounded border"
-                                />
-                              </div>
-                            )}
+                            <div className="flex items-center gap-2 mt-1">
+                              {record.pdf && (
+                                <a
+                                  href={`/${record.pdf}`}
+                                  target="_blank"
+                                  className="text-blue-600 hover:underline text-[10px] flex items-center gap-1"
+                                >
+                                  <FileText className="h-3 w-3" /> PDF
+                                </a>)}
+                              {record.img && (
+                                <div className="flex items-center gap-1">
+                                  <ImagePreview
+                                    dataImg={record.img}
+                                    size="h-4 w-4"
+                                    className="rounded border object-cover"
+                                  />
+                                  <span className="text-[10px] text-muted-foreground">Image</span>
+                                </div>
+                              )}
+                            </div>
                           </CardContent>
                         </Card>
                       ))}
@@ -745,59 +755,47 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
                       {projectMilestones.map((milestone) => (
                         <Card
                           key={milestone.id}
-                          className="cursor-pointer hover:bg-muted/50 transition-colors"
+                          className="cursor-pointer hover:bg-muted/50 transition-colors border shadow-sm overflow-hidden"
                           onClick={() => handleMilestoneClick(milestone)}
                         >
-                          <CardHeader className="p-3 pb-1">
-                            <div className="flex justify-between items-start">
-                              <div className="font-semibold text-sm">{milestone.name}</div>
-                              <Badge variant={
-                                milestone.status === 'completed' ? 'default' :
-                                  milestone.status === 'inprogress' ? 'secondary' : 'outline'
-                              } className="capitalize text-xs">
-                                {milestone.status}
-                              </Badge>
-                            </div>
-                          </CardHeader>
-                          <CardContent className="p-3 text-sm space-y-2">
+                          <div className="flex items-start">
                             {milestone.img && (
-                              <div className="mb-2">
+                              <div className="w-16 h-full shrink-0">
                                 <ImagePreview
                                   dataImg={milestone.img}
-                                  size="h-32"
-                                  className="w-full object-cover rounded-md"
+                                  size="h-full w-full"
+                                  className="h-full w-full object-cover rounded-none"
                                 />
                               </div>
                             )}
-                            {milestone.pdf && (
-                              <a
-                                href={`/${milestone.pdf}`}
-                                target="_blank"
-                                className="mb-2 text-blue-600 underline text-xs flex items-center gap-1"
-                              >
-                                View Document (PDF)
-                              </a>
-                            )}
-                            <div className="grid grid-cols-2 gap-2 text-xs">
-                              <div>
-                                <span className="text-muted-foreground">Due in: </span>
-                                {milestone.days} days
-                              </div>
-                              {milestone.completed_date && (
-                                <div>
-                                  <span className="text-muted-foreground">Completed: </span>
-                                  <span className="text-green-600 dark:text-green-400">{new Date(milestone.completed_date).toLocaleDateString()}</span>
+                            <div className="flex-1 min-w-0">
+                              <CardHeader className="p-2 py-1.5 border-b bg-muted/10 flex flex-row items-center justify-between space-y-0">
+                                <div className="font-semibold text-xs truncate pr-2">{milestone.name}</div>
+                                <Badge variant={
+                                  milestone.status === 'completed' ? 'default' :
+                                    milestone.status === 'inprogress' ? 'secondary' : 'outline'
+                                } className="capitalize text-[10px] px-1 py-0 h-4 shrink-0">
+                                  {milestone.status}
+                                </Badge>
+                              </CardHeader>
+                              <CardContent className="p-2 text-xs space-y-1">
+                                <div className="flex justify-between text-[10px] text-muted-foreground">
+                                  <span>Due: {milestone.days} days</span>
+                                  {milestone.completed_date && (
+                                    <span className="text-green-600 dark:text-green-400">Done: {new Date(milestone.completed_date).toLocaleDateString()}</span>
+                                  )}
                                 </div>
-                              )}
+                                {milestone.description && (
+                                  <p className="text-muted-foreground text-[10px] line-clamp-1">
+                                    {milestone.description}
+                                  </p>
+                                )}
+                              </CardContent>
                             </div>
-                            {milestone.description && (
-                              <p className="text-muted-foreground text-xs mt-1">
-                                {milestone.description}
-                              </p>
-                            )}
-                          </CardContent>
+                          </div>
                         </Card>
                       ))}
+
                     </div>
                   )}
                 </TabsContent>
@@ -824,36 +822,36 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
                   ) : (
                     <div className="space-y-4">
                       {projectPayments.map((payment) => (
-                        <Card key={payment.id}>
-                          <CardHeader className="p-3 pb-1">
-                            <div className="flex justify-between items-start">
-                              <div className="font-semibold text-sm">Amount: {payment.amount}</div>
-                              <Badge variant="outline" className={`capitalize text-xs ${payment.status === 'Approved' ? 'border-green-500 text-green-600 bg-green-50' :
-                                payment.status === 'Rejected' ? 'border-red-500 text-red-600 bg-red-50' :
-                                  'border-yellow-500 text-yellow-600 bg-yellow-50'
-                                }`}>
-                                {payment.status}
-                              </Badge>
-                            </div>
+                        <Card key={payment.id} className="border shadow-sm">
+                          <CardHeader className="p-2 py-1.5 border-b bg-muted/10 flex flex-row items-center justify-between space-y-0">
+                            <div className="font-semibold text-xs">Rs. {payment.amount.toLocaleString()}</div>
+                            <Badge variant="outline" className={`capitalize text-[10px] px-1 py-0 h-4 ${payment.status === 'Approved' ? 'border-green-500 text-green-600 bg-green-50' :
+                              payment.status === 'Rejected' ? 'border-red-500 text-red-600 bg-red-50' :
+                                'border-yellow-500 text-yellow-600 bg-yellow-50'
+                              }`}>
+                              {payment.status}
+                            </Badge>
                           </CardHeader>
-                          <CardContent className="p-3 text-sm space-y-2">
-                            <div className="text-xs text-muted-foreground">
-                              {payment.fund_head?.name || 'General Fund'}
-                            </div>
-                            <div className="text-xs">
-                              {new Date(payment.added_date).toLocaleDateString()}
+                          <CardContent className="p-2 text-xs space-y-1">
+                            <div className="flex justify-between items-center text-[10px]">
+                              <div className="text-muted-foreground font-medium truncate max-w-[150px]" title={payment.fund_head?.name || 'General Fund'}>
+                                {payment.fund_head?.name || 'General Fund'}
+                              </div>
+                              <div className="text-muted-foreground">
+                                {new Date(payment.added_date).toLocaleDateString()}
+                              </div>
                             </div>
                             {payment.description && (
-                              <p className="text-muted-foreground text-xs italic">
+                              <p className="text-muted-foreground text-[10px] italic bg-muted/30 px-1.5 py-0.5 rounded truncate">
                                 "{payment.description}"
                               </p>
                             )}
 
                             {payment.img && (
-                              <div className="mt-2">
+                              <div className="mt-1">
                                 <ImagePreview
                                   dataImg={payment.img}
-                                  size="h-20"
+                                  size="h-12"
                                   className="rounded border"
                                 />
                               </div>
@@ -887,10 +885,11 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
                   )}
                 </TabsContent>
               </div>
-            </Tabs>
-          </div>
-        )}
-      </div>
+            </Tabs >
+          </div >
+        )
+        }
+      </div >
 
       {selectedPanelProject && (
         <div

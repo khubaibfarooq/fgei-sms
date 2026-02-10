@@ -142,6 +142,7 @@ Route::post('/projects/{project}/approvals', [ProjectApprovalController::class, 
 Route::post('/projects/{project}/update-cost', [ProjectApprovalController::class, 'updateActualCost'])->name('projects.update-cost');
 Route::post('/projects/{project}/select-head', [ProjectApprovalController::class, 'selectHead'])->name('projects.select-head');
 Route::get('/projects/{project}/history', [ProjectApprovalController::class, 'history'])->name('projects.approvals.history');
+Route::get('/projects/{project}/details', [ProjectController::class, 'details'])->name('projects.details');
 Route::get('/projects/{project}/project-details', [ProjectController::class, 'projectDetails'])->name('projects.project-details');
 Route::get('/projects/{project}/milestones', [ProjectController::class, 'milestones'])->name('projects.milestones');
 Route::get('/projects/{project}/payments', [ProjectController::class, 'payments'])->name('projects.payments');

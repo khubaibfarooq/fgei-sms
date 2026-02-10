@@ -16,7 +16,7 @@ class HelpDeskController extends Controller
         $query = HelpDesk::query();
 $inst_id = session('sms_inst_id');
 $type=session('type');
-if($type=="School"||$type=="College")
+if($type=="School"||$type=="College" ||$type=="Regional Office")
    {$query->where('institute_id',$inst_id);}
 
         if ($request->search) {
@@ -27,7 +27,7 @@ if($type=="School"||$type=="College")
         }
 
         $helpDesk = $query->with(['user', 'institute', 'feedbackby'])->orderBy('id', 'desc')->paginate(10)->withQueryString();
-if($type=="School"||$type=="College"){
+if($type=="School"||$type=="College"||$type=="Regional Office"){
         return Inertia::render('helpdesk/Index', [
             'helpDesk' => $helpDesk,
             'filters' => ['search' => $request->search ?? '', 'status' => $request->status ?? ''],

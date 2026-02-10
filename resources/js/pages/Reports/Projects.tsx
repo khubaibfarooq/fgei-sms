@@ -1,6 +1,6 @@
 // Imports updated with new dependencies
 import React, { useState, useEffect, useMemo, Component, ReactNode } from 'react';
-import { Head, router, usePage } from '@inertiajs/react';
+import { Head, router, usePage, Link } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -471,117 +471,116 @@ export default function Projects({ projects: initialProjects, institutes, region
         <div className="flex flex-col lg:flex-row h-[calc(100vh-65px)] overflow-hidden">
           {/* Main Content Area (Filters + Table) */}
           <div className={`flex-1 p-2 md:p-4 overflow-y-auto ${selectedPanelProject ? 'lg:w-2/3' : 'w-full'}`}>
-            <div className="flex flex-col gap-3 h-full">
-
-              {/* Only Filter Card Area */}
-              <Card className="shrink-0">
-                <CardHeader className="py-3">
-                  <CardTitle className="text-xl font-bold">Filters</CardTitle>
-                </CardHeader>
-                <CardContent className="py-2 space-y-4">
-                  <div className="flex flex-col md:flex-row gap-2">
-                    {/* Region */}
-                    {memoizedRegions.length > 0 && (
-                      <div className="w-full md:w-1/4">
-                        <Combobox
-                          entity="region"
-                          value={region}
-                          onChange={(value) => handleRegionChange(value)}
-                          options={memoizedRegions.map((reg) => ({
-                            id: reg.id.toString(),
-                            name: reg.name.split(' ').pop() || reg.name,
-                          }))}
-                          includeAllOption={true}
-                        />
-                      </div>
-                    )}
-                    {/* Institute */}
-                    <div className="w-full md:w-1/4">
+            <Card className="flex-1 flex flex-col min-h-0">
+              <CardHeader className="p-1.5 pb-0 shrink-0">
+                <div className="flex justify-between items-center mb-1">
+                  <CardTitle className="text-base font-bold">Projects Report</CardTitle>
+                </div>
+                <div className={`grid grid-cols-1 md:grid-cols-2 ${selectedPanelProject ? 'xl:grid-cols-2 2xl:grid-cols-4' : 'lg:grid-cols-4'} gap-1.5`}>
+                  {/* Region */}
+                  {memoizedRegions.length > 0 && (
+                    <div className="w-full">
                       <Combobox
-                        entity="institute"
-                        value={institute}
-                        onChange={setInstitute}
-                        options={memoizedInstitutes.map((i) => ({ id: i.id.toString(), name: i.name }))}
-                        includeAllOption={false}
-                        placeholder="Select Institute"
+                        entity="region"
+                        value={region}
+                        onChange={(value) => handleRegionChange(value)}
+                        options={memoizedRegions.map((reg) => ({
+                          id: reg.id.toString(),
+                          name: reg.name.split(' ').pop() || reg.name,
+                        }))}
+                        includeAllOption={true}
                       />
                     </div>
-
-                    {/* Project Type */}
-                    <div className="w-full md:w-1/4">
-                      <Select value={projectType} onValueChange={(v) => setProjectType(v)}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select Project Type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="0">All Project Types</SelectItem>
-                          {memoizedProjectTypes.map((pt) => (
-                            <SelectItem key={pt.id} value={pt.id.toString()}>
-                              {pt.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {/* Status */}
-                    <div className="w-full md:w-1/4">
-                      <Select value={status} onValueChange={(v) => setStatus(v)}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select Status" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All Status</SelectItem>
-                          <SelectItem value="planned">Planned</SelectItem>
-                          <SelectItem value="inprogress">In Progress</SelectItem>
-                          <SelectItem value="completed">Completed</SelectItem>
-                          <SelectItem value="waiting">Waiting</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
+                  )}
+                  {/* Institute */}
+                  <div className="w-full">
+                    <Combobox
+                      entity="institute"
+                      value={institute}
+                      onChange={setInstitute}
+                      options={memoizedInstitutes.map((i) => ({ id: i.id.toString(), name: i.name }))}
+                      includeAllOption={false}
+                      placeholder="Select Institute"
+                    />
                   </div>
 
-                  <div className="flex flex-wrap gap-2 justify-between items-center">
-                    {/* Need Approval Checkbox */}
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <Checkbox
-                        checked={needApproval}
-                        onCheckedChange={(checked) => setNeedApproval(checked === true)}
-                      />
-                      <span className="text-sm font-medium">Need Approval</span>
-                    </label>
-
-                    <div className="flex flex-wrap gap-2">
-                      <Button onClick={debouncedApplyFilters} size="sm">
-                        Apply Filters
-                      </Button>
-                      <Button onClick={exportToPDF} size="sm" variant="outline">
-                        PDF
-                      </Button>
-                      <Button onClick={exportToExcel} size="sm" variant="outline">
-                        Excel
-                      </Button>
-                    </div>
+                  {/* Project Type */}
+                  <div className="w-full">
+                    <Select value={projectType} onValueChange={(v) => setProjectType(v)}>
+                      <SelectTrigger className="h-7 text-xs">
+                        <SelectValue placeholder="Select Project Type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="0">All Project Types</SelectItem>
+                        {memoizedProjectTypes.map((pt) => (
+                          <SelectItem key={pt.id} value={pt.id.toString()}>
+                            {pt.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
-                </CardContent>
-              </Card>
 
-              {/* Table Area - Desktop View */}
-              <Card className="flex-1 min-h-0 flex-col hidden md:flex">
-                <CardContent className="p-0 flex-1 overflow-auto">
+                  {/* Status */}
+                  <div className="w-full">
+                    <Select value={status} onValueChange={(v) => setStatus(v)}>
+                      <SelectTrigger className="h-7 text-xs">
+                        <SelectValue placeholder="Select Status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Status</SelectItem>
+                        <SelectItem value="planned">Planned</SelectItem>
+                        <SelectItem value="inprogress">In Progress</SelectItem>
+                        <SelectItem value="completed">Completed</SelectItem>
+                        <SelectItem value="waiting">Waiting</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap gap-2 justify-between items-center pt-1.5 pb-1.5 border-b">
+                  {/* Need Approval Checkbox */}
+                  <label className="flex items-center gap-1.5 cursor-pointer">
+                    <Checkbox
+                      checked={needApproval}
+                      onCheckedChange={(checked) => setNeedApproval(checked === true)}
+                      className="h-3.5 w-3.5"
+                    />
+                    <span className="text-[11px] font-medium uppercase tracking-tight text-muted-foreground">Need Approval</span>
+                  </label>
+
+                  <div className="flex flex-wrap gap-1.5">
+                    <Button onClick={debouncedApplyFilters} size="sm" className="h-7 text-xs px-2">
+                      Apply Filters
+                    </Button>
+                    <Button onClick={exportToPDF} size="sm" variant="outline" className="h-7 text-xs px-2">
+                      PDF
+                    </Button>
+                    <Button onClick={exportToExcel} size="sm" variant="outline" className="h-7 text-xs px-2">
+                      Excel
+                    </Button>
+                  </div>
+                </div>
+              </CardHeader>
+
+              <CardContent className="p-0 flex-1 overflow-auto bg-muted/5 relative">
+                {/* Desktop Table */}
+                <div className="hidden md:block h-full">
                   <table className="w-full border-collapse text-sm min-w-[900px]">
                     <thead className="sticky top-0 z-10">
-                      <tr className="bg-primary text-white text-center">
-                        <th className="border p-2 font-medium">Institute</th>
-                        <th className="border p-2 font-medium hidden lg:table-cell">Type</th>
-                        <th className="border p-2 font-medium">Project</th>
-                        <th className="border p-2 font-medium">Est. Cost</th>
-                        <th className="border p-2 font-medium">Act. Cost</th>
-                        <th className="border p-2 font-medium hidden xl:table-cell">Fund Head</th>
-                        <th className="border p-2 font-medium hidden lg:table-cell">Stage</th>
-                        <th className="border p-2 font-medium">Status</th>
-                        <th className="border p-2 font-medium hidden xl:table-cell">Comments</th>
-                        <th className="border p-2 font-medium">Action</th>
+                      <tr className="bg-primary text-white text-center shadow-sm text-xs">
+                        <th className="border p-1.5 font-medium">Institute</th>
+                        <th className="border p-1.5 font-medium hidden xl:table-cell">Type</th>
+                        <th className="border p-1.5 font-medium">Project</th>
+                        <th className="border p-1.5 font-medium">Est. Cost</th>
+                        <th className="border p-1.5 font-medium">Act. Cost</th>
+                        <th className="border p-1.5 font-medium hidden xl:table-cell">Fund Head</th>
+                        <th className="border p-1.5 font-medium hidden xl:table-cell">Stage</th>
+                        <th className="border p-1.5 font-medium">Approval Status</th>
+                        <th className="border p-1.5 font-medium">Project Status</th>
+                        <th className="border p-1.5 font-medium">%</th>
+                        <th className="border p-1.5 font-medium hidden xl:table-cell">Comments</th>
+                        <th className="border p-1.5 font-medium">Action</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -595,171 +594,148 @@ export default function Projects({ projects: initialProjects, institutes, region
                         filteredProjects.map((project) => (
                           <tr
                             key={project.id}
-                            className={`hover:bg-primary/10 dark:hover:bg-gray-700 cursor-pointer transition-colors ${selectedPanelProject?.id === project.id ? 'bg-primary/5 dark:bg-gray-700 border-l-4 border-l-primary' : ''}`}
+                            className={`hover:bg-primary/10 dark:hover:bg-gray-700 cursor-pointer transition-colors border-b text-xs ${selectedPanelProject?.id === project.id ? 'bg-primary/5 dark:bg-gray-700 border-l-4 border-l-primary' : 'bg-card'}`}
                             onClick={() => setSelectedPanelProject(project)}
                           >
-                            <td className="border p-2">{project.institute?.name || '-'}</td>
-                            <td className="border p-2 text-center hidden lg:table-cell">{project.projecttype?.name || '-'}</td>
-                            <td className="border p-2 font-medium">{project.name}</td>
-                            <td className="border p-2 text-right whitespace-nowrap">{formatAmount(project.estimated_cost)}</td>
-                            <td className="border p-2 text-right whitespace-nowrap">{formatAmount(project.actual_cost)}</td>
-                            <td className="border p-2 text-center hidden xl:table-cell">{project.fundhead?.name}</td>
-                            <td className="border p-2 text-center hidden lg:table-cell">{project.current_stage?.stage_name || 'Request Initiated'}</td>
-                            <td className="border p-2 text-center">
-                              <div className="flex flex-col gap-1">
-                                <div className="flex items-center justify-center gap-1">
-                                  <span className="text-xs">App:</span>
-                                  <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${project.approval_status === 'completed' ? 'bg-green-100 text-green-800' :
-                                    project.approval_status === 'inprogress' ? 'bg-yellow-100 text-yellow-800' :
-                                      'bg-blue-100 text-blue-800'
-                                    }`}>
-                                    {project.approval_status.charAt(0).toUpperCase() + project.approval_status.slice(1)}
-                                  </span>
-                                </div>
-                                {project.approval_status === 'waiting' && (
-                                  <span className="text-xs text-muted-foreground">{project.current_stage?.level || 'Regional Office'}</span>
-                                )}
-                                <div className="flex items-center justify-center gap-1">
-                                  <span className="text-xs">Proj:</span>
-                                  <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${project.status === 'completed' ? 'bg-green-100 text-green-800' :
-                                    project.status === 'inprogress' ? 'bg-yellow-100 text-yellow-800' :
-                                      'bg-blue-100 text-blue-800'
-                                    }`}>
-                                    {project.status.charAt(0).toUpperCase() + project.status.slice(1)}
-                                  </span>
-                                </div>
-                                <span className="text-xs">{project.completion_per ? parseFloat(project.completion_per.toString()) : '-'}%</span>
-                              </div>
+                            <td className="border p-1.5 text-center">{project.institute?.name || '-'}</td>
+                            <td className="border p-1.5 text-center hidden xl:table-cell">{project.projecttype?.name || '-'}</td>
+                            <td className="border p-1.5 font-medium">
+                              <Link
+                                href={`/projects/${project.id}/details`}
+                                className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
+                                onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                              >
+                                {project.name}
+                              </Link>
                             </td>
-                            <td className="border p-2 text-center hidden xl:table-cell">{project.final_comments || '-'}</td>
-                            <td className="border p-2 text-center" onClick={(e) => e.stopPropagation()}>
-                              {project.description && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="text-blue-600 hover:text-blue-700"
-                                  title="View Description"
-                                  onClick={() => {
-                                    setSelectedDescriptionProject(project);
-                                    setDescriptionModalOpen(true);
-                                  }}
-                                >
-                                  <Eye className="h-4 w-4" />
-                                </Button>
-                              )}
-
-                              {project.pdf && (
-                                <a
-                                  href={`/assets/${project.pdf}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="inline-flex items-center justify-center text-blue-600 hover:text-blue-700"
-                                  title="View PDF"
-                                >
-                                  PDF
-                                </a>
-                              )}
-                              {canShowApproveButton(project) && (
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  title="View/Approve"
-                                  className="text-blue-600 hover:text-blue-700"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setSelectedProject(project);
-                                    setApprovalModalOpen(true);
-                                  }}
-                                >
-                                  <ClipboardCheck className="h-4 w-4" />
-                                </Button>
-                              )}
-
-                              {user.roles[0]?.name.toLowerCase() === 'region' && !project.fund_head_id && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  title="Select Fund Head"
-                                  className="text-orange-600 hover:text-orange-700 font-bold"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setSelectedProjectForFundHead(project);
-                                    setFundHeadModalOpen(true);
-                                  }}
-                                >
-                                  Select Head
-                                </Button>
-                              )}
-
-                              {user.type === 'Regional Office' && project.status === 'inprogress' && (
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  title={`Update Completion (${project.completion_per || 0}%)`}
-                                  className="text-purple-600 hover:text-purple-700"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleOpenCompletionModal(project);
-                                  }}
-                                >
-                                  <Percent className="h-4 w-4" />
-                                </Button>
-                              )}
+                            <td className="border p-1.5 text-right whitespace-nowrap">{formatAmount(project.estimated_cost)}</td>
+                            <td className="border p-1.5 text-right whitespace-nowrap">{formatAmount(project.actual_cost)}</td>
+                            <td className="border p-1.5 text-center hidden xl:table-cell">{project.fundhead?.name}</td>
+                            <td className="border p-1.5 text-center hidden xl:table-cell">{project.current_stage?.stage_name || 'Request Initiated'}</td>
+                            <td className="border p-1.5 text-center">
+                              <span className={`px-2 py-0.5 rounded-full text-[10px] uppercase font-bold tracking-tight ${project.approval_status === 'completed' ? 'bg-green-100 text-green-800' :
+                                project.approval_status === 'inprogress' ? 'bg-yellow-100 text-yellow-800' :
+                                  'bg-blue-100 text-blue-800'
+                                }`}>
+                                {project.approval_status.charAt(0).toUpperCase() + project.approval_status.slice(1)}
+                              </span>
+                            </td>
+                            <td className="border p-1.5 text-center">
+                              <span className={`px-2 py-0.5 rounded-full text-[10px] uppercase font-bold tracking-tight ${project.status === 'completed' ? 'bg-green-100 text-green-800' :
+                                project.status === 'inprogress' ? 'bg-yellow-100 text-yellow-800' :
+                                  'bg-blue-100 text-blue-800'
+                                }`}>
+                                {project.status.charAt(0).toUpperCase() + project.status.slice(1)}
+                              </span>
+                            </td>
+                            <td className="border p-1.5 text-center">
+                              <span className="text-xs">{project.completion_per ? parseFloat(project.completion_per.toString()) : '-'}</span>
+                            </td>
+                            <td className="border p-1.5 text-center hidden xl:table-cell">{project.final_comments || '-'}</td>
+                            <td className="border p-1.5 text-center" onClick={(e) => e.stopPropagation()}>
+                              <div className="flex items-center justify-center gap-1">
+                                {project.description && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="text-blue-600 hover:text-blue-700"
+                                    title="View Description"
+                                    onClick={() => {
+                                      setSelectedDescriptionProject(project);
+                                      setDescriptionModalOpen(true);
+                                    }}
+                                  >
+                                    <Eye className="h-4 w-4" />
+                                  </Button>
+                                )}
+                                {project.pdf && (
+                                  <a
+                                    href={`/assets/${project.pdf}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center justify-center text-blue-600 hover:text-blue-700"
+                                    title="View PDF"
+                                  >
+                                    PDF
+                                  </a>
+                                )}
+                                {canShowApproveButton(project) && (
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    title="View/Approve"
+                                    className="text-blue-600 hover:text-blue-700"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setSelectedProject(project);
+                                      setApprovalModalOpen(true);
+                                    }}
+                                  >
+                                    <ClipboardCheck className="h-4 w-4" />
+                                  </Button>
+                                )}
+                                {user.roles[0]?.name.toLowerCase() === 'region' && !project.fund_head_id && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    title="Select Fund Head"
+                                    className="text-orange-600 hover:text-orange-700 font-bold"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setSelectedProjectForFundHead(project);
+                                      setFundHeadModalOpen(true);
+                                    }}
+                                  >
+                                    Select Head
+                                  </Button>
+                                )}
+                                {user.type === 'Regional Office' && project.status === 'inprogress' && (
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    title={`Update Completion (${project.completion_per || 0}%)`}
+                                    className="text-purple-600 hover:text-purple-700"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleOpenCompletionModal(project);
+                                    }}
+                                  >
+                                    <Percent className="h-4 w-4" />
+                                  </Button>
+                                )}
+                              </div>
                             </td>
                           </tr>
                         ))
                       )}
                     </tbody>
                   </table>
-                </CardContent>
-                {/* Pagination */}
-                {projects.links.length > 1 && (
-                  <div className="p-4 border-t flex justify-center flex-wrap gap-2 shrink-0">
-                    {projects.links.map((link, i) => (
-                      <Button
-                        key={i}
-                        disabled={!link.url}
-                        variant={link.active ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => {
-                          if (link.url) {
-                            fetch(link.url)
-                              .then((response) => response.json())
-                              .then((data) => {
-                                setProjects(data);
-                              })
-                              .catch((error) => {
-                                console.error('Error:', error);
-                              });
-                          }
-                        }}
-                      >
-                        <span dangerouslySetInnerHTML={{ __html: link.label }} />
-                      </Button>
-                    ))}
-                  </div>
-                )}
-              </Card>
+                </div>
 
-              {/* Mobile Card View */}
-              <Card className="flex-1 min-h-0 flex flex-col md:hidden">
-                <CardContent className="p-2 flex-1 overflow-auto">
+                {/* Mobile List View */}
+                <div className="md:hidden space-y-2 p-2 bg-muted/5">
                   {filteredProjects.length === 0 ? (
                     <div className="text-center p-4 text-muted-foreground">
                       No projects found.
                     </div>
                   ) : (
-                    <div className="space-y-3">
+                    <div className="space-y-2">
                       {filteredProjects.map((project) => (
                         <div
                           key={project.id}
-                          className={`p-3 rounded-lg border bg-card shadow-sm cursor-pointer transition-all hover:shadow-md ${selectedPanelProject?.id === project.id ? 'ring-2 ring-primary' : ''}`}
+                          className={`p-2 rounded-lg border bg-card shadow-sm cursor-pointer transition-all hover:shadow-md ${selectedPanelProject?.id === project.id ? 'ring-2 ring-primary' : ''}`}
                           onClick={() => setSelectedPanelProject(project)}
                         >
                           {/* Header */}
                           <div className="flex justify-between items-start mb-2">
                             <div className="flex-1">
-                              <h3 className="font-semibold text-sm">{project.name}</h3>
+                              <Link
+                                href={`/projects/${project.id}/details`}
+                                className="text-blue-600 hover:text-blue-800 hover:underline"
+                                onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                              >
+                                <h3 className="font-semibold text-sm">{project.name}</h3>
+                              </Link>
                               <p className="text-xs text-muted-foreground">{project.institute?.name || '-'}</p>
                             </div>
                             <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
@@ -846,7 +822,7 @@ export default function Projects({ projects: initialProjects, institutes, region
                               <Button
                                 variant="outline"
                                 size="sm"
-                                className="text-xs h-7 text-orange-600 border-orange-300"
+                                className="text-[10px] h-6 text-orange-600 border-orange-300 px-2"
                                 onClick={() => {
                                   setSelectedProjectForFundHead(project);
                                   setFundHeadModalOpen(true);
@@ -859,7 +835,7 @@ export default function Projects({ projects: initialProjects, institutes, region
                               <Button
                                 variant="outline"
                                 size="sm"
-                                className="text-xs h-7 text-purple-600 border-purple-300"
+                                className="text-[10px] h-6 text-purple-600 border-purple-300 px-2"
                                 onClick={() => handleOpenCompletionModal(project)}
                               >
                                 <Percent className="h-3 w-3 mr-1" /> Update
@@ -870,38 +846,37 @@ export default function Projects({ projects: initialProjects, institutes, region
                       ))}
                     </div>
                   )}
-                </CardContent>
-                {/* Mobile Pagination */}
-                {projects.links.length > 1 && (
-                  <div className="p-3 border-t flex justify-center flex-wrap gap-1 shrink-0">
-                    {projects.links.map((link, i) => (
-                      <Button
-                        key={i}
-                        disabled={!link.url}
-                        variant={link.active ? 'default' : 'outline'}
-                        size="sm"
-                        className="h-8 text-xs px-2"
-                        onClick={() => {
-                          if (link.url) {
-                            fetch(link.url)
-                              .then((response) => response.json())
-                              .then((data) => {
-                                setProjects(data);
-                              })
-                              .catch((error) => {
-                                console.error('Error:', error);
-                              });
-                          }
-                        }}
-                      >
-                        <span dangerouslySetInnerHTML={{ __html: link.label }} />
-                      </Button>
-                    ))}
-                  </div>
-                )}
-              </Card>
-
-            </div>
+                </div>
+              </CardContent>
+              {/* Pagination */}
+              {projects.links.length > 1 && (
+                <div className="p-2 border-t flex justify-center flex-wrap gap-1 shrink-0 bg-background">
+                  {projects.links.map((link, i) => (
+                    <Button
+                      key={i}
+                      disabled={!link.url}
+                      variant={link.active ? 'default' : 'outline'}
+                      size="sm"
+                      className="h-8 text-xs px-2"
+                      onClick={() => {
+                        if (link.url) {
+                          fetch(link.url)
+                            .then((response) => response.json())
+                            .then((data) => {
+                              setProjects(data);
+                            })
+                            .catch((error) => {
+                              console.error('Error:', error);
+                            });
+                        }
+                      }}
+                    >
+                      <span dangerouslySetInnerHTML={{ __html: link.label }} />
+                    </Button>
+                  ))}
+                </div>
+              )}
+            </Card>
           </div>
 
           {/* Right Side Panel */}
@@ -935,57 +910,62 @@ export default function Projects({ projects: initialProjects, institutes, region
                     ) : (
                       <div className="space-y-4">
                         {approvalHistory.map((record) => (
-                          <Card key={record.id} className="overflow-hidden">
-                            <CardHeader className="p-3 bg-muted/50 pb-2">
-                              <div className="flex justify-between items-start">
-                                <div className="font-semibold text-sm">{record.stage?.stage_name || 'Stage'}</div>
+                          <Card key={record.id} className="overflow-hidden border shadow-sm">
+                            <CardHeader className="p-2 bg-muted/30 pb-1 border-b">
+                              <div className="flex justify-between items-center">
+                                <div className="font-semibold text-xs">{record.stage?.stage_name || 'Stage'}</div>
                                 {record.status === 'approved' ? (
-                                  <Badge variant="outline" className="border-green-500 text-green-600 bg-green-50 gap-1">
-                                    <CheckCircle2 className="w-3 h-3" /> Approved
+                                  <Badge variant="outline" className="h-4 border-green-500 text-green-600 bg-green-50 gap-1 px-1 py-0 text-[10px]">
+                                    <CheckCircle2 className="w-2.5 h-2.5" /> Approved
                                   </Badge>
                                 ) : record.status === 'rejected' ? (
-                                  <Badge variant="outline" className="border-red-500 text-red-600 bg-red-50 gap-1">
-                                    <XCircle className="w-3 h-3" /> Rejected
+                                  <Badge variant="outline" className="h-4 border-red-500 text-red-600 bg-red-50 gap-1 px-1 py-0 text-[10px]">
+                                    <XCircle className="w-2.5 h-2.5" /> Rejected
                                   </Badge>
                                 ) : (
-                                  <Badge variant="outline" className="border-yellow-500 text-yellow-600 bg-yellow-50 gap-1">
-                                    <Clock className="w-3 h-3" /> Pending
+                                  <Badge variant="outline" className="h-4 border-yellow-500 text-yellow-600 bg-yellow-50 gap-1 px-1 py-0 text-[10px]">
+                                    <Clock className="w-2.5 h-2.5" /> Pending
                                   </Badge>
                                 )}
                               </div>
                             </CardHeader>
-                            <CardContent className="p-3 text-sm">
-                              <div className="flex items-center text-xs text-muted-foreground mb-2">
-                                <Clock className="w-3 h-3 mr-1" />
-                                {record.action_date ? new Date(record.action_date).toLocaleString() : ''}
-                              </div>
-                              <div className="mb-2">
-                                <span className="font-medium text-xs">Approver: </span>
-                                {record.approver?.name}
+                            <CardContent className="p-2 text-xs">
+                              <div className="flex flex-wrap items-center justify-between gap-1 mb-1">
+                                <div className="text-[10px] text-muted-foreground flex items-center">
+                                  <Clock className="w-2.5 h-2.5 mr-1" />
+                                  {record.action_date ? new Date(record.action_date).toLocaleString() : ""}
+                                </div>
+                                <div className="text-[10px]">
+                                  <span className="font-medium text-muted-foreground">Appr: </span>
+                                  {record.approver?.name}
+                                </div>
                               </div>
                               {record.comments && (
-                                <div className="bg-muted/30 p-2 rounded text-xs italic border">
+                                <div className="bg-muted/50 px-2 py-1 rounded text-[10px] italic border mt-1 line-clamp-2">
                                   "{record.comments}"
                                 </div>
                               )}
-                              {record.pdf && (
-                                <a
-                                  href={`/${record.pdf}`}
-                                  target="_blank"
-                                  className="mt-1 text-blue-600 underline text-xs flex items-center gap-1"
-                                >
-                                  View PDF
-                                </a>
-                              )}
-                              {record.img && (
-                                <div className="mt-2">
-                                  <ImagePreview
-                                    dataImg={record.img}
-                                    size="h-20"
-                                    className="rounded border"
-                                  />
-                                </div>
-                              )}
+                              <div className="flex items-center gap-2 mt-1">
+                                {record.pdf && (
+                                  <a
+                                    href={`/${record.pdf}`}
+                                    target="_blank"
+                                    className="text-blue-600 hover:underline text-[10px] flex items-center gap-1"
+                                  >
+                                    <FileText className="h-3 w-3" /> PDF
+                                  </a>
+                                )}
+                                {record.img && (
+                                  <div className="flex items-center gap-1">
+                                    <ImagePreview
+                                      dataImg={record.img}
+                                      size="h-4 w-4"
+                                      className="rounded border object-cover"
+                                    />
+                                    <span className="text-[10px] text-muted-foreground">Image</span>
+                                  </div>
+                                )}
+                              </div>
                             </CardContent>
                           </Card>
                         ))}
@@ -1003,55 +983,45 @@ export default function Projects({ projects: initialProjects, institutes, region
                     ) : (
                       <div className="space-y-4">
                         {projectMilestones.map((milestone) => (
-                          <Card key={milestone.id}>
-                            <CardHeader className="p-3 pb-1">
-                              <div className="flex justify-between items-start">
-                                <div className="font-semibold text-sm">{milestone.name}</div>
-                                <Badge variant={
-                                  milestone.status === 'completed' ? 'default' :
-                                    milestone.status === 'inprogress' ? 'secondary' : 'outline'
-                                } className="capitalize text-xs">
-                                  {milestone.status}
-                                </Badge>
-                              </div>
-                            </CardHeader>
-                            <CardContent className="p-3 text-sm space-y-2">
+                          <Card
+                            key={milestone.id}
+                            className="border shadow-sm overflow-hidden"
+                          >
+                            <div className="flex items-start">
                               {milestone.img && (
-                                <div className="mb-2">
+                                <div className="w-16 h-full shrink-0">
                                   <ImagePreview
                                     dataImg={milestone.img}
-                                    size="h-32"
-                                    className="w-full object-cover rounded-md"
+                                    size="h-full w-full"
+                                    className="h-full w-full object-cover rounded-none"
                                   />
                                 </div>
                               )}
-                              {milestone.pdf && (
-                                <a
-                                  href={`/${milestone.pdf}`}
-                                  target="_blank"
-                                  className="mb-2 text-blue-600 underline text-xs flex items-center gap-1"
-                                >
-                                  View Document (PDF)
-                                </a>
-                              )}
-                              <div className="grid grid-cols-2 gap-2 text-xs">
-                                <div>
-                                  <span className="text-muted-foreground">Due in: </span>
-                                  {milestone.days} days
-                                </div>
-                                {milestone.completed_date && (
-                                  <div>
-                                    <span className="text-muted-foreground">Completed: </span>
-                                    <span className="text-green-600 dark:text-green-400">{new Date(milestone.completed_date).toLocaleDateString()}</span>
+                              <div className="flex-1 min-w-0">
+                                <CardHeader className="p-2 py-1.5 border-b bg-muted/10 flex flex-row items-center justify-between space-y-0">
+                                  <div className="font-semibold text-xs truncate pr-2">{milestone.name}</div>
+                                  <Badge variant={
+                                    milestone.status === 'completed' ? 'default' :
+                                      milestone.status === 'inprogress' ? 'secondary' : 'outline'
+                                  } className="capitalize text-[10px] px-1 py-0 h-4 shrink-0">
+                                    {milestone.status}
+                                  </Badge>
+                                </CardHeader>
+                                <CardContent className="p-2 text-xs space-y-1">
+                                  <div className="flex justify-between text-[10px] text-muted-foreground">
+                                    <span>Due: {milestone.days} days</span>
+                                    {milestone.completed_date && (
+                                      <span className="text-green-600 dark:text-green-400">Done: {new Date(milestone.completed_date).toLocaleDateString()}</span>
+                                    )}
                                   </div>
-                                )}
+                                  {milestone.description && (
+                                    <p className="text-muted-foreground text-[10px] line-clamp-1">
+                                      {milestone.description}
+                                    </p>
+                                  )}
+                                </CardContent>
                               </div>
-                              {milestone.description && (
-                                <p className="text-muted-foreground text-xs mt-1">
-                                  {milestone.description}
-                                </p>
-                              )}
-                            </CardContent>
+                            </div>
                           </Card>
                         ))}
                       </div>
@@ -1068,27 +1038,27 @@ export default function Projects({ projects: initialProjects, institutes, region
                     ) : (
                       <div className="space-y-4">
                         {projectPayments.map((payment) => (
-                          <Card key={payment.id}>
-                            <CardHeader className="p-3 pb-1">
-                              <div className="flex justify-between items-start">
-                                <div className="font-semibold text-sm">Amount: {payment.amount}</div>
-                                <Badge variant="outline" className={`capitalize text-xs ${payment.status === 'Approved' ? 'border-green-500 text-green-600 bg-green-50' :
-                                  payment.status === 'Rejected' ? 'border-red-500 text-red-600 bg-red-50' :
-                                    'border-yellow-500 text-yellow-600 bg-yellow-50'
-                                  }`}>
-                                  {payment.status}
-                                </Badge>
-                              </div>
+                          <Card key={payment.id} className="border shadow-sm">
+                            <CardHeader className="p-2 py-1.5 border-b bg-muted/10 flex flex-row items-center justify-between space-y-0">
+                              <div className="font-semibold text-xs">Rs. {payment.amount.toLocaleString()}</div>
+                              <Badge variant="outline" className={`capitalize text-[10px] px-1 py-0 h-4 ${payment.status === 'Approved' ? 'border-green-500 text-green-600 bg-green-50' :
+                                payment.status === 'Rejected' ? 'border-red-500 text-red-600 bg-red-50' :
+                                  'border-yellow-500 text-yellow-600 bg-yellow-50'
+                                }`}>
+                                {payment.status}
+                              </Badge>
                             </CardHeader>
-                            <CardContent className="p-3 text-sm space-y-2">
-                              <div className="text-xs text-muted-foreground">
-                                {payment.fund_head?.name || 'General Fund'}
-                              </div>
-                              <div className="text-xs">
-                                {new Date(payment.added_date).toLocaleDateString()}
+                            <CardContent className="p-2 text-xs space-y-1">
+                              <div className="flex justify-between items-center text-[10px]">
+                                <div className="text-muted-foreground font-medium truncate max-w-[150px]" title={payment.fund_head?.name || 'General Fund'}>
+                                  {payment.fund_head?.name || 'General Fund'}
+                                </div>
+                                <div className="text-muted-foreground">
+                                  {new Date(payment.added_date).toLocaleDateString()}
+                                </div>
                               </div>
                               {payment.description && (
-                                <p className="text-muted-foreground text-xs italic">
+                                <p className="text-muted-foreground text-[10px] italic bg-muted/30 px-1.5 py-0.5 rounded truncate">
                                   "{payment.description}"
                                 </p>
                               )}

@@ -450,6 +450,22 @@ public function projectDetails(Project $project)
 {$project->load('institute');
     return response()->json($project);
 }
+
+    public function details(Project $project)
+    {
+        $project->load([
+            'institute', 
+            'fundHead', 
+            'projecttype', 
+            'currentStage',
+
+        ]);
+
+        return Inertia::render('projects/ProjectDetails', [
+            'project' => $project,
+        ]);
+    }
+
     public function updateCompletion(Request $request, Project $project)
     {
         $request->validate([
