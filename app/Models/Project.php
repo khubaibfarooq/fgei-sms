@@ -27,6 +27,8 @@ class Project extends Model
         'priority',
         'completion_per',
         'pdf',
+        'structural_plan',
+        'contractor_id',
     ];
 
     public function fundHead()
@@ -65,5 +67,10 @@ class Project extends Model
     public function milestones()
     {
         return $this->hasMany(Milestone::class);
+    }
+
+    public function contractor()
+    {
+        return $this->belongsTo(Contractor::class);
     }
 }

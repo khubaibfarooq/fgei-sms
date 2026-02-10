@@ -12,6 +12,8 @@ use App\Models\ProjectApproval;
 use App\Models\FundHead;
 use App\Models\Fund;
 use App\Models\Institute;
+use App\Models\Contractor;
+use App\Models\Company;
 
 class ProjectController extends Controller
 {
@@ -56,10 +58,14 @@ $permissions = [
             abort(403);
         }
         $projectTypes = ProjectType::pluck('name', 'id')->toArray();
+        $contractors = Contractor::all();
+        $companies = Company::all();
 
         return Inertia::render('projects/Form', [
             'project' => null,
             'projectTypes' => $projectTypes,
+            'contractors' => $contractors,
+            'companies' => $companies,
         ]);
     }
 public function store(Request $request)
@@ -72,6 +78,8 @@ public function store(Request $request)
         'description'      => 'nullable|string',
         'actual_cost'      => 'required_if:status,completed|nullable|numeric',
         'pdf'              => 'nullable|file|max:10240',
+        'structural_plan'  => 'nullable|file|max:10240',
+        'contractor_id'    => 'nullable|exists:contractor,id',
 
         'final_comments'   => 'required_if:status,completed|nullable|string',
 
@@ -97,15 +105,25 @@ public function store(Request $request)
         'description'      => $request->description,
         'institute_id'     => session('sms_inst_id'),
         'submitted_by'     => auth()->id(),
-        'approval_status'   => 'waiting',
+        'approval_status'  => 'waiting',
+        'contractor_id'    => $request->contractor_id,
     ]);
-   if ($request->hasFile("pdf")) {
-                $file = $request->file("pdf");
-                $FILENAME = time() . '-' . uniqid() . '.' . $file->getClientOriginalExtension();
-                $file->move(public_path('assets/projects'), $FILENAME);
-                $project->pdf = 'projects/' . $FILENAME;
-                $project->save();
-            }
+
+    if ($request->hasFile("pdf")) {
+        $file = $request->file("pdf");
+        $FILENAME = time() . '-' . uniqid() . '.' . $file->getClientOriginalExtension();
+        $file->move(public_path('assets/projects'), $FILENAME);
+        $project->pdf = 'projects/' . $FILENAME;
+        $project->save();
+    }
+
+    if ($request->hasFile("structural_plan")) {
+        $file = $request->file("structural_plan");
+        $FILENAME = time() . '-plan-' . uniqid() . '.' . $file->getClientOriginalExtension();
+        $file->move(public_path('assets/projects/plans'), $FILENAME);
+        $project->structural_plan = 'projects/plans/' . $FILENAME;
+        $project->save();
+    }
   
     if ($request->has('milestones')) {
         foreach ($request->input('milestones', []) as $index => $m) {
@@ -211,10 +229,14 @@ public function store(Request $request)
         }
         $projectTypes = ProjectType::pluck('name', 'id')->toArray();
         $milestones = $project->milestones;
+        $contractors = Contractor::all();
+        $companies = Company::all();
+
         return Inertia::render('projects/Form', [
             'project'     => $project,
             'projectTypes'=> $projectTypes,
-    
+            'contractors' => $contractors,
+            'companies'   => $companies,
             'milestones'  => $milestones,
         ]);
     }
@@ -230,6 +252,8 @@ public function update(Request $request, Project $project)
         'description'      => 'nullable|string',
         'actual_cost'      => 'required_if:status,completed|nullable|numeric',
         'pdf'              => 'nullable|file|max:10240',
+        'structural_plan'  => 'nullable|file|max:10240',
+        'contractor_id'    => 'nullable|exists:contractor,id',
         'final_comments'   => 'required_if:status,completed|nullable|string',
 
         'milestones.*.id'             => 'nullable|integer|exists:milestones,id,project_id,' . $project->id,
@@ -256,6 +280,22 @@ public function update(Request $request, Project $project)
         $file->move(public_path('assets/projects'), $FILENAME);
         $project->pdf = 'projects/' . $FILENAME;
     }
+
+    if ($request->hasFile("structural_plan")) {
+        // Delete old plan if exists
+        if ($project->structural_plan) {
+            $oldPlanPath = public_path('assets/' . $project->structural_plan);
+            if (File::exists($oldPlanPath)) {
+                File::delete($oldPlanPath);
+            }
+        }
+        
+        $file = $request->file("structural_plan");
+        $FILENAME = time() . '-plan-' . uniqid() . '.' . $file->getClientOriginalExtension();
+        $file->move(public_path('assets/projects/plans'), $FILENAME);
+        $project->structural_plan = 'projects/plans/' . $FILENAME;
+    }
+
     // Update main project
     $project->update([
         'name'             => $request->name,
@@ -263,10 +303,12 @@ public function update(Request $request, Project $project)
         'project_type_id'  => $request->project_type_id,
         'actual_cost'      => $request->actual_cost,
         'pdf'              =>  $project->pdf,
+        'structural_plan'  =>  $project->structural_plan,
         'final_comments'   => $request->final_comments,
         'priority'         => $request->priority,
         'description'      => $request->description,
         'institute_id'     => session('sms_inst_id'),
+        'contractor_id'    => $request->contractor_id,
     ]);
 
     $submittedIds = [];
@@ -458,7 +500,7 @@ public function projectDetails(Project $project)
             'fundHead', 
             'projecttype', 
             'currentStage',
-
+            'contractor',
         ]);
 
         return Inertia::render('projects/ProjectDetails', [

@@ -18,6 +18,16 @@ import {
 import { BreadcrumbItem } from '@/types';
 import { toast } from 'sonner';
 import { ImagePreview } from '@/components/ui/image-preview';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import axios from 'axios';
+import { Textarea } from '@/components/ui/textarea';
 interface MilestoneRow {
   key: number;                          // For React rendering
   id?: number;                          // Laravel milestone ID
@@ -34,6 +44,11 @@ interface MilestoneRow {
   existingPdf?: string;                 // Added PDF path
 }
 
+interface Contractor {
+  id: number;
+  name: string;
+}
+
 interface ProjectFormProps {
   project?: {
     id?: number;
@@ -41,12 +56,14 @@ interface ProjectFormProps {
     estimated_cost: number;
     actual_cost: number | null;
     pdf: string | null;
+    structural_plan: string | null;
     final_comments: string | null;
     project_type_id: number | null;
     description: string | null;
     priority: string | null;
     status: string | null;
     approval_status: string | null;
+    contractor_id: number | null;
     milestones?: Array<{
       id: number;
       name: string;
@@ -60,9 +77,11 @@ interface ProjectFormProps {
     }>;
   };
   projectTypes: Record<string, string>;
+  contractors: Contractor[];
+  companies: Array<{ id: number; name: string }>;
 }
 
-export default function ProjectForm({ project, projectTypes }: ProjectFormProps) {
+export default function ProjectForm({ project, projectTypes, contractors: initialContractors, companies: propsCompanies }: ProjectFormProps) {
   const isEdit = !!project?.id;
 
   const [name, setName] = useState(project?.name || '');
@@ -77,6 +96,34 @@ export default function ProjectForm({ project, projectTypes }: ProjectFormProps)
   const [priority, setPriority] = useState(project?.priority || 'Medium');
   const [projectPdf, setProjectPdf] = useState<File | null>(null);
   const [existingPdf, setExistingPdf] = useState(project?.pdf || null);
+
+  const [contractorId, setContractorId] = useState(project?.contractor_id?.toString() || '');
+  const [structuralPlan, setStructuralPlan] = useState<File | null>(null);
+  const [existingPlan, setExistingPlan] = useState(project?.structural_plan || null);
+
+  // Quick Add Contractor State
+  const [contractors, setContractors] = useState<Contractor[]>(initialContractors);
+  const [isContractorModalOpen, setIsContractorModalOpen] = useState(false);
+  const [newContractor, setNewContractor] = useState({
+    company_id: '',
+    name: '',
+    email: '',
+    phone: '',
+    address: '',
+    specialization: '',
+  });
+  const [creatingContractor, setCreatingContractor] = useState(false);
+
+  // Quick Add Company State
+  const [companies, setCompanies] = useState(initialContractors.length >= 0 ? propsCompanies : []); // Need to fix destructuring to rename companies prop to propsCompanies
+  const [isCompanyModalOpen, setIsCompanyModalOpen] = useState(false);
+  const [newCompany, setNewCompany] = useState({
+    name: '',
+    email: '',
+    contact: '',
+    address: '',
+  });
+  const [creatingCompany, setCreatingCompany] = useState(false);
 
 
   const [milestones, setMilestones] = useState<MilestoneRow[]>(
@@ -139,6 +186,121 @@ export default function ProjectForm({ project, projectTypes }: ProjectFormProps)
     updateMilestone(key, 'img', file);
   };
 
+  const handleAddContractor = async () => {
+    if (!newContractor.name || !newContractor.company_id) {
+      toast.error("Name and Company are required");
+      return;
+    }
+
+    setCreatingContractor(true);
+    try {
+      const res = await axios.post('/contractor', newContractor);
+      // Assuming the response returns the created contractor or we can construct it
+      // Ideally the backend should return the created object.
+      // If the backend returns a redirect, we might need to adjust.
+      // But for resource controllers typically store returns redirect.
+      // We might want to check if request expects json in controller, or just assume we reload list.
+      // For now let's hope we can get the ID. If not, we might need to fetch all again.
+
+      // Actually simpler: let's fetch all contractors again to be safe and get the new ID
+      const contractorsRes = await axios.get(route('contractor.index'), {
+        params: { json: true } // We might need to adjust endpoint to return JSON list if not standard
+      }).catch(() => null);
+
+      // Alternative since we can't easily change backend return type of store without affecting other flows:
+      // We will optimistically add if we had the ID, but we don't.
+      // Let's rely on standard Inertia reload? No, we want partial.
+
+      // Let's TRY to just manually add it if we can't get it back.
+      // But wait, the previous tool confirmed standard resource controller.
+
+      // Best bet: Fetch all contractors after add.
+      // Or better: Update the store method to return JSON if wantsJson().
+      // For now, let's assume we can fetch the updated list or just add it to state if we don't care about ID (but we do).
+
+      // Standard Laravel Inertia Store returns redirect. 
+      // We can make a specific endpoint or just accept that we might need to reload.
+      // Let's try to just use valid data and push to list with a fake ID if needed? No must be real DB ID.
+
+      // Real solution:
+      // We will fetch all contractors again.
+      // NOTE: This assumes there is an API endpoint or we can use Inertia to reload just that prop?
+      // router.reload({ only: ['contractors'] }) would work!
+
+      // Use Inertia reload
+      router.reload({
+        only: ['contractors'],
+        onSuccess: (page) => {
+          // The props will be updated automatically
+          // But we need to select the new one.
+          // We'll need to find the one with the name we just added?
+          // Or just let user select it.
+          toast.success("Contractor added");
+          setIsContractorModalOpen(false);
+          setNewContractor({
+            company_id: '',
+            name: '',
+            email: '',
+            phone: '',
+            address: '',
+            specialization: '',
+          });
+          // We can't easily auto-select without knowing the new ID.
+          // Unless we sort by ID desc.
+        }
+      });
+
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to add contractor");
+    } finally {
+      setCreatingContractor(false);
+    }
+  };
+
+  const handleAddCompany = async () => {
+    if (!newCompany.name) {
+      toast.error("Company Name is required");
+      return;
+    }
+
+    setCreatingCompany(true);
+    try {
+      await axios.post('/company', newCompany);
+
+      // Refresh companies list
+      router.reload({
+        only: ['companies'],
+        onSuccess: () => {
+          toast.success("Company added");
+          setIsCompanyModalOpen(false);
+          setNewCompany({
+            name: '',
+            email: '',
+            contact: '',
+            address: '',
+          });
+        }
+      });
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to add company");
+    } finally {
+      setCreatingCompany(false);
+    }
+  };
+
+  // Custom helper to manualy refresh contractors if router.reload is tricky within the same component state context for 'contractors' variable 
+  // actually 'contractors' prop will update, but our local state 'contractors' initialized from props won't automatically sync unless we use useEffect.
+  // Re-sync local state when prop changes
+  React.useEffect(() => {
+    setContractors(initialContractors);
+  }, [initialContractors]);
+
+  React.useEffect(() => {
+    setCompanies(propsCompanies);
+  }, [propsCompanies]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -157,8 +319,14 @@ export default function ProjectForm({ project, projectTypes }: ProjectFormProps)
     fd.append('project_type_id', projectTypeId);
     fd.append('description', description);
     fd.append('priority', priority);
+    if (contractorId) {
+      fd.append('contractor_id', contractorId);
+    }
     if (projectPdf) {
       fd.append('pdf', projectPdf);
+    }
+    if (structuralPlan) {
+      fd.append('structural_plan', structuralPlan);
     }
 
     if (isEdit) {
@@ -279,6 +447,53 @@ export default function ProjectForm({ project, projectTypes }: ProjectFormProps)
                   )}
                   {projectPdf && (
                     <p className="text-sm text-green-600">New PDF selected: {projectPdf.name}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Contractor</Label>
+                  <div className="flex gap-2">
+                    <div className="flex-1">
+                      <Select value={contractorId} onValueChange={setContractorId}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select contractor" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {contractors.map(c => (
+                            <SelectItem key={c.id} value={c.id.toString()}>{c.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <Button type="button" variant="outline" size="icon" onClick={() => setIsContractorModalOpen(true)} title="Add New Contractor">
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="space-y-2 md:col-span-2">
+                  <Label>Structural Plan (PDF)</Label>
+                  {
+                    (approvalStatus !== 'approved' || !existingPlan) && (
+                      <Input
+                        type="file"
+                        accept=".pdf"
+                        onChange={e => setStructuralPlan(e.target.files?.[0] || null)}
+                      />
+                    )
+                  }
+
+                  {existingPlan && !structuralPlan && (
+                    <a
+                      href={`/assets/${existingPlan}`}
+                      target="_blank"
+                      className="text-sm text-blue-600 hover:underline"
+                    >
+                      View Current Structural Plan
+                    </a>
+                  )}
+                  {structuralPlan && (
+                    <p className="text-sm text-green-600">New Plan selected: {structuralPlan.name}</p>
                   )}
                 </div>
               </div>
@@ -433,6 +648,139 @@ export default function ProjectForm({ project, projectTypes }: ProjectFormProps)
           </CardContent>
         </Card>
       </div>
+
+      {/* Quick Add Contractor Modal */}
+      <Dialog open={isContractorModalOpen} onOpenChange={setIsContractorModalOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Add New Contractor</DialogTitle>
+            <DialogDescription>
+              Create a new contractor to assign to this project immediately.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label>Company <span className="text-red-500">*</span></Label>
+              <div className="flex gap-2">
+                <div className="flex-1">
+                  <Select
+                    value={newContractor.company_id}
+                    onValueChange={(val) => setNewContractor({ ...newContractor, company_id: val })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Company" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {companies.map(c => (
+                        <SelectItem key={c.id} value={c.id.toString()}>{c.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button type="button" variant="outline" size="icon" onClick={() => setIsCompanyModalOpen(true)} title="Add New Company">
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Contractor Name <span className="text-red-500">*</span></Label>
+              <Input
+                value={newContractor.name}
+                onChange={(e) => setNewContractor({ ...newContractor, name: e.target.value })}
+                placeholder="Enter contractor name"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Specialization</Label>
+              <Input
+                value={newContractor.specialization}
+                onChange={(e) => setNewContractor({ ...newContractor, specialization: e.target.value })}
+                placeholder="e.g. Electrical, Civil"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Email</Label>
+                <Input
+                  type="email"
+                  value={newContractor.email}
+                  onChange={(e) => setNewContractor({ ...newContractor, email: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Phone</Label>
+                <Input
+                  value={newContractor.phone}
+                  onChange={(e) => setNewContractor({ ...newContractor, phone: e.target.value })}
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Address</Label>
+              <Textarea
+                value={newContractor.address}
+                onChange={(e) => setNewContractor({ ...newContractor, address: e.target.value })}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsContractorModalOpen(false)}>Cancel</Button>
+            <Button onClick={handleAddContractor} disabled={creatingContractor}>
+              {creatingContractor ? 'Creating...' : 'Create Contractor'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Quick Add Company Modal */}
+      <Dialog open={isCompanyModalOpen} onOpenChange={setIsCompanyModalOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add New Company</DialogTitle>
+            <DialogDescription>
+              Create a new company to assign to the contractor.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label>Company Name <span className="text-red-500">*</span></Label>
+              <Input
+                value={newCompany.name}
+                onChange={(e) => setNewCompany({ ...newCompany, name: e.target.value })}
+                placeholder="Enter company name"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Email</Label>
+              <Input
+                type="email"
+                value={newCompany.email}
+                onChange={(e) => setNewCompany({ ...newCompany, email: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Contact Number</Label>
+              <Input
+                value={newCompany.contact}
+                onChange={(e) => setNewCompany({ ...newCompany, contact: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Address</Label>
+              <Textarea
+                value={newCompany.address}
+                onChange={(e) => setNewCompany({ ...newCompany, address: e.target.value })}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsCompanyModalOpen(false)}>Cancel</Button>
+            <Button onClick={handleAddCompany} disabled={creatingCompany}>
+              {creatingCompany ? 'Creating...' : 'Create Company'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 }

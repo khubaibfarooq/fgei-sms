@@ -30,12 +30,16 @@ interface Project {
     estimated_cost: number;
     actual_cost: number | null;
     pdf: string | null;
+    structural_plan: string | null;
     final_comments: string | null;
     status: string;
     approval_status: string;
     priority: string;
     completion_per?: number;
     institute: {
+        name: string;
+    };
+    contractor?: {
         name: string;
     };
     fund_head?: {
@@ -235,6 +239,18 @@ export default function ProjectDetails({ project }: Props) {
                                 <FileText className="h-3.5 w-3.5" />
                                 View PDF
                             </a>
+
+                        )}
+                        {project.structural_plan && (
+                            <a
+                                href={`/assets/${project.structural_plan}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-xs font-medium h-8"
+                            >
+                                <FileText className="h-3.5 w-3.5" />
+                                View Structural Plan
+                            </a>
                         )}
                     </div>
                 </CardHeader>
@@ -276,6 +292,12 @@ export default function ProjectDetails({ project }: Props) {
                             <div className="sm:col-span-2 lg:col-span-1">
                                 <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Fund Head</p>
                                 <p className="font-medium truncate" title={project.fund_head?.name}>{project.fund_head?.name || '-'}</p>
+                            </div>
+
+                            {/* Contractor */}
+                            <div className="sm:col-span-2 lg:col-span-1">
+                                <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Contractor</p>
+                                <p className="font-medium truncate" title={project.contractor?.name}>{project.contractor?.name || '-'}</p>
                             </div>
 
                             {/* Estimated Cost */}

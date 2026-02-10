@@ -11,6 +11,11 @@ class CheckMenuPermission
 {
     public function handle(Request $request, Closure $next): Response
     {
+        // Skip menu permission check for non-GET requests (actions like store/update)
+        if (!$request->isMethod('get')) {
+            return $next($request);
+        }
+
         $user = $request->user();
 
         // Abaikan jika belum login

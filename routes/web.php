@@ -48,6 +48,8 @@ use App\Http\Controllers\ApprovalStageController;
 use App\Http\Controllers\MilestoneController;
 use App\Http\Controllers\ProjectApprovalController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\CompanyController;
+use App\Http\Controllers\ContractorController;
 
 Route::get('/', function () {
     return Inertia::render('welcome');
@@ -177,6 +179,9 @@ Route::resource('asset-transactions', AssetTransactionController::class);
 Route::resource('vehicle-types', VehicleTypeController::class);
 Route::resource('transports', TransportController::class);
 Route::resource('block-types', BlockTypeController::class);
+Route::resource('company', CompanyController::class);
+Route::resource('contractor', ContractorController::class);
+
 Route::get('/asset-trans', [AssetTransactionController::class, 'Transaction']);
 
 Route::get('/transactions', [TransactionController::class, 'index'])
