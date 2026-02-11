@@ -426,8 +426,8 @@ export default function ProjectDetails({ project, canEditMilestones }: Props) {
                                                                 {record.action_date ? new Date(record.action_date).toLocaleString() : "-"}
                                                             </div>
                                                             <div className="text-[10px] md:text-xs">
-                                                                <span className="font-medium text-muted-foreground">Appr: </span>
-                                                                {record.approver?.name}
+                                                                <span className="font-medium text-muted-foreground">Approved by: </span>
+                                                                <span className="font-medium">{record.approver?.name}</span>
                                                             </div>
                                                         </div>
 
