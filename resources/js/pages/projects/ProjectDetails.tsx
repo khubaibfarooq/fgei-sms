@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { type BreadcrumbItem } from '@/types';
-import { ArrowLeft, CheckCircle2, XCircle, Clock, Eye, FileText } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, XCircle, Clock, Eye, FileText, Camera, Upload, X } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -99,8 +99,17 @@ interface Payment {
     };
 }
 
+interface ProjectImage {
+    id: number;
+    project_id: number;
+    desc: string | null;
+    date: string | null;
+    image: string;
+}
+
 interface Props {
     project: Project;
+    canEditMilestones: boolean;
 }
 
 const formatAmount = (value: number | null | undefined): string => {
@@ -111,11 +120,17 @@ const formatAmount = (value: number | null | undefined): string => {
     return value.toLocaleString();
 };
 
-export default function ProjectDetails({ project }: Props) {
+export default function ProjectDetails({ project, canEditMilestones }: Props) {
     const [approvalHistory, setApprovalHistory] = useState<ApprovalHistory[]>([]);
     const [projectMilestones, setProjectMilestones] = useState<Milestone[]>([]);
     const [projectPayments, setProjectPayments] = useState<Payment[]>([]);
+    const [projectImages, setProjectImages] = useState<ProjectImage[]>([]);
     const [loadingData, setLoadingData] = useState(false);
+
+    // Image Upload State
+    const [imageUploadModalOpen, setImageUploadModalOpen] = useState(false);
+    const [imageForm, setImageForm] = useState({ desc: '', date: '', image: null as File | null });
+    const [uploadingImage, setUploadingImage] = useState(false);
 
     // Description Modal State
     const [descriptionModalOpen, setDescriptionModalOpen] = useState(false);
@@ -144,14 +159,16 @@ export default function ProjectDetails({ project }: Props) {
         const fetchDetails = async () => {
             setLoadingData(true);
             try {
-                const [historyRes, milestonesRes, paymentsRes] = await Promise.all([
+                const [historyRes, milestonesRes, paymentsRes, imagesRes] = await Promise.all([
                     axios.get(`/projects/${project.id}/history`),
                     axios.get(`/projects/${project.id}/milestones`),
-                    axios.get(`/projects/${project.id}/payments`)
+                    axios.get(`/projects/${project.id}/payments`),
+                    axios.get(`/projects/${project.id}/images`)
                 ]);
                 setApprovalHistory(historyRes.data);
                 setProjectMilestones(milestonesRes.data);
                 setProjectPayments(paymentsRes.data.payments);
+                setProjectImages(imagesRes.data);
             } catch (error) {
                 console.error("Failed to fetch project details", error);
                 toast.error("Failed to load project details.");
@@ -367,6 +384,7 @@ export default function ProjectDetails({ project }: Props) {
                                     <TabsTrigger value="approvals" className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none rounded-none px-4 py-3 bg-transparent">Approvals</TabsTrigger>
                                     <TabsTrigger value="milestones" className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none rounded-none px-4 py-3 bg-transparent">Milestones</TabsTrigger>
                                     <TabsTrigger value="payments" className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none rounded-none px-4 py-3 bg-transparent">Payments</TabsTrigger>
+                                    <TabsTrigger value="images" className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none rounded-none px-4 py-3 bg-transparent flex items-center gap-1"><Camera className="h-3.5 w-3.5" /> Images</TabsTrigger>
                                 </TabsList>
                             </div>
 
@@ -459,16 +477,16 @@ export default function ProjectDetails({ project }: Props) {
                                             {projectMilestones.map((milestone) => (
                                                 <Card
                                                     key={milestone.id}
-                                                    className="cursor-pointer hover:bg-muted/50 transition-colors border shadow-sm overflow-hidden"
-                                                    onClick={() => handleMilestoneClick(milestone)}
+                                                    className={`border shadow-sm overflow-hidden ${canEditMilestones ? 'cursor-pointer hover:bg-muted/50 transition-colors' : ''}`}
+                                                    onClick={() => canEditMilestones && handleMilestoneClick(milestone)}
                                                 >
                                                     <div className="flex items-start">
                                                         {milestone.img && (
-                                                            <div className="w-16 h-full shrink-0">
+                                                            <div className="w-16 h-16 shrink-0">
                                                                 <ImagePreview
                                                                     dataImg={milestone.img}
-                                                                    size="h-full w-full"
-                                                                    className="h-full w-full object-cover rounded-none"
+                                                                    size="h-16 w-16"
+                                                                    className="h-16 w-16 object-cover rounded-none"
                                                                 />
                                                             </div>
                                                         )}
@@ -493,6 +511,17 @@ export default function ProjectDetails({ project }: Props) {
                                                                     <p className="text-muted-foreground text-[10px] line-clamp-1">
                                                                         {milestone.description}
                                                                     </p>
+                                                                )}
+                                                                {milestone.pdf && (
+                                                                    <a
+                                                                        href={`/assets/${milestone.pdf}`}
+                                                                        target="_blank"
+                                                                        rel="noopener noreferrer"
+                                                                        onClick={(e) => e.stopPropagation()}
+                                                                        className="text-blue-600 hover:underline text-[10px] flex items-center gap-1 mt-0.5"
+                                                                    >
+                                                                        <FileText className="h-3 w-3" /> View PDF
+                                                                    </a>
                                                                 )}
                                                             </CardContent>
                                                         </div>
@@ -544,14 +573,53 @@ export default function ProjectDetails({ project }: Props) {
                                         </div>
                                     )}
                                 </TabsContent>
+
+                                {/* Images Tab */}
+                                <TabsContent value="images" className="mt-0 space-y-3 h-full">
+                                    {loadingData ? (
+                                        <div className="flex justify-center py-8 text-muted-foreground">Loading images...</div>
+                                    ) : (
+                                        <div className="space-y-3">
+
+
+                                            {projectImages.length === 0 ? (
+                                                <div className="text-center py-8 text-muted-foreground border rounded-lg border-dashed">
+                                                    No images found.
+                                                </div>
+                                            ) : (
+                                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                                    {projectImages.map((img) => (
+                                                        <Card key={img.id} className="overflow-hidden border shadow-sm">
+                                                            <div className="relative group">
+                                                                <ImagePreview
+                                                                    dataImg={`assets/${img.image}`}
+                                                                    size="w-full h-32 object-cover"
+                                                                />
+
+                                                            </div>
+                                                            <CardContent className="p-2">
+                                                                {img.desc && (
+                                                                    <p className="text-xs text-muted-foreground line-clamp-2 mb-1" title={img.desc}>{img.desc}</p>
+                                                                )}
+                                                                {img.date && (
+                                                                    <p className="text-[10px] text-muted-foreground block">{new Date(img.date).toLocaleDateString()}</p>
+                                                                )}
+                                                            </CardContent>
+                                                        </Card>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </TabsContent>
                             </div>
                         </Tabs>
                     </div>
                 </CardContent>
-            </Card>
+            </Card >
 
             {/* Description Modal */}
-            <Dialog open={descriptionModalOpen} onOpenChange={setDescriptionModalOpen}>
+            < Dialog open={descriptionModalOpen} onOpenChange={setDescriptionModalOpen} >
                 <DialogContent className="max-w-2xl">
                     <DialogHeader>
                         <DialogTitle>Project Description</DialogTitle>
@@ -560,10 +628,10 @@ export default function ProjectDetails({ project }: Props) {
                         <p className="text-sm whitespace-pre-wrap">{project.description}</p>
                     </div>
                 </DialogContent>
-            </Dialog>
+            </Dialog >
 
             {/* Contractor Details Modal */}
-            <Dialog open={contractorModalOpen} onOpenChange={setContractorModalOpen}>
+            < Dialog open={contractorModalOpen} onOpenChange={setContractorModalOpen} >
                 <DialogContent className="max-w-md">
                     <DialogHeader>
                         <DialogTitle>Contractor Details</DialogTitle>
@@ -603,10 +671,11 @@ export default function ProjectDetails({ project }: Props) {
                         </div>
                     )}
                 </DialogContent>
-            </Dialog>
+            </Dialog >
 
             {/* Milestone Edit Modal */}
-            <Dialog open={!!editingMilestone} onOpenChange={(open) => !open && setEditingMilestone(null)}>
+            < Dialog open={!!editingMilestone
+            } onOpenChange={(open) => !open && setEditingMilestone(null)}>
                 <DialogContent className="max-w-2xl">
                     <DialogHeader>
                         <DialogTitle>Edit Milestone</DialogTitle>
@@ -684,7 +753,84 @@ export default function ProjectDetails({ project }: Props) {
                         </Button>
                     </DialogFooter>
                 </DialogContent>
-            </Dialog>
+            </Dialog >
+
+            {/* Image Upload Modal */}
+            < Dialog open={imageUploadModalOpen} onOpenChange={setImageUploadModalOpen} >
+                <DialogContent className="sm:max-w-[450px]">
+                    <DialogHeader>
+                        <DialogTitle>Upload Project Image</DialogTitle>
+                        <DialogDescription>
+                            Add a new image for <strong>{project.name}</strong>.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="img_file" className="text-right">Image</Label>
+                            <Input
+                                id="img_file"
+                                type="file"
+                                accept="image/*"
+                                className="col-span-3"
+                                onChange={(e) => {
+                                    if (e.target.files && e.target.files[0]) {
+                                        setImageForm({ ...imageForm, image: e.target.files[0] });
+                                    }
+                                }}
+                            />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="img_desc" className="text-right">Description</Label>
+                            <Textarea
+                                id="img_desc"
+                                placeholder="Describe the image..."
+                                className="col-span-3"
+                                value={imageForm.desc}
+                                onChange={(e) => setImageForm({ ...imageForm, desc: e.target.value })}
+                            />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="img_date" className="text-right">Date</Label>
+                            <Input
+                                id="img_date"
+                                type="date"
+                                className="col-span-3"
+                                value={imageForm.date}
+                                onChange={(e) => setImageForm({ ...imageForm, date: e.target.value })}
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="secondary" onClick={() => setImageUploadModalOpen(false)}>Cancel</Button>
+                        <Button
+                            disabled={uploadingImage || !imageForm.image}
+                            onClick={async () => {
+                                if (!imageForm.image) return;
+                                setUploadingImage(true);
+                                const formData = new FormData();
+                                formData.append('image', imageForm.image);
+                                if (imageForm.desc) formData.append('desc', imageForm.desc);
+                                if (imageForm.date) formData.append('date', imageForm.date);
+                                try {
+                                    await axios.post(`/projects/${project.id}/images`, formData, {
+                                        headers: { 'Content-Type': 'multipart/form-data' },
+                                    });
+                                    toast.success('Image uploaded successfully');
+                                    setImageUploadModalOpen(false);
+                                    const res = await axios.get(`/projects/${project.id}/images`);
+                                    setProjectImages(res.data);
+                                } catch {
+                                    toast.error('Failed to upload image');
+                                } finally {
+                                    setUploadingImage(false);
+                                }
+                            }}
+                        >
+                            {uploadingImage ? 'Uploading...' : 'Upload'}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog >
         </AppLayout >
     );
 }

@@ -73,4 +73,9 @@ class Project extends Model
     {
         return $this->belongsTo(Contractor::class);
     }
+
+    public function images()
+    {
+        return $this->hasMany(ProjectImage::class);
+    }
 }

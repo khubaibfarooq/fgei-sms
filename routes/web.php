@@ -150,6 +150,9 @@ Route::get('/projects/{project}/milestones', [ProjectController::class, 'milesto
 Route::get('/projects/{project}/payments', [ProjectController::class, 'payments'])->name('projects.payments');
 Route::post('/projects/{project}/request-payment', [ProjectController::class, 'requestPayment'])->name('projects.request-payment');
 Route::post('/projects/{project}/update-completion', [ProjectController::class, 'updateCompletion'])->name('projects.update-completion');
+Route::get('/projects/{project}/images', [ProjectController::class, 'projectImages'])->name('projects.images');
+Route::post('/projects/{project}/images', [ProjectController::class, 'storeProjectImage'])->name('projects.images.store');
+Route::delete('/project-images/{projectImage}', [ProjectController::class, 'deleteProjectImage'])->name('project-images.destroy');
 Route::resource('milestones', MilestoneController::class);
 
 // approval stages

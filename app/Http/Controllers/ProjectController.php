@@ -14,6 +14,7 @@ use App\Models\Fund;
 use App\Models\Institute;
 use App\Models\Contractor;
 use App\Models\Company;
+use App\Models\ProjectImage;
 
 class ProjectController extends Controller
 {
@@ -503,8 +504,11 @@ public function projectDetails(Project $project)
             'contractor.company',
         ]);
 
+        $canEditMilestones = session('sms_inst_id') == $project->institute_id && $project->status !== 'completed';
+
         return Inertia::render('projects/ProjectDetails', [
             'project' => $project,
+            'canEditMilestones' => $canEditMilestones,
         ]);
     }
 
@@ -522,6 +526,43 @@ public function projectDetails(Project $project)
             'success' => true, 
             'message' => 'Completion percentage updated successfully.'
         ]);
+    }
+
+    public function projectImages(Project $project)
+    {
+        return response()->json($project->images()->orderBy('date', 'desc')->get());
+    }
+
+    public function storeProjectImage(Request $request, Project $project)
+    {
+        $request->validate([
+            'desc'  => 'nullable|string|max:1000',
+            'date'  => 'nullable|date',
+            'image' => 'required|file|max:51200',
+        ]);
+
+        $file = $request->file('image');
+        $fileName = time() . '-' . uniqid() . '.' . $file->getClientOriginalExtension();
+        $file->move(public_path('assets/project_images'), $fileName);
+
+        $image = $project->images()->create([
+            'desc'  => $request->desc,
+            'date'  => $request->date,
+            'image' => 'project_images/' . $fileName,
+        ]);
+
+        return response()->json(['success' => true, 'message' => 'Image uploaded successfully.', 'image' => $image]);
+    }
+
+    public function deleteProjectImage(ProjectImage $projectImage)
+    {
+        $path = public_path('assets/' . $projectImage->image);
+        if (File::exists($path)) {
+            File::delete($path);
+        }
+        $projectImage->delete();
+
+        return response()->json(['success' => true, 'message' => 'Image deleted successfully.']);
     }
 }
  
