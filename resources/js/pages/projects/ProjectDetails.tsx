@@ -41,6 +41,15 @@ interface Project {
     };
     contractor?: {
         name: string;
+        contact?: string | null;
+        email?: string | null;
+        address?: string | null;
+        company?: {
+            name: string;
+            contact?: string | null;
+            email?: string | null;
+            address?: string | null;
+        } | null;
     };
     fund_head?: {
         name: string;
@@ -110,6 +119,7 @@ export default function ProjectDetails({ project }: Props) {
 
     // Description Modal State
     const [descriptionModalOpen, setDescriptionModalOpen] = useState(false);
+    const [contractorModalOpen, setContractorModalOpen] = useState(false);
 
     // Milestone Edit State
     const [editingMilestone, setEditingMilestone] = useState<Milestone | null>(null);
@@ -297,7 +307,18 @@ export default function ProjectDetails({ project }: Props) {
                             {/* Contractor */}
                             <div className="sm:col-span-2 lg:col-span-1">
                                 <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Contractor</p>
-                                <p className="font-medium truncate" title={project.contractor?.name}>{project.contractor?.name || '-'}</p>
+                                <div className="flex items-center gap-1">
+                                    <p className="font-medium truncate" title={project.contractor?.name}>{project.contractor?.name || '-'}</p>
+                                    {project.contractor && (
+                                        <button
+                                            onClick={() => setContractorModalOpen(true)}
+                                            className="text-muted-foreground hover:text-foreground transition-colors shrink-0"
+                                            title="View Contractor Details"
+                                        >
+                                            <Eye className="h-3.5 w-3.5" />
+                                        </button>
+                                    )}
+                                </div>
                             </div>
 
                             {/* Estimated Cost */}
@@ -538,6 +559,49 @@ export default function ProjectDetails({ project }: Props) {
                     <div className="py-4">
                         <p className="text-sm whitespace-pre-wrap">{project.description}</p>
                     </div>
+                </DialogContent>
+            </Dialog>
+
+            {/* Contractor Details Modal */}
+            <Dialog open={contractorModalOpen} onOpenChange={setContractorModalOpen}>
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Contractor Details</DialogTitle>
+                    </DialogHeader>
+                    {project.contractor && (
+                        <div className="space-y-4 py-2">
+                            <div className="space-y-2">
+                                <div className="grid grid-cols-[100px_1fr] gap-1 text-sm">
+                                    <span className="text-muted-foreground font-medium">Name:</span>
+                                    <span>{project.contractor.name}</span>
+                                    <span className="text-muted-foreground font-medium">Contact:</span>
+                                    <span>{project.contractor.contact || '-'}</span>
+                                    <span className="text-muted-foreground font-medium">Email:</span>
+                                    <span>{project.contractor.email || '-'}</span>
+                                    <span className="text-muted-foreground font-medium">Address:</span>
+                                    <span>{project.contractor.address || '-'}</span>
+                                </div>
+                            </div>
+                            {project.contractor.company && (
+                                <>
+                                    <Separator />
+                                    <div className="space-y-2">
+                                        <h4 className="text-sm font-semibold">Company Details</h4>
+                                        <div className="grid grid-cols-[100px_1fr] gap-1 text-sm">
+                                            <span className="text-muted-foreground font-medium">Name:</span>
+                                            <span>{project.contractor.company.name}</span>
+                                            <span className="text-muted-foreground font-medium">Contact:</span>
+                                            <span>{project.contractor.company.contact || '-'}</span>
+                                            <span className="text-muted-foreground font-medium">Email:</span>
+                                            <span>{project.contractor.company.email || '-'}</span>
+                                            <span className="text-muted-foreground font-medium">Address:</span>
+                                            <span>{project.contractor.company.address || '-'}</span>
+                                        </div>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                    )}
                 </DialogContent>
             </Dialog>
 

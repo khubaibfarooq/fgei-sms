@@ -500,7 +500,7 @@ public function projectDetails(Project $project)
             'fundHead', 
             'projecttype', 
             'currentStage',
-            'contractor',
+            'contractor.company',
         ]);
 
         return Inertia::render('projects/ProjectDetails', [
