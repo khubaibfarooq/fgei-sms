@@ -560,6 +560,17 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
                           </td>
                           <td className="border p-2 text-xs md:text-sm text-gray-900 dark:text-gray-100" onClick={(e) => e.stopPropagation()}>
                             <div className="flex items-center justify-center gap-1">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6 text-blue-600 hover:text-blue-700"
+                                onClick={() => {
+                                  setImageForm({ desc: '', date: new Date().toISOString().split('T')[0], image: null });
+                                  setImageUploadModalOpen(true);
+                                }}
+                              >
+                                <Camera className="h-3 w-3 mr-1" />
+                              </Button>
                               {project.pdf ? (
                                 <a
                                   href={`/assets/${project.pdf}`}
