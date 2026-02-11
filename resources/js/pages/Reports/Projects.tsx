@@ -596,7 +596,7 @@ export default function Projects({ projects: initialProjects, institutes, region
                         <th className="border p-1.5 font-medium hidden xl:table-cell">Stage</th>
                         <th className="border p-1.5 font-medium">Approval Status</th>
                         <th className="border p-1.5 font-medium">Project Status</th>
-                        <th className="border p-1.5 font-medium">%</th>
+                        <th className="border p-1.5 font-medium">Progress</th>
                         <th className="border p-1.5 font-medium hidden xl:table-cell">Comments</th>
                         <th className="border p-1.5 font-medium">Action</th>
                       </tr>

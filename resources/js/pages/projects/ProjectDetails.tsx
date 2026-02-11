@@ -252,8 +252,8 @@ export default function ProjectDetails({ project, canEditMilestones }: Props) {
                                 <ArrowLeft className="h-4 w-4" />
                             </Button>
                             <div>
-                                <CardTitle className="text-lg font-bold leading-tight">{project.name}</CardTitle>
-                                <p className="text-muted-foreground text-xs">{project.institute?.name}</p>
+                                <CardTitle className="text-lg md:text-xl font-bold leading-tight">{project.name}</CardTitle>
+                                <p className="text-muted-foreground text-xs md:text-sm">{project.institute?.name}</p>
                             </div>
                         </div>
                         {project.pdf && (
@@ -284,46 +284,46 @@ export default function ProjectDetails({ project, canEditMilestones }: Props) {
                 <Separator />
                 <CardContent className="flex-1 flex flex-col p-0 min-h-0">
                     <div className="p-3 pb-2 space-y-2 shrink-0">
-                        <div className="flex flex-wrap gap-2 items-center text-xs">
-                            <Badge variant="outline" className={`h-5 px-2 text-[10px] ${project.status === 'completed' ? 'border-green-500 text-green-600 bg-green-50' :
+                        <div className="flex flex-wrap gap-2 items-center text-xs md:text-sm">
+                            <Badge variant="outline" className={`h-5 px-2 text-[10px] md:text-xs ${project.status === 'completed' ? 'border-green-500 text-green-600 bg-green-50' :
                                 project.status === 'inprogress' ? 'border-blue-500 text-blue-600 bg-blue-50' :
                                     'border-gray-500 text-gray-600 bg-gray-50'
                                 }`}>
                                 {project.status.charAt(0).toUpperCase() + project.status.slice(1)}
                             </Badge>
-                            <Badge variant="outline" className={`h-5 px-2 text-[10px] ${project.approval_status === 'approved' ? 'border-green-500 text-green-600 bg-green-50' :
+                            <Badge variant="outline" className={`h-5 px-2 text-[10px] md:text-xs ${project.approval_status === 'approved' ? 'border-green-500 text-green-600 bg-green-50' :
                                 project.approval_status === 'rejected' ? 'border-red-500 text-red-600 bg-red-50' :
                                     'border-yellow-500 text-yellow-600 bg-yellow-50'
                                 }`}>
                                 {project.approval_status.charAt(0).toUpperCase() + project.approval_status.slice(1)}
                             </Badge>
-                            <div className="text-muted-foreground ml-auto hidden sm:block text-[10px] uppercase tracking-wider font-semibold">
+                            <div className="text-muted-foreground ml-auto hidden sm:block text-[10px] md:text-xs uppercase tracking-wider font-semibold">
                                 {project.current_stage?.stage_name || 'Held with Regional Office'}
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-x-4 gap-y-2 bg-muted/20 p-2 rounded-md border text-xs">
+                        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-x-4 gap-y-2 bg-muted/20 p-2 rounded-md border text-xs md:text-sm">
                             {/* Project Type */}
                             <div>
-                                <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Type</p>
+                                <p className="text-[10px] md:text-xs text-muted-foreground uppercase tracking-wide">Type</p>
                                 <p className="font-medium truncate" title={project.projecttype?.name}>{project.projecttype?.name || '-'}</p>
                             </div>
 
                             {/* Priority */}
                             <div>
-                                <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Priority</p>
+                                <p className="text-[10px] md:text-xs text-muted-foreground uppercase tracking-wide">Priority</p>
                                 <p className="font-medium capitalize">{project.priority || '-'}</p>
                             </div>
 
                             {/* Fund Head */}
                             <div className="sm:col-span-2 lg:col-span-1">
-                                <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Fund Head</p>
+                                <p className="text-[10px] md:text-xs text-muted-foreground uppercase tracking-wide">Fund Head</p>
                                 <p className="font-medium truncate" title={project.fund_head?.name}>{project.fund_head?.name || '-'}</p>
                             </div>
 
                             {/* Contractor */}
                             <div className="sm:col-span-2 lg:col-span-1">
-                                <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Contractor</p>
+                                <p className="text-[10px] md:text-xs text-muted-foreground uppercase tracking-wide">Contractor</p>
                                 <div className="flex items-center gap-1">
                                     <p className="font-medium truncate" title={project.contractor?.name}>{project.contractor?.name || '-'}</p>
                                     {project.contractor && (
@@ -340,19 +340,19 @@ export default function ProjectDetails({ project, canEditMilestones }: Props) {
 
                             {/* Estimated Cost */}
                             <div>
-                                <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Est. Cost</p>
+                                <p className="text-[10px] md:text-xs text-muted-foreground uppercase tracking-wide">Est. Cost</p>
                                 <p className="font-medium">{formatAmount(project.estimated_cost)}</p>
                             </div>
 
                             {/* Actual Cost */}
                             <div>
-                                <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Act. Cost</p>
+                                <p className="text-[10px] md:text-xs text-muted-foreground uppercase tracking-wide">Act. Cost</p>
                                 <p className="font-medium">{formatAmount(project.actual_cost)}</p>
                             </div>
 
                             {/* Completion Percentage */}
                             <div>
-                                <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Done</p>
+                                <p className="text-[10px] md:text-xs text-muted-foreground uppercase tracking-wide">Progress</p>
                                 <p className="font-medium">{project.completion_per ? `${parseFloat(project.completion_per.toString())}%` : '-'}</p>
                             </div>
 
@@ -360,7 +360,7 @@ export default function ProjectDetails({ project, canEditMilestones }: Props) {
                             {project.description && (
                                 <div className="col-span-2 sm:col-span-4 lg:col-span-6 border-t pt-1 mt-1">
                                     <div className="flex items-start gap-1">
-                                        <p className="flex-1 text-muted-foreground line-clamp-1 italic text-[11px]">{project.description}</p>
+                                        <p className="flex-1 text-muted-foreground line-clamp-1 italic text-[11px] md:text-xs">{project.description}</p>
                                         <Button
                                             variant="ghost"
                                             size="icon"
@@ -403,36 +403,36 @@ export default function ProjectDetails({ project, canEditMilestones }: Props) {
                                                 <Card key={record.id} className="overflow-hidden border shadow-sm">
                                                     <CardHeader className="p-2 bg-muted/30 pb-1 border-b">
                                                         <div className="flex justify-between items-center">
-                                                            <div className="font-semibold text-xs">{record.stage?.stage_name || 'Stage'}</div>
+                                                            <div className="font-semibold text-xs md:text-sm">{record.stage?.stage_name || 'Stage'}</div>
                                                             {record.status === 'approved' ? (
-                                                                <Badge variant="outline" className="h-4 border-green-500 text-green-600 bg-green-50 gap-1 px-1 py-0 text-[10px]">
+                                                                <Badge variant="outline" className="h-4 border-green-500 text-green-600 bg-green-50 gap-1 px-1 py-0 text-[10px] md:text-xs">
                                                                     <CheckCircle2 className="w-2.5 h-2.5" /> Approved
                                                                 </Badge>
                                                             ) : record.status === 'rejected' ? (
-                                                                <Badge variant="outline" className="h-4 border-red-500 text-red-600 bg-red-50 gap-1 px-1 py-0 text-[10px]">
+                                                                <Badge variant="outline" className="h-4 border-red-500 text-red-600 bg-red-50 gap-1 px-1 py-0 text-[10px] md:text-xs">
                                                                     <XCircle className="w-2.5 h-2.5" /> Rejected
                                                                 </Badge>
                                                             ) : (
-                                                                <Badge variant="outline" className="h-4 border-yellow-500 text-yellow-600 bg-yellow-50 gap-1 px-1 py-0 text-[10px]">
+                                                                <Badge variant="outline" className="h-4 border-yellow-500 text-yellow-600 bg-yellow-50 gap-1 px-1 py-0 text-[10px] md:text-xs">
                                                                     <Clock className="w-2.5 h-2.5" /> Pending
                                                                 </Badge>
                                                             )}
                                                         </div>
                                                     </CardHeader>
-                                                    <CardContent className="p-2 text-xs">
+                                                    <CardContent className="p-2 text-xs md:text-sm">
                                                         <div className="flex flex-wrap items-center justify-between gap-1 mb-1">
-                                                            <div className="text-[10px] text-muted-foreground flex items-center">
+                                                            <div className="text-[10px] md:text-xs text-muted-foreground flex items-center">
                                                                 <Clock className="w-2.5 h-2.5 mr-1" />
                                                                 {record.action_date ? new Date(record.action_date).toLocaleString() : "-"}
                                                             </div>
-                                                            <div className="text-[10px]">
+                                                            <div className="text-[10px] md:text-xs">
                                                                 <span className="font-medium text-muted-foreground">Appr: </span>
                                                                 {record.approver?.name}
                                                             </div>
                                                         </div>
 
                                                         {record.comments && (
-                                                            <div className="bg-muted/50 px-2 py-1 rounded text-[10px] italic border mt-1 line-clamp-2">
+                                                            <div className="bg-muted/50 px-2 py-1 rounded text-[10px] md:text-xs italic border mt-1 line-clamp-2">
                                                                 "{record.comments}"
                                                             </div>
                                                         )}
@@ -441,7 +441,7 @@ export default function ProjectDetails({ project, canEditMilestones }: Props) {
                                                                 <a
                                                                     href={`/${record.pdf}`}
                                                                     target="_blank"
-                                                                    className="text-blue-600 hover:underline text-[10px] flex items-center gap-1"
+                                                                    className="text-blue-600 hover:underline text-[10px] md:text-xs flex items-center gap-1"
                                                                 >
                                                                     <FileText className="h-3 w-3" /> PDF
                                                                 </a>
@@ -453,7 +453,7 @@ export default function ProjectDetails({ project, canEditMilestones }: Props) {
                                                                         size="h-4 w-4"
                                                                         className="rounded border object-cover"
                                                                     />
-                                                                    <span className="text-[10px] text-muted-foreground">Image</span>
+                                                                    <span className="text-[10px] md:text-xs text-muted-foreground">Image</span>
                                                                 </div>
                                                             )}
                                                         </div>
@@ -492,23 +492,23 @@ export default function ProjectDetails({ project, canEditMilestones }: Props) {
                                                         )}
                                                         <div className="flex-1 min-w-0">
                                                             <CardHeader className="p-2 py-1.5 border-b bg-muted/10 flex flex-row items-center justify-between space-y-0">
-                                                                <div className="font-semibold text-xs truncate pr-2">{milestone.name}</div>
+                                                                <div className="font-semibold text-xs md:text-sm truncate pr-2">{milestone.name}</div>
                                                                 <Badge variant={
                                                                     milestone.status === 'completed' ? 'default' :
                                                                         milestone.status === 'inprogress' ? 'secondary' : 'outline'
-                                                                } className="capitalize text-[10px] px-1 py-0 h-4 shrink-0">
+                                                                } className="capitalize text-[10px] md:text-xs px-1 py-0 h-4 shrink-0">
                                                                     {milestone.status}
                                                                 </Badge>
                                                             </CardHeader>
-                                                            <CardContent className="p-2 text-xs space-y-1">
-                                                                <div className="flex justify-between text-[10px] text-muted-foreground">
+                                                            <CardContent className="p-2 text-xs md:text-sm space-y-1">
+                                                                <div className="flex justify-between text-[10px] md:text-xs text-muted-foreground">
                                                                     <span>Due: {milestone.days} days</span>
                                                                     {milestone.completed_date && (
                                                                         <span className="text-green-600 dark:text-green-400">Done: {new Date(milestone.completed_date).toLocaleDateString()}</span>
                                                                     )}
                                                                 </div>
                                                                 {milestone.description && (
-                                                                    <p className="text-muted-foreground text-[10px] line-clamp-1">
+                                                                    <p className="text-muted-foreground text-[10px] md:text-xs line-clamp-1">
                                                                         {milestone.description}
                                                                     </p>
                                                                 )}
@@ -518,7 +518,7 @@ export default function ProjectDetails({ project, canEditMilestones }: Props) {
                                                                         target="_blank"
                                                                         rel="noopener noreferrer"
                                                                         onClick={(e) => e.stopPropagation()}
-                                                                        className="text-blue-600 hover:underline text-[10px] flex items-center gap-1 mt-0.5"
+                                                                        className="text-blue-600 hover:underline text-[10px] md:text-xs flex items-center gap-1 mt-0.5"
                                                                     >
                                                                         <FileText className="h-3 w-3" /> View PDF
                                                                     </a>
@@ -545,16 +545,16 @@ export default function ProjectDetails({ project, canEditMilestones }: Props) {
                                             {projectPayments.map((payment) => (
                                                 <Card key={payment.id} className="border shadow-sm">
                                                     <CardHeader className="p-2 py-1.5 border-b bg-muted/10 flex flex-row items-center justify-between space-y-0">
-                                                        <div className="font-semibold text-xs">Rs. {payment.amount.toLocaleString()}</div>
-                                                        <Badge variant="outline" className={`capitalize text-[10px] px-1 py-0 h-4 ${payment.status === 'Approved' ? 'border-green-500 text-green-600 bg-green-50' :
+                                                        <div className="font-semibold text-xs md:text-sm">Rs. {payment.amount.toLocaleString()}</div>
+                                                        <Badge variant="outline" className={`capitalize text-[10px] md:text-xs px-1 py-0 h-4 ${payment.status === 'Approved' ? 'border-green-500 text-green-600 bg-green-50' :
                                                             payment.status === 'Rejected' ? 'border-red-500 text-red-600 bg-red-50' :
                                                                 'border-yellow-500 text-yellow-600 bg-yellow-50'
                                                             }`}>
                                                             {payment.status}
                                                         </Badge>
                                                     </CardHeader>
-                                                    <CardContent className="p-2 text-xs space-y-1">
-                                                        <div className="flex justify-between items-center text-[10px]">
+                                                    <CardContent className="p-2 text-xs md:text-sm space-y-1">
+                                                        <div className="flex justify-between items-center text-[10px] md:text-xs">
                                                             <div className="text-muted-foreground font-medium truncate max-w-[150px]" title={payment.fund_head?.name || 'General Fund'}>
                                                                 {payment.fund_head?.name || 'General Fund'}
                                                             </div>
@@ -563,7 +563,7 @@ export default function ProjectDetails({ project, canEditMilestones }: Props) {
                                                             </div>
                                                         </div>
                                                         {payment.description && (
-                                                            <p className="text-muted-foreground text-[10px] italic bg-muted/30 px-1.5 py-0.5 rounded truncate">
+                                                            <p className="text-muted-foreground text-[10px] md:text-xs italic bg-muted/30 px-1.5 py-0.5 rounded truncate">
                                                                 "{payment.description}"
                                                             </p>
                                                         )}
@@ -599,10 +599,10 @@ export default function ProjectDetails({ project, canEditMilestones }: Props) {
                                                             </div>
                                                             <CardContent className="p-2">
                                                                 {img.desc && (
-                                                                    <p className="text-xs text-muted-foreground line-clamp-2 mb-1" title={img.desc}>{img.desc}</p>
+                                                                    <p className="text-xs md:text-sm text-muted-foreground line-clamp-2 mb-1" title={img.desc || ''}>{img.desc}</p>
                                                                 )}
                                                                 {img.date && (
-                                                                    <p className="text-[10px] text-muted-foreground block">{new Date(img.date).toLocaleDateString()}</p>
+                                                                    <p className="text-[10px] md:text-xs text-muted-foreground block">{new Date(img.date).toLocaleDateString()}</p>
                                                                 )}
                                                             </CardContent>
                                                         </Card>
