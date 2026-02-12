@@ -295,7 +295,7 @@ class FundsController extends Controller
             // Validate image if provided
             if ($request->hasFile('img')) {
                 $request->validate([
-                    'img' => 'image|file|max:5120',
+                    'img' => 'file',
                 ]);
             }
 
