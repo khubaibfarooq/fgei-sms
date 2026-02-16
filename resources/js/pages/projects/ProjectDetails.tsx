@@ -192,6 +192,24 @@ export default function ProjectDetails({ project, canEditMilestones }: Props) {
         return completedRecord?.action_date || null;
     }, [approvalHistory]);
 
+    // Calculate payment amounts
+    const releasedPayments = React.useMemo(() => {
+        return projectPayments
+            .filter(payment => payment.status === 'Approved')
+            .reduce((sum, payment) => sum + Number(payment.amount), 0);
+    }, [projectPayments]);
+
+    const pendingRequests = React.useMemo(() => {
+        return projectPayments
+            .filter(payment => payment.status !== 'Approved')
+            .reduce((sum, payment) => sum + Number(payment.amount), 0);
+    }, [projectPayments]);
+
+    const remainingPayments = React.useMemo(() => {
+        const actualCost = Number(project.actual_cost) || 0;
+        return actualCost - releasedPayments;
+    }, [project.actual_cost, releasedPayments]);
+
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Projects', href: '/projects' },
         { title: project.name, href: `/projects/${project.id}/details` },
@@ -431,6 +449,24 @@ export default function ProjectDetails({ project, canEditMilestones }: Props) {
                                     <p className="font-medium">{new Date(completionDate).toLocaleDateString()}</p>
                                 </div>
                             )}
+
+                            {/* Released Payments */}
+                            <div>
+                                <p className="text-[10px] md:text-xs text-muted-foreground uppercase tracking-wide">Released</p>
+                                <p className="font-medium text-green-600">{formatAmount(releasedPayments)}</p>
+                            </div>
+
+                            {/* Remaining Payments */}
+                            <div>
+                                <p className="text-[10px] md:text-xs text-muted-foreground uppercase tracking-wide">Remaining</p>
+                                <p className="font-medium text-blue-600">{formatAmount(remainingPayments)}</p>
+                            </div>
+
+                            {/* Pending Requests */}
+                            <div>
+                                <p className="text-[10px] md:text-xs text-muted-foreground uppercase tracking-wide">Pending Req.</p>
+                                <p className="font-medium text-orange-600">{formatAmount(pendingRequests)}</p>
+                            </div>
 
                             {/* Description Truncated */}
                             {project.description && (
