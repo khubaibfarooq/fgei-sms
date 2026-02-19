@@ -1153,15 +1153,30 @@ $regions = Institute::select('region_id as id', 'name')->where('type', 'Regional
         // -----------------------------------------------------------------
         // Pagination
         // -----------------------------------------------------------------
-        $projects = $query->paginate(10)->withQueryString();
+        // -----------------------------------------------------------------
+        // Pagination or Export
+        // -----------------------------------------------------------------
+        if ($request->boolean('all') || $request->has('export')) {
+            $projects = $query->get();
+            
+            // Attach region name for the front-end
+            $projects->transform(function ($project) {
+                $project->region = $project->institute?->region;
+                return $project;
+            });
+            
+            return response()->json($projects);
+        } else {
+            $projects = $query->paginate(10)->withQueryString();
 
-        // Attach region name for the front-end (if not already eager-loaded)
-        $projects->getCollection()->transform(function ($project) {
-            $project->region = $project->institute?->region;
-            return $project;
-        });
+            // Attach region name for the front-end (if not already eager-loaded)
+            $projects->getCollection()->transform(function ($project) {
+                $project->region = $project->institute?->region;
+                return $project;
+            });
 
-        return response()->json($projects);
+            return response()->json($projects);
+        }
     }
 
 

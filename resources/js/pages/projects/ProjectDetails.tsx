@@ -107,6 +107,20 @@ interface ProjectImage {
     image: string;
 }
 
+interface TimelineEvent {
+    id: number;
+    table_name: string;
+    record_id: number;
+    action: string;
+    old_values: any;
+    new_values: any;
+    changed_by: number;
+    changed_at: string;
+    user?: {
+        name: string;
+    };
+}
+
 interface Props {
     project: Project;
     canEditMilestones: boolean;
@@ -141,6 +155,7 @@ export default function ProjectDetails({ project, canEditMilestones }: Props) {
     const [projectMilestones, setProjectMilestones] = useState<Milestone[]>([]);
     const [projectPayments, setProjectPayments] = useState<Payment[]>([]);
     const [projectImages, setProjectImages] = useState<ProjectImage[]>([]);
+    const [projectTimeline, setProjectTimeline] = useState<TimelineEvent[]>([]);
     const [loadingData, setLoadingData] = useState(false);
 
     // Image Upload State
@@ -220,16 +235,18 @@ export default function ProjectDetails({ project, canEditMilestones }: Props) {
         const fetchDetails = async () => {
             setLoadingData(true);
             try {
-                const [historyRes, milestonesRes, paymentsRes, imagesRes] = await Promise.all([
+                const [historyRes, milestonesRes, paymentsRes, imagesRes, timelineRes] = await Promise.all([
                     axios.get(`/projects/${project.id}/history`),
                     axios.get(`/projects/${project.id}/milestones`),
                     axios.get(`/projects/${project.id}/payments`),
-                    axios.get(`/projects/${project.id}/images`)
+                    axios.get(`/projects/${project.id}/images`),
+                    axios.get(`/projects/${project.id}/timeline`)
                 ]);
                 setApprovalHistory(historyRes.data);
                 setProjectMilestones(milestonesRes.data);
                 setProjectPayments(paymentsRes.data.payments);
                 setProjectImages(imagesRes.data);
+                setProjectTimeline(timelineRes.data);
             } catch (error) {
                 console.error("Failed to fetch project details", error);
                 toast.error("Failed to load project details.");
@@ -496,7 +513,9 @@ export default function ProjectDetails({ project, canEditMilestones }: Props) {
                                     <TabsTrigger value="approvals" className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none rounded-none px-4 py-3 bg-transparent">Approvals</TabsTrigger>
                                     <TabsTrigger value="milestones" className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none rounded-none px-4 py-3 bg-transparent">Milestones</TabsTrigger>
                                     <TabsTrigger value="payments" className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none rounded-none px-4 py-3 bg-transparent">Payments</TabsTrigger>
+                                    <TabsTrigger value="payments" className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none rounded-none px-4 py-3 bg-transparent">Payments</TabsTrigger>
                                     <TabsTrigger value="images" className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none rounded-none px-4 py-3 bg-transparent flex items-center gap-1"><Camera className="h-3.5 w-3.5" /> Images</TabsTrigger>
+                                    <TabsTrigger value="timeline" className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none rounded-none px-4 py-3 bg-transparent flex items-center gap-1"><Clock className="h-3.5 w-3.5" /> Timeline</TabsTrigger>
                                 </TabsList>
                             </div>
 
@@ -740,6 +759,68 @@ export default function ProjectDetails({ project, canEditMilestones }: Props) {
                                         </div>
                                     )}
                                 </TabsContent>
+
+
+                                {/* Timeline Tab */}
+                                <TabsContent value="timeline" className="mt-0 space-y-3 h-full">
+                                    {loadingData ? (
+                                        <div className="flex justify-center py-8 text-muted-foreground">Loading timeline...</div>
+                                    ) : projectTimeline.length === 0 ? (
+                                        <div className="text-center py-8 text-muted-foreground border rounded-lg border-dashed">
+                                            No timeline activities found.
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-4 relative pl-4 border-l-2 border-muted ml-2">
+                                            {projectTimeline.map((event) => (
+                                                <div key={event.id} className="relative mb-6 last:mb-0">
+                                                    <div className="absolute -left-[21px] top-1 h-3 w-3 rounded-full border-2 border-background bg-muted-foreground" />
+                                                    <div className="flex flex-col gap-1">
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="text-xs font-semibold">
+                                                                {new Date(event.changed_at).toLocaleString()}
+                                                            </span>
+                                                            <Badge variant="outline" className="text-[10px] px-1 py-0 h-4">
+                                                                {event.action}
+                                                            </Badge>
+                                                        </div>
+                                                        <div className="text-sm">
+                                                            <span className="font-medium">{event.user?.name || 'Unknown User'}</span>
+                                                            <span className="text-muted-foreground"> {event.action.toLowerCase()}d </span>
+                                                            <span className="font-medium">{event.table_name === 'projects' ? 'Project' : 'Milestone'}</span>
+                                                        </div>
+                                                        {/* Optional: Show details of changes */}
+                                                        {event.action === 'UPDATE' && event.old_values && event.new_values && (
+                                                            <div className="text-xs text-muted-foreground bg-muted/30 p-2 rounded mt-1">
+                                                                {Object.keys(event.new_values).map((key) => {
+                                                                    // Skip non-displayable or large fields if needed
+                                                                    if (['updated_at', 'created_at'].includes(key)) return null;
+                                                                    const oldVal = event.old_values[key];
+                                                                    const newVal = event.new_values[key];
+                                                                    if (oldVal == newVal) return null; // Skip unchanged fields
+
+                                                                    return (
+                                                                        <div key={key} className="grid grid-cols-[1fr_auto_1fr] gap-2 items-center">
+                                                                            <span className="font-medium text-right truncate">{key}:</span>
+                                                                            <span className="text-muted-foreground">→</span>
+                                                                            <span className="truncate" title={String(newVal)}>
+                                                                                {String(oldVal || '(empty)')} <span className="text-foreground">to</span> {String(newVal)}
+                                                                            </span>
+                                                                        </div>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                        )}
+                                                        {event.action === 'INSERT' && (
+                                                            <div className="text-xs text-muted-foreground mt-1">
+                                                                Created new record.
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </TabsContent>
                             </div>
                         </Tabs>
                     </div>
@@ -802,7 +883,7 @@ export default function ProjectDetails({ project, canEditMilestones }: Props) {
             </Dialog >
 
             {/* Comment Detail Modal */}
-            <Dialog open={commentDetailModalOpen} onOpenChange={setCommentDetailModalOpen}>
+            < Dialog open={commentDetailModalOpen} onOpenChange={setCommentDetailModalOpen} >
                 <DialogContent className="max-w-2xl">
                     <DialogHeader>
                         <DialogTitle>Comment Details</DialogTitle>
@@ -811,7 +892,7 @@ export default function ProjectDetails({ project, canEditMilestones }: Props) {
                         <p className="text-sm whitespace-pre-wrap">{selectedComment}</p>
                     </div>
                 </DialogContent>
-            </Dialog>
+            </Dialog >
 
             {/* Milestone Edit Modal */}
             < Dialog open={!!editingMilestone
@@ -842,6 +923,7 @@ export default function ProjectDetails({ project, canEditMilestones }: Props) {
                                     type="number"
                                     value={milestoneForm.days}
                                     onChange={(e) => setMilestoneForm({ ...milestoneForm, days: parseInt(e.target.value) || 0 })}
+                                    disabled={milestoneForm.status === 'completed'}
                                 />
                             </div>
                             <div>
@@ -850,6 +932,7 @@ export default function ProjectDetails({ project, canEditMilestones }: Props) {
                                     className="w-full px-3 py-2 border rounded-md"
                                     value={milestoneForm.status}
                                     onChange={(e) => setMilestoneForm({ ...milestoneForm, status: e.target.value })}
+                                    disabled={milestoneForm.status === 'completed'}
                                 >
                                     <option value="pending">Pending</option>
                                     <option value="inprogress">In Progress</option>
@@ -864,6 +947,7 @@ export default function ProjectDetails({ project, canEditMilestones }: Props) {
                                     type="date"
                                     value={milestoneForm.completed_date}
                                     onChange={(e) => setMilestoneForm({ ...milestoneForm, completed_date: e.target.value })}
+                                    readOnly={true}
                                 />
                             </div>
                         )}

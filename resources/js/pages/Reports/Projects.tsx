@@ -266,6 +266,20 @@ export default function Projects({ projects: initialProjects, institutes, region
   // Need Approval Filter State
   const [needApproval, setNeedApproval] = useState(false);
 
+  // Rejection Modal State
+  const [rejectionModalOpen, setRejectionModalOpen] = useState(false);
+  const [selectedProjectForRejection, setSelectedProjectForRejection] = useState<ProjectProp | null>(null);
+  const [rejectionReason, setRejectionReason] = useState('');
+  const [isRejecting, setIsRejecting] = useState(false);
+
+
+
+  // Initiation Modal State
+  const [initiationModalOpen, setInitiationModalOpen] = useState(false);
+  const [selectedProjectForInitiation, setSelectedProjectForInitiation] = useState<ProjectProp | null>(null);
+  const [initiationReason, setInitiationReason] = useState('');
+  const [isInitiating, setIsInitiating] = useState(false);
+
   // Memoized dropdown options
   const memoizedInstitutes = useMemo(() => {
     return Array.isArray(filteredInstitutes) ? filteredInstitutes.filter(isValidItem) : [];
@@ -384,27 +398,56 @@ export default function Projects({ projects: initialProjects, institutes, region
     }
   };
 
+  // Fetch Helper
+  const fetchAllProjects = async () => {
+    const params = new URLSearchParams({
+      search: search.trim(),
+      institute_id: institute || '',
+      region_id: region || '',
+      project_type_id: projectType || '',
+      status: status || '',
+      export: 'true'
+    });
+
+    try {
+      const response = await fetch(`/reports/projects/getprojects?${params.toString()}`);
+      if (!response.ok) throw new Error('Failed to fetch projects');
+      const data = await response.json();
+      // Handle both array and paginated response structure just in case, though backend sends array for export
+      return Array.isArray(data) ? data : data.data;
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to fetch all projects for export");
+      return [];
+    }
+  };
+
   // Export to Excel
   const exportToExcel = async () => {
+    const allProjects = await fetchAllProjects();
+    if (!allProjects || allProjects.length === 0) {
+      toast.warning("No projects to export");
+      return;
+    }
+
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('Projects');
 
     worksheet.columns = [
       { header: 'Name', key: 'name', width: 30 },
       { header: 'Cost', key: 'cost', width: 15 },
-
+      { header: 'Actual Cost', key: 'actual_cost', width: 15 },
       { header: 'Status', key: 'status', width: 15 },
       { header: 'Project Type', key: 'project_type', width: 25 },
       { header: 'Institute', key: 'institute', width: 30 },
       { header: 'Region', key: 'region', width: 25 },
     ];
 
-    projects.data.forEach((p) => {
+    allProjects.forEach((p: ProjectProp) => {
       worksheet.addRow({
         name: p.name,
-        estimated_cost: p.estimated_cost,
-        actual_cost: p.actual_cost,
-
+        cost: formatAmount(p.estimated_cost),
+        actual_cost: formatAmount(p.actual_cost),
         status: p.status,
         project_type: p.projecttype?.name || 'N/A',
         institute: p.institute?.name || 'N/A',
@@ -418,17 +461,22 @@ export default function Projects({ projects: initialProjects, institutes, region
   };
 
   // Export to PDF
-  const exportToPDF = () => {
+  const exportToPDF = async () => {
+    const allProjects = await fetchAllProjects();
+    if (!allProjects || allProjects.length === 0) {
+      toast.warning("No projects to export");
+      return;
+    }
+
     const doc = new jsPDF();
     doc.setFontSize(16);
     doc.text('Projects Report', 14, 15);
 
     const headers = ['Name', 'Estimated Cost', 'Actual Cost', 'Status', 'Project Type', 'Institute', 'Region'];
-    const rows = projects.data.map((p) => [
+    const rows = allProjects.map((p: ProjectProp) => [
       p.name,
-      p.estimated_cost,
-      p.actual_cost,
-
+      formatAmount(p.estimated_cost),
+      formatAmount(p.actual_cost),
       p.status,
       p.projecttype?.name || 'N/A',
       p.institute?.name || 'N/A',
@@ -454,6 +502,72 @@ export default function Projects({ projects: initialProjects, institutes, region
     });
 
     doc.save('Projects_Report.pdf');
+  };
+
+  const openRejectModal = (project: ProjectProp) => {
+    setSelectedProjectForRejection(project);
+    setRejectionReason('');
+    setRejectionModalOpen(true);
+  };
+  const handleRejectProject = () => {
+    if (!selectedProjectForRejection) return;
+    if (!rejectionReason.trim()) {
+      toast.error('Please provide a reason for rejection.');
+      return;
+    }
+
+    if (!confirm('Are you sure you want to reject this project?')) return;
+
+    setIsRejecting(true);
+    router.post(
+      `/projects/${selectedProjectForRejection.id}/reject`,
+      { reason: rejectionReason },
+      {
+        onSuccess: () => {
+          toast.success('Project rejected successfully');
+          setIsRejecting(false);
+          setRejectionModalOpen(false);
+          debouncedApplyFilters();
+        },
+        onError: () => {
+          toast.error('Failed to reject project');
+          setIsRejecting(false);
+        },
+      }
+    );
+  };
+  const handleInitiateProject = () => {
+    if (!selectedProjectForInitiation) return;
+    if (!initiationReason.trim()) {
+      toast.error('Please provide a reason for initiation.');
+      return;
+    }
+
+    if (!confirm('Are you sure you want to initiate this project?')) return;
+
+    setIsInitiating(true);
+    router.post(
+      `/projects/${selectedProjectForInitiation.id}/initiate`,
+      { reason: initiationReason },
+      {
+        onSuccess: () => {
+          toast.success('Project initiated successfully');
+          setIsInitiating(false);
+          setInitiationModalOpen(false);
+          debouncedApplyFilters();
+        },
+        onError: () => {
+          toast.error('Failed to initiate project');
+          setIsInitiating(false);
+        },
+      }
+    );
+  };
+
+  const openInitiateModal = (project: ProjectProp) => {
+    setSelectedProjectForInitiation(project);
+    setInitiationReason('');
+    setInitiationModalOpen(true);
   };
 
   // Debounced filter apply
@@ -692,7 +806,7 @@ export default function Projects({ projects: initialProjects, institutes, region
                                     <ClipboardCheck className="h-4 w-4" />
                                   </Button>
                                 )}
-                                {user.roles[0]?.name.toLowerCase() === 'region' && !project.fund_head_id && (
+                                {user.roles[0]?.name.toLowerCase() === 'region' && !project.fund_head_id && project.status !== 'rejected' && (
                                   <Button
                                     variant="ghost"
                                     size="sm"
@@ -705,6 +819,34 @@ export default function Projects({ projects: initialProjects, institutes, region
                                     }}
                                   >
                                     Select Head
+                                  </Button>
+                                )}
+                                {user.roles[0]?.name.toLowerCase() === 'region' && !project.fund_head_id && project.status !== 'rejected' && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    title="Reject Project"
+                                    className="text-red-600 hover:text-red-700 font-bold"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      openRejectModal(project);
+                                    }}
+                                  >
+                                    Reject
+                                  </Button>
+                                )}
+                                {user.roles[0]?.name.toLowerCase() === 'region' && !project.fund_head_id && project.status === 'rejected' && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    title="Initiate Project"
+                                    className="text-green-600 hover:text-green-700 font-bold"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      openInitiateModal(project);
+                                    }}
+                                  >
+                                    Re-Initiate
                                   </Button>
                                 )}
                                 {user.type === 'Regional Office' && project.status === 'inprogress' && (
@@ -837,6 +979,7 @@ export default function Projects({ projects: initialProjects, institutes, region
                           {/* Action Buttons for Mobile */}
                           <div className="mt-2 flex gap-2" onClick={(e) => e.stopPropagation()}>
                             {user.roles[0]?.name.toLowerCase() === 'region' && !project.fund_head_id && (
+
                               <Button
                                 variant="outline"
                                 size="sm"
@@ -848,6 +991,36 @@ export default function Projects({ projects: initialProjects, institutes, region
                               >
                                 Select Head
                               </Button>
+
+                            )} {user.roles[0]?.name.toLowerCase() === 'region' && !project.fund_head_id && project.status !== 'rejected' && (
+
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="text-[10px] h-6 text-orange-600 border-orange-300 px-2"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openRejectModal(project);
+                                }}
+                              >
+                                Reject
+                              </Button>
+
+                            )}
+                            {(user.roles[0]?.name.toLowerCase() === 'region' && !project.fund_head_id && project.status === 'rejected') && (
+
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="text-[10px] h-6 text-green-600 border-green-300 px-2"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openInitiateModal(project);
+                                }}
+                              >
+                                Re-Initiate
+                              </Button>
+
                             )}
                             {user.type === 'Regional Office' && project.status === 'inprogress' && (
                               <Button
@@ -1140,6 +1313,75 @@ export default function Projects({ projects: initialProjects, institutes, region
           )}
 
         </div>
+        {/* Rejection Modal */}
+        <Dialog open={rejectionModalOpen} onOpenChange={setRejectionModalOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Reject Project</DialogTitle>
+              <DialogDescription>
+                Please provide a reason for rejecting this project. This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="reason" className="text-right">
+                  Reason
+                </Label>
+                <Textarea
+                  id="reason"
+                  className="col-span-3"
+                  value={rejectionReason}
+                  onChange={(e) => setRejectionReason(e.target.value)}
+                  placeholder="Enter rejection reason..."
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setRejectionModalOpen(false)} disabled={isRejecting}>
+                Cancel
+              </Button>
+              <Button variant="destructive" onClick={handleRejectProject} disabled={isRejecting}>
+                {isRejecting ? 'Rejecting...' : 'Reject Project'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Initiation Modal */}
+        <Dialog open={initiationModalOpen} onOpenChange={setInitiationModalOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Initiate Project</DialogTitle>
+              <DialogDescription>
+                Please provide a reason for initiating this project.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="initiate-reason" className="text-right">
+                  Reason
+                </Label>
+                <Textarea
+                  id="initiate-reason"
+                  className="col-span-3"
+                  value={initiationReason}
+                  onChange={(e) => setInitiationReason(e.target.value)}
+                  placeholder="Enter initiation reason..."
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setInitiationModalOpen(false)} disabled={isInitiating}>
+                Cancel
+              </Button>
+              <Button onClick={handleInitiateProject} disabled={isInitiating}>
+                {isInitiating ? 'Initiating...' : 'Initiate Project'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Approval Modal */}
         <ApprovalModal
           isOpen={approvalModalOpen}
           onClose={() => setApprovalModalOpen(false)}

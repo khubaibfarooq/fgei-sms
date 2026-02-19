@@ -12,6 +12,23 @@ use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 use Firebase\JWT\ExpiredException;
 use Firebase\JWT\SignatureInvalidException;
+use App\Models\InstituteAsset;
+use App\Models\AssetCategory;
+use App\Models\Asset;
+use App\Models\Room;
+use App\Models\VehicleType;
+use App\Models\Transport;
+use App\Models\Plant;
+use App\Models\Project;
+use App\Models\ProjectType;
+use App\Models\FundHeld;
+use App\Models\Fund;
+use App\Models\FundHead;
+use App\Models\Upgradation;
+use App\Models\Block;
+use App\Models\Shift;
+use Illuminate\Support\Facades\DB;
+
 use Exception;
 
 class SSORedirectController extends Controller
@@ -182,4 +199,99 @@ class SSORedirectController extends Controller
                 return 'user';
         }
     }
+
+     public function SendInstituteData(Request $request)
+{   
+
+       $token = $request->query('token');
+    
+        \Log::info('SSO Redirect initiated', ['token_present' => !empty($token)]);
+    
+        try {
+            if (empty($token)) {
+                \Log::warning('SSO: No token provided');
+                return redirect('https://hrms.fgei.gov.pk/login')->with('error', 'No authentication token provided.');
+            }
+    
+            // Add leeway for clock skew between servers (60 seconds)
+            JWT::$leeway = 60;
+            
+            // Decode and verify JWT token
+            $decoded = JWT::decode($token, new Key($this->secretKey, 'HS256'));
+                        $data = (array) $decoded->data;
+    $instituteAssets = [];
+    $blocks = [];
+    $rooms = [];
+ 
+    $shifts=[];
+   $upgradations=[];
+    $funds=[];
+    $projects=[];
+    $transports=[];
+    $institute=[];
+    if ($data->institute_id && is_numeric($data->institute_id) && $data->institute_id > 0) {
+        $institute=Institute::find($data->institute_id);
+        $shifts=Shift::where('institute_id', $data->institute_id)->with('buildingType')->get();
+      $upgradations=Upgradation::where('institute_id', $data->institute_id)->get();
+    $funds=FundHeld::where('institute_id', $data->institute_id)->with('fundHead')->get();
+        $transports=Transport::where('institute_id', $data->institute_id)->with('vehicleType')->get();
+        $blocks = Block::where('institute_id', $data->institute_id)->get();
+        $blockIds = $blocks->pluck('id')->toArray();
+        $rooms = Room::whereIn('block_id', $blockIds)->with('block')->get();
+   
+       
+              $instituteAssets = InstituteAsset::query()
+        ->where('institute_id', $data->institute_id)
+        ->join('assets', 'institute_assets.asset_id', '=', 'assets.id')
+        ->select([
+            'assets.id',
+            'assets.name',
+            DB::raw('SUM(institute_assets.current_qty) as total_qty'),
+            DB::raw('COUNT(DISTINCT institute_assets.room_id) as locations_count')
+        ])
+        ->with(['institute', 'room', 'asset'])
+        ->groupBy('assets.id', 'assets.name')
+        ->orderBy('assets.name')
+        ->get();
+$projects = ProjectType::whereHas('projects', function($query) use ($data) {
+        $query->where('institute_id', $data->institute_id);
+    })
+    ->withCount([
+        'projects as completed' => function($query) use ($data) {
+            $query->where('institute_id', $data->institute_id)
+                  ->where('status', 'completed');
+        },
+        'projects as inprogress' => function($query) use ($data) {
+            $query->where('institute_id', $data->institute_id)
+                  ->where('status', 'inprogress');
+        },
+        'projects as planned' => function($query) use ($data) {
+            $query->where('institute_id', $data->institute_id)
+                  ->where('status', 'planned');
+        }
+    ])
+    ->get();  
+}
+
+    return response()->json([
+'institute'=>$institute,
+        'blocks' => $blocks,
+        'rooms' => $rooms,
+     
+        'instituteAssets' => $instituteAssets,
+        'shifts'=>$shifts,
+        'upgradations'=>$upgradations,
+        'funds'=>$funds,
+        'projects'=>$projects,
+        'transports'=>$transports,
+       
+    ]);
+} catch (\Exception $e) {
+    \Log::error('Error fetching institute data: ' . $e->getMessage());
+    return response()->json([
+        'error' => 'Failed to fetch institute data',
+        'message' => $e->getMessage()
+    ], 500);
+}
+}
 }

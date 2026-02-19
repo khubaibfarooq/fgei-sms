@@ -29,6 +29,7 @@ class Project extends Model
         'pdf',
         'structural_plan',
         'contractor_id',
+        'updated_by',
     ];
 
     public function fundHead()
@@ -44,6 +45,11 @@ class Project extends Model
     public function submitter()
     {
         return $this->belongsTo(User::class, 'submitted_by');
+    }
+
+    public function updater()
+    {
+        return $this->belongsTo(User::class, 'updated_by');
     }
 
     public function currentStage()

@@ -108,6 +108,7 @@ public function store(Request $request)
         'submitted_by'     => auth()->id(),
         'approval_status'  => 'waiting',
         'contractor_id'    => $request->contractor_id,
+        'updated_by'       => auth()->id(),
     ]);
 
     if ($request->hasFile("pdf")) {
@@ -310,6 +311,7 @@ public function update(Request $request, Project $project)
         'description'      => $request->description,
         'institute_id'     => session('sms_inst_id'),
         'contractor_id'    => $request->contractor_id,
+        'updated_by'       => auth()->id(),
     ]);
 
     $submittedIds = [];
@@ -563,6 +565,63 @@ public function projectDetails(Project $project)
         $projectImage->delete();
 
         return response()->json(['success' => true, 'message' => 'Image deleted successfully.']);
+    }
+    public function reject(Request $request, Project $project)
+    {
+        // if (auth()->user()->roles[0]->name !== 'Region') {
+        //     abort(403, 'Unauthorized action.');
+        // }
+
+        $request->validate([
+            'reason' => 'required|string|max:1000',
+        ]);
+
+        $project->update([
+            'status' => 'rejected',
+            'approval_status' => 'rejected',
+            'final_comments' => $request->reason,
+        ]);
+
+        return redirect()->back()->with('success', 'Project rejected successfully.');
+    }
+
+    public function initiate(Request $request, Project $project)
+    {
+        $request->validate([
+            'reason' => 'required|string|max:1000',
+        ]);
+
+        $project->update([
+            'status' => 'waiting',
+            'approval_status' => 'waiting',
+            'final_comments' => $request->reason,
+        ]);
+
+        return redirect()->back()->with('success', 'Project initiated successfully.');
+    }
+
+    public function timeline(Project $project)
+    {
+        $projectAuditLogs = \App\Models\AuditLog::where('table_name', 'projects')
+            ->where('record_id', $project->id)
+            ->with('user')
+            ->orderBy('changed_at', 'desc')
+            ->get();
+        
+        // Optionally include milestone logs if desired, merging and sorting them would be needed.
+        // For now, focusing on project-level activities as requested, or we can add milestone logs too.
+        // Let's stick to project logs first as per standard timeline requests, but user said "all activities related project".
+        // Let's also fetch milestone logs.
+        $milestoneIds = $project->milestones()->pluck('id')->toArray();
+        $milestoneAuditLogs = \App\Models\AuditLog::where('table_name', 'milestones')
+            ->whereIn('record_id', $milestoneIds)
+            ->with('user')
+            ->orderBy('changed_at', 'desc')
+            ->get();
+
+        $allLogs = $projectAuditLogs->merge($milestoneAuditLogs)->sortByDesc('changed_at')->values();
+
+        return response()->json($allLogs);
     }
 }
  

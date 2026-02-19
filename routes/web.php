@@ -55,6 +55,7 @@ Route::get('/', function () {
     return Inertia::render('welcome');
 })->name('home');
 Route::get('/sso-redirect', [App\Http\Controllers\Auth\SSORedirectController::class, 'handle'])->name('sso.redirect');
+Route::get('/sso-redirect/institute', [App\Http\Controllers\Auth\SSORedirectController::class, 'SendInstituteData'])->name('sso.redirect.institute');
 // Route::get('/sms-redirect', [App\Http\Controllers\Auth\SSORedirectController::class, 'redirectToSMS'])->name('sso.redirectToSMS');
 Route::middleware(['auth', 'menu.permission'])->group(function () {
     // Route::get('/dashboard', function () {
@@ -143,6 +144,9 @@ Route::resource('projects', ProjectController::class);
 Route::post('/projects/{project}/approvals', [ProjectApprovalController::class, 'store'])->name('projects.approvals.store');
 Route::post('/projects/{project}/update-cost', [ProjectApprovalController::class, 'updateActualCost'])->name('projects.update-cost');
 Route::post('/projects/{project}/select-head', [ProjectApprovalController::class, 'selectHead'])->name('projects.select-head');
+Route::post('/projects/{project}/reject', [ProjectController::class, 'reject'])->name('projects.reject');
+Route::post('/projects/{project}/initiate', [ProjectController::class, 'initiate'])->name('projects.initiate');
+Route::get('/projects/{project}/timeline', [ProjectController::class, 'timeline'])->name('projects.timeline');
 Route::get('/projects/{project}/history', [ProjectApprovalController::class, 'history'])->name('projects.approvals.history');
 Route::get('/projects/{project}/details', [ProjectController::class, 'details'])->name('projects.details');
 Route::get('/projects/{project}/project-details', [ProjectController::class, 'projectDetails'])->name('projects.project-details');
