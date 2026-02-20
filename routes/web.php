@@ -56,6 +56,7 @@ Route::get('/', function () {
 })->name('home');
 Route::get('/sso-redirect', [App\Http\Controllers\Auth\SSORedirectController::class, 'handle'])->name('sso.redirect');
 Route::get('/sso-redirect/institute', [App\Http\Controllers\Auth\SSORedirectController::class, 'SendInstituteData'])->name('sso.redirect.institute');
+Route::get('/sso-redirect/institution-profile', [App\Http\Controllers\Auth\SSORedirectController::class, 'OpenInstitutionProfile'])->name('sso.redirect.institution-profile');
 // Route::get('/sms-redirect', [App\Http\Controllers\Auth\SSORedirectController::class, 'redirectToSMS'])->name('sso.redirectToSMS');
 Route::middleware(['auth', 'menu.permission'])->group(function () {
     // Route::get('/dashboard', function () {

@@ -294,4 +294,29 @@ $projects = ProjectType::whereHas('projects', function($query) use ($data) {
     ], 500);
 }
 }
+
+    public function OpenInstitutionProfile(Request $request)
+    {
+        $institution_id = $request->input('institution_id');
+
+        if (!$institution_id) {
+            return redirect()->back()->with('error', 'Institution ID is required');
+        }
+
+        $key = $this->secretKey; // Use class property initialized in constructor
+        
+        $payload = [
+            'iss' => env('APP_URL'),
+            'iat' => time(),
+            'exp' => time() + (60 * 60),
+            'data' => [
+                'institution_id' => $institution_id
+            ]
+        ];
+
+        $token = JWT::encode($payload, $key, 'HS256');
+        $hrms_url = env('HRMS_URL');
+        
+        return redirect()->away($hrms_url.'/external/institutional-profile/' . $token);
+    }
 }

@@ -58,4 +58,9 @@ class Institute extends Model implements HasMedia
     { 
         return $this->hasMany(Upgradation::class);
     }
+
+    public function region()
+    {
+        return $this->belongsTo(Institute::class, 'region_id');
+    }
 }

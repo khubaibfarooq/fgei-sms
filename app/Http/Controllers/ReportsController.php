@@ -1109,7 +1109,7 @@ $regions = Institute::select('region_id as id', 'name')->where('type', 'Regional
         $regionid      = session('region_id');
         $type          = session('type');
 
-        $query = Project::query()->with(['institute', 'projecttype', 'currentStage','fundhead']);
+        $query = Project::query()->with(['institute.region', 'projecttype', 'currentStage','fundhead']);
 
         // -----------------------------------------------------------------
         // Global search

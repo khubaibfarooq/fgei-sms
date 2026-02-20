@@ -677,6 +677,15 @@ export default function InstitutionalReportIndex({ institute: initialInstitute =
 
 
             <div className="flex gap-2">
+              <Button onClick={() => {
+                if (institute) {
+                  window.location.href = route('sso.redirect.institution-profile', { institution_id: institute });
+                } else {
+                  toast.error("Please select an institute first");
+                }
+              }} className="w-full md:w-auto">
+                Institution Profile
+              </Button>
               <Button onClick={exportToPDF} className="w-full md:w-auto">
                 Export PDF
               </Button>

@@ -440,7 +440,7 @@ export default function Projects({ projects: initialProjects, institutes, region
       { header: 'Status', key: 'status', width: 15 },
       { header: 'Project Type', key: 'project_type', width: 25 },
       { header: 'Institute', key: 'institute', width: 30 },
-      { header: 'Region', key: 'region', width: 25 },
+
     ];
 
     allProjects.forEach((p: ProjectProp) => {
@@ -451,7 +451,7 @@ export default function Projects({ projects: initialProjects, institutes, region
         status: p.status,
         project_type: p.projecttype?.name || 'N/A',
         institute: p.institute?.name || 'N/A',
-        region: p.region?.name || 'N/A',
+
       });
     });
 
@@ -472,7 +472,7 @@ export default function Projects({ projects: initialProjects, institutes, region
     doc.setFontSize(16);
     doc.text('Projects Report', 14, 15);
 
-    const headers = ['Name', 'Estimated Cost', 'Actual Cost', 'Status', 'Project Type', 'Institute', 'Region'];
+    const headers = ['Name', 'Estimated Cost', 'Actual Cost', 'Status', 'Project Type', 'Institute'];
     const rows = allProjects.map((p: ProjectProp) => [
       p.name,
       formatAmount(p.estimated_cost),
@@ -480,7 +480,6 @@ export default function Projects({ projects: initialProjects, institutes, region
       p.status,
       p.projecttype?.name || 'N/A',
       p.institute?.name || 'N/A',
-      p.region?.name || 'N/A',
     ]);
 
     autoTable(doc, {

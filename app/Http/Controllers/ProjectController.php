@@ -580,6 +580,7 @@ public function projectDetails(Project $project)
             'status' => 'rejected',
             'approval_status' => 'rejected',
             'final_comments' => $request->reason,
+            'updated_by'       => auth()->id(),
         ]);
 
         return redirect()->back()->with('success', 'Project rejected successfully.');
@@ -595,6 +596,7 @@ public function projectDetails(Project $project)
             'status' => 'waiting',
             'approval_status' => 'waiting',
             'final_comments' => $request->reason,
+            'updated_by'       => auth()->id(),
         ]);
 
         return redirect()->back()->with('success', 'Project initiated successfully.');
