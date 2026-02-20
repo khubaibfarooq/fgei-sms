@@ -670,9 +670,9 @@ export default function InstitutionalReportIndex({ institute: initialInstitute =
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Institutional Report" />
-      <div className="flex-1 p-3 ">
+      <div className="flex-1 p-2 ">
         <Card >
-          <CardHeader className="pb-3 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <CardHeader className="pb-2 flex flex-col md:flex-row md:items-center md:justify-between gap-2">
             <div>          <CardTitle>Institutional Report</CardTitle></div>
 
 
@@ -695,6 +695,9 @@ export default function InstitutionalReportIndex({ institute: initialInstitute =
             </div>
           </CardHeader>
           <Separator />
+
+
+
           <CardContent className="py-3 space-y-2">
 
             <div className="flex flex-col md:flex-row md:items-center gap-4">
@@ -761,14 +764,50 @@ export default function InstitutionalReportIndex({ institute: initialInstitute =
               </Select> */}
             </div>
           </CardContent>
+          {/* Summary Section */}
+          {/* Summary Section */}
+          {fetchedinstitute && (
+            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-x-4 gap-y-2 bg-muted/20 p-2 rounded-md border text-xs md:text-sm mb-2">
+              {/* Est Date */}
+              <div>
+                <p className="text-[10px] md:text-xs text-muted-foreground uppercase tracking-wide">Est. Date</p>
+                <p className="font-medium">{fetchedinstitute.established_date || 'N/A'}</p>
+              </div>
+              {/* Total Area */}
+              <div>
+                <p className="text-[10px] md:text-xs text-muted-foreground uppercase tracking-wide">Total Area</p>
+                <p className="font-medium">{fetchedinstitute.total_area || '0'}</p>
+              </div>
+              {/* Covered Area */}
+              <div>
+                <p className="text-[10px] md:text-xs text-muted-foreground uppercase tracking-wide">Covered Area</p>
+                <p className="font-medium">{fetchedinstitute.convered_area || '0'}</p>
+              </div>
+              {/* Blocks */}
+              <div>
+                <p className="text-[10px] md:text-xs text-muted-foreground uppercase tracking-wide">Blocks</p>
+                <p className="font-medium">{blocks.length}</p>
+              </div>
+              {/* Rooms */}
+              <div>
+                <p className="text-[10px] md:text-xs text-muted-foreground uppercase tracking-wide">Rooms</p>
+                <p className="font-medium">{rooms.length}</p>
+              </div>
+              {/* Funds */}
+              <div>
+                <p className="text-[10px] md:text-xs text-muted-foreground uppercase tracking-wide">Total Funds</p>
+                <p className="font-medium">  {formatBalance(funds.reduce((acc, curr) => acc + (typeof curr.balance === 'number' ? curr.balance : parseFloat(String(curr.balance).replace(/,/g, '')) || 0), 0))}</p>
+              </div>
+            </div>
+          )}
         </Card>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Layout image view */}
           <div className="space-y-2">
             <Label>Current Layout Image</Label>
             {fetchedinstitute?.img_layout ? (
-              <ImagePreview dataImg={`${fetchedinstitute.img_layout}`} className="w-full h-48 object-cover rounded" />
+              <ImagePreview dataImg={`${fetchedinstitute.img_layout}`} className="w-full h-40 object-cover rounded" />
 
 
             ) : (
@@ -781,7 +820,7 @@ export default function InstitutionalReportIndex({ institute: initialInstitute =
           <div className="space-y-2">
             <Label>Current Front View Image</Label>
             {fetchedinstitute?.img_3d ? (
-              <ImagePreview dataImg={`${fetchedinstitute.img_3d}`} className="w-full h-48 object-cover rounded" />
+              <ImagePreview dataImg={`${fetchedinstitute.img_3d}`} className="w-full h-40 object-cover rounded" />
 
             ) : (
               <p className="text-sm text-muted-foreground">No Font View image uploaded.</p>
@@ -793,7 +832,7 @@ export default function InstitutionalReportIndex({ institute: initialInstitute =
           <div className="space-y-2">
             <Label>Current Video</Label>
             {fetchedinstitute?.video ? (
-              <video controls className="w-full h-48 rounded">
+              <video controls className="w-full h-40 rounded">
                 <source src={`/assets/${fetchedinstitute.video}`} type="video/mp4" />
                 Your browser does not support the video tag.
               </video>
@@ -804,15 +843,15 @@ export default function InstitutionalReportIndex({ institute: initialInstitute =
           </div>
         </div>
         {/* Shifts */}
-        <div className="grid grid-cols-1 md:grid-cols-2 my-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 my-1 gap-2">
           <div className="border rounded-lg  border-primary/95">
             <button
-              className="w-full p-4 text-left flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-800 
+              className="w-full p-2 text-left flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-800 
 
   "
               onClick={() => setShiftsOpen(!shiftsOpen)}
             >
-              <h3 className="text-lg font-semibold">Shifts({shifts.length})</h3>
+              <h3 className="text-base font-semibold">Shifts({shifts.length})</h3>
               <svg
                 className={`w-5 h-5 transform transition-transform ${shiftsOpen ? 'rotate-180' : ''}`}
                 fill="none"
@@ -823,23 +862,23 @@ export default function InstitutionalReportIndex({ institute: initialInstitute =
               </svg>
             </button>
             {shiftsOpen && (
-              <div className="p-4 border-t">
+              <div className="p-2 border-t">
                 {shifts.length > 0 ? (
                   <div className="overflow-x-auto">
                     <table className="w-full border-collapse rounded-md overflow-hidden shadow-sm border-1">
                       <thead>
                         <tr className="bg-primary dark:bg-gray-800">
-                          <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Name</th>
-                          <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Building Name</th>
-                          <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Building Type</th>
+                          <th className="border px-2 py-1 text-left text-xs font-medium text-white dark:text-gray-200">Name</th>
+                          <th className="border px-2 py-1 text-left text-xs font-medium text-white dark:text-gray-200">Building Name</th>
+                          <th className="border px-2 py-1 text-left text-xs font-medium text-white dark:text-gray-200">Building Type</th>
                         </tr>
                       </thead>
                       <tbody>
                         {shifts.map((shift) => (
                           <tr key={shift.id} className="hover:bg-primary/10  dark:hover:bg-gray-700">
-                            <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{shift.name}</td>
-                            <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{shift.building_name}</td>
-                            <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{shift.building_type?.name}</td>
+                            <td className="border px-2 py-1 text-xs text-gray-900 dark:text-gray-100">{shift.name}</td>
+                            <td className="border px-2 py-1 text-xs text-gray-900 dark:text-gray-100">{shift.building_name}</td>
+                            <td className="border px-2 py-1 text-xs text-gray-900 dark:text-gray-100">{shift.building_type?.name}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -854,10 +893,10 @@ export default function InstitutionalReportIndex({ institute: initialInstitute =
           {/* Blocks */}
           <div className="border rounded-lg border-primary/95">
             <button
-              className="w-full p-4 text-left flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-800"
+              className="w-full p-2 text-left flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-800"
               onClick={() => setBlocksOpen(!blocksOpen)}
             >
-              <h3 className="text-lg font-semibold">Blocks({blocks.length})</h3>
+              <h3 className="text-base font-semibold">Blocks({blocks.length})</h3>
               <svg
                 className={`w-5 h-5 transform transition-transform ${blocksOpen ? 'rotate-180' : ''}`}
                 fill="none"
@@ -868,24 +907,24 @@ export default function InstitutionalReportIndex({ institute: initialInstitute =
               </svg>
             </button>
             {blocksOpen && (
-              <div className="p-4 border-t">
+              <div className="p-2 border-t">
                 {blocks.length > 0 ? (
                   <div className="overflow-x-auto">
                     <table className="w-full border-collapse rounded-md overflow-hidden shadow-sm border-1">
                       <thead>
                         <tr className="bg-primary dark:bg-gray-800">
-                          <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Name</th>
-                          <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Area (sq ft)</th>
-                          <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Establish Date</th>
+                          <th className="border px-2 py-1 text-left text-xs font-medium text-white dark:text-gray-200">Name</th>
+                          <th className="border px-2 py-1 text-left text-xs font-medium text-white dark:text-gray-200">Area (sq ft)</th>
+                          <th className="border px-2 py-1 text-left text-xs font-medium text-white dark:text-gray-200">Establish Date</th>
 
                         </tr>
                       </thead>
                       <tbody>
                         {blocks.map((block) => (
                           <tr key={block.id} className="hover:bg-primary/10  dark:hover:bg-gray-700">
-                            <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">  <div className='flex flex-column gap-2 align-middle'> <ImagePreview dataImg={block.img} size="h-20 w-20 object-contain" />  <span className='font-bold'>{block.name}</span></div> </td>
-                            <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{block.area}</td>
-                            <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{formatDate(block.establish_date)}</td>
+                            <td className="border px-2 py-1 text-xs text-gray-900 dark:text-gray-100">  <div className='flex flex-column gap-2 align-middle'> <ImagePreview dataImg={block.img} size="h-20 w-20 object-contain" />  <span className='font-bold'>{block.name}</span></div> </td>
+                            <td className="border px-2 py-1 text-xs text-gray-900 dark:text-gray-100">{block.area}</td>
+                            <td className="border px-2 py-1 text-xs text-gray-900 dark:text-gray-100">{formatDate(block.establish_date)}</td>
 
                           </tr>
                         ))}
@@ -900,15 +939,15 @@ export default function InstitutionalReportIndex({ institute: initialInstitute =
           </div>
 
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 my-2  gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 my-1  gap-2">
 
           {/* Rooms */}
           <div className="border rounded-lg  border-primary/95">
             <button
-              className="w-full p-4 text-left flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-800"
+              className="w-full p-2 text-left flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-800"
               onClick={() => setRoomsOpen(!roomsOpen)}
             >
-              <h3 className="text-lg font-semibold">Rooms({rooms.length})</h3>
+              <h3 className="text-base font-semibold">Rooms({rooms.length})</h3>
               <svg
                 className={`w-5 h-5 transform transition-transform ${roomsOpen ? 'rotate-180' : ''}`}
                 fill="none"
@@ -919,25 +958,25 @@ export default function InstitutionalReportIndex({ institute: initialInstitute =
               </svg>
             </button>
             {roomsOpen && (
-              <div className="p-4 border-t">
+              <div className="p-2 border-t">
                 {rooms.length > 0 ? (
                   <div className="overflow-x-auto">
                     <table className="w-full border-collapse rounded-md overflow-hidden shadow-sm border-1">
                       <thead>
                         <tr className="bg-primary dark:bg-gray-800">
-                          <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Block</th>
-                          <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Name</th>
-                          <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Area (sq ft)</th>
+                          <th className="border px-2 py-1 text-left text-xs font-medium text-white dark:text-gray-200">Block</th>
+                          <th className="border px-2 py-1 text-left text-xs font-medium text-white dark:text-gray-200">Name</th>
+                          <th className="border px-2 py-1 text-left text-xs font-medium text-white dark:text-gray-200">Area (sq ft)</th>
 
                         </tr>
                       </thead>
                       <tbody>
                         {rooms.map((room) => (
                           <tr key={room.id} className="hover:bg-primary/10  dark:hover:bg-gray-700">
-                            <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{room.block?.name}</td>
+                            <td className="border px-2 py-1 text-xs text-gray-900 dark:text-gray-100">{room.block?.name}</td>
 
-                            <td className="border p-2 text-sm text-gray-900 dark:text-gray-100"><div className='flex flex-column gap-2 align-middle'> <ImagePreview dataImg={room.img} size="h-20 w-20 object-contain" />  <span className='font-bold'>{room.name}</span></div></td>
-                            <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{room.area}</td>
+                            <td className="border px-2 py-1 text-xs text-gray-900 dark:text-gray-100"><div className='flex flex-column gap-2 align-middle'> <ImagePreview dataImg={room.img} size="h-20 w-20 object-contain" />  <span className='font-bold'>{room.name}</span></div></td>
+                            <td className="border px-2 py-1 text-xs text-gray-900 dark:text-gray-100">{room.area}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -953,10 +992,10 @@ export default function InstitutionalReportIndex({ institute: initialInstitute =
           {/* Institute Assets */}
           <div className="border rounded-lg  border-primary/95">
             <button
-              className="w-full p-4 text-left flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-800"
+              className="w-full p-2 text-left flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-800"
               onClick={() => setAssetsOpen(!assetsOpen)}
             >
-              <h3 className="text-lg font-semibold">Institute Assets({instituteAssets.length})</h3>
+              <h3 className="text-base font-semibold">Institute Assets({instituteAssets.length})</h3>
               <svg
                 className={`w-5 h-5 transform transition-transform ${assetsOpen ? 'rotate-180' : ''}`}
                 fill="none"
@@ -967,27 +1006,27 @@ export default function InstitutionalReportIndex({ institute: initialInstitute =
               </svg>
             </button>
             {assetsOpen && (
-              <div className="p-4 border-t">
+              <div className="p-2 border-t">
                 {instituteAssets.length > 0 ? (
                   <div className="overflow-x-auto">
                     <table className="w-full border-collapse rounded-md overflow-hidden shadow-sm border-1">
                       <thead>
                         <tr className="bg-primary dark:bg-gray-800">
-                          <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Asset Name</th>
+                          <th className="border px-2 py-1 text-left text-xs font-medium text-white dark:text-gray-200">Asset Name</th>
 
-                          <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Total Quantity</th>
+                          <th className="border px-2 py-1 text-left text-xs font-medium text-white dark:text-gray-200">Total Quantity</th>
 
-                          <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Rooms</th>
+                          <th className="border px-2 py-1 text-left text-xs font-medium text-white dark:text-gray-200">Rooms</th>
                         </tr>
                       </thead>
                       <tbody>
                         {instituteAssets.map((asset) => (
                           <tr key={asset.id} className="hover:bg-primary/10  dark:hover:bg-gray-700">
-                            <td className="border p-2 text-sm text-gray-900 font-bold dark:text-gray-100">{asset.name}</td>
+                            <td className="border px-2 py-1 text-xs text-gray-900 font-bold dark:text-gray-100">{asset.name}</td>
 
-                            <td className="border p-2 text-sm text-green-700 font-bold dark:text-gray-100">{asset.total_qty}</td>
+                            <td className="border px-2 py-1 text-xs text-green-700 font-bold dark:text-gray-100">{asset.total_qty}</td>
 
-                            <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{asset.locations_count}</td>
+                            <td className="border px-2 py-1 text-xs text-gray-900 dark:text-gray-100">{asset.locations_count}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -1000,14 +1039,14 @@ export default function InstitutionalReportIndex({ institute: initialInstitute =
             )}
           </div>
         </div>
-        <div className="grid grid-cols-1 my-2  md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 my-1  md:grid-cols-2 gap-2">
           {/* Institute Upgradations */}
           <div className="border rounded-lg  border-primary/95">
             <button
-              className="w-full p-4 text-left flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-800"
+              className="w-full p-2 text-left flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-800"
               onClick={() => setUpgradationsOpen(!upgradationsOpen)}
             >
-              <h3 className="text-lg font-semibold">Institute Upgradations({upgradations.length})</h3>
+              <h3 className="text-base font-semibold">Institute Upgradations({upgradations.length})</h3>
               <svg
                 className={`w-5 h-5 transform transition-transform ${upgradationsOpen ? 'rotate-180' : ''}`}
                 fill="none"
@@ -1018,29 +1057,29 @@ export default function InstitutionalReportIndex({ institute: initialInstitute =
               </svg>
             </button>
             {upgradationsOpen && (
-              <div className="p-4 border-t">
+              <div className="p-2 border-t">
                 {upgradations.length > 0 ? (
                   <div className="overflow-x-auto">
                     <table className="w-full border-collapse rounded-md overflow-hidden shadow-sm border-1">
                       <thead>
                         <tr className="bg-primary dark:bg-gray-800">
-                          <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Details</th>
-                          <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Date from</th>
-                          <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Date to</th>
-                          <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Level From</th>
-                          <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Level To</th>
-                          <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Status</th>
+                          <th className="border px-2 py-1 text-left text-xs font-medium text-white dark:text-gray-200">Details</th>
+                          <th className="border px-2 py-1 text-left text-xs font-medium text-white dark:text-gray-200">Date from</th>
+                          <th className="border px-2 py-1 text-left text-xs font-medium text-white dark:text-gray-200">Date to</th>
+                          <th className="border px-2 py-1 text-left text-xs font-medium text-white dark:text-gray-200">Level From</th>
+                          <th className="border px-2 py-1 text-left text-xs font-medium text-white dark:text-gray-200">Level To</th>
+                          <th className="border px-2 py-1 text-left text-xs font-medium text-white dark:text-gray-200">Status</th>
                         </tr>
                       </thead>
                       <tbody>
                         {upgradations.map((up) => (
                           <tr key={up.id} className="hover:bg-primary/10  dark:hover:bg-gray-700">
-                            <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{up.details}</td>
-                            <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{formatDate(up.from)}</td>
-                            <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{formatDate(up.to)}</td>
-                            <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{up.levelfrom}</td>
-                            <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{up.levelto}</td>
-                            <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{up.status}</td>
+                            <td className="border px-2 py-1 text-xs text-gray-900 dark:text-gray-100">{up.details}</td>
+                            <td className="border px-2 py-1 text-xs text-gray-900 dark:text-gray-100">{formatDate(up.from)}</td>
+                            <td className="border px-2 py-1 text-xs text-gray-900 dark:text-gray-100">{formatDate(up.to)}</td>
+                            <td className="border px-2 py-1 text-xs text-gray-900 dark:text-gray-100">{up.levelfrom}</td>
+                            <td className="border px-2 py-1 text-xs text-gray-900 dark:text-gray-100">{up.levelto}</td>
+                            <td className="border px-2 py-1 text-xs text-gray-900 dark:text-gray-100">{up.status}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -1055,10 +1094,10 @@ export default function InstitutionalReportIndex({ institute: initialInstitute =
           {/* Institute Projects */}
           <div className="border rounded-lg border-primary/95">
             <button
-              className="w-full p-4 text-left flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-800"
+              className="w-full p-2 text-left flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-800"
               onClick={() => setProjectsOpen(!projectsOpen)}
             >
-              <h3 className="text-lg font-semibold">Institute Projects({projects.length})</h3>
+              <h3 className="text-base font-semibold">Institute Projects({projects.length})</h3>
               <svg
                 className={`w-5 h-5 transform transition-transform ${projectsOpen ? 'rotate-180' : ''}`}
                 fill="none"
@@ -1069,26 +1108,26 @@ export default function InstitutionalReportIndex({ institute: initialInstitute =
               </svg>
             </button>
             {projectsOpen && (
-              <div className="p-4 border-t">
+              <div className="p-2 border-t">
                 {projects.length > 0 ? (
                   <div className="overflow-x-auto">
                     <table className="w-full border-collapse rounded-md overflow-hidden shadow-sm border-1">
                       <thead>
                         <tr className="bg-primary dark:bg-gray-800">
-                          <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Project Type</th>
-                          <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Completed</th>
-                          <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">In Progress</th>
-                          <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Planned</th>
+                          <th className="border px-2 py-1 text-left text-xs font-medium text-white dark:text-gray-200">Project Type</th>
+                          <th className="border px-2 py-1 text-left text-xs font-medium text-white dark:text-gray-200">Completed</th>
+                          <th className="border px-2 py-1 text-left text-xs font-medium text-white dark:text-gray-200">In Progress</th>
+                          <th className="border px-2 py-1 text-left text-xs font-medium text-white dark:text-gray-200">Planned</th>
 
                         </tr>
                       </thead>
                       <tbody>
                         {projects.map((p) => (
                           <tr className="hover:bg-primary/10  dark:hover:bg-gray-700">
-                            <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{p.name}</td>
-                            <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{p.completed}</td>
-                            <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{p.inprogress}</td>
-                            <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{p.planned}</td>
+                            <td className="border px-2 py-1 text-xs text-gray-900 dark:text-gray-100">{p.name}</td>
+                            <td className="border px-2 py-1 text-xs text-gray-900 dark:text-gray-100">{p.completed}</td>
+                            <td className="border px-2 py-1 text-xs text-gray-900 dark:text-gray-100">{p.inprogress}</td>
+                            <td className="border px-2 py-1 text-xs text-gray-900 dark:text-gray-100">{p.planned}</td>
 
                           </tr>
                         ))}
@@ -1102,14 +1141,14 @@ export default function InstitutionalReportIndex({ institute: initialInstitute =
             )}
           </div>
         </div>
-        <div className="grid grid-cols-1 my-2  md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 my-1  md:grid-cols-2 gap-2">
           {/* Institute Funds */}
           <div className="border rounded-lg border-primary/95">
             <button
-              className="w-full p-4 text-left flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-800"
+              className="w-full p-2 text-left flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-800"
               onClick={() => setFundsOpen(!fundsOpen)}
             >
-              <h3 className="text-lg font-semibold">Institute Funds({funds.length})</h3>
+              <h3 className="text-base font-semibold">Institute Funds({funds.length})</h3>
               <svg
                 className={`w-5 h-5 transform transition-transform ${fundsOpen ? 'rotate-180' : ''}`}
                 fill="none"
@@ -1120,26 +1159,26 @@ export default function InstitutionalReportIndex({ institute: initialInstitute =
               </svg>
             </button>
             {fundsOpen && (
-              <div className="p-4 border-t">
+              <div className="p-2 border-t">
                 {funds.length > 0 ? (
                   <div className="overflow-x-auto">
                     <table className="w-full border-collapse rounded-md overflow-hidden shadow-sm border-1">
                       <thead>
                         <tr className="bg-primary dark:bg-gray-800">
-                          <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Fund Head</th>
-                          <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Balance</th>
+                          <th className="border px-2 py-1 text-left text-xs font-medium text-white dark:text-gray-200">Fund Head</th>
+                          <th className="border px-2 py-1 text-left text-xs font-medium text-white dark:text-gray-200">Balance</th>
                         </tr>
                       </thead>
                       <tbody>
                         {funds.map((f) => (
                           <tr key={f.id} className="hover:bg-primary/10  dark:hover:bg-gray-700">
-                            <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{f.fund_head?.name}</td>
-                            <td className="border p-2 text-sm text-gray-900 dark:text-gray-100 font-bold">{formatBalance(f.balance)}</td>
+                            <td className="border px-2 py-1 text-xs text-gray-900 dark:text-gray-100">{f.fund_head?.name}</td>
+                            <td className="border px-2 py-1 text-xs text-gray-900 dark:text-gray-100 font-bold">{formatBalance(f.balance)}</td>
                           </tr>
                         ))}
                         <tr>
-                          <td className="border p-2 text-md text-gray-900 font-bold dark:text-gray-100">Total</td>
-                          <td className="border p-2 text-md text-gray-900 font-bold dark:text-gray-100">{formatBalance(funds.reduce((total, f) => Number(total) + Number(f.balance), 0))}</td>
+                          <td className="border px-2 py-1 text-xs text-gray-900 font-bold dark:text-gray-100">Total</td>
+                          <td className="border px-2 py-1 text-xs text-gray-900 font-bold dark:text-gray-100">{formatBalance(funds.reduce((total, f) => Number(total) + Number(f.balance), 0))}</td>
                         </tr>
                       </tbody>
                     </table>
@@ -1153,10 +1192,10 @@ export default function InstitutionalReportIndex({ institute: initialInstitute =
           {/* Institute Transports */}
           <div className="border rounded-lg border-primary/100">
             <button
-              className="w-full p-4 text-left flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-800"
+              className="w-full p-2 text-left flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-800"
               onClick={() => setTransportsOpen(!transportsOpen)}
             >
-              <h3 className="text-lg font-semibold">Institute Transports({transports.length})</h3>
+              <h3 className="text-base font-semibold">Institute Transports({transports.length})</h3>
               <svg
                 className={`w-5 h-5 transform transition-transform ${transportsOpen ? 'rotate-180' : ''}`}
                 fill="none"
@@ -1167,21 +1206,21 @@ export default function InstitutionalReportIndex({ institute: initialInstitute =
               </svg>
             </button>
             {transportsOpen && (
-              <div className="p-4 border-t">
+              <div className="p-2 border-t">
                 {transports.length > 0 ? (
                   <div className="overflow-x-auto">
                     <table className="w-full border-collapse rounded-md overflow-hidden shadow-sm border-1">
                       <thead>
                         <tr className="bg-primary dark:bg-gray-800">
-                          <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Vehicle No</th>
-                          <th className="border p-2 text-left text-sm font-medium text-white dark:text-gray-200">Vehicle Type</th>
+                          <th className="border px-2 py-1 text-left text-xs font-medium text-white dark:text-gray-200">Vehicle No</th>
+                          <th className="border px-2 py-1 text-left text-xs font-medium text-white dark:text-gray-200">Vehicle Type</th>
                         </tr>
                       </thead>
                       <tbody>
                         {transports.map((t) => (
                           <tr key={t.id} className="hover:bg-primary/10  dark:hover:bg-gray-700">
-                            <td className="border p-2 text-sm text-gray-900 font-bold dark:text-gray-100">{t.vehicle_no}</td>
-                            <td className="border p-2 text-sm text-gray-900 dark:text-gray-100">{t.vehicle_type?.name}</td>
+                            <td className="border px-2 py-1 text-xs text-gray-900 font-bold dark:text-gray-100">{t.vehicle_no}</td>
+                            <td className="border px-2 py-1 text-xs text-gray-900 dark:text-gray-100">{t.vehicle_type?.name}</td>
                           </tr>
                         ))}
 

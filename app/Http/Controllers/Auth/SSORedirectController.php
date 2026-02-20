@@ -230,18 +230,19 @@ class SSORedirectController extends Controller
     $transports=[];
     $institute=[];
     if ($data->institute_id && is_numeric($data->institute_id) && $data->institute_id > 0) {
-        $institute=Institute::find($data->institute_id);
-        $shifts=Shift::where('institute_id', $data->institute_id)->with('buildingType')->get();
-      $upgradations=Upgradation::where('institute_id', $data->institute_id)->get();
-    $funds=FundHeld::where('institute_id', $data->institute_id)->with('fundHead')->get();
-        $transports=Transport::where('institute_id', $data->institute_id)->with('vehicleType')->get();
-        $blocks = Block::where('institute_id', $data->institute_id)->get();
+        $institute=Institute::where('hr_id',$data->institute_id)->first();
+        $institute_id=$institute->id;
+        $shifts=Shift::where('institute_id', $institute_id)->with('buildingType')->get();
+      $upgradations=Upgradation::where('institute_id', $institute_id)->get();
+    $funds=FundHeld::where('institute_id', $institute_id)->with('fundHead')->get();
+        $transports=Transport::where('institute_id', $institute_id)->with('vehicleType')->get();
+        $blocks = Block::where('institute_id', $institute_id)->get();
         $blockIds = $blocks->pluck('id')->toArray();
         $rooms = Room::whereIn('block_id', $blockIds)->with('block')->get();
    
        
               $instituteAssets = InstituteAsset::query()
-        ->where('institute_id', $data->institute_id)
+        ->where('institute_id', $institute_id)
         ->join('assets', 'institute_assets.asset_id', '=', 'assets.id')
         ->select([
             'assets.id',
@@ -253,20 +254,20 @@ class SSORedirectController extends Controller
         ->groupBy('assets.id', 'assets.name')
         ->orderBy('assets.name')
         ->get();
-$projects = ProjectType::whereHas('projects', function($query) use ($data) {
-        $query->where('institute_id', $data->institute_id);
+$projects = ProjectType::whereHas('projects', function($query) use ($institute_id) {
+        $query->where('institute_id', $institute_id);
     })
     ->withCount([
-        'projects as completed' => function($query) use ($data) {
-            $query->where('institute_id', $data->institute_id)
+        'projects as completed' => function($query) use ($institute_id) {
+            $query->where('institute_id', $institute_id)
                   ->where('status', 'completed');
         },
-        'projects as inprogress' => function($query) use ($data) {
-            $query->where('institute_id', $data->institute_id)
+        'projects as inprogress' => function($query) use ($institute_id) {
+            $query->where('institute_id', $institute_id)
                   ->where('status', 'inprogress');
         },
-        'projects as planned' => function($query) use ($data) {
-            $query->where('institute_id', $data->institute_id)
+        'projects as planned' => function($query) use ($institute_id) {
+            $query->where('institute_id', $institute_id)
                   ->where('status', 'planned');
         }
     ])

@@ -513,7 +513,7 @@ export default function ProjectDetails({ project, canEditMilestones }: Props) {
                                     <TabsTrigger value="approvals" className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none rounded-none px-4 py-3 bg-transparent">Approvals</TabsTrigger>
                                     <TabsTrigger value="milestones" className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none rounded-none px-4 py-3 bg-transparent">Milestones</TabsTrigger>
                                     <TabsTrigger value="payments" className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none rounded-none px-4 py-3 bg-transparent">Payments</TabsTrigger>
-                                    <TabsTrigger value="payments" className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none rounded-none px-4 py-3 bg-transparent">Payments</TabsTrigger>
+
                                     <TabsTrigger value="images" className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none rounded-none px-4 py-3 bg-transparent flex items-center gap-1"><Camera className="h-3.5 w-3.5" /> Images</TabsTrigger>
                                     <TabsTrigger value="timeline" className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none rounded-none px-4 py-3 bg-transparent flex items-center gap-1"><Clock className="h-3.5 w-3.5" /> Timeline</TabsTrigger>
                                 </TabsList>
