@@ -255,7 +255,11 @@ public function SendInstituteData(Request $request)
 
                 case 'rooms':
                     $blockIds = Block::where('institute_id', $institute_id)->pluck('id')->toArray();
-                    $response['rooms'] = Room::whereIn('block_id', $blockIds)->groupBy('room_type_id')->with('roomType')->get();
+                    $response['rooms'] = Room::whereIn('block_id', $blockIds)
+                        ->join('room_types', 'rooms.room_type_id', '=', 'room_types.id')
+                        ->select('rooms.room_type_id', 'room_types.name as room_type_name', DB::raw('COUNT(*) as count'))
+                        ->groupBy('rooms.room_type_id', 'room_types.name')
+                        ->get();
                     break;
 
                 case 'shifts':
