@@ -199,101 +199,209 @@ class SSORedirectController extends Controller
                 return 'user';
         }
     }
-
-     public function SendInstituteData(Request $request)
+public function SendInstituteData(Request $request)
 {
-        // Read token from request header
-        $token = $request->header('token');
+    $token = $request->header('token');
 
-        \Log::info('SSO Institute Data Request', ['token_present' => !empty($token)]);
+    try {
+        if (empty($token) || $token !== env('JWT_SECRET_KEY')) {
+            \Log::warning('SSO: Invalid or missing API token');
+            return response()->json(['error' => 'Unauthorized: Invalid token'], 401);
+        }
 
-        try {
-            // Validate the static API token
-            $expectedToken = env('JWT_SECRET_KEY');
-            if (empty($token) || $token !== $expectedToken) {
-                \Log::warning('SSO: Invalid or missing API token');
-                return response()->json(['error' => 'Unauthorized: Invalid token'], 401);
-            }
+        $institute_id_param = $request->query('institute_id');
+        $type = $request->query('type');
 
-            $institute_id_param = $request->query('institute_id');
+        if (!$institute_id_param || !is_numeric($institute_id_param) || $institute_id_param <= 0) {
+            return response()->json(['error' => 'Invalid or missing institute_id'], 422);
+        }
 
-    $instituteAssets = [];
-    $blocks = [];
-    $rooms = [];
-    $shifts = [];
-    $upgradations = [];
-    $funds = [];
-    $projects = [];
-    $transports = [];
-    $institute = [];
+        if (empty($type)) {
+            return response()->json(['error' => 'Missing required query parameter: type'], 422);
+        }
 
-    if ($institute_id_param && is_numeric($institute_id_param) && $institute_id_param > 0) {
-        $institute = Institute::select('id','hr_id','established_date','total_area','convered_area','img_3d')->where('hr_id', $institute_id_param)->first();
-        $institute->img_3d = $institute->img_3d ? url('assets/' . $institute->img_3d) : null;
+        $allowedTypes = ['institute', 'institute_profile', 'blocks', 'rooms', 'shifts', 'assets', 'funds', 'transports', 'projects', 'upgradations'];
+        $types = array_intersect(explode(',', $type), $allowedTypes);
+
+        if (empty($types)) {
+            return response()->json(['error' => 'Invalid type value(s). Allowed: ' . implode(', ', $allowedTypes)], 422);
+        }
+
+        $institute = Institute::select('id', 'hr_id', 'established_date', 'total_area', 'convered_area', 'img_3d')
+            ->where('hr_id', $institute_id_param)
+            ->first();
+
+        if (!$institute) {
+            return response()->json(['error' => 'Institute not found'], 404);
+        }
+
         $institute_id = $institute->id;
-        $shifts=Shift::where('institute_id', $institute_id)->with('buildingType')->get();
-      $upgradations=Upgradation::where('institute_id', $institute_id)->get();
-    $funds=FundHeld::where('institute_id', $institute_id)->with('fundHead')->get();
-        $transports=Transport::where('institute_id', $institute_id)->with('vehicleType')->get();
-        $blocks = Block::where('institute_id', $institute_id)->get();
-        $blockIds = $blocks->pluck('id')->toArray();
-        $rooms = Room::whereIn('block_id', $blockIds)->with('block')->get();
+        $response = [];
+
+        foreach ($types as $t) {
+            switch ($t) {
+                case 'institute':
+                    $response['institute'] = $institute;
+                    break;
+
+                case 'institute_profile':
+                    $institute->img_3d = $institute->img_3d ? url('assets/' . $institute->img_3d) : null;
+                    $response['institute_profile'] = $institute;
+                    break;
+
+                case 'blocks':
+                    $response['blocks'] = Block::where('institute_id', $institute_id)->get();
+                    break;
+
+                case 'rooms':
+                    $blockIds = Block::where('institute_id', $institute_id)->pluck('id')->toArray();
+                    $response['rooms'] = Room::whereIn('block_id', $blockIds)->with('block')->get();
+                    break;
+
+                case 'shifts':
+                    $response['shifts'] = Shift::where('institute_id', $institute_id)->with('buildingType')->get();
+                    break;
+
+                case 'assets':
+                    $response['assets'] = InstituteAsset::query()
+                        ->where('institute_id', $institute_id)
+                        ->join('assets', 'institute_assets.asset_id', '=', 'assets.id')
+                        ->select([
+                            'assets.id',
+                            'assets.name',
+                            DB::raw('SUM(institute_assets.current_qty) as total_qty'),
+                            DB::raw('COUNT(DISTINCT institute_assets.room_id) as locations_count')
+                        ])
+                        ->groupBy('assets.id', 'assets.name')
+                        ->orderBy('assets.name')
+                        ->get();
+                    break;
+
+                case 'funds':
+                    $response['funds'] = FundHeld::where('institute_id', $institute_id)->with('fundHead')->get();
+                    break;
+
+                case 'transports':
+                    $response['transports'] = Transport::where('institute_id', $institute_id)->with('vehicleType')->get();
+                    break;
+
+                case 'upgradations':
+                    $response['upgradations'] = Upgradation::where('institute_id', $institute_id)->get();
+                    break;
+
+                case 'projects':
+                    $response['projects'] = ProjectType::whereHas('projects', fn($q) => $q->where('institute_id', $institute_id))
+                        ->withCount([
+                            'projects as completed' => fn($q) => $q->where('institute_id', $institute_id)->where('status', 'completed'),
+                            'projects as inprogress' => fn($q) => $q->where('institute_id', $institute_id)->where('status', 'inprogress'),
+                            'projects as planned'    => fn($q) => $q->where('institute_id', $institute_id)->where('status', 'planned'),
+                        ])
+                        ->get();
+                    break;
+            }
+        }
+
+        return response()->json($response);
+
+    } catch (\Exception $e) {
+        \Log::error('Error fetching institute data: ' . $e->getMessage());
+        return response()->json(['error' => 'Failed to fetch institute data', 'message' => $e->getMessage()], 500);
+    }
+}
+//      public function SendInstituteData(Request $request)
+// {
+//         // Read token from request header
+//         $token = $request->header('token');
+
+//         \Log::info('SSO Institute Data Request', ['token_present' => !empty($token)]);
+
+//         try {
+//             // Validate the static API token
+//             $expectedToken = env('JWT_SECRET_KEY');
+//             if (empty($token) || $token !== $expectedToken) {
+//                 \Log::warning('SSO: Invalid or missing API token');
+//                 return response()->json(['error' => 'Unauthorized: Invalid token'], 401);
+//             }
+
+//             $institute_id_param = $request->query('institute_id');
+
+//     $instituteAssets = [];
+//     $blocks = [];
+//     $rooms = [];
+//     $shifts = [];
+//     $upgradations = [];
+//     $funds = [];
+//     $projects = [];
+//     $transports = [];
+//     $institute = [];
+
+//     if ($institute_id_param && is_numeric($institute_id_param) && $institute_id_param > 0) {
+//         $institute = Institute::select('id','hr_id','established_date','total_area','convered_area','img_3d')->where('hr_id', $institute_id_param)->first();
+//         $institute->img_3d = $institute->img_3d ? url('assets/' . $institute->img_3d) : null;
+//         $institute_id = $institute->id;
+//         $shifts=Shift::where('institute_id', $institute_id)->with('buildingType')->get();
+//       $upgradations=Upgradation::where('institute_id', $institute_id)->get();
+//     $funds=FundHeld::where('institute_id', $institute_id)->with('fundHead')->get();
+//         $transports=Transport::where('institute_id', $institute_id)->with('vehicleType')->get();
+//         $blocks = Block::where('institute_id', $institute_id)->get();
+//         $blockIds = $blocks->pluck('id')->toArray();
+//         $rooms = Room::whereIn('block_id', $blockIds)->with('block')->get();
    
        
-              $instituteAssets = InstituteAsset::query()
-        ->where('institute_id', $institute_id)
-        ->join('assets', 'institute_assets.asset_id', '=', 'assets.id')
-        ->select([
-            'assets.id',
-            'assets.name',
-            DB::raw('SUM(institute_assets.current_qty) as total_qty'),
-            DB::raw('COUNT(DISTINCT institute_assets.room_id) as locations_count')
-        ])
-        ->with(['institute', 'room', 'asset'])
-        ->groupBy('assets.id', 'assets.name')
-        ->orderBy('assets.name')
-        ->get();
-$projects = ProjectType::whereHas('projects', function($query) use ($institute_id) {
-        $query->where('institute_id', $institute_id);
-    })
-    ->withCount([
-        'projects as completed' => function($query) use ($institute_id) {
-            $query->where('institute_id', $institute_id)
-                  ->where('status', 'completed');
-        },
-        'projects as inprogress' => function($query) use ($institute_id) {
-            $query->where('institute_id', $institute_id)
-                  ->where('status', 'inprogress');
-        },
-        'projects as planned' => function($query) use ($institute_id) {
-            $query->where('institute_id', $institute_id)
-                  ->where('status', 'planned');
-        }
-    ])
-    ->get();  
-}
+//               $instituteAssets = InstituteAsset::query()
+//         ->where('institute_id', $institute_id)
+//         ->join('assets', 'institute_assets.asset_id', '=', 'assets.id')
+//         ->select([
+//             'assets.id',
+//             'assets.name',
+//             DB::raw('SUM(institute_assets.current_qty) as total_qty'),
+//             DB::raw('COUNT(DISTINCT institute_assets.room_id) as locations_count')
+//         ])
+//         ->with(['institute', 'room', 'asset'])
+//         ->groupBy('assets.id', 'assets.name')
+//         ->orderBy('assets.name')
+//         ->get();
+// $projects = ProjectType::whereHas('projects', function($query) use ($institute_id) {
+//         $query->where('institute_id', $institute_id);
+//     })
+//     ->withCount([
+//         'projects as completed' => function($query) use ($institute_id) {
+//             $query->where('institute_id', $institute_id)
+//                   ->where('status', 'completed');
+//         },
+//         'projects as inprogress' => function($query) use ($institute_id) {
+//             $query->where('institute_id', $institute_id)
+//                   ->where('status', 'inprogress');
+//         },
+//         'projects as planned' => function($query) use ($institute_id) {
+//             $query->where('institute_id', $institute_id)
+//                   ->where('status', 'planned');
+//         }
+//     ])
+//     ->get();  
+// }
 
-    return response()->json([
-'institute'=>$institute,
-        'blocks' => $blocks,
-        'rooms' => $rooms,
+//     return response()->json([
+// 'institute'=>$institute,
+//         'blocks' => $blocks,
+//         'rooms' => $rooms,
      
-        'instituteAssets' => $instituteAssets,
-        'shifts'=>$shifts,
-        'upgradations'=>$upgradations,
-        'funds'=>$funds,
-        'projects'=>$projects,
-        'transports'=>$transports,
+//         'instituteAssets' => $instituteAssets,
+//         'shifts'=>$shifts,
+//         'upgradations'=>$upgradations,
+//         'funds'=>$funds,
+//         'projects'=>$projects,
+//         'transports'=>$transports,
        
-    ]);
-} catch (\Exception $e) {
-    \Log::error('Error fetching institute data: ' . $e->getMessage());
-    return response()->json([
-        'error' => 'Failed to fetch institute data',
-        'message' => $e->getMessage()
-    ], 500);
-}
-}
+//     ]);
+// } catch (\Exception $e) {
+//     \Log::error('Error fetching institute data: ' . $e->getMessage());
+//     return response()->json([
+//         'error' => 'Failed to fetch institute data',
+//         'message' => $e->getMessage()
+//     ], 500);
+// }
+// }
 
     public function OpenInstitutionProfile(Request $request)
     {
