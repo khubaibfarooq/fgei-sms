@@ -409,19 +409,44 @@ public function update(Request $request, Project $project)
         abort(403, 'You do not have permission to delete a project.');
     }
 
+    // Guard: block deletion if project has approval records
+    if ($project->approvals()->exists()) {
+        return redirect()->back()
+            ->with('error', 'Cannot delete this project because it has approval records.');
+    }
+
+    // Guard: block deletion if project has uploaded images
+    if ($project->images()->exists()) {
+        return redirect()->back()
+            ->with('error', 'Cannot delete this project because it has project images.');
+    }
+
+    // Guard: block deletion if project has fund/payment records
+    $hasFunds = \App\Models\Fund::where('tid', $project->id)
+        ->where('trans_type', 'project')
+        ->exists();
+
+    if ($hasFunds) {
+        return redirect()->back()
+            ->with('error', 'Cannot delete this project because it has associated fund transactions.');
+    }
+
     // Delete all milestone images
     foreach ($project->milestones as $milestone) {
         if ($milestone->img) {
-            Storage::disk('public')->delete($milestone->img);
+            $path = public_path('assets/' . $milestone->img);
+            if (File::exists($path)) {
+                File::delete($path);
+            }
         }
     }
 
-    // Delete milestones + project (cascading or manual)
+    // Delete milestones + project
     $project->milestones()->delete();
     $project->delete();
 
     return redirect()->route('projects.index')
-        ->with('success', 'Project and all its milestones deleted successfully.');
+        ->with('success', 'Project deleted successfully.');
 }
 
     public function milestones(Project $project)
