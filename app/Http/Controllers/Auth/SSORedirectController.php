@@ -250,12 +250,12 @@ public function SendInstituteData(Request $request)
                     break;
 
                 case 'blocks':
-                    $response['blocks'] = Block::where('institute_id', $institute_id)->get();
+                    $response['blocks'] = Block::where('institute_id', $institute_id)->count();
                     break;
 
                 case 'rooms':
                     $blockIds = Block::where('institute_id', $institute_id)->pluck('id')->toArray();
-                    $response['rooms'] = Room::whereIn('block_id', $blockIds)->with('block')->get();
+                    $response['rooms'] = Room::whereIn('block_id', $blockIds)->groupBy('room_type_id')->with('roomType')->get();
                     break;
 
                 case 'shifts':
