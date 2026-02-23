@@ -246,7 +246,7 @@ public function SendInstituteData(Request $request)
 
                 case 'institute_profile':
                     $institute->img_3d = $institute->img_3d ? url('assets/' . $institute->img_3d) : null;
-                    $response['institute_profile'] = $institute;
+                    $response['institute_profile'] = $institute->img_3d;
                     break;
 
                 case 'blocks':
