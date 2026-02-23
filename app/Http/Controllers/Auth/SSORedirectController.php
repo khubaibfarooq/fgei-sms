@@ -201,37 +201,35 @@ class SSORedirectController extends Controller
     }
 
      public function SendInstituteData(Request $request)
-{   
+{
+        // Read token from request header
+        $token = $request->header('token');
 
-       $token = $request->query('token');
-    
-        \Log::info('SSO Redirect initiated', ['token_present' => !empty($token)]);
-    
+        \Log::info('SSO Institute Data Request', ['token_present' => !empty($token)]);
+
         try {
-            if (empty($token)) {
-                \Log::warning('SSO: No token provided');
-                return redirect('https://hrms.fgei.gov.pk/login')->with('error', 'No authentication token provided.');
+            // Validate the static API token
+            $expectedToken = env('SSO_API_TOKEN');
+            if (empty($token) || $token !== $expectedToken) {
+                \Log::warning('SSO: Invalid or missing API token');
+                return response()->json(['error' => 'Unauthorized: Invalid token'], 401);
             }
-    
-            // Add leeway for clock skew between servers (60 seconds)
-            JWT::$leeway = 60;
-            
-            // Decode and verify JWT token
-        
-                        $data = $request->query('institute_id');
+
+            $institute_id_param = $request->query('institute_id');
+
     $instituteAssets = [];
     $blocks = [];
     $rooms = [];
- 
-    $shifts=[];
-   $upgradations=[];
-    $funds=[];
-    $projects=[];
-    $transports=[];
-    $institute=[];
-    if ($data->institute_id && is_numeric($data->institute_id) && $data->institute_id > 0) {
-        $institute=Institute::where('hr_id',$data->institute_id)->first();
-        $institute_id=$institute->id;
+    $shifts = [];
+    $upgradations = [];
+    $funds = [];
+    $projects = [];
+    $transports = [];
+    $institute = [];
+
+    if ($institute_id_param && is_numeric($institute_id_param) && $institute_id_param > 0) {
+        $institute = Institute::where('hr_id', $institute_id_param)->first();
+        $institute_id = $institute->id;
         $shifts=Shift::where('institute_id', $institute_id)->with('buildingType')->get();
       $upgradations=Upgradation::where('institute_id', $institute_id)->get();
     $funds=FundHeld::where('institute_id', $institute_id)->with('fundHead')->get();
