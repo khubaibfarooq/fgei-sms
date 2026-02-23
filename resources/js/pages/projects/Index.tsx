@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Head, router, Link } from '@inertiajs/react';
+import { Head, router, Link, usePage } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -136,8 +136,16 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function ProjectIndex({ projects, filters, permissions }: Props) {
+  const { props } = usePage<{ flash?: { success?: string; error?: string } }>();
   const [search, setSearch] = useState(filters.search || '');
   const [selectedStatus, setSelectedStatus] = useState(filters.status || '');
+
+  // Show server flash messages (e.g. delete blocked by guard)
+  useEffect(() => {
+    if (props.flash?.success) toast.success(props.flash.success);
+    if (props.flash?.error) toast.error(props.flash.error);
+  }, [props.flash]);
+
   // Side Panel State
   const [selectedPanelProject, setSelectedPanelProject] = useState<Project | null>(null);
   const [approvalHistory, setApprovalHistory] = useState<ApprovalHistory[]>([]);

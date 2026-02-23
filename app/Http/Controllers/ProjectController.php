@@ -415,12 +415,6 @@ public function update(Request $request, Project $project)
             ->with('error', 'Cannot delete this project because it has approval records.');
     }
 
-    // Guard: block deletion if project has uploaded images
-    if ($project->images()->exists()) {
-        return redirect()->back()
-            ->with('error', 'Cannot delete this project because it has project images.');
-    }
-
     // Guard: block deletion if project has fund/payment records
     $hasFunds = \App\Models\Fund::where('tid', $project->id)
         ->where('trans_type', 'project')
@@ -430,6 +424,15 @@ public function update(Request $request, Project $project)
         return redirect()->back()
             ->with('error', 'Cannot delete this project because it has associated fund transactions.');
     }
+
+    // Delete all project images (files + records)
+    foreach ($project->images as $image) {
+        $path = public_path('assets/' . $image->image);
+        if (File::exists($path)) {
+            File::delete($path);
+        }
+    }
+    $project->images()->delete();
 
     // Delete all milestone images
     foreach ($project->milestones as $milestone) {
