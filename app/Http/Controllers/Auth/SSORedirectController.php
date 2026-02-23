@@ -263,7 +263,7 @@ public function SendInstituteData(Request $request)
                     break;
 
                 case 'shifts':
-                    $response['shifts'] = Shift::where('institute_id', $institute_id)->with('buildingType')->get();
+                    $response['shifts'] = Shift::where('institute_id', $institute_id)->join('building_types', 'shifts.building_type_id', '=', 'building_types.id')->select('building_types.name', 'shifts.shift_name')->groupBy('building_types.name','shifts.shift_name')->get();
                     break;
 
                 case 'assets':
@@ -286,7 +286,7 @@ public function SendInstituteData(Request $request)
                     break;
 
                 case 'transports':
-                    $response['transports'] = Transport::where('institute_id', $institute_id)->with('vehicleType')->get();
+                    $response['transports'] = Transport::where('institute_id', $institute_id)->join('vehicle_types', 'transports.vehicle_type_id', '=', 'vehicle_types.id')->select('vehicle_types.name', 'transports.vehicle_name')->groupBy('vehicle_types.name','transports.vehicle_name')->get();
                     break;
 
                 case 'upgradations':
