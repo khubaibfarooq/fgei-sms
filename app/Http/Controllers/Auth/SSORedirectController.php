@@ -282,7 +282,7 @@ public function SendInstituteData(Request $request)
                     break;
 
                 case 'funds':
-                    $response['funds'] = FundHeld::where('institute_id', $institute_id)->join('fund_heads', 'fund_helds.fund_head_id', '=', 'fund_heads.id')->select('fund_heads.name', 'fund_helds.balance')->groupBy('fund_heads.name')->get();
+                    $response['funds'] = FundHeld::where('institute_id', $institute_id)->join('fund_heads', 'fund_helds.fund_head_id', '=', 'fund_heads.id')->select('fund_heads.name', 'fund_helds.balance')->groupBy('fund_heads.name','fund_helds.balance')->get();
                     break;
 
                 case 'transports':
