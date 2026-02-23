@@ -229,7 +229,7 @@ class SSORedirectController extends Controller
 
     if ($institute_id_param && is_numeric($institute_id_param) && $institute_id_param > 0) {
         $institute = Institute::select('id','hr_id','established_date','total_area','convered_area','img_3d')->where('hr_id', $institute_id_param)->first();
-        $institute->img_3d = $institute->img_3d ? url('assets/img_3d/' . $institute->img_3d) : null;
+        $institute->img_3d = $institute->img_3d ? url('assets/' . $institute->img_3d) : null;
         $institute_id = $institute->id;
         $shifts=Shift::where('institute_id', $institute_id)->with('buildingType')->get();
       $upgradations=Upgradation::where('institute_id', $institute_id)->get();
