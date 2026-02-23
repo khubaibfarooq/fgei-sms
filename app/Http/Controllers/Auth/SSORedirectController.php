@@ -217,8 +217,8 @@ class SSORedirectController extends Controller
             JWT::$leeway = 60;
             
             // Decode and verify JWT token
-            $decoded = JWT::decode($token, new Key($this->secretKey, 'HS256'));
-                        $data = (array) $decoded->data;
+        
+                        $data = $request->query('institute_id');
     $instituteAssets = [];
     $blocks = [];
     $rooms = [];
