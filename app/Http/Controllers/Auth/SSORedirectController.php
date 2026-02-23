@@ -209,7 +209,7 @@ class SSORedirectController extends Controller
 
         try {
             // Validate the static API token
-            $expectedToken = env('SSO_API_TOKEN');
+            $expectedToken = env('JWT_SECRET_KEY');
             if (empty($token) || $token !== $expectedToken) {
                 \Log::warning('SSO: Invalid or missing API token');
                 return response()->json(['error' => 'Unauthorized: Invalid token'], 401);
@@ -228,7 +228,8 @@ class SSORedirectController extends Controller
     $institute = [];
 
     if ($institute_id_param && is_numeric($institute_id_param) && $institute_id_param > 0) {
-        $institute = Institute::where('hr_id', $institute_id_param)->first();
+        $institute = Institute::select('id','hr_id','established_date','total_area','convered_area','img_3d')->where('hr_id', $institute_id_param)->first();
+        $institute->img_3d = $institute->img_3d ? url('assets/img_3d/' . $institute->img_3d) : null;
         $institute_id = $institute->id;
         $shifts=Shift::where('institute_id', $institute_id)->with('buildingType')->get();
       $upgradations=Upgradation::where('institute_id', $institute_id)->get();
