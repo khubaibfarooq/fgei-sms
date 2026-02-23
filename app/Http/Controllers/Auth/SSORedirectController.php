@@ -257,7 +257,7 @@ public function SendInstituteData(Request $request)
                     $blockIds = Block::where('institute_id', $institute_id)->pluck('id')->toArray();
                     $response['rooms'] = Room::whereIn('block_id', $blockIds)
                         ->join('room_types', 'rooms.room_type_id', '=', 'room_types.id')
-                        ->select('rooms.room_type_id', 'room_types.name as room_type_name', DB::raw('COUNT(*) as count'))
+                        ->select( 'room_types.name as room_type_name', DB::raw('COUNT(*) as count'))
                         ->groupBy('rooms.room_type_id', 'room_types.name')
                         ->get();
                     break;
@@ -274,7 +274,7 @@ public function SendInstituteData(Request $request)
                             'assets.id',
                             'assets.name',
                             DB::raw('SUM(institute_assets.current_qty) as total_qty'),
-                            DB::raw('COUNT(DISTINCT institute_assets.room_id) as locations_count')
+                        
                         ])
                         ->groupBy('assets.id', 'assets.name')
                         ->orderBy('assets.name')
@@ -282,7 +282,7 @@ public function SendInstituteData(Request $request)
                     break;
 
                 case 'funds':
-                    $response['funds'] = FundHeld::where('institute_id', $institute_id)->with('fundHead')->get();
+                    $response['funds'] = FundHeld::where('institute_id', $institute_id)->join('fund_heads', 'fund_helds.fund_head_id', '=', 'fund_heads.id')->select('fund_heads.name', 'fund_helds.amount')->groupBy('fund_heads.name')->get();
                     break;
 
                 case 'transports':
