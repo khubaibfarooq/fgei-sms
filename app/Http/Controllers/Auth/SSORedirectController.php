@@ -300,6 +300,7 @@ public function SendInstituteData(Request $request)
                             'projects as inprogress' => fn($q) => $q->where('institute_id', $institute_id)->where('status', 'inprogress'),
                             'projects as planned'    => fn($q) => $q->where('institute_id', $institute_id)->where('status', 'planned'),
                         ])
+                        ->with(['projects' => fn($q) => $q->where('institute_id', $institute_id)])
                         ->get();
                     break;
             }
