@@ -664,6 +664,7 @@ export default function Projects({ projects: initialProjects, institutes, region
                         <SelectItem value="inprogress">In Progress</SelectItem>
                         <SelectItem value="completed">Completed</SelectItem>
                         <SelectItem value="waiting">Waiting</SelectItem>
+                        <SelectItem value="rejected">Rejected</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

@@ -469,6 +469,9 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
                   <option value="waiting">
                     Waiting
                   </option>
+                  <option value="rejected">
+                    Rejected
+                  </option>
                 </select>
                 <Button onClick={() => updateFilters({ search, status: selectedStatus })}>
                   Fetch
