@@ -249,8 +249,9 @@ public function SendInstituteData(Request $request)
                     $response['institute_profile'] = $institute->img_3d;
 
                     // blocks
-                    $response['blocks'] = Block::where('institute_id', $institute_id)->count();
-
+                     $blocks= Block::where('institute_id', $institute_id)->get();
+                    $blocks->img = $blocks->img ? url('assets/' . $blocks->img) : null;
+                    $response['blocks'] = $blocks;
                     // rooms
                     $allBlockIds = Block::where('institute_id', $institute_id)->pluck('id')->toArray();
                     $response['rooms'] = Room::whereIn('block_id', $allBlockIds)
@@ -318,7 +319,9 @@ public function SendInstituteData(Request $request)
                     break;
 
                 case 'blocks':
-                    $response['blocks'] = Block::where('institute_id', $institute_id)->count();
+                    $blocks= Block::where('institute_id', $institute_id)->get();
+                    $blocks->img = $blocks->img ? url('assets/' . $blocks->img) : null;
+                    $response['blocks'] = $blocks;
                     break;
 
                 case 'rooms':
