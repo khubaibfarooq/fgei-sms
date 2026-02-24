@@ -240,6 +240,74 @@ public function SendInstituteData(Request $request)
 
         foreach ($types as $t) {
             switch ($t) {
+                case 'alltypes':
+                    // institute
+                    $response['institute'] = $institute;
+
+                    // institute_profile
+                    $institute->img_3d = $institute->img_3d ? url('assets/' . $institute->img_3d) : null;
+                    $response['institute_profile'] = $institute->img_3d;
+
+                    // blocks
+                    $response['blocks'] = Block::where('institute_id', $institute_id)->count();
+
+                    // rooms
+                    $allBlockIds = Block::where('institute_id', $institute_id)->pluck('id')->toArray();
+                    $response['rooms'] = Room::whereIn('block_id', $allBlockIds)
+                        ->join('room_types', 'rooms.room_type_id', '=', 'room_types.id')
+                        ->select('room_types.name as room_type_name', DB::raw('COUNT(*) as count'))
+                        ->groupBy('rooms.room_type_id', 'room_types.name')
+                        ->get();
+
+                    // shifts
+                    $response['shifts'] = Shift::where('institute_id', $institute_id)
+                        ->join('building_types', 'shifts.building_type_id', '=', 'building_types.id')
+                        ->select('building_types.name', 'shifts.shift_name')
+                        ->groupBy('building_types.name', 'shifts.shift_name')
+                        ->get();
+
+                    // assets
+                    $response['assets'] = InstituteAsset::query()
+                        ->where('institute_id', $institute_id)
+                        ->join('assets', 'institute_assets.asset_id', '=', 'assets.id')
+                        ->select([
+                            'assets.id',
+                            'assets.name',
+                            DB::raw('SUM(institute_assets.current_qty) as total_qty'),
+                        ])
+                        ->groupBy('assets.id', 'assets.name')
+                        ->orderBy('assets.name')
+                        ->get();
+
+                    // funds
+                    $response['funds'] = FundHeld::where('institute_id', $institute_id)
+                        ->join('fund_heads', 'fund_helds.fund_head_id', '=', 'fund_heads.id')
+                        ->select('fund_heads.name', 'fund_helds.balance')
+                        ->groupBy('fund_heads.name', 'fund_helds.balance')
+                        ->get();
+
+                    // transports
+                    $response['transports'] = Transport::where('institute_id', $institute_id)
+                        ->join('vehicle_types', 'transports.vehicle_type_id', '=', 'vehicle_types.id')
+                        ->select('vehicle_types.name', 'transports.vehicle_name')
+                        ->groupBy('vehicle_types.name', 'transports.vehicle_name')
+                        ->get();
+
+                    // upgradations
+                    $response['upgradations'] = Upgradation::where('institute_id', $institute_id)->get();
+
+                    // projects
+                    $response['projects'] = ProjectType::whereHas('projects', fn($q) => $q->where('institute_id', $institute_id))
+                        ->withCount([
+                            'projects as completed' => fn($q) => $q->where('institute_id', $institute_id)->where('status', 'completed'),
+                            'projects as inprogress' => fn($q) => $q->where('institute_id', $institute_id)->where('status', 'inprogress'),
+                            'projects as planned'    => fn($q) => $q->where('institute_id', $institute_id)->where('status', 'planned'),
+                        ])
+                        ->with(['projects' => fn($q) => $q->where('institute_id', $institute_id)])
+                        ->get();
+
+                    break;
+
                 case 'institute':
                     $response['institute'] = $institute;
                     break;
