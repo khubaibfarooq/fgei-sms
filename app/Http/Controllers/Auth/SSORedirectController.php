@@ -289,8 +289,8 @@ public function SendInstituteData(Request $request)
                     // transports
                     $response['transports'] = Transport::where('institute_id', $institute_id)
                         ->join('vehicle_types', 'transports.vehicle_type_id', '=', 'vehicle_types.id')
-                        ->select('vehicle_types.name', 'transports.vehicle_name')
-                        ->groupBy('vehicle_types.name', 'transports.vehicle_name')
+                        ->select('vehicle_types.name', 'transports.vehicle_no')
+                        ->groupBy('vehicle_types.name', 'transports.vehicle_no')
                         ->get();
 
                     // upgradations
@@ -354,7 +354,7 @@ public function SendInstituteData(Request $request)
                     break;
 
                 case 'transports':
-                    $response['transports'] = Transport::where('institute_id', $institute_id)->join('vehicle_types', 'transports.vehicle_type_id', '=', 'vehicle_types.id')->select('vehicle_types.name', 'transports.vehicle_name')->groupBy('vehicle_types.name','transports.vehicle_name')->get();
+                    $response['transports'] = Transport::where('institute_id', $institute_id)->join('vehicle_types', 'transports.vehicle_type_id', '=', 'vehicle_types.id')->select('vehicle_types.name', 'transports.vehicle_no')->groupBy('vehicle_types.name','transports.vehicle_no')->get();
                     break;
 
                 case 'upgradations':
