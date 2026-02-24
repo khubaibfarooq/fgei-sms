@@ -262,8 +262,8 @@ public function SendInstituteData(Request $request)
                     // shifts
                     $response['shifts'] = Shift::where('institute_id', $institute_id)
                         ->join('building_types', 'shifts.building_type_id', '=', 'building_types.id')
-                        ->select('building_types.name', 'shifts.shift_name')
-                        ->groupBy('building_types.name', 'shifts.shift_name')
+                        ->select('building_types.name', 'shifts.name')
+                        ->groupBy('building_types.name', 'shifts.name')
                         ->get();
 
                     // assets
@@ -331,7 +331,7 @@ public function SendInstituteData(Request $request)
                     break;
 
                 case 'shifts':
-                    $response['shifts'] = Shift::where('institute_id', $institute_id)->join('building_types', 'shifts.building_type_id', '=', 'building_types.id')->select('building_types.name', 'shifts.shift_name')->groupBy('building_types.name','shifts.shift_name')->get();
+                    $response['shifts'] = Shift::where('institute_id', $institute_id)->join('building_types', 'shifts.building_type_id', '=', 'building_types.id')->select('building_types.name', 'shifts.name')->groupBy('building_types.name','shifts.name')->get();
                     break;
 
                 case 'assets':
