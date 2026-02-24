@@ -249,8 +249,8 @@ public function SendInstituteData(Request $request)
                     $response['institute_profile'] = $institute->img_3d;
 
                     // blocks
-                     $blocks= Block::where('institute_id', $institute_id)->get();
-                    $blocks->img = $blocks->img ? url('assets/' . $blocks->img) : null;
+                    $blocks = Block::where('institute_id', $institute_id)->join('block_types', 'blocks.block_type_id', '=', 'block_types.id')->select('block_types.name as block_type_name', 'blocks.name','blocks.img','blocks.area','blocks.establish_date')->get();
+                    $blocks->transform(fn($b) => tap($b, fn($b) => $b->img = $b->img ? url('assets/' . $b->img) : null));
                     $response['blocks'] = $blocks;
                     // rooms
                     $allBlockIds = Block::where('institute_id', $institute_id)->pluck('id')->toArray();
@@ -319,8 +319,8 @@ public function SendInstituteData(Request $request)
                     break;
 
                 case 'blocks':
-                    $blocks= Block::where('institute_id', $institute_id)->get();
-                    $blocks->img = $blocks->img ? url('assets/' . $blocks->img) : null;
+                    $blocks = Block::where('institute_id', $institute_id)->join('block_types', 'blocks.block_type_id', '=', 'block_types.id')->select('block_types.name as block_type_name', 'blocks.name','blocks.img','blocks.area','blocks.establish_date')->get();
+                    $blocks->transform(fn($b) => tap($b, fn($b) => $b->img = $b->img ? url('assets/' . $b->img) : null));
                     $response['blocks'] = $blocks;
                     break;
 
