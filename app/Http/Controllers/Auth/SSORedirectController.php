@@ -281,10 +281,11 @@ public function SendInstituteData(Request $request)
                         ->get();
 
                     // funds
-                    $response['funds'] = FundHeld::where('institute_id', $institute_id)
-                        ->join('fund_heads', 'fund_helds.fund_head_id', '=', 'fund_heads.id')
-                        ->select('fund_heads.name', 'fund_helds.balance')
-                        ->groupBy('fund_heads.name', 'fund_helds.balance')
+                     $response['funds'] = FundHead::leftJoin('fund_helds', function ($join) use ($institute_id) {
+                            $join->on('fund_heads.id', '=', 'fund_helds.fund_head_id')
+                                 ->where('fund_helds.institute_id', $institute_id);
+                        })
+                        ->select('fund_heads.name', DB::raw('COALESCE(fund_helds.balance, 0) as balance'))
                         ->get();
 
                     // transports
@@ -322,6 +323,7 @@ public function SendInstituteData(Request $request)
                     $blocks = Block::where('institute_id', $institute_id)->join('block_types', 'blocks.block_type_id', '=', 'block_types.id')->select('block_types.name as block_type_name', 'blocks.name','blocks.img','blocks.area','blocks.establish_date')->get();
                     $blocks->transform(fn($b) => tap($b, fn($b) => $b->img = $b->img ? url('assets/' . $b->img) : null));
                     $response['blocks'] = $blocks;
+                 
                     break;
 
                 case 'rooms':
@@ -353,7 +355,12 @@ public function SendInstituteData(Request $request)
                     break;
 
                 case 'funds':
-                    $response['funds'] = FundHeld::where('institute_id', $institute_id)->join('fund_heads', 'fund_helds.fund_head_id', '=', 'fund_heads.id')->select('fund_heads.name', 'fund_helds.balance')->groupBy('fund_heads.name','fund_helds.balance')->get();
+                    $response['funds'] = FundHead::leftJoin('fund_helds', function ($join) use ($institute_id) {
+                            $join->on('fund_heads.id', '=', 'fund_helds.fund_head_id')
+                                 ->where('fund_helds.institute_id', $institute_id);
+                        })
+                        ->select('fund_heads.name', DB::raw('COALESCE(fund_helds.balance, 0) as balance'))
+                        ->get();
                     break;
 
                 case 'transports':
@@ -376,7 +383,7 @@ public function SendInstituteData(Request $request)
                     break;
             }
         }
-
+        
         return response()->json($response);
 
     } catch (\Exception $e) {
