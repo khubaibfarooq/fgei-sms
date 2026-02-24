@@ -220,7 +220,7 @@ public function SendInstituteData(Request $request)
             return response()->json(['error' => 'Missing required query parameter: type'], 422);
         }
 
-        $allowedTypes = ['institute', 'institute_profile', 'blocks', 'rooms', 'shifts', 'assets', 'funds', 'transports', 'projects', 'upgradations'];
+        $allowedTypes = ['institute', 'institute_profile', 'blocks', 'rooms', 'shifts', 'assets', 'funds', 'transports', 'projects', 'upgradations', 'alltypes'];
         $types = array_intersect(explode(',', $type), $allowedTypes);
 
         if (empty($types)) {
