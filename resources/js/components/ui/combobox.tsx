@@ -27,6 +27,7 @@ interface ComboboxProps {
   includeAllOption?: boolean; // Optional flag to include "All" option
   allOptionLabel?: string; // Optional label for "All" option
   disabled?: boolean; // Optional flag to disable the combobox
+  className?: string; // Optional custom className for the trigger button
 }
 
 export default function Combobox({
@@ -39,6 +40,7 @@ export default function Combobox({
   includeAllOption = false,
   allOptionLabel = `All ${entity}s`,
   disabled = false,
+  className,
 }: ComboboxProps) {
   const [open, setOpen] = useState(false);
 
@@ -84,10 +86,10 @@ export default function Combobox({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="w-full justify-between"
+          className={cn("w-full justify-between", className)}
           disabled={disabled}
         >
-          {value && selectedOption ? selectedOption.name : buttonPlaceholder}
+          <span className="truncate overflow-hidden">{value && selectedOption ? selectedOption.name : buttonPlaceholder}</span>
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>

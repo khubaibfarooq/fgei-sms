@@ -620,6 +620,7 @@ export default function Projects({ projects: initialProjects, institutes, region
                           name: reg.name.split(' ').pop() || reg.name,
                         }))}
                         includeAllOption={true}
+                        className="h-7 text-xs"
                       />
                     </div>
                   )}
@@ -632,6 +633,7 @@ export default function Projects({ projects: initialProjects, institutes, region
                       options={memoizedInstitutes.map((i) => ({ id: i.id.toString(), name: i.name }))}
                       includeAllOption={false}
                       placeholder="Select Institute"
+                      className="h-7 text-xs"
                     />
                   </div>
 
