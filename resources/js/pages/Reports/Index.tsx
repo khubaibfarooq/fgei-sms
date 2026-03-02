@@ -1076,7 +1076,7 @@ export default function InstitutionalReportIndex({ institute: initialInstitute =
                 <h3 className="text-base font-semibold text-blue-800 dark:text-blue-300">Institute Upgradations ({upgradations.length})</h3>
                 <p className="text-[10px] md:text-xs text-blue-600/80 dark:text-blue-400/80 mt-0.5">
                   {upgradations.length > 0
-                    ? `${upgradations.filter(u => u.status?.toLowerCase() === 'completed').length} completed · ${upgradations.filter(u => u.status?.toLowerCase() !== 'completed').length} pending`
+                    ? `${upgradations.filter(u => u.status?.toLowerCase() === 'approved').length} approved · ${upgradations.filter(u => u.status?.toLowerCase() !== 'approved').length} pending`
                     : 'No data'}
                 </p>
               </div>
