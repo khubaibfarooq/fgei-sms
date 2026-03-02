@@ -426,40 +426,40 @@ export default function Completion({
                                     </div>
 
                                     {/* Completed Card */}
-                                    {(status === 'completed' || status === '') && summary.map((item, idx) => (
-                                        <div key={`completed-${idx}`} className="relative overflow-hidden rounded-xl border border-emerald-200 dark:border-emerald-900 bg-gradient-to-br from-emerald-50 to-green-100 dark:from-emerald-950 dark:to-green-900 p-4 md:p-5 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer group hover:border-emerald-400" onClick={() => { setStatus('completed'); fetchData({ status: 'completed' }); }}>
+                                    {(status === 'completed' || status === '') && (
+                                        <div className="relative overflow-hidden rounded-xl border border-emerald-200 dark:border-emerald-900 bg-gradient-to-br from-emerald-50 to-green-100 dark:from-emerald-950 dark:to-green-900 p-4 md:p-5 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer group hover:border-emerald-400" onClick={() => { setStatus('completed'); fetchData({ status: 'completed' }); }}>
                                             <div className="absolute top-0 right-0 w-20 h-20 bg-emerald-200/50 dark:bg-emerald-800/30 rounded-full -translate-y-1/2 translate-x-1/2"></div>
-                                            <p className="text-base md:text-lg  font-semibold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider mb-2">✓ Completed</p>
-                                            <p className="text-2xl md:text-3xl  font-black text-emerald-600 dark:text-emerald-400 group-hover:scale-105 transition-transform">{item.completed}</p>
+                                            <p className="text-base md:text-lg font-semibold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider mb-2">✓ Completed</p>
+                                            <p className="text-2xl md:text-3xl font-black text-emerald-600 dark:text-emerald-400 group-hover:scale-105 transition-transform">{summary.reduce((sum, item) => sum + item.completed, 0)}</p>
                                         </div>
-                                    ))}
+                                    )}
 
                                     {/* Above 50% Card */}
-                                    {(status === 'greater_than_50' || status === '') && summary.map((item, idx) => (
-                                        <div key={`above50-${idx}`} className="relative overflow-hidden rounded-xl border border-blue-200 dark:border-blue-900 bg-gradient-to-br from-blue-50 to-cyan-100 dark:from-blue-950 dark:to-cyan-900 p-4 md:p-5 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer group hover:border-blue-400" onClick={() => { setStatus('greater_than_50'); fetchData({ status: 'greater_than_50' }); }}>
+                                    {(status === 'greater_than_50' || status === '') && (
+                                        <div className="relative overflow-hidden rounded-xl border border-blue-200 dark:border-blue-900 bg-gradient-to-br from-blue-50 to-cyan-100 dark:from-blue-950 dark:to-cyan-900 p-4 md:p-5 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer group hover:border-blue-400" onClick={() => { setStatus('greater_than_50'); fetchData({ status: 'greater_than_50' }); }}>
                                             <div className="absolute top-0 right-0 w-20 h-20 bg-blue-200/50 dark:bg-blue-800/30 rounded-full -translate-y-1/2 translate-x-1/2"></div>
-                                            <p className="text-base md:text-lg  font-semibold text-blue-700 dark:text-blue-400 uppercase tracking-wider mb-2">↑ Above 50%</p>
-                                            <p className="text-2xl md:text-3xl  font-black text-blue-600 dark:text-blue-400 group-hover:scale-105 transition-transform">{item.greater_than_50}</p>
+                                            <p className="text-base md:text-lg font-semibold text-blue-700 dark:text-blue-400 uppercase tracking-wider mb-2">↑ Above 50%</p>
+                                            <p className="text-2xl md:text-3xl font-black text-blue-600 dark:text-blue-400 group-hover:scale-105 transition-transform">{summary.reduce((sum, item) => sum + item.greater_than_50, 0)}</p>
                                         </div>
-                                    ))}
+                                    )}
 
                                     {/* Below 50% Card */}
-                                    {(status === 'less_than_50' || status === '') && summary.map((item, idx) => (
-                                        <div key={`below50-${idx}`} className="relative overflow-hidden rounded-xl border border-amber-200 dark:border-amber-900 bg-gradient-to-br from-amber-50 to-orange-100 dark:from-amber-950 dark:to-orange-900 p-4 md:p-5 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer group hover:border-amber-400" onClick={() => { setStatus('less_than_50'); fetchData({ status: 'less_than_50' }); }}>
+                                    {(status === 'less_than_50' || status === '') && (
+                                        <div className="relative overflow-hidden rounded-xl border border-amber-200 dark:border-amber-900 bg-gradient-to-br from-amber-50 to-orange-100 dark:from-amber-950 dark:to-orange-900 p-4 md:p-5 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer group hover:border-amber-400" onClick={() => { setStatus('less_than_50'); fetchData({ status: 'less_than_50' }); }}>
                                             <div className="absolute top-0 right-0 w-20 h-20 bg-amber-200/50 dark:bg-amber-800/30 rounded-full -translate-y-1/2 translate-x-1/2"></div>
-                                            <p className="text-base md:text-lg  font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wider mb-2">↓ Below 50%</p>
-                                            <p className="text-2xl md:text-3xl  font-black text-amber-600 dark:text-amber-400 group-hover:scale-105 transition-transform">{item.less_than_50}</p>
+                                            <p className="text-base md:text-lg font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wider mb-2">↓ Below 50%</p>
+                                            <p className="text-2xl md:text-3xl font-black text-amber-600 dark:text-amber-400 group-hover:scale-105 transition-transform">{summary.reduce((sum, item) => sum + item.less_than_50, 0)}</p>
                                         </div>
-                                    ))}
+                                    )}
 
                                     {/* Zero Card */}
-                                    {(status === 'zero' || status === '') && summary.map((item, idx) => (
-                                        <div key={`zero-${idx}`} className="relative overflow-hidden rounded-xl border border-red-200 dark:border-red-900 bg-gradient-to-br from-red-50 to-rose-100 dark:from-red-950 dark:to-rose-900 p-4 md:p-5 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer group hover:border-red-400" onClick={() => { setStatus('zero'); fetchData({ status: 'zero' }); }}>
+                                    {(status === 'zero' || status === '') && (
+                                        <div className="relative overflow-hidden rounded-xl border border-red-200 dark:border-red-900 bg-gradient-to-br from-red-50 to-rose-100 dark:from-red-950 dark:to-rose-900 p-4 md:p-5 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer group hover:border-red-400" onClick={() => { setStatus('zero'); fetchData({ status: 'zero' }); }}>
                                             <div className="absolute top-0 right-0 w-20 h-20 bg-red-200/50 dark:bg-red-800/30 rounded-full -translate-y-1/2 translate-x-1/2"></div>
-                                            <p className="text-sm md:text-base  font-semibold text-red-700 dark:text-red-400 uppercase tracking-wider mb-2">✕ Zero (0%)</p>
-                                            <p className="text-2xl md:text-3xl  font-black text-red-600 dark:text-red-400 group-hover:scale-105 transition-transform">{item.zero}</p>
+                                            <p className="text-sm md:text-base font-semibold text-red-700 dark:text-red-400 uppercase tracking-wider mb-2">✕ Zero (0%)</p>
+                                            <p className="text-2xl md:text-3xl font-black text-red-600 dark:text-red-400 group-hover:scale-105 transition-transform">{summary.reduce((sum, item) => sum + item.zero, 0)}</p>
                                         </div>
-                                    ))}
+                                    )}
                                 </div>
                             ) : (
                                 <div className="text-center py-8 text-muted-foreground bg-muted/20 rounded-xl border-2 border-dashed">
