@@ -5,6 +5,7 @@ import AppLayout from '@/layouts/app-layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Save, ArrowLeft, Plus, Trash2 } from 'lucide-react';
@@ -63,6 +64,7 @@ interface ProjectFormProps {
     priority: string | null;
     status: string | null;
     approval_status: string | null;
+    fund_head_id: number | null;
     contractor_id: number | null;
     milestones?: Array<{
       id: number;
@@ -79,9 +81,10 @@ interface ProjectFormProps {
   projectTypes: Record<string, string>;
   contractors: Contractor[];
   companies: Array<{ id: number; name: string }>;
+  hasApprovals?: boolean;
 }
 
-export default function ProjectForm({ project, projectTypes, contractors: initialContractors, companies: propsCompanies }: ProjectFormProps) {
+export default function ProjectForm({ project, projectTypes, contractors: initialContractors, companies: propsCompanies, hasApprovals }: ProjectFormProps) {
   const isEdit = !!project?.id;
 
   const [name, setName] = useState(project?.name || '');
@@ -89,6 +92,7 @@ export default function ProjectForm({ project, projectTypes, contractors: initia
   const [actualCost, setActualCost] = useState(project?.actual_cost?.toString() || '');
   const [approvalStatus, setApprovalStatus] = useState(project?.approval_status || '');
   const [status, setStatus] = useState(project?.status || '');
+  const [isPlanned, setIsPlanned] = useState(project?.status === 'planned');
 
   const [finalComments, setFinalComments] = useState(project?.final_comments || '');
   const [projectTypeId, setProjectTypeId] = useState((project?.project_type_id || '').toString());
@@ -329,6 +333,13 @@ export default function ProjectForm({ project, projectTypes, contractors: initia
       fd.append('structural_plan', structuralPlan);
     }
 
+    // Send status based on planned checkbox
+    if (isPlanned) {
+      fd.append('status', 'planned');
+    } else if (isEdit && project?.status === 'planned') {
+      fd.append('status', 'waiting');
+    }
+
     if (isEdit) {
       fd.append('_method', 'PUT');
     }
@@ -422,6 +433,27 @@ export default function ProjectForm({ project, projectTypes, contractors: initia
                   <Label>Description</Label>
                   <Input value={description} onChange={e => setDescription(e.target.value)} />
                 </div>
+
+                {/* Planned Checkbox - show on create always, on edit if planned, or if waiting with no fund head and no approvals */}
+                {(!isEdit || project?.status === 'planned' || (project?.status === 'waiting' && !project?.fund_head_id && !hasApprovals)) && (
+                  <div className="flex items-center space-x-2 md:col-span-2">
+                    <Checkbox
+                      id="planned"
+                      checked={isPlanned}
+                      onCheckedChange={(checked) => setIsPlanned(!!checked)}
+                    />
+                    <Label htmlFor="planned" className="cursor-pointer text-sm font-medium">
+                      Planned
+                    </Label>
+                    <span className="text-xs text-muted-foreground">
+                      {isEdit
+                        ? project?.status === 'planned'
+                          ? '(Uncheck to change status to Waiting)'
+                          : '(Check to change status to Planned)'
+                        : '(Check to save as Planned instead of Waiting)'}
+                    </span>
+                  </div>
+                )}
                 <div className="space-y-2 md:col-span-2">
                   <Label>Project PDF Document</Label>
                   {

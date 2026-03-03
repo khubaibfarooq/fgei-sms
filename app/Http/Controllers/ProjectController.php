@@ -77,6 +77,7 @@ public function store(Request $request)
         'project_type_id'  => 'required|exists:project_types,id',
         'priority'         => 'nullable|string',
         'description'      => 'nullable|string',
+        'status'           => 'nullable|in:planned,waiting',
         'actual_cost'      => 'required_if:status,completed|nullable|numeric',
         'pdf'              => 'nullable|file|max:10240',
         'structural_plan'  => 'nullable|file|max:10240',
@@ -99,7 +100,7 @@ public function store(Request $request)
         'estimated_cost'   => $request->estimated_cost,
         'fund_head_id'     => $request->fund_head_id,
         'project_type_id'  => $request->project_type_id,
-        'status'           => 'waiting',
+        'status'           => $request->status ?? 'waiting',
         'actual_cost'      => $request->actual_cost,
         'final_comments'   => $request->final_comments,
         'priority'         => $request->priority,
@@ -240,6 +241,7 @@ public function store(Request $request)
             'contractors' => $contractors,
             'companies'   => $companies,
             'milestones'  => $milestones,
+            'hasApprovals' => $project->approvals()->exists(),
         ]);
     }
   
@@ -299,7 +301,7 @@ public function update(Request $request, Project $project)
     }
 
     // Update main project
-    $project->update([
+    $updateData = [
         'name'             => $request->name,
         'estimated_cost'   => $request->estimated_cost,
         'project_type_id'  => $request->project_type_id,
@@ -312,7 +314,14 @@ public function update(Request $request, Project $project)
         'institute_id'     => session('sms_inst_id'),
         'contractor_id'    => $request->contractor_id,
         'updated_by'       => auth()->id(),
-    ]);
+    ];
+
+    // Allow planned -> waiting transition
+    if ($request->has('status') && in_array($request->status, ['planned', 'waiting'])) {
+        $updateData['status'] = $request->status;
+    }
+
+    $project->update($updateData);
 
     $submittedIds = [];
 

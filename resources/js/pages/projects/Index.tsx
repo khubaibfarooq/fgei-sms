@@ -645,7 +645,7 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
                                 </AlertDialog>
                               }
 
-                              {canShowInstitutionalApprove(project) && (
+                              {project.status !== 'planned' && canShowInstitutionalApprove(project) && (
                                 <Button
                                   variant="ghost"
                                   size="icon"

@@ -808,7 +808,7 @@ export default function Projects({ projects: initialProjects, institutes, region
                                     <ClipboardCheck className="h-4 w-4" />
                                   </Button>
                                 )}
-                                {user.roles[0]?.name.toLowerCase() === 'region' && !project.fund_head_id && project.status !== 'rejected' && (
+                                {user.roles[0]?.name.toLowerCase() === 'region' && !project.fund_head_id && project.status !== 'rejected' && project.status !== 'planned' && (
                                   <Button
                                     variant="ghost"
                                     size="sm"
@@ -823,7 +823,7 @@ export default function Projects({ projects: initialProjects, institutes, region
                                     Select Head
                                   </Button>
                                 )}
-                                {user.roles[0]?.name.toLowerCase() === 'region' && !project.fund_head_id && project.status !== 'rejected' && (
+                                {user.roles[0]?.name.toLowerCase() === 'region' && !project.fund_head_id && project.status !== 'rejected' && project.status !== 'planned' && (
                                   <Button
                                     variant="ghost"
                                     size="sm"
