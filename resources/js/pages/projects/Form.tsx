@@ -29,6 +29,8 @@ import {
 } from "@/components/ui/dialog";
 import axios from 'axios';
 import { Textarea } from '@/components/ui/textarea';
+import ReactQuill from 'react-quill-new';
+import 'react-quill-new/dist/quill.snow.css';
 interface MilestoneRow {
   key: number;                          // For React rendering
   id?: number;                          // Laravel milestone ID
@@ -382,31 +384,31 @@ export default function ProjectForm({ project, projectTypes, contractors: initia
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title={isEdit ? 'Edit Project' : 'Create Project'} />
 
-      <div className="p-4 md:p-6 w-full mx-auto">
+      <div className="p-2 md:p-4 w-full mx-auto">
         <Card>
           <CardHeader>
-            <CardTitle className="text-2xl">
+            <CardTitle className="text-xl">
               {isEdit ? 'Edit Project' : 'Create New Project'}
             </CardTitle>
           </CardHeader>
 
           <Separator />
 
-          <CardContent className="pt-6">
-            <form onSubmit={handleSubmit} className="space-y-8">
+          <CardContent className="pt-4">
+            <form onSubmit={handleSubmit} className="space-y-4">
 
               {/* Project Fields */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-muted/50 p-6 rounded-lg">
-                <div className="space-y-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 bg-muted/50 p-4 rounded-lg">
+                <div className="space-y-1">
                   <Label>Project Name <span className="text-red-500">*</span></Label>
                   <Input value={name} onChange={e => setName(e.target.value)} required />
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-1">
                   <Label>Estimated Cost <span className="text-red-500">*</span></Label>
                   <Input type="number" disabled={isEdit} value={estimatedCost} onChange={e => setEstimatedCost(e.target.value)} required />
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-1">
                   <Label>Project Type <span className="text-red-500">*</span></Label>
                   <Select value={projectTypeId} onValueChange={setProjectTypeId}>
                     <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
@@ -418,7 +420,7 @@ export default function ProjectForm({ project, projectTypes, contractors: initia
                   </Select>
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-1">
                   <Label>Priority</Label>
                   <Select value={priority} onValueChange={setPriority}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
@@ -429,32 +431,28 @@ export default function ProjectForm({ project, projectTypes, contractors: initia
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-2 md:col-span-2">
+                <div className="space-y-1 md:col-span-2">
                   <Label>Description</Label>
-                  <Input value={description} onChange={e => setDescription(e.target.value)} />
+                  <div className="bg-white rounded-md">
+                    <ReactQuill
+                      theme="snow"
+                      value={description}
+                      onChange={setDescription}
+                      modules={{
+                        toolbar: [
+                          [{ header: [1, 2, 3, false] }],
+                          ['bold', 'italic', 'underline', 'strike'],
+                          [{ list: 'ordered' }, { list: 'bullet' }],
+                          [{ color: [] }, { background: [] }],
+                          ['clean'],
+                        ],
+                      }}
+                    />
+                  </div>
                 </div>
 
-                {/* Planned Checkbox - show on create always, on edit if planned, or if waiting with no fund head and no approvals */}
-                {(!isEdit || project?.status === 'planned' || (project?.status === 'waiting' && !project?.fund_head_id && !hasApprovals)) && (
-                  <div className="flex items-center space-x-2 md:col-span-2">
-                    <Checkbox
-                      id="planned"
-                      checked={isPlanned}
-                      onCheckedChange={(checked) => setIsPlanned(!!checked)}
-                    />
-                    <Label htmlFor="planned" className="cursor-pointer text-sm font-medium">
-                      Planned
-                    </Label>
-                    <span className="text-xs text-muted-foreground">
-                      {isEdit
-                        ? project?.status === 'planned'
-                          ? '(Uncheck to change status to Waiting)'
-                          : '(Check to change status to Planned)'
-                        : '(Check to save as Planned instead of Waiting)'}
-                    </span>
-                  </div>
-                )}
-                <div className="space-y-2 md:col-span-2">
+
+                <div className="space-y-1">
                   <Label>Project PDF Document</Label>
                   {
                     (approvalStatus !== 'approved' || !existingPdf) && (
@@ -481,29 +479,7 @@ export default function ProjectForm({ project, projectTypes, contractors: initia
                     <p className="text-sm text-green-600">New PDF selected: {projectPdf.name}</p>
                   )}
                 </div>
-
-                <div className="space-y-2">
-                  <Label>Contractor</Label>
-                  <div className="flex gap-2">
-                    <div className="flex-1">
-                      <Select value={contractorId} onValueChange={setContractorId}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select contractor" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {contractors.map(c => (
-                            <SelectItem key={c.id} value={c.id.toString()}>{c.name}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <Button type="button" variant="outline" size="icon" onClick={() => setIsContractorModalOpen(true)} title="Add New Contractor">
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="space-y-2 md:col-span-2">
+                <div className="space-y-1">
                   <Label>Structural Plan (PDF)</Label>
                   {
                     (approvalStatus !== 'approved' || !existingPlan) && (
@@ -528,11 +504,52 @@ export default function ProjectForm({ project, projectTypes, contractors: initia
                     <p className="text-sm text-green-600">New Plan selected: {structuralPlan.name}</p>
                   )}
                 </div>
+                <div className="space-y-1">
+                  <Label>Contractor</Label>
+                  <div className="flex gap-2">
+                    <div className="flex-1">
+                      <Select value={contractorId} onValueChange={setContractorId}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select contractor" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {contractors.map(c => (
+                            <SelectItem key={c.id} value={c.id.toString()}>{c.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <Button type="button" variant="outline" size="icon" onClick={() => setIsContractorModalOpen(true)} title="Add New Contractor">
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+                {/* Planned Checkbox - show on create always, on edit if planned, or if waiting with no fund head and no approvals */}
+                {(!isEdit || project?.status === 'planned' || (project?.status === 'waiting' && !project?.fund_head_id && !hasApprovals)) && (
+                  <div className="flex items-center space-x-2 md:col-span-2">
+                    <Checkbox
+                      id="planned"
+                      checked={isPlanned}
+                      onCheckedChange={(checked) => setIsPlanned(!!checked)}
+                    />
+                    <Label htmlFor="planned" className="cursor-pointer text-sm font-medium">
+                      Planned
+                    </Label>
+                    <span className="text-xs text-muted-foreground">
+                      {isEdit
+                        ? project?.status === 'planned'
+                          ? '(Uncheck to change status to Waiting)'
+                          : '(Check to change status to Planned)'
+                        : '(Check to save as Planned instead of Waiting)'}
+                    </span>
+                  </div>
+                )}
+
               </div>
 
               {/* Milestones */}
               <div>
-                <div className="flex justify-between items-center mb-6">
+                <div className="flex justify-between items-center mb-3">
                   <h3 className="text-lg font-semibold">Milestones</h3>
                   <Button type="button" onClick={addMilestone} size="sm">
                     <Plus className="w-4 h-4 mr-2" /> Add Milestone
@@ -540,16 +557,16 @@ export default function ProjectForm({ project, projectTypes, contractors: initia
                 </div>
 
                 {milestones.length === 0 ? (
-                  <div className="text-center py-12 text-gray-500 border-2 border-dashed rounded-lg">
+                  <div className="text-center py-6 text-gray-500 border-2 border-dashed rounded-lg text-sm">
                     No milestones yet. Click "Add Milestone" to start.
                   </div>
                 ) : (
-                  <div className="space-y-6">
+                  <div className="space-y-3">
                     {milestones.map((m, index) => (
-                      <Card key={m.key} className="p-6 border">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-6">
+                      <Card key={m.key} className="p-3 border">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
 
-                          <div className="space-y-2">
+                          <div className="space-y-1">
                             <Label>Milestone Name <span className="text-red-500">*</span></Label>
                             <Input
                               value={m.name}
@@ -558,7 +575,7 @@ export default function ProjectForm({ project, projectTypes, contractors: initia
                             />
                           </div>
 
-                          <div className="space-y-2">
+                          <div className="space-y-1">
                             <Label>Description</Label>
                             <Input
                               value={m.description}
@@ -566,7 +583,7 @@ export default function ProjectForm({ project, projectTypes, contractors: initia
                             />
                           </div>
 
-                          <div className="space-y-2">
+                          <div className="space-y-1">
                             <Label>Due (Days) <span className="text-red-500">*</span></Label>
                             <Input
                               type="number"
@@ -578,7 +595,7 @@ export default function ProjectForm({ project, projectTypes, contractors: initia
 
                           {isEdit && (
                             <>
-                              <div className="space-y-2">
+                              <div className="space-y-1">
                                 <Label>Status</Label>
                                 <select
                                   value={m.status}
@@ -592,7 +609,7 @@ export default function ProjectForm({ project, projectTypes, contractors: initia
                               </div>
 
                               {m.status === 'completed' && (
-                                <div className="space-y-2">
+                                <div className="space-y-1">
                                   <Label>Completed Date</Label>
                                   <Input
                                     type="date"
@@ -606,7 +623,7 @@ export default function ProjectForm({ project, projectTypes, contractors: initia
                           {isEdit && (
                             <>
                               {(m.status !== 'completed' || !m.existingPdf) && (
-                                <div className="space-y-2">
+                                <div className="space-y-1">
                                   <Label>Proof Image</Label>
                                   <Input
                                     type="file"
@@ -618,7 +635,7 @@ export default function ProjectForm({ project, projectTypes, contractors: initia
                                   )}
                                 </div>
                               )}
-                              <div className="space-y-2">
+                              <div className="space-y-1">
                                 <Label>Signed Document (PDF)</Label>
                                 {(m.status !== 'completed' || !m.existingPdf) && (
                                   <Input
@@ -665,7 +682,7 @@ export default function ProjectForm({ project, projectTypes, contractors: initia
                 )}
               </div>
 
-              <div className="flex justify-between pt-8 border-t">
+              <div className="flex justify-between pt-4 border-t">
                 <Button type="button" variant="secondary" asChild>
                   <Link href="/projects">
                     <ArrowLeft className="mr-2 h-4 w-4" /> Back

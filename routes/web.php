@@ -149,6 +149,7 @@ Route::post('/projects/{project}/reject', [ProjectController::class, 'reject'])-
 Route::post('/projects/{project}/initiate', [ProjectController::class, 'initiate'])->name('projects.initiate');
 Route::get('/projects/{project}/timeline', [ProjectController::class, 'timeline'])->name('projects.timeline');
 Route::get('/projects/{project}/history', [ProjectApprovalController::class, 'history'])->name('projects.approvals.history');
+Route::get('/projects/{project}/pending-stages', [ProjectApprovalController::class, 'pendingStages'])->name('projects.pending-stages');
 Route::get('/projects/{project}/details', [ProjectController::class, 'details'])->name('projects.details');
 Route::get('/projects/{project}/project-details', [ProjectController::class, 'projectDetails'])->name('projects.project-details');
 Route::get('/projects/{project}/milestones', [ProjectController::class, 'milestones'])->name('projects.milestones');

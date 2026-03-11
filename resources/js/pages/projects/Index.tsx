@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Head, router, Link, usePage } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import { Button } from '@/components/ui/button';
@@ -52,6 +52,7 @@ interface Project {
   institute: {
     name: string;
   };
+  fund_head_id?: Record<string, number> | null;
   fund_head?: {
     name: string;
   }
@@ -59,7 +60,7 @@ interface Project {
     name: string;
   }
   rooms_count?: number;
-  current_stage_id?: number;
+  current_stage_id?: number[] | null;
   current_stage?: {
     stage_name: string;
     level?: string;
@@ -75,7 +76,10 @@ interface ApprovalHistory {
   comments: string;
   action_date: string;
   approver: { name: string };
-  stage: { stage_name: string };
+  stage: {
+    stage_name: string;
+    fund_head?: { name: string } | null;
+  };
   pdf: string | null;
   img: string | null;
 }
@@ -129,13 +133,14 @@ interface Props {
     can_delete: boolean;
     can_approve: boolean;
   };
+  fundHeads: { id: number; name: string }[];
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Projects', href: '/projects' },
 ];
 
-export default function ProjectIndex({ projects, filters, permissions }: Props) {
+export default function ProjectIndex({ projects, filters, permissions, fundHeads }: Props) {
   const { props } = usePage<{ flash?: { success?: string; error?: string } }>();
   const [search, setSearch] = useState(filters.search || '');
   const [selectedStatus, setSelectedStatus] = useState(filters.status || '');
@@ -202,6 +207,50 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
     pdf: null as File | null,
   });
   const [savingMilestone, setSavingMilestone] = useState(false);
+
+  // Fund head ID → name lookup map
+  const fundHeadMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    (fundHeads || []).forEach(fh => { map[fh.id.toString()] = fh.name; });
+    return map;
+  }, [fundHeads]);
+
+  // Select Head Modal State
+  const [selectHeadModalOpen, setSelectHeadModalOpen] = useState(false);
+  const [selectedProjectForHead, setSelectedProjectForHead] = useState<Project | null>(null);
+  const [selectingHead, setSelectingHead] = useState(false);
+  const [headRows, setHeadRows] = useState<{ fund_head_id: string; sanction_amount: string }[]>(
+    [{ fund_head_id: '', sanction_amount: '' }]
+  );
+
+  const addHeadRow = () => setHeadRows(prev => [...prev, { fund_head_id: '', sanction_amount: '' }]);
+  const removeHeadRow = (i: number) => setHeadRows(prev => prev.filter((_, idx) => idx !== i));
+  const updateHeadRow = (i: number, field: 'fund_head_id' | 'sanction_amount', val: string) =>
+    setHeadRows(prev => prev.map((r, idx) => idx === i ? { ...r, [field]: val } : r));
+
+  const handleSelectHeadSubmit = async () => {
+    if (!selectedProjectForHead) return;
+    const rows = headRows.filter(r => r.fund_head_id && r.sanction_amount);
+    if (rows.length === 0) { toast.error('Add at least one fund head'); return; }
+
+    setSelectingHead(true);
+    try {
+      await axios.post(`/projects/${selectedProjectForHead.id}/select-head`, {
+        fund_heads: rows.map(r => ({
+          fund_head_id: parseInt(r.fund_head_id),
+          sanction_amount: parseFloat(r.sanction_amount),
+        })),
+      });
+      toast.success('Fund heads assigned and approval workflow initialized.');
+      setSelectHeadModalOpen(false);
+      router.reload({ only: ['projects'] });
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to assign fund heads');
+    } finally {
+      setSelectingHead(false);
+    }
+  };
+
 
   const handleMilestoneClick = (milestone: Milestone) => {
     setEditingMilestone(milestone);
@@ -525,7 +574,16 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
 
 
                           <td className="border p-2 text-xs md:text-sm text-gray-900 dark:text-gray-100 hidden lg:table-cell">
-                            {project.fund_head?.name}
+                            {project.fund_head_id && Object.keys(project.fund_head_id).length > 0
+                              ? Object.entries(project.fund_head_id).map(([id, amt], i, arr) => (
+                                <span key={id} className="whitespace-nowrap">
+                                  <span className="font-medium text-[10px]">{fundHeadMap[id] || `#${id}`}</span>
+                                  <span className="text-muted-foreground text-[10px] ml-0.5">(Rs.{Number(amt).toLocaleString()})</span>
+                                  {i < arr.length - 1 && <span className="mx-0.5 text-muted-foreground">,</span>}
+                                </span>
+                              ))
+                              : (project.fund_head?.name || '-')
+                            }
                           </td>
                           <td className="border p-2 text-xs md:text-sm text-gray-900 dark:text-gray-100">
                             {project.estimated_cost}
@@ -592,9 +650,7 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
                                 >
                                   PDF
                                 </a>
-                              ) : (
-                                <span className="text-muted-foreground">-</span>
-                              )}
+                              ) : null}
                               {project.description ? (
                                 <Button
                                   variant="ghost"
@@ -608,9 +664,7 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
                                 >
                                   <Eye className="h-3 w-3" />
                                 </Button>
-                              ) : (
-                                <span className="text-muted-foreground">-</span>
-                              )}
+                              ) : null}
                               {permissions.can_edit &&
                                 <Link href={`/projects/${project.id}/edit`}>
                                   <Button variant="ghost" size="icon" className="h-6 w-6">
@@ -660,6 +714,7 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
                                   <ClipboardCheck className="h-3 w-3" />
                                 </Button>
                               )}
+
                             </div>
                           </td>
 
@@ -724,7 +779,11 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
                         <Card key={record.id} className="overflow-hidden border shadow-sm">
                           <CardHeader className="p-2 bg-muted/30 pb-1 border-b">
                             <div className="flex justify-between items-center">
-                              <div className="font-semibold text-xs">{record.stage?.stage_name || 'Stage'}</div>
+                              <div className="font-semibold text-xs">{record.stage?.stage_name || 'Stage'}   {record.stage?.fund_head?.name && (
+                                <span className="ml-2 text-[10px] font-normal bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800 px-1.5 py-0.5 rounded-full">
+                                  {record.stage.fund_head.name}
+                                </span>
+                              )}</div>
                               {record.status === 'approved' ? (
                                 <Badge variant="outline" className="h-4 border-green-500 text-green-600 bg-green-50 gap-1 px-1 py-0 text-[10px]">
                                   <CheckCircle2 className="w-2.5 h-2.5" /> Approved
@@ -1247,9 +1306,16 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
-            <div className="bg-muted/30 p-4 rounded-lg border text-sm leading-relaxed whitespace-pre-wrap">
-              {selectedDescriptionProject?.description || 'No description available.'}
-            </div>
+            {selectedDescriptionProject?.description ? (
+              <div
+                className="bg-muted/30 p-4 rounded-lg border text-sm leading-relaxed prose prose-sm max-w-none"
+                dangerouslySetInnerHTML={{ __html: selectedDescriptionProject.description }}
+              />
+            ) : (
+              <div className="bg-muted/30 p-4 rounded-lg border text-sm leading-relaxed">
+                No description available.
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button onClick={() => setDescriptionModalOpen(false)}>
@@ -1335,7 +1401,7 @@ export default function ProjectIndex({ projects, filters, permissions }: Props) 
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </AppLayout >
 
+    </AppLayout>
   );
 }

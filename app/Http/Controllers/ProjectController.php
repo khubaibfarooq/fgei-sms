@@ -15,41 +15,52 @@ use App\Models\Institute;
 use App\Models\Contractor;
 use App\Models\Company;
 use App\Models\ProjectImage;
+use Illuminate\Support\Str;
 
 class ProjectController extends Controller
 {
     public function index(Request $request)
     {
-
-        $query = Project::with('institute','fundHead','projecttype');
-$inst_id = session('sms_inst_id');
-$type=session('type');
+        $query = Project::with('institute', 'projecttype');
+        $inst_id = session('sms_inst_id');
+        $type = session('type');
 
         $query->where('institute_id', $inst_id);
         if ($request->search) {
             $query->where('name', 'like', '%' . $request->search . '%');
-         
-                  
         }
-  if ($request->status) {
-            $query->where('status',  $request->status);
-                  
+        if ($request->status) {
+            $query->where('status', $request->status);
         }
-       
 
-        $projects = $query->with('currentStage')->paginate(10)->withQueryString();
-$permissions = [
-        'can_add'    => auth()->user()->can('project-add'),
-        'can_edit'   => auth()->user()->can('project-edit'),
-        'can_delete' => auth()->user()->can('project-delete'),
-        'can_approve' => true, // Placeholder for now, or auth()->user()->can('project-approve')
-    ];
+        $projects = $query->paginate(10)->withQueryString();
+
+        // Batch-resolve currentStage from JSON array
+        $stageIds = $projects->getCollection()->map(function ($p) {
+            $ids = is_array($p->current_stage_id) ? $p->current_stage_id : [];
+            return !empty($ids) ? (int) array_values($ids)[0] : null;
+        })->filter()->unique()->values()->all();
+        $stages = \App\Models\ApprovalStage::whereIn('id', $stageIds)->get()->keyBy('id');
+        $projects->getCollection()->each(function ($p) use ($stages) {
+            $ids = is_array($p->current_stage_id) ? $p->current_stage_id : [];
+            $firstId = !empty($ids) ? (int) array_values($ids)[0] : null;
+            $p->setRelation('currentStage', $firstId ? ($stages[$firstId] ?? null) : null);
+        });
+        $permissions = [
+            'can_add'    => auth()->user()->can('project-add'),
+            'can_edit'   => auth()->user()->can('project-edit'),
+            'can_delete' => auth()->user()->can('project-delete'),
+            'can_approve' => true,
+        ];
+
         return Inertia::render('projects/Index', [
-            'projects' => $projects,
-            'filters' => ['search' => $request->search ?? '',
-        'status'=>$request->status ?? '',
-    ],
-                'permissions' => $permissions,
+            'projects'   => $projects,
+            'filters'    => [
+                'search' => $request->search ?? '',
+                'status' => $request->status ?? '',
+            ],
+            'permissions' => $permissions,
+            'fundHeads'  => FundHead::select('id', 'name')->get(),
         ]);
     }
 
@@ -95,6 +106,8 @@ public function store(Request $request)
     ]);
 
 
+    $description = $request->description ? Str::of($request->description)->stripTags() : null;
+
     $project = Project::create([
         'name'             => $request->name,
         'estimated_cost'   => $request->estimated_cost,
@@ -104,7 +117,7 @@ public function store(Request $request)
         'actual_cost'      => $request->actual_cost,
         'final_comments'   => $request->final_comments,
         'priority'         => $request->priority,
-        'description'      => $request->description,
+        'description'      => $description,
         'institute_id'     => session('sms_inst_id'),
         'submitted_by'     => auth()->id(),
         'approval_status'  => 'waiting',
@@ -300,6 +313,8 @@ public function update(Request $request, Project $project)
         $project->structural_plan = 'projects/plans/' . $FILENAME;
     }
 
+    $description = $request->description ? Str::of($request->description)->stripTags() : null;
+
     // Update main project
     $updateData = [
         'name'             => $request->name,
@@ -310,7 +325,7 @@ public function update(Request $request, Project $project)
         'structural_plan'  =>  $project->structural_plan,
         'final_comments'   => $request->final_comments,
         'priority'         => $request->priority,
-        'description'      => $request->description,
+        'description'      => $description,
         'institute_id'     => session('sms_inst_id'),
         'contractor_id'    => $request->contractor_id,
         'updated_by'       => auth()->id(),
@@ -468,14 +483,19 @@ public function update(Request $request, Project $project)
 
     public function payments(Project $project)
     {
-        $project->load('currentStage');
+        // Resolve currentStage from JSON array for payment stage check
+        $ids = is_array($project->current_stage_id) ? $project->current_stage_id : [];
+        $firstId = !empty($ids) ? (int) array_values($ids)[0] : null;
+        $currentStage = $firstId ? \App\Models\ApprovalStage::find($firstId) : null;
+        $project->setRelation('currentStage', $currentStage);
+
         return response()->json([
             'payments' => Fund::with('FundHead')
                 ->where('trans_type', 'project')
                 ->where('tid', $project->id)
                 ->orderBy('added_date', 'asc')
                 ->get(),
-            'current_stage' => $project->currentStage
+            'current_stage' => $currentStage
         ]);
     }
 
@@ -485,48 +505,104 @@ public function update(Request $request, Project $project)
             return response()->json(['success' => false, 'message' => 'Actual cost not set.'], 400);
         }
 
-        // Validate request
         $request->validate([
             'stage_name' => 'required|string|max:255',
-            'amount' => 'required|numeric|min:0.01',
+            'amount'     => 'required|numeric|min:0.01',
         ]);
 
-        $stageName = $request->stage_name;
-        $requestedAmount = $request->amount;
+        $stageName       = $request->stage_name;
+        $requestedAmount = (float) $request->amount;
 
         $existingFunds = Fund::where('trans_type', 'project')
             ->where('tid', $project->id)
             ->get();
 
-        $totalPaid = $existingFunds->where('status', 'Approved')->sum('amount');
-        $remainingAmount = $project->actual_cost - $totalPaid;
+        $totalPaid       = (float) $existingFunds->where('status', 'Approved')->sum('amount');
+        $remainingAmount = (float) $project->actual_cost - $totalPaid;
 
-        // Validate amount doesn't exceed remaining
         if ($requestedAmount > $remainingAmount) {
             return response()->json([
-                'success' => false, 
-                'message' => "Amount exceeds remaining budget. Maximum allowed: " . number_format($remainingAmount, 2)
+                'success' => false,
+                'message' => 'Amount exceeds remaining budget. Maximum allowed: ' . number_format($remainingAmount, 2),
             ], 400);
         }
 
-        $regionid = Institute::where("region_id", $project->institute->region_id)
-            ->where("type", "Regional Office")
+        $regionid = Institute::where('region_id', $project->institute->region_id)
+            ->where('type', 'Regional Office')
             ->first()->id;
 
-        Fund::create([
-            'fund_head_id' => $project->fund_head_id,
-            'institute_id' => $regionid,
-            'amount' => round($requestedAmount, 2),
-            'added_by' => auth()->id(),
-            'added_date' => now(),
-            'status' => 'Pending',
-            'type' => 'out',
-            'trans_type' => 'project',
-            'tid' => $project->id,
-            'description' => "Payment request for: " . $stageName . " (" . $project->name . ")",
-        ]);
+        // -----------------------------------------------------------------------
+        // Smart fund-head splitting:
+        //   fund_head_id JSON = { "headId": sanction_amount, ... }
+        //   For each head, calculate already-paid amount against that head.
+        //   Fill from the first available head; if it runs out, continue to next.
+        // -----------------------------------------------------------------------
+        $fundHeadJson = $project->fund_head_id ?? [];
 
-        return response()->json(['success' => true, 'message' => 'Payment request created successfully.']);
+        if (empty($fundHeadJson)) {
+            // Fallback: no fund head configured — create a single generic payment
+            Fund::create([
+                'fund_head_id' => null,
+                'institute_id' => $regionid,
+                'amount'       => round($requestedAmount, 2),
+                'added_by'     => auth()->id(),
+                'added_date'   => now(),
+                'status'       => 'Pending',
+                'type'         => 'out',
+                'trans_type'   => 'project',
+                'tid'          => $project->id,
+                'description'  => 'Payment request for: ' . $stageName . ' (' . $project->name . ')',
+            ]);
+            return response()->json(['success' => true, 'message' => 'Payment request created successfully.']);
+        }
+
+        $remaining = $requestedAmount;
+
+        foreach ($fundHeadJson as $headId => $sanctionAmount) {
+            if ($remaining <= 0) break;
+
+            // How much has already been paid against this fund head
+            $paidForHead = (float) $existingFunds
+                ->where('fund_head_id', (int) $headId)
+                ->where('status', 'Approved')
+                ->sum('amount');
+
+            $pendingForHead = (float) $existingFunds
+                ->where('fund_head_id', (int) $headId)
+                ->where('status', 'Pending')
+                ->sum('amount');
+
+            $usedForHead  = $paidForHead + $pendingForHead;
+            $spaceInHead  = (float) $sanctionAmount - $usedForHead;
+
+            if ($spaceInHead <= 0) continue; // This head is full
+
+            $allocate = min($remaining, $spaceInHead);
+
+            Fund::create([
+                'fund_head_id' => (int) $headId,
+                'institute_id' => $regionid,
+                'amount'       => round($allocate, 2),
+                'added_by'     => auth()->id(),
+                'added_date'   => now(),
+                'status'       => 'Pending',
+                'type'         => 'out',
+                'trans_type'   => 'project',
+                'tid'          => $project->id,
+                'description'  => 'Payment request for: ' . $stageName . ' (' . $project->name . ')',
+            ]);
+
+            $remaining -= $allocate;
+        }
+
+        if ($remaining > 0) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Insufficient fund head balance. ' . number_format($remaining, 2) . ' could not be allocated.',
+            ], 400);
+        }
+
+        return response()->json(['success' => true, 'message' => 'Payment request(s) created successfully.']);
     }
 public function projectDetails(Project $project)
 {$project->load('institute');
@@ -536,17 +612,21 @@ public function projectDetails(Project $project)
     public function details(Project $project)
     {
         $project->load([
-            'institute', 
-            'fundHead', 
-            'projecttype', 
-            'currentStage',
+            'institute',
+            'projecttype',
             'contractor.company',
         ]);
+
+        // Resolve currentStage from JSON array (current_stage_id is now JSON)
+        $stageIds = is_array($project->current_stage_id) ? $project->current_stage_id : [];
+        $firstId  = !empty($stageIds) ? (int) array_values($stageIds)[0] : null;
+        $project->setRelation('currentStage', $firstId ? \App\Models\ApprovalStage::find($firstId) : null);
 
         $canEditMilestones = session('sms_inst_id') == $project->institute_id && $project->status !== 'completed';
 
         return Inertia::render('projects/ProjectDetails', [
-            'project' => $project,
+            'project'          => $project,
+            'fundHeadsList'    => $project->fund_heads_list,
             'canEditMilestones' => $canEditMilestones,
         ]);
     }

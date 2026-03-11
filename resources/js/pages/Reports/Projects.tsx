@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { type BreadcrumbItem } from '@/types';
-import { Building, ClipboardCheck, X, CheckCircle2, XCircle, Clock, Eye, FileText, Camera, Upload } from 'lucide-react';
+import { Building, ClipboardCheck, X, CheckCircle2, XCircle, Clock, Eye, FileText, Camera, Upload, Layers, Hourglass, AlertTriangle, BarChart3, CalendarClock } from 'lucide-react';
 import { toast } from 'sonner';
 import { debounce } from 'lodash';
 import ExcelJS from 'exceljs';
@@ -70,17 +70,15 @@ interface ProjectProp {
   institute?: { id: number; name?: string };
   region?: { id: number; name?: string };
   projecttype?: { id: number; name?: string };
-  fund_head_id?: number | string | null;
-  current_stage_id?: number;
+  fund_head_id?: Record<string, number> | null;
+  current_stage_id?: number[] | null;
   current_stage?: {
     id: number;
     level: string;
     stage_name: string;
-    users_can_approve: string;
+    users_can_approve: number[];
   };
-  fundhead?: {
-    name: string;
-  };
+  all_users_can_approve?: number[];   // merged from all active stages
   final_comments?: string;
   completion_per?: number;
 }
@@ -104,7 +102,10 @@ interface ApprovalHistory {
   comments: string;
   action_date: string;
   approver: { name: string };
-  stage: { stage_name: string };
+  stage: {
+    stage_name: string;
+    fund_head?: { name: string } | null;
+  };
   pdf: string | null;
   img: string | null;
 }
@@ -215,20 +216,15 @@ export default function Projects({ projects: initialProjects, institutes, region
     const stageLevel = project.current_stage?.level;
     const status = project.approval_status;
 
-
-    // The user strictly asked for region->region and dte->dte check logic.
     if (!stageLevel) return false;
 
-    // Normalize logic
-    const userRole = (user.roles[0].name || '').toLowerCase(); // Assuming type/role property
+    const userRole = (user.roles[0].name || '').toLowerCase();
     const level = stageLevel.toLowerCase();
-    const usercanApprove = project.current_stage?.users_can_approve ?? "";
-    console.log(usercanApprove);
-    console.log(user.id);
-    // Specific user requests
+    // Use all_users_can_approve (merged from ALL active stages)
+    const usercanApprove: number[] = project.all_users_can_approve ?? [];
+
     if (level === 'regional' && userRole === 'region' && status !== "approved") return true;
     if (level === 'dte' && (userRole === 'dirhrm' || userRole === 'directorate' || userRole === 'sms_tech_approval') && status !== "approved" && usercanApprove.includes(user.id)) return true;
-
 
     return false;
   };
@@ -266,6 +262,9 @@ export default function Projects({ projects: initialProjects, institutes, region
   // Need Approval Filter State
   const [needApproval, setNeedApproval] = useState(false);
 
+  // Card-based client-side status filter (separate from dropdown)
+  const [cardFilter, setCardFilter] = useState('');
+
   // Rejection Modal State
   const [rejectionModalOpen, setRejectionModalOpen] = useState(false);
   const [selectedProjectForRejection, setSelectedProjectForRejection] = useState<ProjectProp | null>(null);
@@ -293,11 +292,35 @@ export default function Projects({ projects: initialProjects, institutes, region
     return Array.isArray(projectTypes) ? projectTypes.filter(isValidItem) : [];
   }, [projectTypes]);
 
-  // Filtered projects based on needApproval checkbox
+  // Fund head ID → name lookup map
+  const fundHeadMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    (fundHeads || []).forEach(fh => { map[fh.id.toString()] = fh.name; });
+    return map;
+  }, [fundHeads]);
+
+  // Filtered projects based on needApproval checkbox and card filter
   const filteredProjects = useMemo(() => {
-    if (!needApproval) return projects.data;
-    return projects.data.filter(project => canShowApproveButton(project));
-  }, [projects.data, needApproval, user]);
+    let result = projects.data || [];
+    if (needApproval) {
+      result = result.filter(project => canShowApproveButton(project));
+    }
+    if (cardFilter) {
+      result = result.filter(project => (project.status || '').toLowerCase() === cardFilter);
+    }
+    return result;
+  }, [projects.data, needApproval, cardFilter, user]);
+
+  // Status counts for summary cards
+  const statusCounts = useMemo(() => {
+    const counts = { total: 0, planned: 0, inprogress: 0, completed: 0, waiting: 0, rejected: 0 };
+    (projects.data || []).forEach((p) => {
+      counts.total++;
+      const s = (p.status || '').toLowerCase();
+      if (s in counts) (counts as any)[s]++;
+    });
+    return counts;
+  }, [projects.data]);
 
   // Fetch Panel Data
   useEffect(() => {
@@ -607,6 +630,31 @@ export default function Projects({ projects: initialProjects, institutes, region
                 <div className="flex justify-between items-center mb-1">
                   <CardTitle className="text-base font-bold">Projects Report</CardTitle>
                 </div>
+
+                {/* Status Summary Cards */}
+                <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5 mb-2">
+                  {[
+                    { label: 'Total', value: '', count: statusCounts.total, icon: Layers, bg: 'bg-slate-100 dark:bg-slate-800', text: 'text-slate-700 dark:text-slate-300', iconColor: 'text-slate-500' },
+                    { label: 'Planned', value: 'planned', count: statusCounts.planned, icon: CalendarClock, bg: 'bg-blue-50 dark:bg-blue-950', text: 'text-blue-700 dark:text-blue-300', iconColor: 'text-blue-500' },
+                    { label: 'In Progress', value: 'inprogress', count: statusCounts.inprogress, icon: Clock, bg: 'bg-yellow-50 dark:bg-yellow-950', text: 'text-yellow-700 dark:text-yellow-300', iconColor: 'text-yellow-500' },
+                    { label: 'Completed', value: 'completed', count: statusCounts.completed, icon: CheckCircle2, bg: 'bg-green-50 dark:bg-green-950', text: 'text-green-700 dark:text-green-300', iconColor: 'text-green-500' },
+                    { label: 'Waiting', value: 'waiting', count: statusCounts.waiting, icon: Hourglass, bg: 'bg-orange-50 dark:bg-orange-950', text: 'text-orange-700 dark:text-orange-300', iconColor: 'text-orange-500' },
+                    { label: 'Rejected', value: 'rejected', count: statusCounts.rejected, icon: XCircle, bg: 'bg-red-50 dark:bg-red-950', text: 'text-red-700 dark:text-red-300', iconColor: 'text-red-500' },
+                  ].map((item) => (
+                    <div
+                      key={item.label}
+                      onClick={() => setCardFilter(cardFilter === item.value ? '' : item.value)}
+                      className={`flex items-center gap-2 rounded-lg border px-2.5 py-1.5 cursor-pointer transition-all hover:ring-2 hover:ring-primary/30 hover:shadow-sm active:scale-95 ${item.bg} ${cardFilter === item.value ? 'ring-2 ring-primary shadow-sm' : ''}`}
+                    >
+                      <item.icon className={`h-4 w-4 shrink-0 ${item.iconColor}`} />
+                      <div className="min-w-0">
+                        <p className={`text-[10px] uppercase tracking-wide font-medium ${item.text} opacity-75 truncate`}>{item.label}</p>
+                        <p className={`text-sm font-bold leading-none ${item.text}`}>{item.count}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
                 <div className={`grid grid-cols-1 md:grid-cols-2 ${selectedPanelProject ? 'xl:grid-cols-2 2xl:grid-cols-4' : 'lg:grid-cols-4'} gap-1.5`}>
                   {/* Region */}
                   {memoizedRegions.length > 0 && (
@@ -670,9 +718,6 @@ export default function Projects({ projects: initialProjects, institutes, region
                       </SelectContent>
                     </Select>
                   </div>
-                </div>
-
-                <div className="flex flex-wrap gap-2 justify-between items-center pt-1.5 pb-1.5 border-b">
                   {/* Need Approval Checkbox */}
                   <label className="flex items-center gap-1.5 cursor-pointer">
                     <Checkbox
@@ -683,6 +728,9 @@ export default function Projects({ projects: initialProjects, institutes, region
                     <span className="text-[11px] font-medium uppercase tracking-tight text-muted-foreground">Need Approval</span>
                   </label>
 
+                </div>
+
+                <div className="flex flex-wrap gap-2 justify-between items-center pt-1.5 pb-1.5 border-b">
                   <div className="flex flex-wrap gap-1.5">
                     <Button onClick={debouncedApplyFilters} size="sm" className="h-7 text-xs px-2">
                       Apply Filters
@@ -694,6 +742,7 @@ export default function Projects({ projects: initialProjects, institutes, region
                       Excel
                     </Button>
                   </div>
+
                 </div>
               </CardHeader>
 
@@ -744,7 +793,18 @@ export default function Projects({ projects: initialProjects, institutes, region
                             </td>
                             <td className="border p-1.5 text-right whitespace-nowrap">{formatAmount(project.estimated_cost)}</td>
                             <td className="border p-1.5 text-right whitespace-nowrap">{formatAmount(project.actual_cost)}</td>
-                            <td className="border p-1.5 text-center hidden xl:table-cell">{project.fundhead?.name}</td>
+                            <td className="border p-1.5 text-center hidden xl:table-cell">
+                              {project.fund_head_id && Object.keys(project.fund_head_id).length > 0
+                                ? Object.entries(project.fund_head_id).map(([id, amt], i, arr) => (
+                                  <span key={id} className="whitespace-nowrap">
+                                    <span className="font-medium">{fundHeadMap[id] || `#${id}`}</span>
+                                    <span className="text-muted-foreground ml-0.5 text-[10px]">(Rs.{Number(amt).toLocaleString()})</span>
+                                    {i < arr.length - 1 && <span className="mx-0.5">,</span>}
+                                  </span>
+                                ))
+                                : '-'
+                              }
+                            </td>
                             <td className="border p-1.5 text-center hidden xl:table-cell">{project.current_stage?.stage_name || 'Request Initiated'}</td>
                             <td className="border p-1.5 text-center">
                               <span className={`px-2 py-0.5 rounded-full text-[10px] uppercase font-bold tracking-tight ${project.approval_status === 'completed' ? 'bg-green-100 text-green-800' :
@@ -974,7 +1034,11 @@ export default function Projects({ projects: initialProjects, institutes, region
                           {/* Additional Info */}
                           <div className="mt-2 pt-2 border-t flex flex-wrap gap-2 text-xs text-muted-foreground">
                             {project.projecttype?.name && <span className="bg-muted px-2 py-0.5 rounded">{project.projecttype.name}</span>}
-                            {project.fundhead?.name && <span className="bg-muted px-2 py-0.5 rounded">{project.fundhead.name}</span>}
+                            {project.fund_head_id && Object.keys(project.fund_head_id).length > 0 && (
+                              <span className="bg-muted px-2 py-0.5 rounded">
+                                {Object.entries(project.fund_head_id).map(([id]) => fundHeadMap[id] || `#${id}`).join(', ')}
+                              </span>
+                            )}
                             <span className="bg-muted px-2 py-0.5 rounded">{project.current_stage?.stage_name || 'Request Initiated'}</span>
                           </div>
 
@@ -1107,7 +1171,12 @@ export default function Projects({ projects: initialProjects, institutes, region
                           <Card key={record.id} className="overflow-hidden border shadow-sm">
                             <CardHeader className="p-2 bg-muted/30 pb-1 border-b">
                               <div className="flex justify-between items-center">
-                                <div className="font-semibold text-xs">{record.stage?.stage_name || 'Stage'}</div>
+                                <div className="font-semibold text-xs">{record.stage?.stage_name || 'Stage'}
+                                  {record.stage?.fund_head?.name && (
+                                    <span className="ml-2 text-[10px] font-normal bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800 px-1.5 py-0.5 rounded-full">
+                                      {record.stage.fund_head.name}
+                                    </span>
+                                  )}</div>
                                 {record.status === 'approved' ? (
                                   <Badge variant="outline" className="h-4 border-green-500 text-green-600 bg-green-50 gap-1 px-1 py-0 text-[10px]">
                                     <CheckCircle2 className="w-2.5 h-2.5" /> Approved
@@ -1393,6 +1462,24 @@ export default function Projects({ projects: initialProjects, institutes, region
           }}
         />
 
+        {/* Fund Head Select Modal */}
+        <FundHeadSelectModal
+          isOpen={fundHeadModalOpen}
+          onClose={() => setFundHeadModalOpen(false)}
+          project={selectedProjectForFundHead
+            ? {
+              id: selectedProjectForFundHead.id,
+              name: selectedProjectForFundHead.name,
+              fund_head_id: selectedProjectForFundHead.fund_head_id ?? null,
+            }
+            : null}
+          fundHeads={fundHeads}
+          onSuccess={() => {
+            setFundHeadModalOpen(false);
+            debouncedApplyFilters();
+          }}
+        />
+
         {/* Image Upload Modal */}
         <Dialog open={imageUploadModalOpen} onOpenChange={setImageUploadModalOpen}>
           <DialogContent className="sm:max-w-[450px]">
@@ -1539,9 +1626,16 @@ export default function Projects({ projects: initialProjects, institutes, region
               </DialogDescription>
             </DialogHeader>
             <div className="py-4">
-              <div className="bg-muted/30 p-4 rounded-lg border text-sm leading-relaxed whitespace-pre-wrap">
-                {selectedDescriptionProject?.description || 'No description available.'}
-              </div>
+              {selectedDescriptionProject?.description ? (
+                <div
+                  className="bg-muted/30 p-4 rounded-lg border text-sm leading-relaxed prose prose-sm max-w-none"
+                  dangerouslySetInnerHTML={{ __html: selectedDescriptionProject.description }}
+                />
+              ) : (
+                <div className="bg-muted/30 p-4 rounded-lg border text-sm leading-relaxed">
+                  No description available.
+                </div>
+              )}
             </div>
             <DialogFooter>
               <Button onClick={() => setDescriptionModalOpen(false)}>
@@ -1551,254 +1645,7 @@ export default function Projects({ projects: initialProjects, institutes, region
           </DialogContent>
         </Dialog>
 
-        {selectedPanelProject && (
-          <div className="w-full lg:w-[350px] xl:w-[400px] border-l bg-background p-3 sm:p-4 md:p-6 shadow-xl overflow-y-auto flex flex-col transition-all duration-300 ease-in-out z-20 fixed lg:static inset-y-0 right-0 h-full lg:h-auto shrink-0">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h2 className="text-lg font-bold truncate max-w-[200px]" title={selectedPanelProject.name}>{selectedPanelProject.name}</h2>
-                <p className="text-xs text-muted-foreground truncate max-w-[200px]" title={selectedPanelProject.institute?.name}>{selectedPanelProject.institute?.name}</p>
-              </div>
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSelectedPanelProject(null)}>
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
 
-            <Tabs defaultValue="approvals" className="w-full flex-1 flex flex-col">
-              <TabsList className="grid w-full grid-cols-4 h-8">
-                <TabsTrigger value="approvals" className="text-xs">Approvals</TabsTrigger>
-                <TabsTrigger value="milestones" className="text-xs">Milestones</TabsTrigger>
-                <TabsTrigger value="payments" className="text-xs">Payments</TabsTrigger>
-                <TabsTrigger value="images" className="text-xs flex items-center justify-center"><Camera className="h-3 w-3" /></TabsTrigger>
-              </TabsList>
-
-              <div className="flex-1 overflow-y-auto mt-4 px-1">
-                <TabsContent value="approvals" className="space-y-3 m-0 h-full">
-                  {loadingPanelData ? (
-                    <div className="flex justify-center py-8 text-muted-foreground text-xs">Loading history...</div>
-                  ) : approvalHistory.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground border rounded-lg border-dashed text-xs">
-                      No approval history found.
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {approvalHistory.map((record) => (
-                        <Card key={record.id} className="overflow-hidden border shadow-sm">
-                          <CardHeader className="p-2 bg-muted/30 pb-1 border-b">
-                            <div className="flex justify-between items-center">
-                              <div className="font-semibold text-xs">{record.stage?.stage_name || 'Stage'}</div>
-                              {record.status === 'approved' ? (
-                                <Badge variant="outline" className="h-4 border-green-500 text-green-600 bg-green-50 gap-1 px-1 py-0 text-[10px]">
-                                  <CheckCircle2 className="w-2.5 h-2.5" /> Approved
-                                </Badge>
-                              ) : record.status === 'rejected' ? (
-                                <Badge variant="outline" className="h-4 border-red-500 text-red-600 bg-red-50 gap-1 px-1 py-0 text-[10px]">
-                                  <XCircle className="w-2.5 h-2.5" /> Rejected
-                                </Badge>
-                              ) : (
-                                <Badge variant="outline" className="h-4 border-yellow-500 text-yellow-600 bg-yellow-50 gap-1 px-1 py-0 text-[10px]">
-                                  <Clock className="w-2.5 h-2.5" /> Pending
-                                </Badge>
-                              )}
-                            </div>
-                          </CardHeader>
-                          <CardContent className="p-2 text-xs">
-                            <div className="flex flex-wrap items-center justify-between gap-1 mb-1">
-                              <div className="text-[10px] text-muted-foreground flex items-center">
-                                <Clock className="w-2.5 h-2.5 mr-1" />
-                                {record.action_date ? new Date(record.action_date).toLocaleString() : ""}
-                              </div>
-                              <div className="text-[10px]">
-                                <span className="font-medium text-muted-foreground">Appr: </span>
-                                {record.approver?.name}
-                              </div>
-                            </div>
-                            {record.comments && (
-                              <div className="bg-muted/50 px-2 py-1 rounded text-[10px] italic border mt-1 line-clamp-2">
-                                "{record.comments}"
-                              </div>
-                            )}
-                            <div className="flex items-center gap-2 mt-1">
-                              {record.pdf && (
-                                <a
-                                  href={`/${record.pdf}`}
-                                  target="_blank"
-                                  className="text-blue-600 hover:underline text-[10px] flex items-center gap-1"
-                                >
-                                  <FileText className="h-3 w-3" /> PDF
-                                </a>
-                              )}
-                              {record.img && (
-                                <div className="flex items-center gap-1">
-                                  <ImagePreview
-                                    dataImg={record.img}
-                                    size="h-4 w-4"
-                                    className="rounded border object-cover"
-                                  />
-                                  <span className="text-[10px] text-muted-foreground">Image</span>
-                                </div>
-                              )}
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  )}
-                </TabsContent>
-
-                <TabsContent value="milestones" className="space-y-3 m-0 h-full">
-                  {loadingPanelData ? (
-                    <div className="flex justify-center py-8 text-muted-foreground text-xs">Loading milestones...</div>
-                  ) : projectMilestones.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground border rounded-lg border-dashed text-xs">
-                      No milestones found.
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {projectMilestones.map((milestone) => (
-                        <Card
-                          key={milestone.id}
-                          className="border shadow-sm overflow-hidden"
-                        >
-                          <div className="flex items-start">
-                            {milestone.img && (
-                              <div className="w-16 h-full shrink-0">
-                                <ImagePreview
-                                  dataImg={milestone.img}
-                                  size="h-full w-full"
-                                  className="h-full w-full object-cover rounded-none"
-                                />
-                              </div>
-                            )}
-                            <div className="flex-1 min-w-0">
-                              <CardHeader className="p-2 py-1.5 border-b bg-muted/10 flex flex-row items-center justify-between space-y-0">
-                                <div className="font-semibold text-xs truncate pr-2">{milestone.name}</div>
-                                <Badge variant={
-                                  milestone.status === 'completed' ? 'default' :
-                                    milestone.status === 'inprogress' ? 'secondary' : 'outline'
-                                } className="capitalize text-[10px] px-1 py-0 h-4 shrink-0">
-                                  {milestone.status}
-                                </Badge>
-                              </CardHeader>
-                              <CardContent className="p-2 text-xs space-y-1">
-                                <div className="flex justify-between text-[10px] text-muted-foreground">
-                                  <span>Due: {milestone.days} days</span>
-                                  {milestone.completed_date && (
-                                    <span className="text-green-600 dark:text-green-400">Done: {new Date(milestone.completed_date).toLocaleDateString()}</span>
-                                  )}
-                                </div>
-                                {milestone.description && (
-                                  <p className="text-muted-foreground text-[10px] line-clamp-1">
-                                    {milestone.description}
-                                  </p>
-                                )}
-                              </CardContent>
-                            </div>
-                          </div>
-                        </Card>
-                      ))}
-                    </div>
-                  )}
-                </TabsContent>
-
-                <TabsContent value="payments" className="space-y-3 m-0 h-full">
-                  {loadingPanelData ? (
-                    <div className="flex justify-center py-8 text-muted-foreground text-xs">Loading payments...</div>
-                  ) : projectPayments.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground border rounded-lg border-dashed text-xs">
-                      No payments found.
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {projectPayments.map((payment) => (
-                        <Card key={payment.id} className="border shadow-sm">
-                          <CardHeader className="p-2 py-1.5 border-b bg-muted/10 flex flex-row items-center justify-between space-y-0">
-                            <div className="font-semibold text-xs">Rs. {payment.amount.toLocaleString()}</div>
-                            <Badge variant="outline" className={`capitalize text-[10px] px-1 py-0 h-4 ${payment.status === 'Approved' ? 'border-green-500 text-green-600 bg-green-50' :
-                              payment.status === 'Rejected' ? 'border-red-500 text-red-600 bg-red-50' :
-                                'border-yellow-500 text-yellow-600 bg-yellow-50'
-                              }`}>
-                              {payment.status}
-                            </Badge>
-                          </CardHeader>
-                          <CardContent className="p-2 text-xs space-y-1">
-                            <div className="flex justify-between items-center text-[10px]">
-                              <div className="text-muted-foreground font-medium truncate max-w-[150px]" title={payment.fund_head?.name || 'General Fund'}>
-                                {payment.fund_head?.name || 'General Fund'}
-                              </div>
-                              <div className="text-muted-foreground">
-                                {new Date(payment.added_date).toLocaleDateString()}
-                              </div>
-                            </div>
-                            {payment.description && (
-                              <p className="text-muted-foreground text-[10px] italic bg-muted/30 px-1.5 py-0.5 rounded truncate">
-                                "{payment.description}"
-                              </p>
-                            )}
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  )}
-                </TabsContent>
-
-                <TabsContent value="images" className="space-y-3 m-0 h-full">
-                  {loadingPanelData ? (
-                    <div className="flex justify-center py-8 text-muted-foreground text-xs">Loading images...</div>
-                  ) : projectImages.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground border rounded-lg border-dashed text-xs">
-                      No images found.
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      <div className="flex justify-end p-1">
-                        <Button
-                          size="sm"
-                          className="bg-blue-600 hover:bg-blue-700 h-7 text-[10px] px-2"
-                          onClick={() => {
-                            setImageForm({ desc: '', date: new Date().toISOString().split('T')[0], image: null });
-                            setImageUploadModalOpen(true);
-                          }}
-                        >
-                          <Upload className="h-3 w-3 mr-1" /> Upload
-                        </Button>
-                      </div>
-                      {projectImages.map((img) => (
-                        <Card key={img.id} className="overflow-hidden border shadow-sm">
-                          <div className="relative group">
-                            <ImagePreview
-                              dataImg={`assets/${img.image}`}
-                              size="w-full h-32 object-cover"
-                            />
-                            <button
-                              className="absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white rounded-full h-6 w-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                              title="Delete image"
-                              onClick={async () => {
-                                if (!confirm('Delete this image?')) return;
-                                try {
-                                  await axios.delete(`/project-images/${img.id}`);
-                                  toast.success('Image deleted');
-                                  setProjectImages(prev => prev.filter(i => i.id !== img.id));
-                                } catch {
-                                  toast.error('Failed to delete image');
-                                }
-                              }}
-                            >
-                              <X className="h-3.5 w-3.5" />
-                            </button>
-                          </div>
-                          <CardContent className="p-2 text-xs text-center">
-                            {img.desc && <p className="line-clamp-2 mb-1">{img.desc}</p>}
-                            {img.date && <p className="text-muted-foreground opacity-75">{new Date(img.date).toLocaleDateString()}</p>}
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  )}
-                </TabsContent>
-              </div>
-            </Tabs>
-          </div>
-        )}
 
         {
           selectedPanelProject && (

@@ -945,13 +945,19 @@ $regions = Institute::select('region_id as id', 'name')->where('type', 'Regional
         // -----------------------------------------------------------------
         if ($type === 'Regional Office') {
              if($request->status ){
-                        $query = Project::query()->with(['institute', 'projecttype', 'currentStage','fundHead']);
+                        $query = Project::query()->with(['institute', 'projecttype']);
             $query->where('status', $request->status)->whereHas('institute', function ($q) use ($regionid) {
                 $q->where('region_id', $regionid);
             });
             $projects = $query->paginate(10)->withQueryString();
- $projects->getCollection()->transform(function ($project) {
-            $project->region = $project->institute?->region;
+            // Batch-resolve current_stage from JSON array
+            $stageIds = $projects->getCollection()->map(fn($p) => is_array($p->current_stage_id) && !empty($p->current_stage_id) ? (int) array_values($p->current_stage_id)[0] : null)->filter()->unique()->values()->all();
+            $stages = \App\Models\ApprovalStage::whereIn('id', $stageIds)->get()->keyBy('id');
+ $projects->getCollection()->transform(function ($project) use ($stages) {
+                $ids = is_array($project->current_stage_id) ? $project->current_stage_id : [];
+                $firstId = !empty($ids) ? (int) array_values($ids)[0] : null;
+                $project->setRelation('currentStage', $firstId ? ($stages[$firstId] ?? null) : null);
+             $project->region = $project->institute?->region;
             return $project;
         });}
             $institutes = Institute::where('region_id', $regionid)
@@ -965,10 +971,15 @@ $regions = Institute::select('region_id as id', 'name')->where('type', 'Regional
         // -----------------------------------------------------------------
         else {
             if($request->status ){
-                        $query = Project::query()->with(['institute', 'projecttype', 'currentStage','fundHead']);
+                        $query = Project::query()->with(['institute', 'projecttype']);
             $query->where('status', $request->status);
             $projects = $query->paginate(10)->withQueryString();
- $projects->getCollection()->transform(function ($project) {
+            $stageIds2 = $projects->getCollection()->map(fn($p) => is_array($p->current_stage_id) && !empty($p->current_stage_id) ? (int) array_values($p->current_stage_id)[0] : null)->filter()->unique()->values()->all();
+            $stages2 = \App\Models\ApprovalStage::whereIn('id', $stageIds2)->get()->keyBy('id');
+ $projects->getCollection()->transform(function ($project) use ($stages2) {
+                $ids = is_array($project->current_stage_id) ? $project->current_stage_id : [];
+                $firstId = !empty($ids) ? (int) array_values($ids)[0] : null;
+                $project->setRelation('currentStage', $firstId ? ($stages2[$firstId] ?? null) : null);
             $project->region = $project->institute?->region;
             return $project;
         });
@@ -1109,7 +1120,7 @@ $regions = Institute::select('region_id as id', 'name')->where('type', 'Regional
         $regionid      = session('region_id');
         $type          = session('type');
 
-        $query = Project::query()->with(['institute.region', 'projecttype', 'currentStage','fundhead']);
+        $query = Project::query()->with(['institute.region', 'projecttype']);
 
         // -----------------------------------------------------------------
         // Global search
@@ -1146,35 +1157,55 @@ $regions = Institute::select('region_id as id', 'name')->where('type', 'Regional
         // -----------------------------------------------------------------
         // Status filter
         // -----------------------------------------------------------------
-        if ($request->filled('status') && in_array($request->status, ['planned', 'inprogress', 'completed'])) {
+        if ($request->filled('status') && in_array($request->status, ['planned', 'inprogress', 'completed', 'waiting', 'rejected'])) {
             $query->where('status', $request->status);
         }
 
         // -----------------------------------------------------------------
-        // Pagination
-        // -----------------------------------------------------------------
-        // -----------------------------------------------------------------
         // Pagination or Export
         // -----------------------------------------------------------------
-        if ($request->boolean('all') || $request->has('export')) {
-            $projects = $query->get();
-            
-            // Attach region name for the front-end
-            $projects->transform(function ($project) {
+        // Helper: batch-resolve current_stage from JSON array in one query
+        // Also merges users_can_approve from ALL current stages into all_users_can_approve
+        $resolveStages = function ($collection) {
+            // Collect ALL stage IDs across all projects (not just the first)
+            $allStageIds = $collection->flatMap(function ($p) {
+                $ids = is_array($p->current_stage_id) ? $p->current_stage_id : [];
+                return array_map('intval', $ids);
+            })->filter()->unique()->values()->all();
+
+            $stages = \App\Models\ApprovalStage::whereIn('id', $allStageIds)->get()->keyBy('id');
+
+            return $collection->transform(function ($project) use ($stages) {
+                $ids     = is_array($project->current_stage_id) ? $project->current_stage_id : [];
+                $intIds  = array_map('intval', $ids);
+
+                // First stage → current_stage relation (for level/stage_name checks)
+                $firstId = !empty($intIds) ? $intIds[0] : null;
+                $project->setRelation('currentStage', $firstId ? ($stages[$firstId] ?? null) : null);
+
+                // Merge users_can_approve from ALL current stages into one flat unique array
+                $mergedUsers = [];
+                foreach ($intIds as $sid) {
+                    $stage = $stages[$sid] ?? null;
+                    if ($stage) {
+                        $approvers = is_array($stage->users_can_approve) ? $stage->users_can_approve : [];
+                        $mergedUsers = array_merge($mergedUsers, $approvers);
+                    }
+                }
+                $project->all_users_can_approve = array_values(array_unique($mergedUsers));
+
                 $project->region = $project->institute?->region;
                 return $project;
             });
-            
+        };
+
+        if ($request->boolean('all') || $request->has('export')) {
+            $projects = $query->get();
+            $resolveStages($projects);
             return response()->json($projects);
         } else {
             $projects = $query->paginate(10)->withQueryString();
-
-            // Attach region name for the front-end (if not already eager-loaded)
-            $projects->getCollection()->transform(function ($project) {
-                $project->region = $project->institute?->region;
-                return $project;
-            });
-
+            $resolveStages($projects->getCollection());
             return response()->json($projects);
         }
     }

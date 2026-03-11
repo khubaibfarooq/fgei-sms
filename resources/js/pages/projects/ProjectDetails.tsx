@@ -71,7 +71,9 @@ interface ApprovalHistory {
     comments: string;
     action_date: string;
     approver: { name: string };
-    stage: { stage_name: string; description?: string | null; change_to_in_progress?: boolean; is_last?: boolean };
+    stage: { stage_name: string; description?: string | null; change_to_in_progress?: boolean; is_last?: boolean; fund_head?: { name: string } | null; };
+
+
     pdf: string | null;
     img: string | null;
 }
@@ -124,6 +126,7 @@ interface TimelineEvent {
 interface Props {
     project: Project;
     canEditMilestones: boolean;
+    fundHeadsList?: { id: number; name: string; sanction_amount: number }[];
 }
 
 const formatAmount = (value: number | null | undefined): string => {
@@ -150,7 +153,7 @@ const formatEstimatedTime = (totalDays: number): string => {
     return parts.length > 0 ? parts.join(', ') : '-';
 };
 
-export default function ProjectDetails({ project, canEditMilestones }: Props) {
+export default function ProjectDetails({ project, canEditMilestones, fundHeadsList = [] }: Props) {
     const [approvalHistory, setApprovalHistory] = useState<ApprovalHistory[]>([]);
     const [projectMilestones, setProjectMilestones] = useState<Milestone[]>([]);
     const [projectPayments, setProjectPayments] = useState<Payment[]>([]);
@@ -404,10 +407,21 @@ export default function ProjectDetails({ project, canEditMilestones }: Props) {
                                 <p className="font-medium capitalize">{project.priority || '-'}</p>
                             </div>
 
-                            {/* Fund Head */}
+                            {/* Fund Heads */}
                             <div className="sm:col-span-2 lg:col-span-1">
-                                <p className="text-[10px] md:text-xs text-muted-foreground uppercase tracking-wide">Fund Head</p>
-                                <p className="font-medium truncate" title={project.fund_head?.name}>{project.fund_head?.name || '-'}</p>
+                                <p className="text-[10px] md:text-xs text-muted-foreground uppercase tracking-wide">Fund Head(s)</p>
+                                {fundHeadsList && fundHeadsList.length > 0 ? (
+                                    <div className="space-y-0.5">
+                                        {fundHeadsList.map(fh => (
+                                            <div key={fh.id} className="flex items-center gap-1">
+                                                <span className="font-medium text-[11px]">{fh.name}</span>
+                                                <span className="text-muted-foreground text-[10px]">({(fh.sanction_amount).toLocaleString()})</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <p className="font-medium truncate" title={project.fund_head?.name}>{project.fund_head?.name || '-'}</p>
+                                )}
                             </div>
 
                             {/* Contractor */}
@@ -489,7 +503,7 @@ export default function ProjectDetails({ project, canEditMilestones }: Props) {
                             {project.description && (
                                 <div className="col-span-2 sm:col-span-4 lg:col-span-6 border-t pt-1 mt-1">
                                     <div className="flex items-start gap-1">
-                                        <p className="flex-1 text-muted-foreground line-clamp-1 italic text-[11px] md:text-xs">{project.description}</p>
+                                        <div className="flex-1 text-muted-foreground line-clamp-1 italic text-[11px] md:text-xs prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: project.description }} />
                                         <Button
                                             variant="ghost"
                                             size="icon"
@@ -535,7 +549,11 @@ export default function ProjectDetails({ project, canEditMilestones }: Props) {
                                                     <CardHeader className="p-2 bg-muted/30 pb-1 border-b">
                                                         <div className="flex justify-between items-center">
                                                             <div>
-                                                                <div className="font-semibold text-xs md:text-sm">{record.stage?.stage_name || 'Stage'}</div>
+                                                                <div className="font-semibold text-xs md:text-sm">{record.stage?.stage_name || 'Stage'}  {record.stage?.fund_head?.name && (
+                                                                    <span className="ml-2 text-[10px] font-normal bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800 px-1.5 py-0.5 rounded-full">
+                                                                        {record.stage.fund_head.name}
+                                                                    </span>
+                                                                )}</div>
                                                                 {record.stage?.description && (
                                                                     <div className="text-[10px] md:text-xs text-muted-foreground mt-0.5">{record.stage.description}</div>
                                                                 )}
@@ -834,7 +852,7 @@ export default function ProjectDetails({ project, canEditMilestones }: Props) {
                         <DialogTitle>Project Description</DialogTitle>
                     </DialogHeader>
                     <div className="py-4">
-                        <p className="text-sm whitespace-pre-wrap">{project.description}</p>
+                        <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: project.description || '' }} />
                     </div>
                 </DialogContent>
             </Dialog >
