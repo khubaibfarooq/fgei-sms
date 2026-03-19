@@ -30,6 +30,7 @@ class Project extends Model
         'structural_plan',
         'contractor_id',
         'updated_by',
+        'ddo',
     ];
 
     /**

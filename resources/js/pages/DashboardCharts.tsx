@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
-    BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend
+    BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, LabelList
 } from 'recharts';
 
 // --- Colors ---
@@ -90,11 +90,12 @@ export const ProjectsCountChart = ({ data }: ChartProps) => {
 
     return (
         <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={formattedData} margin={{ top: 20, right: 30, left: 10, bottom: 5 }}>
+            <BarChart data={formattedData} margin={{ top: 24, right: 30, left: 10, bottom: 5 }}>
                 <XAxis dataKey="status" {...axisProps} />
                 <YAxis {...axisProps} />
                 <Tooltip contentStyle={{ fontSize }} />
                 <Bar dataKey="project_count" name="Count" fill="#8884d8" radius={[4, 4, 0, 0]}>
+                    <LabelList dataKey="project_count" position="top" style={{ fontSize, fill: '#555', fontWeight: 600 }} />
                     {formattedData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
@@ -117,11 +118,13 @@ export const AssetsBarChart = ({ data }: ChartProps) => {
 
     return (
         <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={formattedData} layout="vertical" margin={{ top: 20, right: 30, left: isMobile ? 10 : 40, bottom: 5 }}>
+            <BarChart data={formattedData} layout="vertical" margin={{ top: 20, right: 50, left: isMobile ? 10 : 40, bottom: 5 }}>
                 <XAxis type="number" {...axisProps} />
                 <YAxis dataKey="Category" type="category" width={isMobile ? 80 : 100} {...axisProps} tick={{ fontSize: isMobile ? 9 : 11 }} />
                 <Tooltip contentStyle={{ fontSize }} />
-                <Bar dataKey="total_assets" name="Assets" fill="#82ca9d" radius={[0, 4, 4, 0]} />
+                <Bar dataKey="total_assets" name="Assets" fill="#82ca9d" radius={[0, 4, 4, 0]}>
+                    <LabelList dataKey="total_assets" position="right" style={{ fontSize, fill: '#555', fontWeight: 600 }} />
+                </Bar>
             </BarChart>
         </ResponsiveContainer>
     );
@@ -177,13 +180,17 @@ export const ProjectsCostChart = ({ data }: ChartProps) => {
 
     return (
         <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={formattedData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+            <BarChart data={formattedData} margin={{ top: 28, right: 30, left: 20, bottom: 5 }}>
                 <XAxis dataKey="status" {...axisProps} />
                 <YAxis {...axisProps} tickFormatter={(value) => `${(value / 1000000).toFixed(1)}M`} />
                 <Tooltip contentStyle={{ fontSize }} formatter={(value: number) => `${(value / 1000000).toFixed(2)} Mn`} />
                 <Legend {...legendProps} />
-                <Bar dataKey="estimated_cost" name="Est. Cost" fill="#8884d8" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="actual_cost" name="Actual Cost" fill="#82ca9d" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="estimated_cost" name="Est. Cost" fill="#8884d8" radius={[4, 4, 0, 0]}>
+                    <LabelList dataKey="estimated_cost" position="top" formatter={(v: any) => `${(Number(v) / 1000000).toFixed(1)}M`} style={{ fontSize: fontSize - 1, fill: '#555', fontWeight: 600 }} />
+                </Bar>
+                <Bar dataKey="actual_cost" name="Actual Cost" fill="#82ca9d" radius={[4, 4, 0, 0]}>
+                    <LabelList dataKey="actual_cost" position="top" formatter={(v: any) => `${(Number(v) / 1000000).toFixed(1)}M`} style={{ fontSize: fontSize - 1, fill: '#555', fontWeight: 600 }} />
+                </Bar>
             </BarChart>
         </ResponsiveContainer>
     );
@@ -237,11 +244,12 @@ export const TaskStatusChart = ({ data }: ChartProps) => {
 
     return (
         <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={formattedData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+            <BarChart data={formattedData} margin={{ top: 24, right: 30, left: 20, bottom: 5 }}>
                 <XAxis dataKey="status" {...axisProps} />
                 <YAxis {...axisProps} />
                 <Tooltip contentStyle={{ fontSize }} />
                 <Bar dataKey="total_request" name="Requests" fill="#FF8042" radius={[4, 4, 0, 0]}>
+                    <LabelList dataKey="total_request" position="top" style={{ fontSize, fill: '#555', fontWeight: 600 }} />
                     {formattedData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
@@ -264,11 +272,12 @@ export const RegionalFundsChart = ({ data }: ChartProps) => {
 
     return (
         <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={formattedData} margin={{ top: 20, right: 30, left: 20, bottom: 50 }}>
+            <BarChart data={formattedData} margin={{ top: 28, right: 30, left: 20, bottom: 50 }}>
                 <XAxis dataKey="Head" interval={0} angle={-45} textAnchor="end" height={60} {...axisProps} />
                 <YAxis {...axisProps} tickFormatter={(value) => `${(value / 1000000).toFixed(1)}M`} />
                 <Tooltip contentStyle={{ fontSize }} formatter={(value: number) => `${(value / 1000000).toFixed(2)} Mn`} />
                 <Bar dataKey="balance" name="Balance" fill="#82ca9d" radius={[4, 4, 0, 0]}>
+                    <LabelList dataKey="balance" position="top" formatter={(v: any) => `${(Number(v) / 1000000).toFixed(1)}M`} style={{ fontSize: fontSize - 1, fill: '#555', fontWeight: 600 }} />
                     {formattedData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}

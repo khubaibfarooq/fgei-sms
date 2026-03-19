@@ -42,7 +42,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format } from 'date-fns';
 import axios from 'axios';
-import { ImagePreview } from '@/components/ui/image-preview';
+import { ImagePreview } from '@/components/ui/image-preview2';
 import { toast } from 'sonner';
 
 // -----------------------------------------------------------------------------
@@ -115,7 +115,7 @@ interface ApprovalHistory {
     comments: string;
     action_date: string;
     approver: { name: string };
-    stage: { stage_name: string };
+    stage: { stage_name: string; fund_head?: { name: string } | null };
     pdf: string | null;
     img: string | null;
 }
@@ -132,6 +132,11 @@ interface ProjectDetails {
         institute: { name: string };
         description: string;
         pdf: string | null;
+        structural_plan: string | null;
+        final_comments: string | null;
+        fund_head?: { name: string } | null;
+        contractor?: { name: string; contact?: string | null } | null;
+        projecttype?: { name: string } | null;
     };
     history: ApprovalHistory[];
     milestones: Milestone[];
@@ -258,18 +263,24 @@ export default function PendingTrans({ transactions, summary, fundHeads, balance
                 axios.get(`/projects/${projectId}/payments`)
             ]);
             //  console.log(milestonesRes.data);
+            const d = projectDetailsRes.data;
             setProjectDetails({
                 project: {
                     id: projectId,
-                    name: projectDetailsRes.data.name,
-                    estimated_cost: projectDetailsRes.data.estimated_cost,
-                    actual_cost: projectDetailsRes.data.actual_cost,
-                    status: projectDetailsRes.data.status,
-                    approval_status: projectDetailsRes.data.approval_status,
-                    priority: projectDetailsRes.data.priority,
-                    institute: projectDetailsRes.data.institute,
-                    description: projectDetailsRes.data.description,
-                    pdf: projectDetailsRes.data.pdf,
+                    name: d.name,
+                    estimated_cost: d.estimated_cost,
+                    actual_cost: d.actual_cost,
+                    status: d.status,
+                    approval_status: d.approval_status,
+                    priority: d.priority,
+                    institute: d.institute,
+                    description: d.description,
+                    pdf: d.pdf,
+                    structural_plan: d.structural_plan ?? null,
+                    final_comments: d.final_comments ?? null,
+                    fund_head: d.fund_head ?? null,
+                    contractor: d.contractor ?? null,
+                    projecttype: d.projecttype ?? null,
                 },
                 history: historyRes.data,
                 milestones: milestonesRes.data,
@@ -393,58 +404,58 @@ export default function PendingTrans({ transactions, summary, fundHeads, balance
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Pending Fund Transactions" />
 
-            <div className="flex-1 p-2 md:p-3">
+            <div className="flex-1 p-1 md:p-2">
                 <Card>
-                    <CardHeader className="pb-3">
-                        <CardTitle className="text-2xl font-bold flex items-center gap-2">
-                            <FileText className="h-6 w-6" />
+                    <CardHeader className="pb-2 pt-3 px-4">
+                        <CardTitle className="text-lg font-bold flex items-center gap-2">
+                            <FileText className="h-5 w-5" />
                             Pending Fund Transactions
                         </CardTitle>
                     </CardHeader>
 
                     <Separator />
 
-                    <CardContent className="pt-3 space-y-4">
+                    <CardContent className="pt-2 px-4 pb-3 space-y-3">
                         {/* Summary Cards */}
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-3 gap-2">
                             <Card>
-                                <CardContent className="p-4">
+                                <CardContent className="p-3">
                                     <div className="flex items-center justify-between">
                                         <div>
-                                            <p className="text-sm font-medium text-muted-foreground">Total Pending</p>
-                                            <p className="text-2xl font-bold text-blue-600">
+                                            <p className="text-xs font-medium text-muted-foreground">Total Pending</p>
+                                            <p className="text-xl font-bold text-blue-600">
                                                 {summary.total_count}
                                             </p>
                                         </div>
-                                        <FileText className="h-5 w-5 text-blue-600" />
+                                        <FileText className="h-4 w-4 text-blue-600" />
                                     </div>
                                 </CardContent>
                             </Card>
 
                             <Card>
-                                <CardContent className="p-4">
+                                <CardContent className="p-3">
                                     <div className="flex items-center justify-between">
                                         <div>
-                                            <p className="text-sm font-medium text-muted-foreground">Pending IN</p>
-                                            <p className="text-2xl font-bold text-green-600">
+                                            <p className="text-xs font-medium text-muted-foreground">Pending IN</p>
+                                            <p className="text-xl font-bold text-green-600">
                                                 {summary.total_in.toLocaleString()}
                                             </p>
                                         </div>
-                                        <Badge variant="default" className="bg-green-100 text-green-800">IN</Badge>
+                                        <Badge variant="default" className="bg-green-100 text-green-800 text-[10px]">IN</Badge>
                                     </div>
                                 </CardContent>
                             </Card>
 
                             <Card>
-                                <CardContent className="p-4">
+                                <CardContent className="p-3">
                                     <div className="flex items-center justify-between">
                                         <div>
-                                            <p className="text-sm font-medium text-muted-foreground">Pending OUT</p>
-                                            <p className="text-2xl font-bold text-red-600">
+                                            <p className="text-xs font-medium text-muted-foreground">Pending OUT</p>
+                                            <p className="text-xl font-bold text-red-600">
                                                 {summary.total_out.toLocaleString()}
                                             </p>
                                         </div>
-                                        <Badge variant="destructive" className="bg-red-100 text-red-800">OUT</Badge>
+                                        <Badge variant="destructive" className="bg-red-100 text-red-800 text-[10px]">OUT</Badge>
                                     </div>
                                 </CardContent>
                             </Card>
@@ -452,23 +463,22 @@ export default function PendingTrans({ transactions, summary, fundHeads, balance
 
                         {/* Regional Fund Head Balances */}
                         {balances.length > 0 && (
-                            <div className="space-y-3">
-                                <div className="flex items-center justify-between">
-                                    <h3 className="text-lg font-semibold flex items-center gap-2">
-                                        <Building className="h-5 w-5 text-primary" />
-                                        Regional Fund Head Balances
-                                    </h3>
-                                </div>
-                                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+                            <div className="space-y-2">
+                                <h3 className="text-sm font-semibold flex items-center gap-1">
+                                    <Building className="h-4 w-4 text-primary" />
+                                    Regional Fund Head Balances
+                                </h3>
+                                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2">
                                     {balances.map((b, i) => (
                                         <div
                                             key={i}
-                                            className="bg-muted/50 dark:bg-gray-800 p-4 rounded-lg border hover:shadow-md transition-shadow cursor-default"
+                                            onClick={() => window.open(`/fund-trans/${b.fund_head.id}`, '_blank')}
+                                            className="bg-muted/50 dark:bg-gray-800 p-3 rounded-lg border hover:shadow-md hover:border-primary transition-all cursor-pointer"
                                         >
                                             <p className="text-xs font-medium text-muted-foreground truncate">
                                                 {b.fund_head.name}
                                             </p>
-                                            <p className="text-xl font-bold text-green-600 dark:text-green-400 mt-2">
+                                            <p className="text-base font-bold text-green-600 dark:text-green-400 mt-1">
                                                 {formatBalance(b.balance)}
                                             </p>
                                         </div>
@@ -479,20 +489,21 @@ export default function PendingTrans({ transactions, summary, fundHeads, balance
                         )}
 
                         {/* Filters */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
-                            <div className="lg:col-span-2">
-                                <label className="block text-sm font-medium mb-1">Search</label>
+                        <div className="flex flex-wrap items-end gap-2">
+                            <div className="flex-1 min-w-[160px]">
+                                <label className="block text-xs font-medium mb-1">Search</label>
                                 <Input
+                                    className="h-8 text-sm"
                                     placeholder="Search description..."
                                     value={search}
                                     onChange={(e) => setSearch(e.target.value)}
                                     onKeyDown={handleSearchKey}
                                 />
                             </div>
-                            <div>
-                                <label className="block text-sm font-medium mb-1">Fund Head</label>
+                            <div className="min-w-[140px]">
+                                <label className="block text-xs font-medium mb-1">Fund Head</label>
                                 <Select value={fundHeadId} onValueChange={setFundHeadId}>
-                                    <SelectTrigger>
+                                    <SelectTrigger className="h-8 text-sm">
                                         <SelectValue placeholder="All Fund Heads" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -506,90 +517,89 @@ export default function PendingTrans({ transactions, summary, fundHeads, balance
                                 </Select>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium mb-1">From</label>
-                                <Input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
+                                <label className="block text-xs font-medium mb-1">From</label>
+                                <Input className="h-8 text-sm" type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium mb-1">To</label>
-                                <Input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} />
+                                <label className="block text-xs font-medium mb-1">To</label>
+                                <Input className="h-8 text-sm" type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} />
                             </div>
+                            <Button onClick={applyFilters} size="sm" className="h-8">
+                                <Filter className="h-3 w-3 mr-1" />
+                                Filter
+                            </Button>
                         </div>
 
-                        <Button onClick={applyFilters} className="w-full md:w-auto">
-                            <Filter className="h-4 w-4 mr-2" />
-                            Apply Filters
-                        </Button>
-
-                        <div className="text-sm text-muted-foreground">
-                            Showing {transactions.from} to {transactions.to} of {transactions.total} pending transactions
+                        <div className="text-xs text-muted-foreground">
+                            Showing {transactions.from}–{transactions.to} of {transactions.total} pending transactions
                         </div>
 
                         {/* Table */}
-                        <div className="overflow-x-auto">
-                            <table className="w-full border-collapse">
-                                <thead>
+                        <div className="overflow-x-auto rounded-md border" style={{ maxHeight: '60vh', overflowY: 'auto' }}>
+                            <table className="w-full border-collapse text-xs">
+                                <thead className="sticky top-0 z-10">
                                     <tr className="bg-primary dark:bg-gray-800">
-                                        <th className="border p-3 text-left text-sm font-medium text-white dark:text-gray-200">Date</th>
-                                        <th className="border p-3 text-left text-sm font-medium text-white dark:text-gray-200">Fund Head</th>
-                                        <th className="border p-3 text-left text-sm font-medium text-white dark:text-gray-200">Institute</th>
-                                        <th className="border p-3 text-left text-sm font-medium text-white dark:text-gray-200">Description</th>
-                                        <th className="border p-3 text-center text-sm font-medium text-white dark:text-gray-200">Type</th>
-                                        <th className="border p-3 text-right text-sm font-medium text-white dark:text-gray-200">Amount</th>
-                                        <th className="border p-3 text-left text-sm font-medium text-white dark:text-gray-200">Added By</th>
-                                        <th className="border p-3 text-center text-sm font-medium text-white dark:text-gray-200">Actions</th>
+                                        <th className="border p-2 text-left font-medium text-white dark:text-gray-200">Date</th>
+                                        <th className="border p-2 text-left font-medium text-white dark:text-gray-200">Fund Head</th>
+                                        <th className="border p-2 text-left font-medium text-white dark:text-gray-200">Institute</th>
+                                        <th className="border p-2 text-left font-medium text-white dark:text-gray-200">Description</th>
+                                        <th className="border p-2 text-center font-medium text-white dark:text-gray-200">Type</th>
+                                        <th className="border p-2 text-right font-medium text-white dark:text-gray-200">Amount</th>
+                                        <th className="border p-2 text-left font-medium text-white dark:text-gray-200">Added By</th>
+                                        <th className="border p-2 text-center font-medium text-white dark:text-gray-200">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {transactions.data.length === 0 ? (
                                         <tr>
-                                            <td colSpan={7} className="border p-8 text-center">
-                                                <FileText className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                                                <p className="text-muted-foreground">No pending transactions found.</p>
+                                            <td colSpan={8} className="border p-6 text-center">
+                                                <FileText className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                                                <p className="text-muted-foreground text-xs">No pending transactions found.</p>
                                             </td>
                                         </tr>
                                     ) : (
                                         transactions.data.map((transaction) => (
                                             <tr key={transaction.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                                                <td className="border p-3 text-sm">
-                                                    <div className="flex items-center gap-2">
-                                                        <Calendar className="h-4 w-4 text-muted-foreground" />
+                                                <td className="border p-1.5 whitespace-nowrap">
+                                                    <div className="flex items-center gap-1">
+                                                        <Calendar className="h-3 w-3 text-muted-foreground shrink-0" />
                                                         {new Date(transaction.added_date).toLocaleDateString()}
                                                     </div>
                                                 </td>
-                                                <td className="border p-3 text-sm font-medium">{transaction.fund_head.name}</td>
-                                                <td className="border p-3 text-sm">{transaction.institute.name}</td>
-                                                <td className="border p-3 text-sm">{transaction.description}</td>
-                                                <td className="border p-3 text-center">{getTypeBadge(transaction.type)}</td>
-                                                <td className="border p-3 text-right text-sm font-medium">
+                                                <td className="border p-1.5 font-medium">{transaction.fund_head.name}</td>
+                                                <td className="border p-1.5">{transaction.institute.name}</td>
+                                                <td className="border p-1.5 max-w-[200px] truncate">{transaction.description}</td>
+                                                <td className="border p-1.5 text-center">{getTypeBadge(transaction.type)}</td>
+                                                <td className="border p-1.5 text-right font-medium">
                                                     <span className={transaction.type === 'in' ? 'text-green-600' : 'text-red-600'}>
                                                         {transaction.type === 'in' ? '+' : '-'}
                                                         {formatBalance(transaction.amount)}
                                                     </span>
                                                 </td>
-                                                <td className="border p-3 text-sm">
-                                                    <div className="flex items-center gap-2">
-                                                        <User className="h-4 w-4 text-muted-foreground" />
+                                                <td className="border p-1.5">
+                                                    <div className="flex items-center gap-1">
+                                                        <User className="h-3 w-3 text-muted-foreground shrink-0" />
                                                         {transaction.user.name}
                                                     </div>
                                                 </td>
-                                                <td className="border p-3 text-center">
-                                                    <div className="flex items-center justify-center gap-2">
+                                                <td className="border p-1.5 text-center">
+                                                    <div className="flex items-center justify-center gap-1">
                                                         <Button
                                                             size="sm"
                                                             variant="outline"
                                                             onClick={() => openDetails(transaction)}
-                                                            className="text-blue-600 border-blue-600 hover:bg-blue-50"
+                                                            className="h-6 px-2 text-[10px] text-blue-600 border-blue-600 hover:bg-blue-50"
                                                         >
-                                                            <Eye className="h-4 w-4 mr-1" />
+                                                            <Eye className="h-3 w-3 mr-0.5" />
                                                             View
                                                         </Button>
                                                         <Button
                                                             size="sm"
                                                             variant="default"
                                                             onClick={() => openApprovalModal(transaction)}
-                                                            className="bg-green-600 hover:bg-green-700"
+                                                            className="h-6 px-2 text-[10px] bg-green-600 hover:bg-green-700"
                                                         >
-                                                            <Check className="h-4 w-4 mr-1" />
+                                                            <Check className="h-3 w-3 mr-0.5" />
                                                             Approve
                                                         </Button>
                                                     </div>
@@ -603,13 +613,14 @@ export default function PendingTrans({ transactions, summary, fundHeads, balance
 
                         {/* Pagination */}
                         {transactions.links.length > 1 && (
-                            <div className="flex justify-center pt-6 flex-wrap gap-2">
+                            <div className="flex justify-center pt-2 flex-wrap gap-1">
                                 {transactions.links.map((link, i) => (
                                     <Button
                                         key={i}
                                         disabled={!link.url}
                                         variant={link.active ? 'default' : 'outline'}
                                         size="sm"
+                                        className="h-7 px-2 text-xs"
                                         onClick={() => router.visit(link.url || '', { preserveScroll: true })}
                                     >
                                         <span dangerouslySetInnerHTML={{ __html: link.label }} />
@@ -820,156 +831,222 @@ export default function PendingTrans({ transactions, summary, fundHeads, balance
 
             {/* Project Detail Modal */}
             <Dialog open={projectModalOpen} onOpenChange={setProjectModalOpen}>
-                <DialogContent className="max-w-3xl h-[90vh] flex flex-col p-0">
-                    <DialogHeader className="p-6 pb-0">
-                        <DialogTitle className="text-xl font-bold flex items-center gap-2">
-                            <Building className="h-5 w-5 text-primary" />
-                            Request for {selectedTxDetail?.amount} RS
-                            ({projectDetails?.project.name})
+                <DialogContent className="max-w-2xl h-[85vh] flex flex-col p-0">
+                    <DialogHeader className="px-4 pt-3 pb-2 border-b shrink-0">
+                        <DialogTitle className="text-base font-bold flex items-center gap-1.5">
+                            <Building className="h-4 w-4 text-primary shrink-0" />
+                            <span className="truncate">{projectDetails?.project.name}</span>
                         </DialogTitle>
-                        <DialogDescription>
-                            {projectDetails?.project.institute.name}
+                        <DialogDescription asChild>
+                            <div className="text-xs space-y-1.5 mt-1">
+                                {/* Status row */}
+                                <div className="flex flex-wrap items-center gap-1.5">
+                                    <span className="font-medium text-foreground">{projectDetails?.project.institute.name}</span>
+                                    {projectDetails?.project.status && (
+                                        <Badge variant="outline" className={`text-[10px] h-4 px-1.5 ${
+                                            projectDetails.project.status === 'completed' ? 'border-green-500 text-green-600 bg-green-50' :
+                                            projectDetails.project.status === 'inprogress' ? 'border-blue-500 text-blue-600 bg-blue-50' :
+                                            'border-gray-500 text-gray-600 bg-gray-50'
+                                        }`}>
+                                            {projectDetails.project.status.charAt(0).toUpperCase() + projectDetails.project.status.slice(1)}
+                                        </Badge>
+                                    )}
+                                    {projectDetails?.project.approval_status && (
+                                        <Badge variant="outline" className={`text-[10px] h-4 px-1.5 ${
+                                            projectDetails.project.approval_status === 'approved' ? 'border-green-500 text-green-600 bg-green-50' :
+                                            projectDetails.project.approval_status === 'rejected' ? 'border-red-500 text-red-600 bg-red-50' :
+                                            'border-yellow-500 text-yellow-600 bg-yellow-50'
+                                        }`}>
+                                            {projectDetails.project.approval_status.charAt(0).toUpperCase() + projectDetails.project.approval_status.slice(1)}
+                                        </Badge>
+                                    )}
+                                    {projectDetails?.project.priority && (
+                                        <Badge variant="outline" className="text-[10px] h-4 px-1.5 capitalize">{projectDetails.project.priority}</Badge>
+                                    )}
+                                </div>
 
-                            <p className="text-sm text-muted-foreground">Estimated Cost: {projectDetails?.project.estimated_cost}</p>
-                            <p className="text-sm text-muted-foreground">Actual Cost: {projectDetails?.project.actual_cost}</p>
-                            {projectDetails?.project.pdf && (
-                                <a
-                                    href={`/assets/${projectDetails?.project.pdf}`}
-                                    target="_blank"
-                                    className="mt-1 text-blue-600 underline text-xs flex items-center gap-1"
-                                >
-                                    View PDF
-                                </a>
-                            )}
+                                {/* Meta grid */}
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-3 gap-y-1 bg-muted/20 p-2 rounded-md border">
+                                    <div>
+                                        <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Est. Cost</p>
+                                        <p className="font-medium text-foreground">{projectDetails?.project.estimated_cost?.toLocaleString() ?? '-'}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Act. Cost</p>
+                                        <p className="font-medium text-foreground">{projectDetails?.project.actual_cost?.toLocaleString() ?? '-'}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Request</p>
+                                        <p className="font-medium text-orange-600">{selectedTxDetail?.amount?.toLocaleString()} RS</p>
+                                    </div>
+                                    {projectDetails?.project.projecttype?.name && (
+                                        <div>
+                                            <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Type</p>
+                                            <p className="font-medium text-foreground truncate">{projectDetails.project.projecttype.name}</p>
+                                        </div>
+                                    )}
+                                    {projectDetails?.project.fund_head?.name && (
+                                        <div>
+                                            <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Fund Head</p>
+                                            <p className="font-medium text-foreground truncate">{projectDetails.project.fund_head.name}</p>
+                                        </div>
+                                    )}
+                                    {projectDetails?.project.contractor?.name && (
+                                        <div>
+                                            <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Contractor</p>
+                                            <p className="font-medium text-foreground truncate">{projectDetails.project.contractor.name}</p>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Description */}
+                                {projectDetails?.project.description && (
+                                    <div className="bg-muted/10 border rounded px-2 py-1">
+                                        <p className="text-[11px] text-muted-foreground italic line-clamp-2" dangerouslySetInnerHTML={{ __html: projectDetails.project.description }} />
+                                    </div>
+                                )}
+
+                                {/* Final comments */}
+                                {projectDetails?.project.final_comments && (
+                                    <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded px-2 py-1 text-[11px] text-yellow-800 dark:text-yellow-200">
+                                        <span className="font-semibold">Final Comments: </span>{projectDetails.project.final_comments}
+                                    </div>
+                                )}
+
+                                {/* PDF buttons */}
+                                <div className="flex items-center gap-2">
+                                    {projectDetails?.project.pdf && (
+                                        <a href={`/assets/${projectDetails.project.pdf}`} target="_blank"
+                                            className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-600 text-white rounded text-[10px] hover:bg-blue-700">
+                                            <FileText className="h-3 w-3" /> Project PDF
+                                        </a>
+                                    )}
+                                    {projectDetails?.project.structural_plan && (
+                                        <a href={`/assets/${projectDetails.project.structural_plan}`} target="_blank"
+                                            className="inline-flex items-center gap-1 px-2 py-0.5 bg-indigo-600 text-white rounded text-[10px] hover:bg-indigo-700">
+                                            <FileText className="h-3 w-3" /> Structural Plan
+                                        </a>
+                                    )}
+                                </div>
+                            </div>
                         </DialogDescription>
                     </DialogHeader>
 
-                    <div className="flex-1 overflow-y-auto px-6 h-full min-h-0">
-                        <Tabs defaultValue="approvals" className="w-full h-full flex flex-col">
-                            <TabsList className="grid w-full grid-cols-3 shrink-0">
-                                <TabsTrigger value="approvals">Approvals</TabsTrigger>
-                                <TabsTrigger value="milestones">Milestones</TabsTrigger>
-                                <TabsTrigger value="payments">Payments</TabsTrigger>
+                    <div className="flex-1 overflow-y-auto px-4 h-full min-h-0">
+
+                        <Tabs defaultValue="approvals" className="w-full h-full flex flex-col mt-4">
+                            <TabsList className="grid w-full grid-cols-3 shrink-0 h-8 text-xs">
+                                <TabsTrigger value="approvals" className="text-xs py-1">Approvals</TabsTrigger>
+                                <TabsTrigger value="milestones" className="text-xs py-1">Milestones</TabsTrigger>
+                                <TabsTrigger value="payments" className="text-xs py-1">Payments</TabsTrigger>
                             </TabsList>
 
-                            <div className="flex-1 mt-4 pb-6 h-full min-h-0">
-                                <TabsContent value="approvals" className="m-0 space-y-4">
+                            <div className="flex-1 mt-2 pb-4 h-full min-h-0">
+                                {/* Approvals Tab */}
+                                <TabsContent value="approvals" className="m-0 space-y-2">
                                     {loadingDetails ? (
-                                        <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>
+                                        <div className="flex justify-center py-8"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div></div>
                                     ) : projectDetails?.history.length === 0 ? (
-                                        <div className="text-center py-12 text-muted-foreground border-2 border-dashed rounded-lg">No approval history.</div>
+                                        <div className="text-center py-8 text-xs text-muted-foreground border-2 border-dashed rounded-lg">No approval history.</div>
                                     ) : (
-                                        <div className="space-y-4">
+                                        <div className="space-y-2">
                                             {projectDetails?.history.map((record) => (
-                                                <Card key={record.id} className="overflow-hidden">
-                                                    <div className="p-4 flex gap-4">
-                                                        <div className="mt-1">
-                                                            {record.status === 'approved' ? <CheckCircle className="h-5 w-5 text-green-500" /> : <XCircle className="h-5 w-5 text-red-500" />}
+                                                <div key={record.id} className="flex gap-2 p-2 border rounded-lg bg-muted/20">
+                                                    <div className="mt-0.5 shrink-0">
+                                                        {record.status === 'approved'
+                                                            ? <CheckCircle className="h-4 w-4 text-green-500" />
+                                                            : <XCircle className="h-4 w-4 text-red-500" />}
+                                                    </div>
+                                                    <div className="flex-1 min-w-0 space-y-0.5">
+                                                        <div className="flex justify-between items-center gap-2">
+                                                            <p className="text-xs font-semibold truncate">{record.stage?.stage_name || 'Stage'}</p>
+                                                            <Badge variant={record.status === 'approved' ? 'default' : 'destructive'} className="capitalize text-[10px] shrink-0">{record.status}</Badge>
                                                         </div>
-                                                        <div className="flex-1 space-y-1">
-                                                            <div className="flex justify-between items-start">
-                                                                <p className="font-semibold">{record.stage?.stage_name || 'Stage'}</p>
-                                                                <Badge variant={record.status === 'approved' ? 'default' : 'destructive'} className="capitalize">{record.status}</Badge>
-                                                            </div>
-                                                            <p className="text-xs text-muted-foreground flex items-center gap-1"><User className="h-3 w-3" /> {record.approver?.name} • <Clock className="h-3 w-3 ml-1" /> {new Date(record.action_date).toLocaleString()}</p>
-                                                            {record.comments && <p className="text-sm bg-muted/50 p-2 rounded mt-2 border italic">"{record.comments}"</p>}
+                                                        <p className="text-[10px] text-muted-foreground flex items-center gap-1">
+                                                            <User className="h-2.5 w-2.5" /> {record.approver?.name}
+                                                            <span className="mx-1">·</span>
+                                                            <Clock className="h-2.5 w-2.5" /> {new Date(record.action_date).toLocaleString()}
+                                                        </p>
+                                                        {record.stage?.fund_head?.name && (
+                                                            <p className="text-[10px] text-muted-foreground flex items-center gap-1">
+                                                                <Building className="h-2.5 w-2.5" /> {record.stage.fund_head.name}
+                                                            </p>
+                                                        )}
+                                                        {record.comments && (
+                                                            <p className="text-[10px] bg-muted/50 px-2 py-1 rounded border italic">"{record.comments}"</p>
+                                                        )}
+                                                        <div className="flex items-center gap-2 mt-1">
                                                             {record.pdf && (
-                                                                <a
-                                                                    href={`/${record.pdf}`}
-                                                                    target="_blank"
-                                                                    className="mt-1 text-blue-600 underline text-xs flex items-center gap-1"
-                                                                >
-                                                                    View PDF
-                                                                </a>)}
+                                                                <a href={`/${record.pdf}`} target="_blank" className="text-blue-600 underline text-[10px]">PDF</a>
+                                                            )}
                                                             {record.img && (
-                                                                <div className="mt-2">
-                                                                    <ImagePreview
-                                                                        dataImg={record.img}
-                                                                        size="h-20"
-                                                                        className="rounded border"
-                                                                    />
-                                                                </div>
+                                                                <ImagePreview dataImg={record.img} size="h-12" className="rounded border" />
                                                             )}
                                                         </div>
                                                     </div>
-                                                </Card>
-                                            ))}
-                                        </div>
-                                    )}
-                                </TabsContent>
-
-                                <TabsContent value="milestones" className="m-0 space-y-4">
-                                    {projectDetails?.milestones.length === 0 ? (
-                                        <div className="text-center py-12 text-muted-foreground border-2 border-dashed rounded-lg">No milestones found.</div>
-                                    ) : (
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            {projectDetails?.milestones.map((milestone) => (
-                                                <Card key={milestone.id} className="p-4 space-y-2">
-                                                    <div className="flex justify-between items-start gap-2">
-                                                        <p className="font-semibold text-sm">{milestone.name}</p>
-                                                        <Badge variant={milestone.status === 'completed' ? 'default' : 'outline'} className="text-[10px]">{milestone.status}</Badge>
-                                                    </div>
-                                                    {milestone.img && (
-                                                        <div className="mb-2">
-                                                            <ImagePreview
-                                                                dataImg={milestone.img}
-                                                                size="h-32"
-                                                                className="w-full object-cover rounded-md"
-                                                            />
-                                                        </div>
-                                                    )}
-                                                    {milestone.pdf && (
-                                                        <a
-                                                            href={`/${milestone.pdf}`}
-                                                            target="_blank"
-                                                            className="mb-2 text-blue-600 underline text-xs flex items-center gap-1"
-                                                        >
-                                                            View Document (PDF)
-                                                        </a>
-                                                    )}
-                                                    <div className="text-[10px] text-muted-foreground space-y-1">
-                                                        <p className="flex items-center gap-1"><Calendar className="h-3 w-3" /> Due in: {milestone.days} days</p>
-                                                        {milestone.completed_date && <p className="flex items-center gap-1 text-green-600"><CheckCircle className="h-3 w-3" /> Done: {new Date(milestone.completed_date).toLocaleDateString()}</p>}
-                                                    </div>
-                                                    {milestone.description && <p className="text-xs text-muted-foreground line-clamp-2">{milestone.description}</p>}
-                                                </Card>
-                                            ))}
-                                        </div>
-                                    )}
-                                </TabsContent>
-
-                                <TabsContent value="payments" className="m-0 space-y-4">
-                                    {projectDetails?.payments.length === 0 ? (
-                                        <div className="text-center py-12 text-muted-foreground border-2 border-dashed rounded-lg">No payments recorded.</div>
-                                    ) : (
-                                        <div className="space-y-3">
-                                            {projectDetails?.payments.map((payment) => (
-                                                <div key={payment.id} className="flex items-center justify-between p-3 border rounded-lg bg-muted/30">
-                                                    <div className="space-y-1">
-                                                        <p className="font-bold">{payment.amount.toLocaleString()}</p>
-                                                        <p className="text-xs text-muted-foreground">{payment.fund_head?.name || 'General Fund'} • {new Date(payment.added_date).toLocaleDateString()}</p>
-                                                    </div>
-                                                    <Badge variant={payment.status === 'Approved' ? 'default' : 'outline'}>{payment.status}</Badge>
-                                                    {payment.img && (
-                                                        <div className="mt-2">
-                                                            <ImagePreview
-                                                                dataImg={payment.img}
-                                                                size="h-20"
-                                                                className="rounded border"
-                                                            />
-                                                        </div>
-                                                    )}
                                                 </div>
                                             ))}
                                         </div>
+                                    )}
+                                </TabsContent>
+
+                                {/* Milestones Tab */}
+                                <TabsContent value="milestones" className="m-0">
+                                    {projectDetails?.milestones.length === 0 ? (
+                                        <div className="text-center py-8 text-xs text-muted-foreground border-2 border-dashed rounded-lg">No milestones found.</div>
+                                    ) : (
+                                        <div className="grid grid-cols-2 gap-2">
+                                            {projectDetails?.milestones.map((milestone) => (
+                                                <div key={milestone.id} className="p-2 border rounded-lg bg-muted/20 space-y-1 text-xs">
+                                                    <div className="flex justify-between items-start gap-1">
+                                                        <p className="font-semibold leading-tight">{milestone.name}</p>
+                                                        <Badge variant={milestone.status === 'completed' ? 'default' : 'outline'} className="text-[9px] shrink-0">{milestone.status}</Badge>
+                                                    </div>
+                                                    {milestone.img && (
+                                                        <ImagePreview dataImg={milestone.img} size="h-20" className="w-full object-cover rounded" />
+                                                    )}
+                                                    <div className="flex items-center gap-2 text-[10px] text-muted-foreground flex-wrap">
+                                                        <span className="flex items-center gap-0.5"><Calendar className="h-2.5 w-2.5" /> {milestone.days}d</span>
+                                                        {milestone.completed_date && (
+                                                            <span className="flex items-center gap-0.5 text-green-600"><CheckCircle className="h-2.5 w-2.5" /> {new Date(milestone.completed_date).toLocaleDateString()}</span>
+                                                        )}
+                                                        {milestone.pdf && (
+                                                            <a href={`/${milestone.pdf}`} target="_blank" className="text-blue-600 underline">PDF</a>
+                                                        )}
+                                                    </div>
+                                                    {milestone.description && <p className="text-[10px] text-muted-foreground line-clamp-2">{milestone.description}</p>}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </TabsContent>
+
+                                {/* Payments Tab */}
+                                <TabsContent value="payments" className="m-0 space-y-1.5">
+                                    {projectDetails?.payments.length === 0 ? (
+                                        <div className="text-center py-8 text-xs text-muted-foreground border-2 border-dashed rounded-lg">No payments recorded.</div>
+                                    ) : (
+                                        projectDetails?.payments.map((payment) => (
+                                            <div key={payment.id} className="flex items-center justify-between px-3 py-2 border rounded-lg bg-muted/20 text-xs">
+                                                <div>
+                                                    <p className="font-bold">{payment.amount.toLocaleString()}</p>
+                                                    <p className="text-[10px] text-muted-foreground">{payment.fund_head?.name || 'General Fund'} · {new Date(payment.added_date).toLocaleDateString()}</p>
+                                                    {payment.description && <p className="text-[10px] text-muted-foreground line-clamp-1">{payment.description}</p>}
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    {payment.img && <ImagePreview dataImg={payment.img} size="h-10" className="rounded border" />}
+                                                    <Badge variant={payment.status === 'Approved' ? 'default' : 'outline'} className="text-[10px]">{payment.status}</Badge>
+                                                </div>
+                                            </div>
+                                        ))
                                     )}
                                 </TabsContent>
                             </div>
                         </Tabs>
                     </div>
 
-                    <DialogFooter className="p-6 border-t shrink-0">
-                        <Button variant="outline" onClick={() => setProjectModalOpen(false)}>
+                    <DialogFooter className="px-4 py-2 border-t shrink-0">
+                        <Button size="sm" variant="outline" onClick={() => setProjectModalOpen(false)}>
                             Close
                         </Button>
                     </DialogFooter>

@@ -247,83 +247,84 @@ export default function FundsTran({ fundheld, fundtrans, filters }: Props) {
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title={`Fund Transactions - ${fundheld.fund_head.name}`} />
 
-      <div className="flex-1 p-2 md:p-3">
+      <div className="flex-1 p-1 md:p-2">
         <Card>
-          <CardHeader className="pb-3">
+          <CardHeader className="pb-2 pt-3 px-4">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
                 <Link href="/funds">
-                  <Button variant="outline" size="icon">
-                    <ArrowLeft className="h-4 w-4" />
+                  <Button variant="outline" size="icon" className="h-7 w-7">
+                    <ArrowLeft className="h-3.5 w-3.5" />
                   </Button>
                 </Link>
                 <div>
-                  <CardTitle className="text-2xl font-bold flex items-center gap-2">
+                  <CardTitle className="text-lg font-bold">
                     {fundheld.fund_head.name}
                   </CardTitle>
-                  <p className="text-muted-foreground text-sm">{fundheld.institute.name}</p>
+                  <p className="text-muted-foreground text-xs">{fundheld.institute.name}</p>
                 </div>
               </div>
               <div className="text-right">
-                <p className="text-2xl font-bold text-green-600">
+                <p className="text-xl font-bold text-green-600">
                   {formatAmount(fundheld.balance)}
                 </p>
-                <p className="text-sm text-muted-foreground">Current Balance</p>
+                <p className="text-xs text-muted-foreground">Current Balance</p>
               </div>
             </div>
           </CardHeader>
 
           <Separator />
 
-          <CardContent className="pt-3 space-y-4">
+          <CardContent className="pt-2 px-4 pb-3 space-y-3">
             {/* Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-3 gap-2">
               <Card>
-                <CardContent className="p-4">
+                <CardContent className="p-3">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Total In</p>
-                      <p className="text-2xl font-bold text-green-600">
+                      <p className="text-xs font-medium text-muted-foreground">Total In</p>
+                      <p className="text-xl font-bold text-green-600">
                         {formatAmount(calculateTotalIn())}
                       </p>
                     </div>
-                    <Badge variant="default" className="bg-green-100 text-green-800">IN</Badge>
+                    <Badge variant="default" className="bg-green-100 text-green-800 text-[10px]">IN</Badge>
                   </div>
                 </CardContent>
               </Card>
 
               <Card>
-                <CardContent className="p-4">
+                <CardContent className="p-3">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Total Out</p>
-                      <p className="text-2xl font-bold text-red-600">
+                      <p className="text-xs font-medium text-muted-foreground">Total Out</p>
+                      <p className="text-xl font-bold text-red-600">
                         {formatAmount(calculateTotalOut())}
                       </p>
                     </div>
-                    <Badge variant="destructive" className="bg-red-100 text-red-800">OUT</Badge>
+                    <Badge variant="destructive" className="bg-red-100 text-red-800 text-[10px]">OUT</Badge>
                   </div>
                 </CardContent>
               </Card>
 
               <Card>
-                <CardContent className="p-4">
+                <CardContent className="p-3">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Total Transactions</p>
-                      <p className="text-2xl font-bold text-blue-600">{fundtrans.total}</p>
+                      <p className="text-xs font-medium text-muted-foreground">Total Transactions</p>
+                      <p className="text-xl font-bold text-blue-600">{fundtrans.total}</p>
                     </div>
-                    <FileText className="h-5 w-5 text-blue-600" />
+                    <FileText className="h-4 w-4 text-blue-600" />
                   </div>
                 </CardContent>
               </Card>
             </div>
 
             {/* Filters */}
-            <div className="flex flex-col md:flex-row gap-3 items-end">
-              <div className="flex-1">
-                <label className="block text-sm font-medium mb-1">Search</label>
+            <div className="flex flex-wrap items-end gap-2">
+              <div className="flex-1 min-w-[160px]">
+                <label className="block text-xs font-medium mb-1">Search</label>
                 <Input
+                  className="h-8 text-sm"
                   placeholder="Search description..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
@@ -331,85 +332,90 @@ export default function FundsTran({ fundheld, fundtrans, filters }: Props) {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">From</label>
-                <Input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
+                <label className="block text-xs font-medium mb-1">From</label>
+                <Input className="h-8 text-sm" type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">To</label>
-                <Input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} />
+                <label className="block text-xs font-medium mb-1">To</label>
+                <Input className="h-8 text-sm" type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} />
               </div>
-              <Button onClick={applyFilters} className="w-full md:w-auto">
+              <Button onClick={applyFilters} size="sm" className="h-8">
                 Fetch
               </Button>
             </div>
 
-            <div className="text-sm text-muted-foreground">
-              Showing {fundtrans.from} to {fundtrans.to} of {fundtrans.total} transactions
+            <div className="text-xs text-muted-foreground">
+              Showing {fundtrans.from}–{fundtrans.to} of {fundtrans.total} transactions
             </div>
 
             {/* Table */}
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse">
-                <thead>
+            <div className="overflow-x-auto rounded-md border" style={{ maxHeight: '60vh', overflowY: 'auto' }}>
+              <table className="w-full border-collapse text-xs">
+                <thead className="sticky top-0 z-10">
                   <tr className="bg-primary dark:bg-gray-800">
-                    <th className="border p-3 text-left text-sm font-medium text-white dark:text-gray-200">Date</th>
-                    <th className="border p-3 text-left text-sm font-medium text-white dark:text-gray-200">Description</th>
-                    <th className="border p-3 text-center text-sm font-medium text-white dark:text-gray-200">Type</th>
-                    <th className="border p-3 text-right text-sm font-medium text-white dark:text-gray-200">Amount</th>
-                    <th className="border p-3 text-left text-sm font-medium text-white dark:text-gray-200">Admin Info</th>
-                    <th className="border p-3 text-center text-sm font-medium text-white dark:text-gray-200">Status</th>
-                    <th className="border p-3 text-center text-sm font-medium text-white dark:text-gray-200">Actions</th>
+                    <th className="border p-2 text-left font-medium text-white dark:text-gray-200">Date</th>
+                    <th className="border p-2 text-left font-medium text-white dark:text-gray-200">Description</th>
+                    <th className="border p-2 text-center font-medium text-white dark:text-gray-200">Type</th>
+                    <th className="border p-2 text-right font-medium text-white dark:text-gray-200">Amount</th>
+                    <th className="border p-2 text-left font-medium text-white dark:text-gray-200">Admin Info</th>
+                    <th className="border p-2 text-center font-medium text-white dark:text-gray-200">Status</th>
+                    <th className="border p-2 text-center font-medium text-white dark:text-gray-200">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {fundtrans.data.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="border p-8 text-center">
-                        <FileText className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                        <p className="text-muted-foreground">No transactions found.</p>
+                      <td colSpan={7} className="border p-6 text-center">
+                        <FileText className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                        <p className="text-muted-foreground text-xs">No transactions found.</p>
                       </td>
                     </tr>
                   ) : (
                     fundtrans.data.map((transaction) => (
                       <tr key={transaction.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                        <td className="border p-3 text-sm">
-                          <div className="flex items-center gap-2">
-                            <Calendar className="h-4 w-4 text-muted-foreground" />
+                        <td className="border p-1.5 whitespace-nowrap">
+                          <div className="flex items-center gap-1">
+                            <Calendar className="h-3 w-3 text-muted-foreground shrink-0" />
                             {new Date(transaction.added_date).toLocaleDateString()}
                           </div>
                         </td>
-                        <td className="border p-3 text-sm">  <div className='flex flex-row gap-2 align-middle'> <ImagePreview dataImg={transaction.img} size="h-20 w-20" />  <span className='font-bold'>{transaction.description}</span></div></td>
-                        <td className="border p-3 text-center">{getTypeBadge(transaction.type)}</td>
-                        <td className="border p-3 text-right text-sm font-medium">
+                        <td className="border p-1.5">
+                          <div className="flex flex-row gap-2 items-center">
+                            <ImagePreview dataImg={transaction.img} size="h-12 w-12" />
+                            <span className="font-semibold">{transaction.description}</span>
+                          </div>
+                        </td>
+                        <td className="border p-1.5 text-center">{getTypeBadge(transaction.type)}</td>
+                        <td className="border p-1.5 text-right font-medium">
                           <span className={transaction.type === 'in' ? 'text-green-600' : 'text-red-600'}>
                             {transaction.type === 'in' ? '+' : '-'}
                             {formatAmount(Number(transaction.amount))}
                           </span>
                         </td>
-                        <td className="border p-3 text-sm">
-                          <div className="flex flex-col gap-1">
-                            <div className="flex items-center gap-1 text-xs">
-                              <User className="h-3 w-3 text-muted-foreground" />
+                        <td className="border p-1.5">
+                          <div className="flex flex-col gap-0.5">
+                            <div className="flex items-center gap-1">
+                              <User className="h-3 w-3 text-muted-foreground shrink-0" />
                               <span className="text-muted-foreground">Added:</span>
-                              <span className="font-medium text-gray-700 dark:text-gray-300">{transaction.user.name}</span>
+                              <span className="font-medium">{transaction.user.name}</span>
                             </div>
                             {transaction.approver && (
-                              <div className="flex items-center gap-1 text-xs">
-                                <Check className="h-3 w-3 text-green-600" />
+                              <div className="flex items-center gap-1">
+                                <Check className="h-3 w-3 text-green-600 shrink-0" />
                                 <span className="text-muted-foreground">Appr:</span>
-                                <span className="font-medium text-gray-700 dark:text-gray-300">{transaction.approver.name}</span>
+                                <span className="font-medium">{transaction.approver.name}</span>
                               </div>
                             )}
                             {transaction.approved_date && (
-                              <div className="flex items-center gap-1 text-[10px] text-muted-foreground ml-4">
-                                <span>{new Date(transaction.approved_date).toLocaleDateString()}</span>
+                              <div className="text-[10px] text-muted-foreground ml-4">
+                                {new Date(transaction.approved_date).toLocaleDateString()}
                               </div>
                             )}
                           </div>
                         </td>
-                        <td className="border p-3 text-center">{getStatusBadge(transaction.status)}</td>
-                        <td className="border p-3 text-center">
-                          <div className="flex items-center justify-center gap-2">
+                        <td className="border p-1.5 text-center">{getStatusBadge(transaction.status)}</td>
+                        <td className="border p-1.5 text-center">
+                          <div className="flex items-center justify-center gap-1">
                             {transaction.status === 'Pending' && (
                               <Button
                                 size="sm"
@@ -417,12 +423,12 @@ export default function FundsTran({ fundheld, fundtrans, filters }: Props) {
                                 onClick={() => handleApprove(transaction)}
                                 disabled={approvingId === transaction.id}
                                 title="Approve Transaction"
-                                className="bg-green-600 hover:bg-green-700"
+                                className="h-6 w-6 p-0 bg-green-600 hover:bg-green-700"
                               >
                                 {approvingId === transaction.id ? (
-                                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                  <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
                                 ) : (
-                                  <Check className="h-4 w-4" />
+                                  <Check className="h-3 w-3" />
                                 )}
                               </Button>
                             )}
@@ -432,8 +438,9 @@ export default function FundsTran({ fundheld, fundtrans, filters }: Props) {
                                 variant="ghost"
                                 onClick={() => openDetailModal(transaction)}
                                 title="View Details"
+                                className="h-6 w-6 p-0"
                               >
-                                <Eye className="h-4 w-4" />
+                                <Eye className="h-3 w-3" />
                               </Button>
                             ) : null}
                           </div>
@@ -447,13 +454,14 @@ export default function FundsTran({ fundheld, fundtrans, filters }: Props) {
 
             {/* Pagination */}
             {fundtrans.links.length > 1 && (
-              <div className="flex justify-center pt-6 flex-wrap gap-2">
+              <div className="flex justify-center pt-2 flex-wrap gap-1">
                 {fundtrans.links.map((link, i) => (
                   <Button
                     key={i}
                     disabled={!link.url}
                     variant={link.active ? 'default' : 'outline'}
                     size="sm"
+                    className="h-7 px-2 text-xs"
                     onClick={() => router.visit(link.url || '', { preserveScroll: true })}
                   >
                     <span dangerouslySetInnerHTML={{ __html: link.label }} />

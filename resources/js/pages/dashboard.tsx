@@ -337,13 +337,13 @@ export default function Dashboard() {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-4">
             {/* Chart 1: Based on Title 1 */}
-            <Card className="shadow-lg p-1 sm:p-2">
-              <CardHeader className="pb-1 md:pb-2">
+            <Card className="shadow-lg p-0">
+              <CardHeader className="pb-0 pt-2 px-3">
                 <CardTitle className="text-lg font-medium text-gray-700 dark:text-gray-200">
                   {props.title1} Analysis
                 </CardTitle>
               </CardHeader>
-              <CardContent className="h-[200px] sm:h-[250px] md:h-[300px] pt-4">
+              <CardContent className="h-[200px] sm:h-[250px] md:h-[300px] pt-1 px-1">
                 {props.title1 === 'Funds' ? (
                   <FundsPieChart data={props.tab1} />
                 ) : props.title1 === 'Institutes' ? (
@@ -359,13 +359,13 @@ export default function Dashboard() {
             </Card>
 
             {/* Chart 2: Based on Title 2 */}
-            <Card className="shadow-lg p-1 sm:p-2">
-              <CardHeader className="pb-1 md:pb-2">
+            <Card className="shadow-lg p-0">
+              <CardHeader className="pb-0 pt-2 px-3">
                 <CardTitle className="text-lg font-medium text-gray-700 dark:text-gray-200">
                   {props.title2} Analysis
                 </CardTitle>
               </CardHeader>
-              <CardContent className="h-[200px] sm:h-[250px] md:h-[300px] pt-4">
+              <CardContent className="h-[200px] sm:h-[250px] md:h-[300px] pt-1 px-1">
                 {props.title2 === 'Projects' ? (
                   // If Regional/Directorate (has est/actual cost), use CostChart, else CountChart
                   (props.tab2[0]?.estimated_cost !== undefined) ? (
@@ -385,13 +385,13 @@ export default function Dashboard() {
 
             {/* Chart 3: Based on Title 3 */}
             {props.title3 && (
-              <Card className="shadow-lg p-1 sm:p-2">
-                <CardHeader className="pb-1 md:pb-2">
+              <Card className="shadow-lg p-0">
+                <CardHeader className="pb-0 pt-2 px-3">
                   <CardTitle className="text-lg font-medium text-gray-700 dark:text-gray-200">
                     {props.title3} Analysis
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="h-[200px] sm:h-[250px] md:h-[300px] pt-4">
+                <CardContent className="h-[200px] sm:h-[250px] md:h-[300px] pt-1 px-1">
                   {props.title3 === 'Assets' ? (
                     <AssetsBarChart data={props.tab3} />
                   ) : props.title3 === 'Projects' ? (
