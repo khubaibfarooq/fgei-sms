@@ -74,10 +74,11 @@ class ProjectController extends Controller
         $companies = Company::all();
 
         return Inertia::render('projects/Form', [
-            'project' => null,
+            'project'      => null,
             'projectTypes' => $projectTypes,
-            'contractors' => $contractors,
-            'companies' => $companies,
+            'contractors'  => $contractors,
+            'companies'    => $companies,
+            'fundHeads'    => FundHead::select('id', 'name')->get(),
         ]);
     }
 public function store(Request $request)
@@ -88,7 +89,10 @@ public function store(Request $request)
         'project_type_id'  => 'required|exists:project_types,id',
         'priority'         => 'nullable|string',
         'description'      => 'nullable|string',
-        'status'           => 'nullable|in:planned,waiting',
+        'status'           => 'nullable|in:planned,waiting,completed',
+        'fund_heads'       => 'nullable|array',
+        'fund_heads.*.fund_head_id'  => 'required_with:fund_heads|integer|exists:fund_heads,id',
+        'fund_heads.*.sanction_amount' => 'required_with:fund_heads|numeric|min:0.01',
         'actual_cost'      => 'required_if:status,completed|nullable|numeric',
         'pdf'              => 'nullable|file|max:10240',
         'structural_plan'  => 'nullable|file|max:10240',
@@ -108,10 +112,19 @@ public function store(Request $request)
 
     $description = $request->description ? Str::of($request->description)->stripTags() : null;
 
+    // Build fund_head_id JSON from submitted fund_heads array (if completed)
+    $fundHeadJson = null;
+    if ($request->has('fund_heads') && is_array($request->fund_heads)) {
+        $fundHeadJson = collect($request->fund_heads)
+            ->filter(fn($r) => !empty($r['fund_head_id']) && !empty($r['sanction_amount']))
+            ->mapWithKeys(fn($r) => [(string)$r['fund_head_id'] => (float)$r['sanction_amount']])
+            ->toArray();
+    }
+
     $project = Project::create([
         'name'             => $request->name,
         'estimated_cost'   => $request->estimated_cost,
-        'fund_head_id'     => $request->fund_head_id,
+        'fund_head_id'     => $fundHeadJson,
         'project_type_id'  => $request->project_type_id,
         'status'           => $request->status ?? 'waiting',
         'actual_cost'      => $request->actual_cost,
@@ -120,7 +133,7 @@ public function store(Request $request)
         'description'      => $description,
         'institute_id'     => session('sms_inst_id'),
         'submitted_by'     => auth()->id(),
-        'approval_status'  => 'waiting',
+        'approval_status'  => $request->approval_status ?? 'waiting',
         'contractor_id'    => $request->contractor_id,
         'updated_by'       => auth()->id(),
     ]);
@@ -159,14 +172,14 @@ public function store(Request $request)
             if ($request->hasFile("milestones.$index.img")) {
                 $file = $request->file("milestones.$index.img");
                 $imageName = time() . '-' . uniqid() . '.' . $file->getClientOriginalExtension();
-                $file->move(public_path('assets/milestones'), $imageName);
+                $file->move(public_path('/milestones'), $imageName);
                 $payload['img'] = 'milestones/' . $imageName;
             }
 
             if ($request->hasFile("milestones.$index.pdf")) {
                 $file = $request->file("milestones.$index.pdf");
                 $pdfName = time() . '-' . uniqid() . '.' . $file->getClientOriginalExtension();
-                $file->move(public_path('assets/milestones/pdfs'), $pdfName);
+                $file->move(public_path('/milestones/pdfs'), $pdfName);
                 $payload['pdf'] = 'milestones/pdfs/' . $pdfName;
             }
 
@@ -249,12 +262,13 @@ public function store(Request $request)
         $companies = Company::all();
 
         return Inertia::render('projects/Form', [
-            'project'     => $project,
-            'projectTypes'=> $projectTypes,
-            'contractors' => $contractors,
-            'companies'   => $companies,
-            'milestones'  => $milestones,
+            'project'      => $project,
+            'projectTypes' => $projectTypes,
+            'contractors'  => $contractors,
+            'companies'    => $companies,
+            'milestones'   => $milestones,
             'hasApprovals' => $project->approvals()->exists(),
+            'fundHeads'    => FundHead::select('id', 'name')->get(),
         ]);
     }
   
@@ -335,7 +349,9 @@ public function update(Request $request, Project $project)
     if ($request->has('status') && in_array($request->status, ['planned', 'waiting'])) {
         $updateData['status'] = $request->status;
     }
-
+ if ($request->has('status') && in_array($request->status, ['completed'])) {
+        $updateData['completion_per'] = 100;
+    }
     $project->update($updateData);
 
     $submittedIds = [];
@@ -375,7 +391,7 @@ public function update(Request $request, Project $project)
 
                 // Upload new image using your exact naming & path
                 $imageName = time() . '-' . uniqid() . '.' . $file->getClientOriginalExtension();
-                $file->move(public_path('assets/milestones'), $imageName);
+                $file->move(public_path('milestones'), $imageName);
                 $payload['img'] = 'milestones/' . $imageName;
             }
 
@@ -387,7 +403,7 @@ public function update(Request $request, Project $project)
                 if ($milestoneId) {
                     $oldMilestone = $project->milestones()->find($milestoneId);
                     if ($oldMilestone && $oldMilestone->pdf) {
-                        $oldPath = public_path('assets/' . $oldMilestone->pdf);
+                        $oldPath = public_path('milestones/' . $oldMilestone->pdf);
                         if (File::exists($oldPath)) {
                             File::delete($oldPath);
                         }
@@ -395,7 +411,7 @@ public function update(Request $request, Project $project)
                 }
 
                 $pdfName = time() . '-' . uniqid() . '.' . $file->getClientOriginalExtension();
-                $file->move(public_path('assets/milestones/pdfs'), $pdfName);
+                $file->move(public_path('milestones/pdfs'), $pdfName);
                 $payload['pdf'] = 'milestones/pdfs/' . $pdfName;
             }
 
@@ -417,7 +433,7 @@ public function update(Request $request, Project $project)
         ->get()
         ->each(function ($milestone) {
             if ($milestone->img) {
-                $path = public_path('assets/' . $milestone->img);
+                $path = public_path('milestones/' . $milestone->img);
                 if (File::exists($path)) {
                     File::delete($path);
                 }
@@ -558,8 +574,11 @@ public function update(Request $request, Project $project)
 
         $remaining = $requestedAmount;
 
-        foreach ($fundHeadJson as $headId => $sanctionAmount) {
+        foreach ($fundHeadJson as $headId => $sanctionValue) {
             if ($remaining <= 0) break;
+
+            // Support comma-separated history: "100000,5000" → total cap = 105000
+            $sanctionAmount = array_sum(array_map('floatval', explode(',', (string) $sanctionValue)));
 
             // How much has already been paid against this fund head
             $paidForHead = (float) $existingFunds

@@ -13,7 +13,8 @@ import ExcelJS from 'exceljs';
 import FileSaver from 'file-saver';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { DollarSign, FileText } from 'lucide-react';
+import { DollarSign, FileText, Images, X } from 'lucide-react';
+import { ImagePreview } from '@/components/ui/image-preview2';
 
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -36,12 +37,19 @@ interface BalanceItem {
   balance?: number | string;
 }
 
+interface BankStatementMeta {
+  total: number;
+  last_image: string | null;
+  last_date: string | null;
+}
+
 interface Props {
   funds: FundItem[];
   fundheads: Item[];
   regions: Item[];
   institutes: Item[];
   balances: BalanceItem[];
+  bankStatements: Record<string, BankStatementMeta>;
   filters: {
     institute_id?: string;
     region_id?: string;
@@ -56,6 +64,7 @@ export default function Funds({
   regions = [],
   institutes: initialInstitutes = [],
   balances: initialBalances = [],
+  bankStatements: initialBankStatements = {},
   filters,
 }: Props) {
   const [institute, setInstitute] = useState(filters.institute_id || '');
@@ -63,9 +72,11 @@ export default function Funds({
   const [region, setRegion] = useState(filters.region_id || '');
   const [funds, setFunds] = useState<FundItem[]>(initialFunds);
   const [balances, setBalances] = useState<BalanceItem[]>(initialBalances);
+  const [bankStatements, setBankStatements] = useState<Record<string, BankStatementMeta>>(initialBankStatements);
   const [filteredInstitutes, setFilteredInstitutes] = useState<Item[]>(initialInstitutes);
   const [selectedRegions, setSelectedRegions] = useState<number[]>([]);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
 
   // Convert any string/number → number safely
   const toNumber = (value: any): number => {
@@ -123,6 +134,7 @@ export default function Funds({
       const data = await res.json();
       setFunds(data.funds || data || []);
       setBalances(data.balances || []);
+      if (data.bankStatements) setBankStatements(data.bankStatements);
     } catch (e) {
       console.error(e);
       toast.error('Failed to load data');
@@ -344,58 +356,49 @@ export default function Funds({
     }
   };
 
+  // show bank statements column only when displaying individual institutes
+  const showBankStmtCol = funds.length > 0 && !!funds[0].institute_name;
+
   return (
+    <>
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Funds Report" />
 
-      <div className="p-2 sm:p-4 lg:p-6 w-full overflow-x-hidden space-y-4 sm:space-y-6">
-        <Card className=" shadow-lg">
-          <CardHeader className="pb-4">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div>
-                <CardTitle className="text-lg sm:text-2xl font-bold">Funds Report</CardTitle>
-                <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-                  View fund balances by institute / fund head
-                </p>
+      <div className="p-2 sm:p-3 w-full overflow-x-hidden space-y-3">
+        <Card className="shadow-md">
+          <CardHeader className="py-1.5 px-4">
+            <div className="flex flex-wrap items-center gap-2">
+              {/* Title */}
+              <div className="shrink-0 mr-2">
+                <CardTitle className="text-sm font-bold leading-none">Funds Report</CardTitle>
+                <p className="text-[10px] text-muted-foreground mt-0.5">Fund balances by institute / fund head</p>
               </div>
 
-              {/* Export Buttons */}
-              <div className="flex gap-2">
-                <Button onClick={exportToPDF} variant="outline" size="sm">
-                  PDF
-                </Button>
-                <Button onClick={exportToExcel} variant="outline" size="sm">
-                  Excel
-                </Button>
-              </div>
-            </div>
-          </CardHeader>
-
-          <Separator />
-
-          {/* Filters */}
-          <CardContent className="pt-6 pb-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Filters inline */}
               {regions.length > 0 && (
-                <Combobox
-                  entity="region"
-                  value={region}
-                  onChange={handleRegionChange}
-                  options={regions.map(r => ({ id: r.id.toString(), name: r.name.split(' ').pop() || r.name }))}
-                  includeAllOption={true}
-                  placeholder="Select Region"
-                />
+                <div className="w-32">
+                  <Combobox
+                    entity="region"
+                    value={region}
+                    onChange={handleRegionChange}
+                    options={regions.map(r => ({ id: r.id.toString(), name: r.name.split(' ').pop() || r.name }))}
+                    includeAllOption={true}
+                    placeholder="Region"
+                  />
+                </div>
               )}
-              <Combobox
-                entity="institute"
-                value={institute}
-                onChange={setInstitute}
-                options={filteredInstitutes.map(i => ({ id: i.id.toString(), name: i.name }))}
-                includeAllOption={true}
-                placeholder="Select Institute"
-              />
+              <div className="w-36">
+                <Combobox
+                  entity="institute"
+                  value={institute}
+                  onChange={setInstitute}
+                  options={filteredInstitutes.map(i => ({ id: i.id.toString(), name: i.name }))}
+                  includeAllOption={true}
+                  placeholder="Institute"
+                />
+              </div>
               <Select value={fundHead} onValueChange={setFundHead}>
-                <SelectTrigger><SelectValue placeholder="Fund Head" /></SelectTrigger>
+                <SelectTrigger className="h-7 text-xs w-32"><SelectValue placeholder="Fund Head" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="0">All Fund Heads</SelectItem>
                   {fundheads.map(f => (
@@ -403,78 +406,72 @@ export default function Funds({
                   ))}
                 </SelectContent>
               </Select>
-              <div className="flex gap-2">
-                <Button onClick={() => applyFilters()} className="flex-1">Apply</Button>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setRegion(''); setInstitute(''); setFundHead('');
-                    applyFilters('/reports/funds');
-                  }}
-                  className="flex-1"
-                >
-                  Reset
-                </Button>
+              <Button onClick={() => applyFilters()} className="h-7 text-xs px-3">Apply</Button>
+              <Button
+                variant="outline"
+                onClick={() => { setRegion(''); setInstitute(''); setFundHead(''); applyFilters('/reports/funds'); }}
+                className="h-7 text-xs px-3"
+              >Reset</Button>
+
+              {/* Export — pushed to right */}
+              <div className="flex gap-1 ml-auto">
+                <Button onClick={exportToPDF} variant="outline" size="sm" className="h-7 text-xs px-2">PDF</Button>
+                <Button onClick={exportToExcel} variant="outline" size="sm" className="h-7 text-xs px-2">Excel</Button>
               </div>
             </div>
-          </CardContent>
+          </CardHeader>
 
           <Separator />
 
-          {/* Region Selection for PDF Report - Only show when regions are available */}
+          {/* Region Selection for PDF Report */}
           {regions.length > 0 && (
             <>
-              <CardContent className="pt-6 pb-4">
-                <div className="space-y-4">
+              <CardContent className="pt-2 pb-2 px-4">
+                <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-sm sm:text-base lg:text-lg font-semibold flex items-center gap-2">
-                      <FileText className="h-4 w-4 sm:h-5 sm:w-5" />
-                      Generate Regional Fund Report
+                    <h3 className="text-xs font-semibold flex items-center gap-1 text-muted-foreground">
+                      <FileText className="h-3 w-3" />
+                      Regional Fund Report
                       {region && region !== '0' && (
-                        <span className="text-sm font-normal text-muted-foreground">
-                          ({regions.find(r => r.id.toString() === region)?.name.split(' ').pop() || 'Selected Region'})
+                        <span className="font-normal">
+                          — {regions.find(r => r.id.toString() === region)?.name.split(' ').pop()}
                         </span>
                       )}
                     </h3>
-                    <div className="flex items-center gap-4">
-                      {/* Show Select All only when no specific region is selected */}
+                    <div className="flex items-center gap-2">
                       {(!region || region === '0') && (
-                        <label className="flex items-center gap-2 cursor-pointer">
+                        <label className="flex items-center gap-1 cursor-pointer">
                           <Checkbox
                             checked={selectedRegions.length === regions.length && regions.length > 0}
                             onCheckedChange={toggleAllRegions}
                           />
-                          <span className="text-xs sm:text-sm font-medium">Select All</span>
+                          <span className="text-xs">All</span>
                         </label>
                       )}
                       <Button
                         onClick={() => {
-                          // If a region is selected, generate report for that region only
-                          if (region && region !== '0') {
-                            generatePDFReport([parseInt(region)]);
-                          } else {
-                            generatePDFReport();
-                          }
+                          if (region && region !== '0') generatePDFReport([parseInt(region)]);
+                          else generatePDFReport();
                         }}
                         disabled={((!region || region === '0') && selectedRegions.length === 0) || isGeneratingPDF}
-                        className="gap-2"
+                        size="sm"
+                        className="h-7 text-xs gap-1"
                       >
-                        <FileText className="h-4 w-4" />
+                        <FileText className="h-3 w-3" />
                         {isGeneratingPDF ? 'Generating...' : 'Create Report'}
                       </Button>
                     </div>
                   </div>
-                  {/* Show checkboxes only when no specific region is selected */}
                   {(!region || region === '0') && (
                     <>
-                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                      <div className="flex flex-wrap gap-1.5">
                         {regions.map(r => {
                           const shortName = r.name.split(' ').pop() || r.name;
                           return (
                             <label
                               key={r.id}
-                              className={`flex items-center gap-2 p-3 rounded-lg border cursor-pointer transition-all ${selectedRegions.includes(r.id)
-                                ? 'bg-primary/10 border-primary'
+                              className={`flex items-center gap-1 px-2 py-1 rounded border cursor-pointer text-xs transition-all ${selectedRegions.includes(r.id)
+                                ? 'bg-primary/10 border-primary text-primary'
                                 : 'hover:bg-muted/50 border-border'
                                 }`}
                             >
@@ -482,15 +479,13 @@ export default function Funds({
                                 checked={selectedRegions.includes(r.id)}
                                 onCheckedChange={() => toggleRegionSelection(r.id)}
                               />
-                              <span className="text-xs sm:text-sm font-medium">{shortName}</span>
+                              {shortName}
                             </label>
                           );
                         })}
                       </div>
                       {selectedRegions.length > 0 && (
-                        <p className="text-xs sm:text-sm text-muted-foreground">
-                          {selectedRegions.length} region(s) selected for report
-                        </p>
+                        <p className="text-xs text-muted-foreground">{selectedRegions.length} region(s) selected</p>
                       )}
                     </>
                   )}
@@ -502,8 +497,8 @@ export default function Funds({
 
 
           {/* Total Balance Summary */}
-          <CardContent className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-900 py-6">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-6" onClick={() => {
+          <CardContent className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-900 py-2 px-4">
+            <div className="flex items-center justify-between gap-2 cursor-pointer" onClick={() => {
               setFundHead('');
               const params = new URLSearchParams({
                 institute_id: institute || '',
@@ -513,16 +508,12 @@ export default function Funds({
               applyFilters(`/reports/funds/getfunds?${params.toString()}`);
             }}>
               <div>
-                <p className="text-xs sm:text-sm font-medium text-muted-foreground">Total Balance</p>
-                <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-primary mt-2">
-                  {formatCurrency(totalBalance)}
-                </p>
+                <p className="text-xs text-muted-foreground">Total Balance</p>
+                <p className="text-xl font-bold text-primary">{formatCurrency(totalBalance)}</p>
               </div>
               <div className="text-right">
-                <p className="text-xs sm:text-sm text-muted-foreground">Active Fund Heads</p>
-                <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-muted-foreground mt-1">
-                  {balances.length}
-                </p>
+                <p className="text-xs text-muted-foreground">Fund Heads</p>
+                <p className="text-xl font-bold text-muted-foreground">{balances.length}</p>
               </div>
             </div>
           </CardContent>
@@ -532,9 +523,9 @@ export default function Funds({
           {/* Fund Head Mini Cards */}
           {balances.length > 0 && (
             <>
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-base sm:text-lg font-semibold">Fund Head Balances</h3>
+              <CardContent className="pt-2 pb-2 px-4">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-xs font-semibold text-muted-foreground">Fund Head Balances</h3>
                   <Button
                     onClick={() => {
                       setFundHead('');
@@ -547,37 +538,31 @@ export default function Funds({
                     }}
                     variant="outline"
                     size="sm"
+                    className="h-6 text-xs px-2"
                   >
                     Show All
                   </Button>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+                <div className="flex flex-wrap gap-2">
                   {balances.map((b, i) => (
                     <div
                       key={i}
                       onClick={() => {
-                        // Get the fund head ID from the balance object
                         const fundHeadId = b.fund_head?.id?.toString() || '';
-
-                        // Set fund head filter
                         setFundHead(fundHeadId);
-
-                        // Re-apply filters with the selected fund head
                         const params = new URLSearchParams({
                           institute_id: institute || '',
                           region_id: region || '',
                           fund_head_id: fundHeadId,
                         });
-
                         applyFilters(`/reports/funds/getfunds?${params.toString()}`);
-
                       }}
-                      className="bg-muted/50 dark:bg-gray-800 p-3 sm:p-4 rounded-lg border hover:shadow-md transition-shadow cursor-pointer"
+                      className="bg-muted/50 dark:bg-gray-800 px-3 py-1.5 rounded border hover:shadow-sm transition-shadow cursor-pointer min-w-[100px]"
                     >
-                      <p className="text-xs sm:text-sm font-medium text-muted-foreground truncate">
+                      <p className="text-[10px] font-medium text-muted-foreground truncate">
                         {b.fund_head?.name && b.fund_head.name !== 'N/A' ? b.fund_head.name : fundheads.find(fh => fh.id.toString() === fundHead)?.name}
                       </p>
-                      <p className="text-base sm:text-lg lg:text-xl font-bold text-green-600 dark:text-green-400 mt-1 sm:mt-2">
+                      <p className="text-sm font-bold text-green-600 dark:text-green-400">
                         {formatCurrency(b.balance)}
                       </p>
                     </div>
@@ -617,39 +602,35 @@ export default function Funds({
                   </div>
                 ) : (
 
-                  <div className=" overflow-x-auto mx-2 sm:mx-0">
-                    <table className="w-full border-collapse text-xs sm:text-sm">
+                  <div className="overflow-x-auto">
+                    <table className="w-full border-collapse text-xs">
                       <thead>
                         <tr className="bg-primary text-white">
-                          <th className="sticky left-0 z-20 bg-primary px-3 sm:px-6 py-3 sm:py-4 text-left font-semibold text-xs sm:text-sm">
+                          <th className="sticky left-0 z-20 bg-primary px-3 py-2 text-left font-semibold text-xs">
                             {funds[0].institute_name ? 'Institute' : 'Region'}
                           </th>
-                          {/* Show only selected fund head or all if none selected */}
                           {fundHead && fundHead !== '0' ? (
-                            // Show only the selected fund head
-                            <th className="px-4 py-4 text-center font-medium whitespace-nowrap">
+                            <th className="px-3 py-2 text-center font-medium whitespace-nowrap">
                               {fundheads.find(fh => fh.id.toString() === fundHead)?.name}
                             </th>
                           ) : (
-                            // Show all fund heads
                             fundheads.map(fh => (
-                              <th key={fh.id} className="px-4 py-4 text-center font-medium whitespace-nowrap">
+                              <th key={fh.id} className="px-3 py-2 text-center font-medium whitespace-nowrap">
                                 {fh.name}
                               </th>
                             ))
                           )}
-                          {fundHead == '0' || fundHead == '' ? (
-                            <th className="sticky right-0 z-20 bg-primary px-6 py-4 text-right font-bold">
-                              Total
-                            </th>
-                          ) : (''
+                          {(fundHead == '0' || fundHead == '') && (
+                            <th className="sticky right-0 z-20 bg-primary px-3 py-2 text-right font-bold">Total</th>
+                          )}
+                          {showBankStmtCol && (
+                            <th className="px-3 py-2 text-center font-medium whitespace-nowrap">Bank Statements</th>
                           )}
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                         {funds.map(row => {
                           const isRegionRow = !row.institute_name && row.region_name;
-
                           return (
                             <tr
                               key={row.institute_id ?? row.region_id}
@@ -657,28 +638,20 @@ export default function Funds({
                               onClick={() => {
                                 if (isRegionRow && row.region_id) {
                                   const regionId = row.region_id.toString();
-
-                                  // Set region and load institutes
                                   setRegion(regionId);
                                   fetchInstitutes(regionId);
-
-                                  // Clear institute selection and re-apply filters
                                   setInstitute('');
-                                  // Re-apply filters with the selected fund head
                                   const params = new URLSearchParams({
                                     institute_id: institute || '',
                                     region_id: regionId,
                                     fund_head_id: fundHead || '',
                                   });
-
                                   applyFilters(`/reports/funds/getfunds?${params.toString()}`);
-
-                                  // Optional: show toast feedback
                                 }
                               }}
                             >
-                              <td className="sticky left-0 z-10 bg-background text-wrap px-3 sm:px-6 py-3 sm:py-4 font-medium text-xs sm:text-sm border-r ">
-                                <div className="flex items-center gap-2">
+                              <td className="sticky left-0 z-10 bg-background text-wrap px-3 py-1.5 font-medium text-xs border-r">
+                                <div className="flex items-center gap-1">
                                   {row.institute_name || (
                                     <>
                                       {/* Optional visual indicator that this is a clickable region */}
@@ -691,14 +664,11 @@ export default function Funds({
                                 </div>
                               </td>
 
-                              {/* Show only selected fund head or all if none selected */}
                               {fundHead && fundHead !== '0' ? (
-                                // Show only the selected fund head value
-                                <td className="px-2 sm:px-4 py-2 sm:py-4 text-right font-medium text-xs sm:text-sm tabular-nums whitespace-nowrap">
+                                <td className="px-2 py-1.5 text-right font-medium text-xs tabular-nums whitespace-nowrap">
                                   {(() => {
                                     const selectedFundHead = fundheads.find(fh => fh.id.toString() === fundHead);
                                     const amount = row.fund_heads[selectedFundHead?.name || ''] || 0;
-
                                     if (!isRegionRow) {
                                       return (
                                         <a
@@ -716,10 +686,9 @@ export default function Funds({
                                   })()}
                                 </td>
                               ) : (
-                                // Show all fund heads
                                 <>
                                   {fundheads.map(fh => (
-                                    <td key={fh.id} className="px-1 sm:px-2 py-2 text-right font-medium text-xs sm:text-sm tabular-nums whitespace-nowrap">
+                                    <td key={fh.id} className="px-2 py-1.5 text-right font-medium text-xs tabular-nums whitespace-nowrap">
                                       {!isRegionRow ? (
                                         <a
                                           href={`/reports/fundstrans?institute_id=${row.institute_id}&fund_head_id=${fh.id}&region_id=${region}`}
@@ -737,27 +706,48 @@ export default function Funds({
                                   ))}
                                 </>
                               )}
-
-                              {/* Total Balance - Outside the conditional */}
-                              {fundHead == '0' || fundHead == '' ? (
-                                <td className="sticky right-0 z-10 bg-green-50 dark:bg-green-900/30 px-2 sm:px-3 py-2 text-xs sm:text-sm text-right font-bold text-green-700 dark:text-green-400 tabular-nums border-l whitespace-nowrap">
+                              {(fundHead == '0' || fundHead == '') && (
+                                <td className="sticky right-0 z-10 bg-green-50 dark:bg-green-900/30 px-2 py-1.5 text-xs text-right font-bold text-green-700 dark:text-green-400 tabular-nums border-l whitespace-nowrap">
                                   {formatCurrency(row.total_balance)}
                                 </td>
-                              ) : (
-                                ''
                               )}
+                              {/* Bank Statements cell — only for institute rows */}
+                              {showBankStmtCol && (() => {
+                                const instId = row.institute_id?.toString();
+                                const meta = instId ? bankStatements[instId] : undefined;
+                                return (
+                                  <td className="px-2 py-1.5 text-center text-xs">
+                                    {meta ? (
+                                      <div className="flex flex-col items-center gap-0.5">
+                                        {meta.last_image && (
+                                          <ImagePreview
+                                            dataImg={meta.last_image}
+                                            className="h-8 w-12 object-cover rounded border cursor-pointer hover:opacity-90"
+
+                                          />
+                                        )}
+                                        <span className="text-[10px] text-muted-foreground">
+                                          {meta.last_date ? new Date(meta.last_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : ''}
+                                        </span>
+                                        <span className="text-[10px] font-semibold text-primary flex items-center gap-0.5">
+                                          <Images className="h-2.5 w-2.5" />{meta.total}
+                                        </span>
+                                      </div>
+                                    ) : (
+                                      <span className="text-muted-foreground">—</span>
+                                    )}
+                                  </td>
+                                );
+                              })()}
                             </tr>
                           );
                         })}
                       </tbody>
                       <tfoot>
                         <tr className="bg-gray-100 dark:bg-gray-800 font-bold">
-                          <td className="sticky left-0 z-10 bg-gray-100 dark:bg-gray-800 px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm">
-                            Grand Total
-                          </td>
+                          <td className="sticky left-0 z-10 bg-gray-100 dark:bg-gray-800 px-3 py-2 text-xs">Grand Total</td>
                           {fundHead && fundHead !== '0' ? (
-                            // Show only the selected fund head total
-                            <td className="px-2 sm:px-4 py-3 sm:py-4 text-right font-mono text-xs sm:text-sm tabular-nums">
+                            <td className="px-2 py-2 text-right font-mono text-xs tabular-nums">
                               {(() => {
                                 const selectedFundHead = fundheads.find(fh => fh.id.toString() === fundHead);
                                 const sum = funds.reduce((acc, row) => acc + toNumber(row.fund_heads[selectedFundHead?.name || ''] || 0), 0);
@@ -765,21 +755,24 @@ export default function Funds({
                               })()}
                             </td>
                           ) : (
-                            // Show all fund head totals
                             fundheads.map(fh => {
                               const sum = funds.reduce((acc, row) => acc + toNumber(row.fund_heads[fh.name]), 0);
                               return (
-                                <td key={fh.id} className="px-2 sm:px-4 py-3 sm:py-4 text-right font-mono text-xs sm:text-sm tabular-nums">
+                                <td key={fh.id} className="px-2 py-2 text-right font-mono text-xs tabular-nums">
                                   {formatCurrency(sum)}
                                 </td>
                               );
                             })
                           )}
-                          {fundHead == '0' || fundHead == '' ? (
-                            <td className="sticky right-0 z-10 bg-emerald-100 dark:bg-emerald-900/50 px-3 sm:px-6 py-3 sm:py-4 text-right font-bold text-emerald-700 dark:text-emerald-400 font-mono tabular-nums border-l text-xs sm:text-sm">
+                          {(fundHead == '0' || fundHead == '') && (
+                            <td className="sticky right-0 z-10 bg-emerald-100 dark:bg-emerald-900/50 px-3 py-2 text-right font-bold text-emerald-700 dark:text-emerald-400 font-mono tabular-nums border-l text-xs">
                               {formatCurrency(totalBalance)}
                             </td>
-                          ) : (''
+                          )}
+                          {showBankStmtCol && (
+                            <td className="px-2 py-2 text-center text-xs text-muted-foreground">
+                              {Object.values(bankStatements).reduce((s, m) => s + m.total, 0)} total
+                            </td>
                           )}
                         </tr>
                       </tfoot>
@@ -792,5 +785,23 @@ export default function Funds({
         </Card>
       </div>
     </AppLayout>
+
+    {lightboxSrc && (
+      <div
+        className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center"
+        onClick={() => setLightboxSrc(null)}
+      >
+        <div className="relative max-w-3xl w-full p-4" onClick={(e) => e.stopPropagation()}>
+          <button
+            className="absolute top-2 right-2 bg-black/60 text-white rounded-full p-1"
+            onClick={() => setLightboxSrc(null)}
+          >
+            <X className="h-5 w-5" />
+          </button>
+          <img src={lightboxSrc} alt="Bank Statement" className="w-full rounded-lg max-h-[80vh] object-contain" />
+        </div>
+      </div>
+    )}
+    </>
   );
 }

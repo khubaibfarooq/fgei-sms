@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Head, router, Link } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import { Button } from '@/components/ui/button';
@@ -6,7 +6,18 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { type BreadcrumbItem } from '@/types';
-import { Plus, Edit, Trash2, Building, Eye, X, Calendar, DollarSign, FileText } from 'lucide-react';
+import {
+  Plus,
+  Edit,
+  Trash2,
+  Eye,
+  Upload,
+  Images,
+  X,
+  ChevronDown,
+  ChevronUp,
+  Calendar,
+} from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogTrigger,
@@ -60,6 +71,12 @@ interface Fund {
   updated_at?: string;
 }
 
+interface BankStatementItem {
+  id: number;
+  image: string;
+  uploaded_at: string;
+}
+
 interface Props {
   funds: {
     data: Fund[];
@@ -75,13 +92,14 @@ interface Props {
     can_edit: boolean;
     can_delete: boolean;
   };
+  bankStatements: Record<string, BankStatementItem[]>;
+  instituteId: number;
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Funds', href: '/funds' },
 ];
 
-// Format amount: show in millions with "Mn" suffix if >= 1 million, otherwise show with locale formatting
 const formatAmount = (amount: number): string => {
   if (amount >= 1000000) {
     return `${(amount / 1000000).toFixed(2)} Mn`;
@@ -89,9 +107,25 @@ const formatAmount = (amount: number): string => {
   return amount.toLocaleString();
 };
 
-export default function FundIndex({ funds, filters, permissions }: Props) {
+const formatDate = (isoString: string): string => {
+  const d = new Date(isoString);
+  return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+};
+
+export default function FundIndex({ funds, filters, permissions, bankStatements, instituteId }: Props) {
   const [search, setSearch] = useState(filters.search || '');
-  const [selectedFund, setSelectedFund] = useState<Fund | null>(null);
+
+  // Bank statements state
+  const statements: BankStatementItem[] = bankStatements[instituteId] ?? [];
+  const lastStatement = statements.length > 0 ? statements[0] : null;
+
+  const [galleryOpen, setGalleryOpen] = useState(false);
+  const [uploadOpen, setUploadOpen] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewSrc, setPreviewSrc] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const handleDelete = (id: number) => {
     router.delete(`/funds/${id}`, {
@@ -106,10 +140,42 @@ export default function FundIndex({ funds, filters, permissions }: Props) {
     }
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] ?? null;
+    setSelectedFile(file);
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (ev) => setPreviewSrc(ev.target?.result as string);
+      reader.readAsDataURL(file);
+    } else {
+      setPreviewSrc(null);
+    }
+  };
 
+  const handleUpload = () => {
+    if (!selectedFile) return;
+    setUploading(true);
+    const formData = new FormData();
+    formData.append('image', selectedFile);
+    router.post(`/institutes/${instituteId}/bank-statements`, formData as any, {
+      forceFormData: true,
+      onSuccess: () => {
+        toast.success('Bank statement uploaded');
+        setUploadOpen(false);
+        setSelectedFile(null);
+        setPreviewSrc(null);
+      },
+      onError: () => toast.error('Upload failed'),
+      onFinish: () => setUploading(false),
+    });
+  };
 
-
-
+  const handleDeleteStatement = (statementId: number) => {
+    router.delete(`/bank-statements/${statementId}`, {
+      onSuccess: () => toast.success('Statement deleted'),
+      onError: () => toast.error('Delete failed'),
+    });
+  };
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
@@ -121,15 +187,106 @@ export default function FundIndex({ funds, filters, permissions }: Props) {
               <CardTitle className="text-2xl font-bold">Funds</CardTitle>
               <p className="text-muted-foreground text-sm">Manage institutional funds</p>
             </div>
-            {permissions.can_add &&
-              <Link href="/funds/create" className="w-full md:w-auto">
-                <Button className="w-full">
-
-                  Fund Transaction
-                </Button>
-              </Link>
-            }
+            <div className="flex flex-wrap gap-2 items-center">
+              {/* Bank Statement buttons */}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setUploadOpen(true)}
+                className="flex items-center gap-1"
+                title="Upload Bank Statement"
+              >
+                <Upload className="h-4 w-4" />
+                Upload Statement
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setGalleryOpen(!galleryOpen)}
+                className="flex items-center gap-1"
+                title="View Bank Statements"
+              >
+                <Images className="h-4 w-4" />
+                Statements
+                {galleryOpen ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+              </Button>
+              {permissions.can_add &&
+                <Link href="/funds/create" className="w-full md:w-auto">
+                  <Button className="w-full">
+                    Fund Transaction
+                  </Button>
+                </Link>
+              }
+            </div>
           </CardHeader>
+
+          {/* Last statement info bar */}
+          {lastStatement && (
+            <div className="mx-4 mb-2 flex items-center gap-2 text-xs text-muted-foreground bg-muted/40 rounded px-3 py-1.5">
+              <Calendar className="h-3.5 w-3.5" />
+              <span>Last bank statement uploaded on <strong>{formatDate(lastStatement.uploaded_at)}</strong></span>
+              <img
+                src={`/${lastStatement.image}`}
+                alt="Last Statement"
+                className="h-6 w-9 object-cover rounded border cursor-pointer ml-1"
+                onClick={() => setLightboxSrc(`/${lastStatement.image}`)}
+              />
+            </div>
+          )}
+
+          {/* Collapsed gallery */}
+          {galleryOpen && (
+            <div className="mx-4 mb-4 border rounded-lg p-3 bg-muted/20">
+              <p className="text-sm font-medium mb-2">Bank Statements ({statements.length})</p>
+              {statements.length === 0 ? (
+                <p className="text-xs text-muted-foreground">No statements uploaded yet.</p>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {statements.map((stmt) => (
+                    <div key={stmt.id} className="relative group">
+                      <img
+                        src={`/${stmt.image}`}
+                        alt="Bank Statement"
+                        className="h-20 w-28 object-cover rounded border cursor-pointer hover:opacity-90 transition-opacity"
+                        onClick={() => setLightboxSrc(`/${stmt.image}`)}
+                        title={formatDate(stmt.uploaded_at)}
+                      />
+                      <span className="absolute bottom-0 left-0 right-0 text-[9px] text-center bg-black/50 text-white rounded-b px-1 py-0.5 truncate">
+                        {formatDate(stmt.uploaded_at)}
+                      </span>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <button
+                            className="absolute top-0.5 right-0.5 bg-black/60 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                            title="Delete"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete this statement?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This action cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              className="bg-destructive hover:bg-destructive/90"
+                              onClick={() => handleDeleteStatement(stmt.id)}
+                            >
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
           <Separator />
 
@@ -176,8 +333,6 @@ export default function FundIndex({ funds, filters, permissions }: Props) {
                               <Button
                                 variant="ghost"
                                 size="icon"
-
-
                                 title="View Fund Transactions"
                               >
                                 <Eye className="h-4 w-4" />
@@ -252,7 +407,67 @@ export default function FundIndex({ funds, filters, permissions }: Props) {
         </Card>
       </div>
 
+      {/* ── Upload Modal ── */}
+      <Dialog open={uploadOpen} onOpenChange={setUploadOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Upload Bank Statement</DialogTitle>
+            <DialogDescription>Select an image of the bank statement to upload.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 mt-2">
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleFileChange}
+            />
+            {previewSrc ? (
+              <div className="relative">
+                <img src={previewSrc} alt="Preview" className="w-full rounded-md border max-h-52 object-contain" />
+                <button
+                  className="absolute top-1 right-1 bg-black/60 text-white rounded-full p-0.5"
+                  onClick={() => { setSelectedFile(null); setPreviewSrc(null); if (fileRef.current) fileRef.current.value = ''; }}
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            ) : (
+              <div
+                className="border-2 border-dashed rounded-lg p-8 text-center cursor-pointer hover:bg-muted/30 transition-colors"
+                onClick={() => fileRef.current?.click()}
+              >
+                <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                <p className="text-sm text-muted-foreground">Click to select an image</p>
+              </div>
+            )}
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" onClick={() => setUploadOpen(false)}>Cancel</Button>
+              <Button onClick={handleUpload} disabled={!selectedFile || uploading}>
+                {uploading ? 'Uploading...' : 'Upload'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
+      {/* ── Lightbox ── */}
+      {lightboxSrc && (
+        <div
+          className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center"
+          onClick={() => setLightboxSrc(null)}
+        >
+          <div className="relative max-w-3xl w-full p-4" onClick={(e) => e.stopPropagation()}>
+            <button
+              className="absolute top-2 right-2 bg-black/60 text-white rounded-full p-1"
+              onClick={() => setLightboxSrc(null)}
+            >
+              <X className="h-5 w-5" />
+            </button>
+            <img src={lightboxSrc} alt="Bank Statement" className="w-full rounded-lg max-h-[80vh] object-contain" />
+          </div>
+        </div>
+      )}
     </AppLayout>
   );
 }

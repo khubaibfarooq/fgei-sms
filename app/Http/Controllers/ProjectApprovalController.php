@@ -17,11 +17,12 @@ class ProjectApprovalController extends Controller
     public function store(Request $request, Project $project)
     {
         $request->validate([
-            'status'   => ['required', Rule::in(['approved', 'rejected'])],
-            'comments' => 'nullable|string',
-            'pdf'      => 'nullable|file',
-            'img'      => 'nullable|file',
-            'stage_id' => 'nullable|integer|exists:approval_stages,id',
+            'status'              => ['required', Rule::in(['approved', 'rejected'])],
+            'comments'            => 'nullable|string',
+            'pdf'                 => 'nullable|file',
+            'img'                 => 'nullable|file',
+            'stage_id'            => 'nullable|integer|exists:approval_stages,id',
+            'revert_to_stage_id'  => 'nullable|integer|exists:approval_stages,id',
         ]);
 
         // If a specific stage_id was submitted (user selected from radio buttons), use it.
@@ -80,6 +81,7 @@ class ProjectApprovalController extends Controller
                 ]);
             }
             $pendingcount = ProjectApproval::where('project_id', $project->id)->where('status', 'pending')->count();
+
             if ($request->status === 'approved' && $pendingcount ==0) {
                 if ($currentStage->is_last) {
                     $project->update([
@@ -88,18 +90,25 @@ class ProjectApprovalController extends Controller
                     ]);
                 } else {
                     // Collect next stages for ALL fund heads in the JSON
-                    $fundHeadJson    = $project->fund_head_id ?? [];
-                    $fundHeadIds     = array_keys($fundHeadJson);
-
-                    // Map: stage_name => first matching ApprovalStage (shared if same name)
+                    // $fundHeadJson    = $project->fund_head_id ?? [];
+                    // $fundHeadIds     = array_keys($fundHeadJson);
+  $ids = $project->getRawOriginal('current_stage_id')
+            ? json_decode($project->getRawOriginal('current_stage_id'), true)
+            : [];
+            $fundHeadIds = ApprovalStage::whereIn('id', $ids)->pluck('fund_head_id')->filter()->unique()->values();
+                    // Map:` stage_name => first matching ApprovalStage (shared if same name)
                     $nextStagesByName = [];
-
+   
+   if(count($ids)==1 && count($fundHeadIds)==0 ){
+    $fundHeadIds = [$currentStage->fund_head_id];
+   }
+   //dd($fundHeadIds);
                     foreach ($fundHeadIds as $headId) {
                         $nextStage = ApprovalStage::where('stage_order', '>', $currentStage->stage_order)
-                            ->where('fund_head_id', (int) $currentStage->fund_head_id)
+                            ->where('fund_head_id', (int) $headId)
                             ->orderBy('stage_order')
                             ->first();
-
+    
                         if ($nextStage) {
                             $stageName = $nextStage->stage_name;
                             // Same name → keep the first one (shared stage)
@@ -108,32 +117,27 @@ class ProjectApprovalController extends Controller
                             }
                         }
                     }
-        //  dd($nextStagesByName, $fundHeadIds   );
+
                     // Special rule: "Execution of approved work" is only created
                     // when ALL fund heads share it as their next stage.
                     // If even one fund head has a different next stage, exclude it.
                     $executionStageName = 'Execution of approved work';
-                    if (isset($nextStagesByName[$executionStageName]) && count($nextStagesByName) > 1) {
+                    if (isset($nextStagesByName[$executionStageName]) && count($nextStagesByName) > 1 &&!isset($nextStagesByName["Regional Dev Committee"]) ) {
                         // Not all fund heads point to this stage exclusively → remove it
                         unset($nextStagesByName[$executionStageName]);
+                    }else if(isset($nextStagesByName["Regional Dev Committee"]) && count($nextStagesByName) > 1 ) {
+                        // Not all fund heads point to this stage exclusively → remove it
+                        unset($nextStagesByName["Regional Dev Committee"]);
                     }
-
+        // dd($nextStagesByName,count($nextStagesByName)  );
                     if (!empty($nextStagesByName)) {
                         // Save ALL next stage IDs as JSON array
                         $nextStageIds = array_values(
                             array_map(fn($s) => $s->id, array_values($nextStagesByName))
                         );
-              
+             // dd($nextStageIds  );
                         $project->update(['current_stage_id' => $nextStageIds]);
-
-                        if ($currentStage->change_to_in_progress && $pendingcount ==0 ) {
-                            $project->update([
-                                'approval_status' => 'approved',
-                                'status'          => 'inprogress',
-                            ]);
-                        }
-
-                        // Create a pending approval row for each unique next stage
+ // Create a pending approval row for each unique next stage
                         foreach ($nextStagesByName as $nextStage) {
                             ProjectApproval::create([
                                 'project_id'  => $project->id,
@@ -142,8 +146,19 @@ class ProjectApprovalController extends Controller
                                 'approver_id' => null,
                                 'comments'    => null,
                             ]);
+                        }  
+                        $pendingcount = ProjectApproval::where('project_id', $project->id)->where('status', 'pending')->count();
+                
+                        if ($currentStage->change_to_in_progress && $pendingcount ==1 ) {
+                            $project->update([
+                                'approval_status' => 'approved',
+                                'status'          => 'inprogress',
+                            ]);
                         }
-                    } else {
+
+                       
+                     } 
+                     else {
                         // No further stages for any fund head → project fully approved
                         $project->update([
                             'approval_status' => 'approved',
@@ -153,6 +168,26 @@ class ProjectApprovalController extends Controller
                 }
             } else if($request->status === 'rejected') {
                 $project->update(['approval_status' => 'rejected']);
+
+                // If a revert stage was selected, re-create it as pending
+                if ($request->filled('revert_to_stage_id')) {
+                    $revertStage = ApprovalStage::find((int) $request->revert_to_stage_id);
+                    if ($revertStage) {
+                        ProjectApproval::create([
+                            'project_id'  => $project->id,
+                            'stage_id'    => $revertStage->id,
+                            'status'      => 'pending',
+                            'approver_id' => null,
+                            'comments'    => 'Stage reverted after rejection.',
+                            'action_date' => null,
+                        ]);
+                        $project->update([
+                            'current_stage_id' => [$revertStage->id],
+                            'approval_status'  => 'inprogress',
+                            'status'           => 'waiting',
+                        ]);
+                    }
+                }
             }
         });
 
@@ -206,12 +241,25 @@ class ProjectApprovalController extends Controller
 
         DB::transaction(function () use ($request, $project) {
 
-            // --- 1. Merge new fund heads into existing JSON ---
+            // --- 1. Merge new fund heads into existing JSON (comma-separated top-up) ---
             $existing = $project->fund_head_id ?? [];
             foreach ($request->fund_heads as $entry) {
-                $existing[(string) $entry['fund_head_id']] = (float) $entry['sanction_amount'];
+                $key = (string) $entry['fund_head_id'];
+                $newAmount = (float) $entry['sanction_amount'];
+                if (isset($existing[$key])) {
+                    // Append as comma-separated to keep history
+                    $existing[$key] = $existing[$key] . ',' . $newAmount;
+                } else {
+                    $existing[$key] = (string) $newAmount;
+                }
             }
             $project->update(['fund_head_id' => $existing]);
+
+            // --- 1.5. Add the submitted amounts to estimated_cost ---
+            $addedTotal = array_sum(array_column($request->fund_heads, 'sanction_amount'));
+            if ($addedTotal > 0) {
+                $project->increment('estimated_cost', $addedTotal);
+            }
 
             // --- 2. For each fund head, find its first approval stage ---
             $newFundHeadIds = array_column($request->fund_heads, 'fund_head_id');
@@ -231,17 +279,20 @@ class ProjectApprovalController extends Controller
                 return; // No stages configured – skip
             }
 
-            // --- 3. Group stages by stage_name: same name = one stage, different = multiple ---
-            $stagesByName = [];
+            // --- 3. Group stages by stage_name ---
+            // stagesByName: name => first stage (used for one pending approval row per name)
+            // allStagesByName: name => [all stages] (used to collect ALL ids for current_stage_id)
+            $stagesByName    = [];
+            $allStagesByName = [];
             foreach ($stagesPerHead as $headId => $stage) {
                 $key = strtolower(trim($stage->stage_name));
                 if (!isset($stagesByName[$key])) {
-                    $stagesByName[$key] = $stage; // Use the first one found
+                    $stagesByName[$key] = $stage; // First stage → used for approval row
                 }
+                $allStagesByName[$key][] = $stage; // All stages → used for current_stage_id
             }
 
-            // --- 4. Create a pending approval row for each unique stage ---
-            //   Use the FIRST unique stage as the project's current stage
+            // --- 4. Create a pending approval row for each unique stage name ---
             $firstStage = null;
             foreach ($stagesByName as $stageName => $stage) {
                 // Avoid duplicate pending approvals for same stage
@@ -265,12 +316,31 @@ class ProjectApprovalController extends Controller
                 }
             }
 
+            // --- 4.5. Auto-approve any pending "Extension" stage for this project ---
+            $extensionStage = ApprovalStage::where('stage_name', 'Extension')->first();
+            if ($extensionStage) {
+                ProjectApproval::where('project_id', $project->id)
+                    ->where('stage_id', $extensionStage->id)
+                    ->where('status', 'pending')
+                    ->update([
+                        'status'      => 'approved',
+                        'approver_id' => auth()->id(),
+                        'comments'    => 'Extension approved via fund head assignment.',
+                        'action_date' => now(),
+                    ]);
+            }
+
             // --- 5. Update project's current stage if not already in progress ---
-            if ($firstStage && in_array($project->approval_status, ['waiting', null, ''])) {
-                // Save ALL first stage IDs as JSON array
-                $allFirstStageIds = array_values(
-                    array_map(fn($s) => $s->id, array_values($stagesByName))
-                );
+            if ($firstStage && in_array($project->approval_status, ['waiting', null, 'inprogress'])) {
+                // Collect ALL stage IDs across all same-name groups
+                $allFirstStageIds = [];
+                foreach ($allStagesByName as $stages) {
+                    foreach ($stages as $s) {
+                        $allFirstStageIds[] = $s->id;
+                    }
+                }
+                $allFirstStageIds = array_values(array_unique($allFirstStageIds));
+
                 $project->update([
                     'current_stage_id' => $allFirstStageIds,
                     'approval_status'  => 'inprogress',
@@ -279,6 +349,77 @@ class ProjectApprovalController extends Controller
         });
 
         return response()->json(['success' => true, 'message' => 'Fund head(s) selected and approval workflow initialized.']);
+    }
+
+    /**
+     * Apply to extend project: creates an "Extension" pending approval stage.
+     */
+    public function applyExtension(Request $request, Project $project)
+    {
+        $request->validate([
+            'description' => 'required|string|max:5000',
+            'pdf'         => 'required|file|mimes:pdf|max:10240',
+        ]);
+
+        // Find or create the "Extension" approval stage
+        $extensionStage = ApprovalStage::firstOrCreate(
+            ['stage_name' => 'Extension'],
+            [
+                'stage_order'          => 999,
+                'is_last'              => false,
+                'is_mandatory'         => false,
+                'is_user_required'     => false,
+                'change_to_in_progress'=> false,
+                'can_change_cost'      => false,
+                'level'                => 'regional',
+            ]
+        );
+
+        // Upload PDF
+        $pdfPath = null;
+        if ($request->hasFile('pdf')) {
+            $file    = $request->file('pdf');
+            $pdfName = time() . '-ext-' . uniqid() . '.' . $file->getClientOriginalExtension();
+
+            if (!is_dir(public_path('approvals/extensions'))) {
+                mkdir(public_path('approvals/extensions'), 0755, true);
+            }
+
+            $file->move(public_path('approvals/extensions'), $pdfName);
+            $pdfPath = 'approvals/extensions/' . $pdfName;
+        }
+
+        DB::transaction(function () use ($request, $project, $extensionStage, $pdfPath) {
+            // Mark the last pending stage as 'extension requested'
+            $lastPending = ProjectApproval::where('project_id', $project->id)
+                ->where('status', 'pending')
+                ->orderBy('id', 'desc')
+                ->first();
+//dd($lastPending);
+            if ($lastPending) {
+                $lastPending->update(['status' => 'extension requested']);
+            }
+
+            // Create pending approval record for the extension stage
+            ProjectApproval::create([
+                'project_id'  => $project->id,
+                'stage_id'    => $extensionStage->id,
+                'approver_id' => null,
+                'status'      => 'pending',
+                'comments'    => $request->description,
+                'pdf'         => $pdfPath,
+                'action_date' => null,
+            ]);
+
+            // Update project current stage and status
+            $project->update([
+                'current_stage_id' => [$extensionStage->id],
+                'approval_status'  => 'inprogress',
+                'status'           => 'waiting',
+            ]);
+        });
+
+        return redirect()->back()->with('success', 'Extension request submitted successfully.');
     }
 
     public function updateActualCost(Request $request, Project $project)

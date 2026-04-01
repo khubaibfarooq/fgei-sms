@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { type BreadcrumbItem } from '@/types';
-import { Plus, Edit, Trash2, Building, ClipboardCheck, X, CheckCircle2, XCircle, Clock, Eye, FileText, Camera, Upload } from 'lucide-react';
+import { Plus, Edit, Trash2, Building, ClipboardCheck, X, CheckCircle2, XCircle, Clock, Eye, FileText, Camera, Upload, ArrowUpRight } from 'lucide-react';
 
 import {
   AlertDialog,
@@ -52,7 +52,7 @@ interface Project {
   institute: {
     name: string;
   };
-  fund_head_id?: Record<string, number> | null;
+  fund_head_id?: Record<string, number | string> | null;
   fund_head?: {
     name: string;
   }
@@ -140,10 +140,16 @@ const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Projects', href: '/projects' },
 ];
 
-export default function ProjectIndex({ projects, filters, permissions, fundHeads }: Props) {
+export default function ProjectIndex({ projects: initialProjects, filters, permissions, fundHeads }: Props) {
   const { props } = usePage<{ flash?: { success?: string; error?: string } }>();
   const [search, setSearch] = useState(filters.search || '');
   const [selectedStatus, setSelectedStatus] = useState(filters.status || '');
+  const [projects, setProjects] = useState(initialProjects);
+
+  // Keep local projects state in sync with Inertia server-side updates
+  useEffect(() => {
+    setProjects(initialProjects);
+  }, [initialProjects]);
 
   // Show server flash messages (e.g. delete blocked by guard)
   useEffect(() => {
@@ -189,6 +195,36 @@ export default function ProjectIndex({ projects, filters, permissions, fundHeads
   // Description Modal State
   const [descriptionModalOpen, setDescriptionModalOpen] = useState(false);
   const [selectedDescriptionProject, setSelectedDescriptionProject] = useState<Project | null>(null);
+
+  // Extend Project Modal State
+  const [extendModalOpen, setExtendModalOpen] = useState(false);
+  const [selectedProjectForExtension, setSelectedProjectForExtension] = useState<Project | null>(null);
+  const [extendForm, setExtendForm] = useState({ description: '', pdf: null as File | null });
+  const [submittingExtension, setSubmittingExtension] = useState(false);
+
+  const handleApplyExtension = async () => {
+    if (!selectedProjectForExtension) return;
+    if (!extendForm.description.trim()) { toast.error('Please enter a description'); return; }
+    if (!extendForm.pdf) { toast.error('Please upload a PDF file'); return; }
+
+    setSubmittingExtension(true);
+    try {
+      const fd = new FormData();
+      fd.append('description', extendForm.description);
+      fd.append('pdf', extendForm.pdf);
+      await axios.post(`/projects/${selectedProjectForExtension.id}/apply-extension`, fd, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      toast.success('Extension request submitted successfully.');
+      setExtendModalOpen(false);
+      setExtendForm({ description: '', pdf: null });
+      router.reload({ only: ['projects'] });
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to submit extension request.');
+    } finally {
+      setSubmittingExtension(false);
+    }
+  };
 
   const canShowInstitutionalApprove = (project: Project) => {
     return project.current_stage?.level?.toLowerCase() === 'institutional' && project.status !== 'completed';
@@ -575,13 +611,17 @@ export default function ProjectIndex({ projects, filters, permissions, fundHeads
 
                           <td className="border p-2 text-xs md:text-sm text-gray-900 dark:text-gray-100 hidden lg:table-cell">
                             {project.fund_head_id && Object.keys(project.fund_head_id).length > 0
-                              ? Object.entries(project.fund_head_id).map(([id, amt], i, arr) => (
-                                <span key={id} className="whitespace-nowrap">
-                                  <span className="font-medium text-[10px]">{fundHeadMap[id] || `#${id}`}</span>
-                                  <span className="text-muted-foreground text-[10px] ml-0.5">(Rs.{Number(amt).toLocaleString()})</span>
-                                  {i < arr.length - 1 && <span className="mx-0.5 text-muted-foreground">,</span>}
-                                </span>
-                              ))
+                              ? Object.entries(project.fund_head_id).map(([id, amt], i, arr) => {
+                                // amt may be "100000" or "100000,5000" — sum all parts
+                                const total = String(amt).split(',').reduce((s, v) => s + (parseFloat(v) || 0), 0);
+                                return (
+                                  <span key={id} className="whitespace-nowrap">
+                                    <span className="font-medium text-[10px]">{fundHeadMap[id] || `#${id}`}</span>
+                                    <span className="text-muted-foreground text-[10px] ml-0.5">(Rs.{total.toLocaleString()})</span>
+                                    {i < arr.length - 1 && <span className="mx-0.5 text-muted-foreground">,</span>}
+                                  </span>
+                                );
+                              })
                               : (project.fund_head?.name || '-')
                             }
                           </td>
@@ -591,7 +631,7 @@ export default function ProjectIndex({ projects, filters, permissions, fundHeads
                           <td className="border p-2 text-xs md:text-sm text-gray-900 dark:text-gray-100">
                             <div className="flex items-center justify-center gap-1">
                               {project.actual_cost || ''}
-                              {project.current_stage?.can_change_cost && !project.actual_cost && (
+                              {project.current_stage?.can_change_cost && (
                                 <Button
                                   variant="ghost"
                                   size="icon"
@@ -715,6 +755,7 @@ export default function ProjectIndex({ projects, filters, permissions, fundHeads
                                 </Button>
                               )}
 
+
                             </div>
                           </td>
 
@@ -776,67 +817,87 @@ export default function ProjectIndex({ projects, filters, permissions, fundHeads
                   ) : (
                     <div className="space-y-4">
                       {approvalHistory.map((record) => (
-                        <Card key={record.id} className="overflow-hidden border shadow-sm">
-                          <CardHeader className="p-2 bg-muted/30 pb-1 border-b">
-                            <div className="flex justify-between items-center">
-                              <div className="font-semibold text-xs">{record.stage?.stage_name || 'Stage'}   {record.stage?.fund_head?.name && (
-                                <span className="ml-2 text-[10px] font-normal bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800 px-1.5 py-0.5 rounded-full">
-                                  {record.stage.fund_head.name}
-                                </span>
-                              )}</div>
-                              {record.status === 'approved' ? (
-                                <Badge variant="outline" className="h-4 border-green-500 text-green-600 bg-green-50 gap-1 px-1 py-0 text-[10px]">
-                                  <CheckCircle2 className="w-2.5 h-2.5" /> Approved
-                                </Badge>
-                              ) : record.status === 'rejected' ? (
-                                <Badge variant="outline" className="h-4 border-red-500 text-red-600 bg-red-50 gap-1 px-1 py-0 text-[10px]">
-                                  <XCircle className="w-2.5 h-2.5" /> Rejected
-                                </Badge>
-                              ) : (
-                                <Badge variant="outline" className="h-4 border-yellow-500 text-yellow-600 bg-yellow-50 gap-1 px-1 py-0 text-[10px]">
-                                  <Clock className="w-2.5 h-2.5" /> Pending
-                                </Badge>
-                              )}
-                            </div>
-                          </CardHeader>
-                          <CardContent className="p-2 text-xs">
-                            <div className="flex flex-wrap items-center justify-between gap-1 mb-1">
-                              <div className="text-[10px] text-muted-foreground flex items-center">
-                                <Clock className="w-2.5 h-2.5 mr-1" />
-                                {record.action_date ? new Date(record.action_date).toLocaleString() : "-"}
+                        <>
+                          <Card key={record.id} className="overflow-hidden border shadow-sm">
+                            <CardHeader className="p-2 bg-muted/30 pb-1 border-b">
+                              <div className="flex justify-between items-center">
+                                <div className="font-semibold text-xs">{record.stage?.stage_name || 'Stage'}   {record.stage?.fund_head?.name && (
+                                  <span className="ml-2 text-[10px] font-normal bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800 px-1.5 py-0.5 rounded-full">
+                                    {record.stage.fund_head.name}
+                                  </span>
+                                )}</div>
+                                {record.status === 'approved' ? (
+                                  <Badge variant="outline" className="h-4 border-green-500 text-green-600 bg-green-50 gap-1 px-1 py-0 text-[10px]">
+                                    <CheckCircle2 className="w-2.5 h-2.5" /> Approved
+                                  </Badge>
+                                ) : record.status === 'rejected' ? (
+                                  <Badge variant="outline" className="h-4 border-red-500 text-red-600 bg-red-50 gap-1 px-1 py-0 text-[10px]">
+                                    <XCircle className="w-2.5 h-2.5" /> Rejected
+                                  </Badge>
+                                ) : record.status === 'extension requested' ? (
+                                  <Badge variant="outline" className="h-4 border-red-500 text-red-600 bg-red-50 gap-1 px-1 py-0 text-[10px]">
+                                    <XCircle className="w-2.5 h-2.5" /> Extension Requested
+                                  </Badge>
+                                ) : (
+                                  <Badge variant="outline" className="h-4 border-yellow-500 text-yellow-600 bg-yellow-50 gap-1 px-1 py-0 text-[10px]">
+                                    <Clock className="w-2.5 h-2.5" /> Pending
+                                  </Badge>
+                                )}
                               </div>
-                              <div className="text-[10px]">
-                                <span className="font-medium text-muted-foreground">Approved by: </span>
-                                <span className="font-medium">{record.approver?.name}</span>
+                            </CardHeader>
+                            <CardContent className="p-2 text-xs">
+                              <div className="flex flex-wrap items-center justify-between gap-1 mb-1">
+                                <div className="text-[10px] text-muted-foreground flex items-center">
+                                  <Clock className="w-2.5 h-2.5 mr-1" />
+                                  {record.action_date ? new Date(record.action_date).toLocaleString() : "-"}
+                                </div>
+                                <div className="text-[10px]">
+                                  <span className="font-medium text-muted-foreground">Approved by: </span>
+                                  <span className="font-medium">{record.approver?.name}</span>
+                                </div>
                               </div>
-                            </div>
-                            {record.comments && (
-                              <div className="bg-muted/50 px-2 py-1 rounded text-[10px] italic border mt-1 line-clamp-2">
-                                "{record.comments}"
-                              </div>
-                            )}
-                            <div className="flex items-center gap-2 mt-1">
-                              {record.pdf && (
-                                <a
-                                  href={`/${record.pdf}`}
-                                  target="_blank"
-                                  className="text-blue-600 hover:underline text-[10px] flex items-center gap-1"
-                                >
-                                  <FileText className="h-3 w-3" /> PDF
-                                </a>)}
-                              {record.img && (
-                                <div className="flex items-center gap-1">
-                                  <ImagePreview
-                                    dataImg={record.img}
-                                    size="h-4 w-4"
-                                    className="rounded border object-cover"
-                                  />
-                                  <span className="text-[10px] text-muted-foreground">Image</span>
+                              {record.comments && (
+                                <div className="bg-muted/50 px-2 py-1 rounded text-[10px] italic border mt-1 line-clamp-2">
+                                  "{record.comments}"
                                 </div>
                               )}
-                            </div>
-                          </CardContent>
-                        </Card>
+                              <div className="flex items-center gap-2 mt-1">
+                                {record.pdf && (
+                                  <a
+                                    href={`/${record.pdf}`}
+                                    target="_blank"
+                                    className="text-blue-600 hover:underline text-[10px] flex items-center gap-1"
+                                  >
+                                    <FileText className="h-3 w-3" /> PDF
+                                  </a>)}
+                                {record.img && (
+                                  <div className="flex items-center gap-1">
+                                    <ImagePreview
+                                      dataImg={record.img}
+                                      size="h-4 w-4"
+                                      className="rounded border object-cover"
+                                    />
+                                    <span className="text-[10px] text-muted-foreground">Image</span>
+                                  </div>
+                                )}
+                              </div>
+                            </CardContent>
+                          </Card>
+                          {record.stage?.stage_name === 'Execution of approved work' && record.status === 'pending' &&
+                            !approvalHistory.some(r => r.stage?.stage_name === 'Extension' && r.status === 'pending') && (
+                              <Button
+                                onClick={() => {
+
+                                  setSelectedProjectForExtension(selectedPanelProject);
+                                  setExtendForm({ description: '', pdf: null });
+                                  setExtendModalOpen(true);
+                                }}
+                                className="w-full"
+                              >
+                                Apply to Extend Project
+                              </Button>
+                            )}
+                        </>
                       ))}
                     </div>
                   )}
@@ -1397,6 +1458,55 @@ export default function ProjectIndex({ projects, filters, permissions, fundHeads
               }}
             >
               {uploadingImage ? 'Uploading...' : 'Upload'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Apply to Extend Project Modal */}
+      <Dialog open={extendModalOpen} onOpenChange={(open) => { if (!open) setExtendModalOpen(false); }}>
+        <DialogContent className="sm:max-w-[480px]">
+          <DialogHeader>
+            <DialogTitle>Apply to Extend Project</DialogTitle>
+            <DialogDescription>
+              Submitting an extension request for <strong>{selectedProjectForExtension?.name}</strong> will create a new <em>Extension</em> approval stage pending review.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-start gap-4">
+              <Label htmlFor="ext_desc" className="text-right pt-2">Description <span className="text-destructive">*</span></Label>
+              <Textarea
+                id="ext_desc"
+                placeholder="Reason for extension..."
+                className="col-span-3"
+                rows={4}
+                value={extendForm.description}
+                onChange={(e) => setExtendForm({ ...extendForm, description: e.target.value })}
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="ext_pdf" className="text-right">PDF <span className="text-destructive">*</span></Label>
+              <Input
+                id="ext_pdf"
+                type="file"
+                accept=".pdf"
+                className="col-span-3"
+                onChange={(e) => {
+                  if (e.target.files && e.target.files[0]) {
+                    setExtendForm({ ...extendForm, pdf: e.target.files[0] });
+                  }
+                }}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="secondary" onClick={() => setExtendModalOpen(false)}>Cancel</Button>
+            <Button
+              className="bg-orange-500 hover:bg-orange-600"
+              disabled={submittingExtension || !extendForm.description.trim() || !extendForm.pdf}
+              onClick={handleApplyExtension}
+            >
+              {submittingExtension ? 'Submitting...' : 'Submit Extension'}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -56,11 +56,13 @@ class Project extends Model
         $heads = FundHead::whereIn('id', $ids)->pluck('name', 'id');
 
         $result = [];
-        foreach ($data as $headId => $sanctionAmount) {
+        foreach ($data as $headId => $sanctionValue) {
+            // Support comma-separated history: "100000,5000" → sum = 105000
+            $total = array_sum(array_map('floatval', explode(',', (string) $sanctionValue)));
             $result[] = [
-                'id'             => (int) $headId,
-                'name'           => $heads[$headId] ?? 'Unknown',
-                'sanction_amount' => (float) $sanctionAmount,
+                'id'              => (int) $headId,
+                'name'            => $heads[$headId] ?? 'Unknown',
+                'sanction_amount' => $total,
             ];
         }
         return $result;

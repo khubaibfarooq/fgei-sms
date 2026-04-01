@@ -15,27 +15,48 @@ class FundHeldController extends Controller
     public function index(Request $request)
     {
         $query = FundHeld::with('institute');
-$inst_id = session('sms_inst_id');
-$type=session('type');
+        $inst_id = session('sms_inst_id');
+        $type = session('type');
 
         $query->where('institute_id', $inst_id)->with('FundHead');
         if ($request->search) {
- $query->whereHas('FundHead', function ($q) use ($request) {
-            $q->where('name', 'like', '%' . $request->search . '%');
-        });        }
+            $query->whereHas('FundHead', function ($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->search . '%');
+            });
+        }
 
         $funds = $query->with('FundHead')->paginate(10)->withQueryString();
-$permissions = [
-        'can_add'    => auth()->user()->can('fund-add'),
-        'can_edit'   => auth()->user()->can('fund-edit'),
-        'can_delete' => auth()->user()->can('fund-delete'),
-    ];
+
+        // Load bank statements for the current institute
+        $bankStatementsRaw = \App\Models\BankStatement::where('institute_id', $inst_id)
+            ->orderBy('created_at', 'desc')
+            ->get(['id', 'institute_id', 'image', 'created_at']);
+
+        $bankStatements = $bankStatementsRaw->groupBy('institute_id')->map(function ($items) {
+            return $items->map(function ($item) {
+                return [
+                    'id'          => $item->id,
+                    'image'       => $item->image,
+                    'uploaded_at' => $item->created_at->toISOString(),
+                ];
+            })->values();
+        })->toArray();
+
+        $permissions = [
+            'can_add'    => auth()->user()->can('fund-add'),
+            'can_edit'   => auth()->user()->can('fund-edit'),
+            'can_delete' => auth()->user()->can('fund-delete'),
+        ];
+
         return Inertia::render('funds/Index', [
-            'funds' => $funds,
-            'filters' => ['search' => $request->search ?? ''],
-            'permissions'=>$permissions,
+            'funds'           => $funds,
+            'filters'         => ['search' => $request->search ?? ''],
+            'permissions'     => $permissions,
+            'bankStatements'  => $bankStatements,
+            'instituteId'     => $inst_id,
         ]);
     }
+
 
     public function create()
     {

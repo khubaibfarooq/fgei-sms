@@ -490,7 +490,7 @@ export default function ProjectDetails({ project, canEditMilestones, fundHeadsLi
                             {/* Remaining Payments */}
                             <div>
                                 <p className="text-[10px] md:text-xs text-muted-foreground uppercase tracking-wide">Remaining</p>
-                                <p className="font-medium text-blue-600">{formatAmount(remainingPayments)}</p>
+                                <p className="font-medium text-blue-600">{project.status === 'completed' ? 'N/A' : formatAmount(remainingPayments)}</p>
                             </div>
 
                             {/* Pending Requests */}

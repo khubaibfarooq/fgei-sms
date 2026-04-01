@@ -300,21 +300,21 @@ export default function Upgradations({ upgradations: upgradationProp, institutes
                   }))}
                   includeAllOption={false}
                 />
-              </div>
 
-              {/* Buttons Row */}
-              <div className="flex flex-col md:flex-row gap-2 justify-end">
-                <Button onClick={debouncedApplyFilters} className="w-full md:w-auto">
-                  Apply Filters
-                </Button>
-                <Button onClick={exportToPDF} className="w-full md:w-auto">
-                  Export PDF
-                </Button>
-                <Button onClick={exportToExcel} className="w-full md:w-auto">
-                  Export Excel
-                </Button>
-              </div>
 
+                {/* Buttons Row */}
+                <div className="flex flex-col md:flex-row gap-2 justify-end">
+                  <Button onClick={debouncedApplyFilters} className="w-full md:w-auto">
+                    Apply Filters
+                  </Button>
+                  <Button onClick={exportToPDF} className="w-full md:w-auto">
+                    Export PDF
+                  </Button>
+                  <Button onClick={exportToExcel} className="w-full md:w-auto">
+                    Export Excel
+                  </Button>
+                </div>
+              </div>
               {/* Table Section */}
               <div className="space-y-3">
                 <table className="w-full border-collapse border-1 rounded-md overflow-hidden shadow-sm">

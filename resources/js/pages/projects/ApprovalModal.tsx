@@ -26,11 +26,13 @@ interface ApprovalProps {
 
 interface ApprovalHistory {
     id: number;
+    stage_id: number;
     status: string;
     comments: string;
     action_date: string;
     approver: { name: string };
     stage: {
+        id: number;
         stage_name: string;
         fund_head?: { name: string } | null;
     };
@@ -53,6 +55,7 @@ export default function ApprovalModal({ isOpen, onClose, project, onSuccess }: A
     const [loading, setLoading] = useState(false);
     const [pendingStages, setPendingStages] = useState<PendingStage[]>([]);
     const [selectedStageId, setSelectedStageId] = useState<number | null>(null);
+    const [revertStageId, setRevertStageId] = useState<number | string>('');
     const historyEndRef = useRef<HTMLDivElement>(null);
 
     const scrollToBottom = () => {
@@ -74,6 +77,7 @@ export default function ApprovalModal({ isOpen, onClose, project, onSuccess }: A
             setImgFile(null);
             setPendingStages([]);
             setSelectedStageId(null);
+            setRevertStageId('');
         }
     }, [isOpen, project]);
 
@@ -125,6 +129,7 @@ export default function ApprovalModal({ isOpen, onClose, project, onSuccess }: A
         fd.append('pdf', pdfFile);
         if (imgFile) fd.append('img', imgFile);
         if (selectedStageId) fd.append('stage_id', selectedStageId.toString());
+        if (status === 'rejected' && revertStageId) fd.append('revert_to_stage_id', revertStageId.toString());
 
         router.post(
             `/projects/${project.id}/approvals`,
@@ -139,6 +144,7 @@ export default function ApprovalModal({ isOpen, onClose, project, onSuccess }: A
                     setPdfFile(null);
                     setImgFile(null);
                     setSelectedStageId(null);
+                    setRevertStageId('');
                 },
                 onError: () => {
                     toast.error('Failed to process approval');
@@ -258,6 +264,35 @@ export default function ApprovalModal({ isOpen, onClose, project, onSuccess }: A
                             rows={3}
                         />
                     </div>
+
+                    {/* Revert Stage — shown only when approver clicks Reject */}
+                    {(() => {
+                        const approvedStages = history.filter(
+                            r => r.status === 'approved' && r.stage?.stage_name
+                        );
+                        // Deduplicate by stage name
+                        const uniqueStages = approvedStages.filter(
+                            (r, idx, arr) => arr.findIndex(x => x.stage?.stage_name === r.stage?.stage_name) === idx
+                        );
+                        return uniqueStages.length > 0 ? (
+                            <div className="space-y-2">
+                                <Label htmlFor="revert_stage" className="text-sm font-medium">
+                                    Revert to Stage <span className="text-xs text-muted-foreground font-normal">(optional — select to re-activate a past stage)</span>
+                                </Label>
+                                <select
+                                    id="revert_stage"
+                                    value={revertStageId}
+                                    onChange={(e) => setRevertStageId(e.target.value)}
+                                    className="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                                >
+                                    <option value="">— Do not revert (keep rejected) —</option>
+                                    {uniqueStages.map(r => (
+                                        <option key={r.id} value={r.stage_id}>{r.stage?.stage_name}{r.stage?.fund_head?.name ? ` (${r.stage.fund_head.name})` : ''}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        ) : null;
+                    })()}
 
                     {/* Attachments */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

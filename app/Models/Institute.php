@@ -63,4 +63,9 @@ class Institute extends Model implements HasMedia
     {
         return $this->belongsTo(Institute::class, 'region_id');
     }
+
+    public function bankStatements()
+    {
+        return $this->hasMany(BankStatement::class)->latest();
+    }
 }

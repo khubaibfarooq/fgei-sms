@@ -50,6 +50,7 @@ use App\Http\Controllers\ProjectApprovalController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\ContractorController;
+use App\Http\Controllers\BankStatementController;
 
 Route::get('/', function () {
     return Inertia::render('welcome');
@@ -159,6 +160,7 @@ Route::post('/projects/{project}/update-completion', [ProjectController::class, 
 Route::get('/projects/{project}/images', [ProjectController::class, 'projectImages'])->name('projects.images');
 Route::post('/projects/{project}/images', [ProjectController::class, 'storeProjectImage'])->name('projects.images.store');
 Route::delete('/project-images/{projectImage}', [ProjectController::class, 'deleteProjectImage'])->name('project-images.destroy');
+Route::post('/projects/{project}/apply-extension', [ProjectApprovalController::class, 'applyExtension'])->name('projects.apply-extension');
 Route::resource('milestones', MilestoneController::class);
 
 // approval stages
@@ -266,6 +268,10 @@ Route::get('/reports/fundstrans', [ReportsController::class, 'getFund'])->name('
 Route::post('/helpdesk', [HelpDeskController::class, 'store'])->name('helpdesk.store');
 Route::get('/helpdesk/{helpDesk}/messages', [HelpDeskController::class, 'fetchMessages'])->name('helpdesk.messages.fetch');
 Route::post('/helpdesk/{helpDesk}/messages', [HelpDeskController::class, 'sendMessage'])->name('helpdesk.messages.send');
+
+// Bank Statements
+Route::post('/institutes/{institute}/bank-statements', [BankStatementController::class, 'store'])->name('bank-statements.store');
+Route::delete('/bank-statements/{bankStatement}', [BankStatementController::class, 'destroy'])->name('bank-statements.destroy');
 
 });
 

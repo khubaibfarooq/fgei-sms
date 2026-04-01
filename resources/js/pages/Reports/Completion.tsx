@@ -412,57 +412,57 @@ export default function Completion({
                     <CardContent className="space-y-3">
                         {/* Summary Section - Modern Stat Cards */}
                         <div>
-                            <h3 className="text-base md:text-lg lg:text-xl font-semibold mb-2 flex items-center gap-2">
-                                <span className="w-1 h-4 bg-primary rounded-full"></span>
+                            <h3 className="text-xs sm:text-sm font-semibold mb-1.5 flex items-center gap-1.5 text-muted-foreground uppercase tracking-wide">
+                                <span className="w-1 h-3 bg-primary rounded-full"></span>
                                 Summary Overview
                             </h3>
                             {summary.length > 0 ? (
-                                <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3 md:gap-4">
+                                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-1.5 sm:gap-2">
                                     {/* Total Institutions Card */}
-                                    <div className="relative overflow-hidden rounded-xl border bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 p-4 md:p-5 shadow-sm hover:shadow-md transition-all duration-300 group" onClick={() => { setStatus(''); fetchData({ status: '' }); }}>
-                                        <div className="absolute top-0 right-0 w-20 h-20 bg-slate-200/50 dark:bg-slate-700/30 rounded-full -translate-y-1/2 translate-x-1/2"></div>
-                                        <p className="text-base md:text-lg  font-semibold text-muted-foreground uppercase tracking-wider mb-2">Institutions</p>
-                                        <p className="text-2xl md:text-3xl  font-black text-slate-700 dark:text-slate-200 group-hover:scale-105 transition-transform">{totalInstitutes}</p>
+                                    <div className="relative overflow-hidden rounded-lg border bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 p-2.5 sm:p-3 shadow-sm hover:shadow-md transition-all duration-300 group cursor-pointer" onClick={() => { setStatus(''); fetchData({ status: '' }); }}>
+                                        <div className="absolute top-0 right-0 w-12 h-12 bg-slate-200/50 dark:bg-slate-700/30 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+                                        <p className="text-[10px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-0.5">Institutions</p>
+                                        <p className="text-lg sm:text-xl font-black text-slate-700 dark:text-slate-200 group-hover:scale-105 transition-transform">{totalInstitutes}</p>
                                     </div>
 
                                     {/* Completed Card */}
                                     {(status === 'completed' || status === '') && (
-                                        <div className="relative overflow-hidden rounded-xl border border-emerald-200 dark:border-emerald-900 bg-gradient-to-br from-emerald-50 to-green-100 dark:from-emerald-950 dark:to-green-900 p-4 md:p-5 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer group hover:border-emerald-400" onClick={() => { setStatus('completed'); fetchData({ status: 'completed' }); }}>
-                                            <div className="absolute top-0 right-0 w-20 h-20 bg-emerald-200/50 dark:bg-emerald-800/30 rounded-full -translate-y-1/2 translate-x-1/2"></div>
-                                            <p className="text-base md:text-lg font-semibold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider mb-2">✓ Completed</p>
-                                            <p className="text-2xl md:text-3xl font-black text-emerald-600 dark:text-emerald-400 group-hover:scale-105 transition-transform">{summary.reduce((sum, item) => sum + item.completed, 0)}</p>
+                                        <div className="relative overflow-hidden rounded-lg border border-emerald-200 dark:border-emerald-900 bg-gradient-to-br from-emerald-50 to-green-100 dark:from-emerald-950 dark:to-green-900 p-2.5 sm:p-3 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer group hover:border-emerald-400" onClick={() => { setStatus('completed'); fetchData({ status: 'completed' }); }}>
+                                            <div className="absolute top-0 right-0 w-12 h-12 bg-emerald-200/50 dark:bg-emerald-800/30 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+                                            <p className="text-[10px] sm:text-xs font-semibold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider mb-0.5">✓ Completed</p>
+                                            <p className="text-lg sm:text-xl font-black text-emerald-600 dark:text-emerald-400 group-hover:scale-105 transition-transform">{summary.reduce((sum, item) => sum + item.completed, 0)}</p>
                                         </div>
                                     )}
 
                                     {/* Above 50% Card */}
                                     {(status === 'greater_than_50' || status === '') && (
-                                        <div className="relative overflow-hidden rounded-xl border border-blue-200 dark:border-blue-900 bg-gradient-to-br from-blue-50 to-cyan-100 dark:from-blue-950 dark:to-cyan-900 p-4 md:p-5 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer group hover:border-blue-400" onClick={() => { setStatus('greater_than_50'); fetchData({ status: 'greater_than_50' }); }}>
-                                            <div className="absolute top-0 right-0 w-20 h-20 bg-blue-200/50 dark:bg-blue-800/30 rounded-full -translate-y-1/2 translate-x-1/2"></div>
-                                            <p className="text-base md:text-lg font-semibold text-blue-700 dark:text-blue-400 uppercase tracking-wider mb-2">↑ Above 50%</p>
-                                            <p className="text-2xl md:text-3xl font-black text-blue-600 dark:text-blue-400 group-hover:scale-105 transition-transform">{summary.reduce((sum, item) => sum + item.greater_than_50, 0)}</p>
+                                        <div className="relative overflow-hidden rounded-lg border border-blue-200 dark:border-blue-900 bg-gradient-to-br from-blue-50 to-cyan-100 dark:from-blue-950 dark:to-cyan-900 p-2.5 sm:p-3 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer group hover:border-blue-400" onClick={() => { setStatus('greater_than_50'); fetchData({ status: 'greater_than_50' }); }}>
+                                            <div className="absolute top-0 right-0 w-12 h-12 bg-blue-200/50 dark:bg-blue-800/30 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+                                            <p className="text-[10px] sm:text-xs font-semibold text-blue-700 dark:text-blue-400 uppercase tracking-wider mb-0.5">↑ Above 50%</p>
+                                            <p className="text-lg sm:text-xl font-black text-blue-600 dark:text-blue-400 group-hover:scale-105 transition-transform">{summary.reduce((sum, item) => sum + item.greater_than_50, 0)}</p>
                                         </div>
                                     )}
 
                                     {/* Below 50% Card */}
                                     {(status === 'less_than_50' || status === '') && (
-                                        <div className="relative overflow-hidden rounded-xl border border-amber-200 dark:border-amber-900 bg-gradient-to-br from-amber-50 to-orange-100 dark:from-amber-950 dark:to-orange-900 p-4 md:p-5 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer group hover:border-amber-400" onClick={() => { setStatus('less_than_50'); fetchData({ status: 'less_than_50' }); }}>
-                                            <div className="absolute top-0 right-0 w-20 h-20 bg-amber-200/50 dark:bg-amber-800/30 rounded-full -translate-y-1/2 translate-x-1/2"></div>
-                                            <p className="text-base md:text-lg font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wider mb-2">↓ Below 50%</p>
-                                            <p className="text-2xl md:text-3xl font-black text-amber-600 dark:text-amber-400 group-hover:scale-105 transition-transform">{summary.reduce((sum, item) => sum + item.less_than_50, 0)}</p>
+                                        <div className="relative overflow-hidden rounded-lg border border-amber-200 dark:border-amber-900 bg-gradient-to-br from-amber-50 to-orange-100 dark:from-amber-950 dark:to-orange-900 p-2.5 sm:p-3 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer group hover:border-amber-400" onClick={() => { setStatus('less_than_50'); fetchData({ status: 'less_than_50' }); }}>
+                                            <div className="absolute top-0 right-0 w-12 h-12 bg-amber-200/50 dark:bg-amber-800/30 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+                                            <p className="text-[10px] sm:text-xs font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wider mb-0.5">↓ Below 50%</p>
+                                            <p className="text-lg sm:text-xl font-black text-amber-600 dark:text-amber-400 group-hover:scale-105 transition-transform">{summary.reduce((sum, item) => sum + item.less_than_50, 0)}</p>
                                         </div>
                                     )}
 
                                     {/* Zero Card */}
                                     {(status === 'zero' || status === '') && (
-                                        <div className="relative overflow-hidden rounded-xl border border-red-200 dark:border-red-900 bg-gradient-to-br from-red-50 to-rose-100 dark:from-red-950 dark:to-rose-900 p-4 md:p-5 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer group hover:border-red-400" onClick={() => { setStatus('zero'); fetchData({ status: 'zero' }); }}>
-                                            <div className="absolute top-0 right-0 w-20 h-20 bg-red-200/50 dark:bg-red-800/30 rounded-full -translate-y-1/2 translate-x-1/2"></div>
-                                            <p className="text-sm md:text-base font-semibold text-red-700 dark:text-red-400 uppercase tracking-wider mb-2">✕ Zero (0%)</p>
-                                            <p className="text-2xl md:text-3xl font-black text-red-600 dark:text-red-400 group-hover:scale-105 transition-transform">{summary.reduce((sum, item) => sum + item.zero, 0)}</p>
+                                        <div className="relative overflow-hidden rounded-lg border border-red-200 dark:border-red-900 bg-gradient-to-br from-red-50 to-rose-100 dark:from-red-950 dark:to-rose-900 p-2.5 sm:p-3 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer group hover:border-red-400" onClick={() => { setStatus('zero'); fetchData({ status: 'zero' }); }}>
+                                            <div className="absolute top-0 right-0 w-12 h-12 bg-red-200/50 dark:bg-red-800/30 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+                                            <p className="text-[10px] sm:text-xs font-semibold text-red-700 dark:text-red-400 uppercase tracking-wider mb-0.5">✕ Zero (0%)</p>
+                                            <p className="text-lg sm:text-xl font-black text-red-600 dark:text-red-400 group-hover:scale-105 transition-transform">{summary.reduce((sum, item) => sum + item.zero, 0)}</p>
                                         </div>
                                     )}
                                 </div>
                             ) : (
-                                <div className="text-center py-8 text-muted-foreground bg-muted/20 rounded-xl border-2 border-dashed">
+                                <div className="text-center py-4 text-muted-foreground bg-muted/20 rounded-lg border-2 border-dashed text-xs">
                                     No summary data available
                                 </div>
                             )}
@@ -472,13 +472,13 @@ export default function Completion({
 
                         {/* Details Section */}
                         <div>
-                            <h3 className="text-base md:text-lg lg:text-xl font-semibold mb-4 flex items-center gap-2">
-                                <span className="w-1 h-6 bg-primary rounded-full"></span>
+                            <h3 className="text-xs sm:text-sm font-semibold mb-1.5 flex items-center gap-1.5 text-muted-foreground uppercase tracking-wide">
+                                <span className="w-1 h-3 bg-primary rounded-full"></span>
                                 Institute Details
                             </h3>
 
-                            {/* Filter Buttons - Modern Pill Style */}
-                            <div className="flex gap-2 mb-4 sm:mb-5 overflow-x-auto pb-2 sm:pb-0 sm:flex-wrap scrollbar-thin">
+                            {/* Filter Buttons */}
+                            <div className="flex gap-1.5 mb-2 overflow-x-auto pb-1 sm:pb-0 sm:flex-wrap scrollbar-thin">
                                 {!isRegionView && regions.length > 0 ? (
                                     <>
                                         <Combobox
@@ -490,90 +490,69 @@ export default function Completion({
                                             placeholder="Select Institute"
                                         />
                                         <Button
-                                            onClick={() => {
-                                                setRegion('');
-                                                setInstitute('');
-                                                fetchData({ region_id: '', institute_id: '' });
-                                            }}
+                                            onClick={() => { setRegion(''); setInstitute(''); fetchData({ region_id: '', institute_id: '' }); }}
                                             variant="outline"
                                             size="sm"
-                                            className="rounded-full px-4 hover:bg-primary hover:text-primary-foreground transition-colors"
+                                            className="rounded-full h-6 px-2.5 text-xs hover:bg-primary hover:text-primary-foreground transition-colors"
                                         >
-                                            ← Show All Regions
+                                            ← All Regions
                                         </Button>
                                     </>
-                                ) : (
-                                    ''
-                                )}
+                                ) : ''}
 
-                                <div className="h-6 w-px bg-border mx-1 hidden sm:block"></div>
+                                <div className="h-5 w-px bg-border mx-0.5 hidden sm:block self-center"></div>
 
-                                <Button
-                                    onClick={() => { setStatus(''); fetchData({ status: '' }); }}
-                                    size="sm"
-                                    className={`rounded-full px-4 transition-all ${status === '' || status === 'all' ? 'bg-slate-700 text-white shadow-md' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300'}`}
-                                >
+                                <Button onClick={() => { setStatus(''); fetchData({ status: '' }); }} size="sm"
+                                    className={`rounded-full h-6 px-2.5 text-xs transition-all ${status === '' || status === 'all' ? 'bg-slate-700 text-white shadow-sm' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300'}`}>
                                     All
                                 </Button>
-                                <Button
-                                    onClick={() => { setStatus('completed'); fetchData({ status: 'completed' }); }}
-                                    size="sm"
-                                    className={`rounded-full px-4 text-base transition-all ${status === 'completed' ? 'bg-emerald-600 text-white shadow-md' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950 dark:text-emerald-400'}`}
-                                >
+                                <Button onClick={() => { setStatus('completed'); fetchData({ status: 'completed' }); }} size="sm"
+                                    className={`rounded-full h-6 px-2.5 text-xs transition-all ${status === 'completed' ? 'bg-emerald-600 text-white shadow-sm' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950 dark:text-emerald-400'}`}>
                                     ✓ Completed
                                 </Button>
-                                <Button
-                                    onClick={() => { setStatus('greater_than_50'); fetchData({ status: 'greater_than_50' }); }}
-                                    size="sm"
-                                    className={`rounded-full px-4 text-base transition-all ${status === 'greater_than_50' ? 'bg-blue-600 text-white shadow-md' : 'bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-950 dark:text-blue-400'}`}
-                                >
+                                <Button onClick={() => { setStatus('greater_than_50'); fetchData({ status: 'greater_than_50' }); }} size="sm"
+                                    className={`rounded-full h-6 px-2.5 text-xs transition-all ${status === 'greater_than_50' ? 'bg-blue-600 text-white shadow-sm' : 'bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-950 dark:text-blue-400'}`}>
                                     ↑ Above 50%
                                 </Button>
-                                <Button
-                                    onClick={() => { setStatus('less_than_50'); fetchData({ status: 'less_than_50' }); }}
-                                    size="sm"
-                                    className={`rounded-full px-4 text-base transition-all ${status === 'less_than_50' ? 'bg-amber-600 text-white shadow-md' : 'bg-amber-50 text-amber-700 hover:bg-amber-100 dark:bg-amber-950 dark:text-amber-400'}`}
-                                >
+                                <Button onClick={() => { setStatus('less_than_50'); fetchData({ status: 'less_than_50' }); }} size="sm"
+                                    className={`rounded-full h-6 px-2.5 text-xs transition-all ${status === 'less_than_50' ? 'bg-amber-600 text-white shadow-sm' : 'bg-amber-50 text-amber-700 hover:bg-amber-100 dark:bg-amber-950 dark:text-amber-400'}`}>
                                     ↓ Below 50%
                                 </Button>
-                                <Button
-                                    onClick={() => { setStatus('zero'); fetchData({ status: 'zero' }); }}
-                                    size="sm"
-                                    className={`rounded-full px-4 text-base transition-all ${status === 'zero' ? 'bg-red-600 text-white shadow-md' : 'bg-red-50 text-red-700 hover:bg-red-100 dark:bg-red-950 dark:text-red-400'}`}
-                                >
+                                <Button onClick={() => { setStatus('zero'); fetchData({ status: 'zero' }); }} size="sm"
+                                    className={`rounded-full h-6 px-2.5 text-xs transition-all ${status === 'zero' ? 'bg-red-600 text-white shadow-sm' : 'bg-red-50 text-red-700 hover:bg-red-100 dark:bg-red-950 dark:text-red-400'}`}>
                                     ✕ Zero
                                 </Button>
                             </div>
 
-                            {/* Modern Table Design */}
-                            <div className="overflow-x-auto rounded-lg sm:rounded-xl border shadow-sm -mx-2 sm:mx-0">
-                                <table className="w-full text-xs sm:text-sm md:text-base min-w-[600px]">
+                            {/* Table */}
+                            <div className="overflow-x-auto rounded-lg border shadow-sm">
+                                <table className="w-full text-xs min-w-[520px]">
                                     <thead>
                                         <tr className="bg-gradient-to-r from-slate-100 to-slate-50 dark:from-slate-800 dark:to-slate-900 border-b">
-                                            <th className="px-4 md:px-6 py-4 text-left font-semibold text-slate-700 dark:text-slate-300  text-base md:text-lg lg:text-xl tracking-wider ">
+                                            <th className="px-3 py-2 text-left font-semibold text-slate-700 dark:text-slate-300 text-xs tracking-wide">
                                                 {isRegionView ? 'Region' : 'Institute'}
                                             </th>
 
                                             {isRegionView ? (
                                                 <>
-                                                    {status === '' && <th className="px-3 md:px-4 py-4 text-center font-semibold text-slate-700 dark:text-slate-300  text-base md:text-lg lg:text-xl tracking-wider">Total</th>}
-                                                    {(status === 'completed' || status === '') && <th className="px-3 md:px-4 py-4 text-center font-semibold text-emerald-700 dark:text-emerald-400  text-base md:text-lg lg:text-xl tracking-wider">Completed</th>}
-                                                    {(status === 'greater_than_50' || status === '') && <th className="px-3 md:px-4 py-4 text-center font-semibold text-blue-700 dark:text-blue-400  text-base md:text-lg lg:text-xl tracking-wider">Above 50%</th>}
-                                                    {(status === 'less_than_50' || status === '') && <th className="px-3 md:px-4 py-4 text-center font-semibold text-amber-700 dark:text-amber-400  text-base md:text-lg lg:text-xl tracking-wider">Below 50%</th>}
-                                                    {(status === 'zero' || status === '') && <th className="px-3 md:px-4 py-4 text-center font-semibold text-red-700 dark:text-red-400  text-base md:text-lg lg:text-xl tracking-wider">Zero(0%)</th>}
+                                                    {status === '' && <th className="px-2 py-2 text-center font-semibold text-slate-700 dark:text-slate-300 text-xs">Total</th>}
+                                                    {(status === 'completed' || status === '') && <th className="px-2 py-2 text-center font-semibold text-emerald-700 dark:text-emerald-400 text-xs">Completed</th>}
+                                                    {(status === 'greater_than_50' || status === '') && <th className="px-2 py-2 text-center font-semibold text-blue-700 dark:text-blue-400 text-xs">Above 50%</th>}
+                                                    {(status === 'less_than_50' || status === '') && <th className="px-2 py-2 text-center font-semibold text-amber-700 dark:text-amber-400 text-xs">Below 50%</th>}
+                                                    {(status === 'zero' || status === '') && <th className="px-2 py-2 text-center font-semibold text-red-700 dark:text-red-400 text-xs">Zero(0%)</th>}
                                                 </>
                                             ) : (
                                                 <>
-                                                    <th className="px-2 md:px-3 py-4 text-center font-semibold text-slate-600 dark:text-slate-400 uppercase text-base md:text-lg lg:text-xl tracking-wider">Shifts</th>
-                                                    <th className="px-2 md:px-3 py-4 text-center font-semibold text-slate-600 dark:text-slate-400 uppercase text-base md:text-lg lg:text-xl tracking-wider">Blocks</th>
-                                                    <th className="px-2 md:px-3 py-4 text-center font-semibold text-slate-600 dark:text-slate-400 uppercase text-base md:text-lg lg:text-xl tracking-wider">Rooms</th>
-                                                    <th className="px-2 md:px-3 py-4 text-center font-semibold text-slate-600 dark:text-slate-400 uppercase text-base md:text-lg lg:text-xl tracking-wider">Assets</th>
-                                                    <th className="px-2 md:px-3 py-4 text-center font-semibold text-slate-600 dark:text-slate-400 uppercase text-base md:text-lg lg:text-xl tracking-wider">Plants</th>
-                                                    <th className="px-2 md:px-3 py-4 text-center font-semibold text-slate-600 dark:text-slate-400 uppercase text-base md:text-lg lg:text-xl tracking-wider">Trans.</th>
-                                                    <th className="px-2 md:px-3 py-4 text-center font-semibold text-slate-600 dark:text-slate-400 uppercase text-base md:text-lg lg:text-xl tracking-wider">Fund</th>
-                                                    <th className="px-2 md:px-3 py-4 text-center font-semibold text-slate-600 dark:text-slate-400 uppercase text-base md:text-lg lg:text-xl tracking-wider">Proj.</th>
-                                                    <th className="px-2 md:px-3 py-4 text-center font-semibold text-slate-600 dark:text-slate-400 uppercase text-base md:text-lg lg:text-xl tracking-wider">Upg.</th>
-                                                    <th className="px-3 md:px-4 py-4 text-center font-semibold text-slate-700 dark:text-slate-300 uppercase text-base md:text-lg lg:text-xl tracking-wider bg-slate-200/50 dark:bg-slate-700/50">Score</th>
+                                                    <th className="px-2 py-2 text-center font-semibold text-slate-600 dark:text-slate-400 uppercase text-xs">Shifts</th>
+                                                    <th className="px-2 py-2 text-center font-semibold text-slate-600 dark:text-slate-400 uppercase text-xs">Blocks</th>
+                                                    <th className="px-2 py-2 text-center font-semibold text-slate-600 dark:text-slate-400 uppercase text-xs">Rooms</th>
+                                                    <th className="px-2 py-2 text-center font-semibold text-slate-600 dark:text-slate-400 uppercase text-xs">Assets</th>
+                                                    <th className="px-2 py-2 text-center font-semibold text-slate-600 dark:text-slate-400 uppercase text-xs">Plants</th>
+                                                    <th className="px-2 py-2 text-center font-semibold text-slate-600 dark:text-slate-400 uppercase text-xs">Trans.</th>
+                                                    <th className="px-2 py-2 text-center font-semibold text-slate-600 dark:text-slate-400 uppercase text-xs">Fund</th>
+                                                    <th className="px-2 py-2 text-center font-semibold text-slate-600 dark:text-slate-400 uppercase text-xs">Proj.</th>
+                                                    <th className="px-2 py-2 text-center font-semibold text-slate-600 dark:text-slate-400 uppercase text-xs">Upg.</th>
+                                                    <th className="px-2 py-2 text-center font-semibold text-slate-700 dark:text-slate-300 uppercase text-xs bg-slate-200/50 dark:bg-slate-700/50">Score</th>
                                                 </>
                                             )}
                                         </tr>
@@ -583,79 +562,60 @@ export default function Completion({
                                             details.map((item, index) => (
                                                 <tr
                                                     key={item.id}
-                                                    className={`
-                                                        ${index % 2 === 0 ? 'bg-white dark:bg-slate-900' : 'bg-slate-50/50 dark:bg-slate-800/30'}
-                                                        hover:bg-primary/5 dark:hover:bg-primary/10 transition-colors
-                                                        ${isRegionView ? 'cursor-pointer' : ''}
-                                                        border-b border-slate-100 dark:border-slate-800 last:border-0
-                                                    `}
+                                                    className={`${index % 2 === 0 ? 'bg-white dark:bg-slate-900' : 'bg-slate-50/50 dark:bg-slate-800/30'} hover:bg-primary/5 dark:hover:bg-primary/10 transition-colors ${isRegionView ? 'cursor-pointer' : ''} border-b border-slate-100 dark:border-slate-800 last:border-0`}
                                                     onClick={() => isRegionView ? handleRegionClick(item.id, status) : handleInstituteClick(item.id)}
                                                 >
-                                                    <td className={`px-4 md:px-6 py-4 font-semibold text-base md:text-lg lg:text-xl ${isRegionView ? 'text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300' : 'text-slate-800 dark:text-slate-200'}`}>
+                                                    <td className={`px-3 py-1.5 font-semibold text-xs ${isRegionView ? 'text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300' : 'text-slate-800 dark:text-slate-200'}`}>
                                                         {isRegionView ? item.name.split(' ').pop() || item.name : item.name}
                                                     </td>
 
                                                     {isRegionView ? (
                                                         <>
-                                                            {status === '' && <td className="px-3 md:px-4 py-4 text-center font-bold text-base md:text-lg lg:text-xl text-slate-700 dark:text-slate-300">{item.total_institutes}</td>}
+                                                            {status === '' && <td className="px-2 py-1.5 text-center font-bold text-xs text-slate-700 dark:text-slate-300">{item.total_institutes}</td>}
                                                             {(status === 'completed' || status === '') && (
-                                                                <td className="px-3 md:px-4 py-4 text-center" onClick={(e) => { e.stopPropagation(); setStatus('completed'); handleRegionClick(item.id, 'completed'); }}>
-                                                                    <span className="inline-flex items-center justify-center min-w-[1rem] sm:min-w-[2.5rem] px-3 py-1.5 rounded-full text-sm md:text-base lg:text-lg font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400">
-                                                                        {item.completed}
-                                                                    </span>
+                                                                <td className="px-2 py-1.5 text-center" onClick={(e) => { e.stopPropagation(); setStatus('completed'); handleRegionClick(item.id, 'completed'); }}>
+                                                                    <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400">{item.completed}</span>
                                                                 </td>
                                                             )}
                                                             {(status === 'greater_than_50' || status === '') && (
-                                                                <td className="px-3 md:px-4 py-4 text-center" onClick={(e) => { e.stopPropagation(); setStatus('greater_than_50'); handleRegionClick(item.id, 'greater_than_50'); }}>
-                                                                    <span className="inline-flex items-center justify-center min-w-[2.5rem] px-3 py-1.5 rounded-full text-sm md:text-base lg:text-lg font-bold bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-400">
-                                                                        {item.greater_than_50}
-                                                                    </span>
+                                                                <td className="px-2 py-1.5 text-center" onClick={(e) => { e.stopPropagation(); setStatus('greater_than_50'); handleRegionClick(item.id, 'greater_than_50'); }}>
+                                                                    <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-400">{item.greater_than_50}</span>
                                                                 </td>
                                                             )}
                                                             {(status === 'less_than_50' || status === '') && (
-                                                                <td className="px-3 md:px-4 py-4 text-center" onClick={(e) => { e.stopPropagation(); setStatus('less_than_50'); handleRegionClick(item.id, 'less_than_50'); }}>
-                                                                    <span className="inline-flex items-center justify-center min-w-[2.5rem] px-3 py-1.5 rounded-full text-sm md:text-base lg:text-lg font-bold bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-400">
-                                                                        {item.less_than_50}
-                                                                    </span>
+                                                                <td className="px-2 py-1.5 text-center" onClick={(e) => { e.stopPropagation(); setStatus('less_than_50'); handleRegionClick(item.id, 'less_than_50'); }}>
+                                                                    <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-400">{item.less_than_50}</span>
                                                                 </td>
                                                             )}
                                                             {(status === 'zero' || status === '') && (
-                                                                <td className="px-3 md:px-4 py-4 text-center" onClick={(e) => { e.stopPropagation(); setStatus('zero'); handleRegionClick(item.id, 'zero'); }}>
-                                                                    <span className="inline-flex items-center justify-center min-w-[2.5rem] px-3 py-1.5 rounded-full text-sm md:text-base lg:text-lg font-bold bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-400">
-                                                                        {item.zero}
-                                                                    </span>
+                                                                <td className="px-2 py-1.5 text-center" onClick={(e) => { e.stopPropagation(); setStatus('zero'); handleRegionClick(item.id, 'zero'); }}>
+                                                                    <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-400">{item.zero}</span>
                                                                 </td>
                                                             )}
                                                         </>
                                                     ) : (
                                                         <>
-                                                            <td className="px-2 md:px-3 py-4 text-center text-base md:text-lg lg:text-xl font-semibold text-slate-700 dark:text-slate-300">{item.shifts || 0}</td>
-                                                            <td className="px-2 md:px-3 py-4 text-center text-base md:text-lg lg:text-xl font-semibold text-slate-700 dark:text-slate-300">{item.blocks || 0}</td>
-                                                            <td className="px-2 md:px-3 py-4 text-center text-base md:text-lg lg:text-xl font-semibold text-slate-700 dark:text-slate-300">{item.rooms || 0}</td>
-                                                            <td className="px-2 md:px-3 py-4 text-center text-base md:text-lg lg:text-xl font-semibold text-slate-700 dark:text-slate-300">{item.assets || 0}</td>
-                                                            <td className="px-2 md:px-3 py-4 text-center text-base md:text-lg lg:text-xl font-semibold text-slate-700 dark:text-slate-300">{item.plants || 0}</td>
-                                                            <td className="px-2 md:px-3 py-4 text-center text-base md:text-lg lg:text-xl font-semibold text-slate-700 dark:text-slate-300">{item.transports || 0}</td>
-                                                            <td className="px-2 md:px-3 py-4 text-center text-base md:text-lg lg:text-xl font-semibold text-slate-700 dark:text-slate-300">{item.funds || 0}</td>
-                                                            <td className="px-2 md:px-3 py-4 text-center text-base md:text-lg lg:text-xl font-semibold text-slate-700 dark:text-slate-300">{item.projects || 0}</td>
-                                                            <td className="px-2 md:px-3 py-4 text-center text-base md:text-lg lg:text-xl font-semibold text-slate-700 dark:text-slate-300">{item.upgradations || 0}</td>
-                                                            <td className="px-3 md:px-4 py-4 text-center bg-slate-50/50 dark:bg-slate-800/30">
+                                                            <td className="px-2 py-1.5 text-center text-xs font-semibold text-slate-700 dark:text-slate-300">{item.shifts || 0}</td>
+                                                            <td className="px-2 py-1.5 text-center text-xs font-semibold text-slate-700 dark:text-slate-300">{item.blocks || 0}</td>
+                                                            <td className="px-2 py-1.5 text-center text-xs font-semibold text-slate-700 dark:text-slate-300">{item.rooms || 0}</td>
+                                                            <td className="px-2 py-1.5 text-center text-xs font-semibold text-slate-700 dark:text-slate-300">{item.assets || 0}</td>
+                                                            <td className="px-2 py-1.5 text-center text-xs font-semibold text-slate-700 dark:text-slate-300">{item.plants || 0}</td>
+                                                            <td className="px-2 py-1.5 text-center text-xs font-semibold text-slate-700 dark:text-slate-300">{item.transports || 0}</td>
+                                                            <td className="px-2 py-1.5 text-center text-xs font-semibold text-slate-700 dark:text-slate-300">{item.funds || 0}</td>
+                                                            <td className="px-2 py-1.5 text-center text-xs font-semibold text-slate-700 dark:text-slate-300">{item.projects || 0}</td>
+                                                            <td className="px-2 py-1.5 text-center text-xs font-semibold text-slate-700 dark:text-slate-300">{item.upgradations || 0}</td>
+                                                            <td className="px-2 py-1.5 text-center bg-slate-50/50 dark:bg-slate-800/30">
                                                                 <span
-                                                                    className={`
-                                                                        inline-flex items-center justify-center min-w-[2rem] sm:min-w-[4rem] px-4 py-2 rounded-full text-base md:text-lg lg:text-xl font-bold cursor-pointer
-                                                                        transition-all hover:scale-105 hover:shadow-md
-                                                                        ${item.percentage === 100
-                                                                            ? 'bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-emerald-200 dark:shadow-emerald-900'
+                                                                    className={`inline-flex items-center justify-center px-2 py-0.5 rounded-full text-xs font-bold cursor-pointer transition-all hover:scale-105 hover:shadow-sm ${
+                                                                        item.percentage === 100
+                                                                            ? 'bg-gradient-to-r from-emerald-500 to-green-500 text-white'
                                                                             : item.percentage >= 50
-                                                                                ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-blue-200 dark:shadow-blue-900'
+                                                                                ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white'
                                                                                 : item.percentage > 0
-                                                                                    ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-amber-200 dark:shadow-amber-900'
-                                                                                    : 'bg-gradient-to-r from-red-500 to-rose-500 text-white shadow-red-200 dark:shadow-red-900'
-                                                                        }
-                                                                    `}
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        handleShowDetails(item.id);
-                                                                    }}
+                                                                                    ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white'
+                                                                                    : 'bg-gradient-to-r from-red-500 to-rose-500 text-white'
+                                                                    }`}
+                                                                    onClick={(e) => { e.stopPropagation(); handleShowDetails(item.id); }}
                                                                     title="Click to see breakdown"
                                                                 >
                                                                     {item.percentage}%
@@ -667,13 +627,11 @@ export default function Completion({
                                             ))
                                         ) : (
                                             <tr>
-                                                <td colSpan={isRegionView ? 6 : 11} className="px-6 py-12 text-center">
-                                                    <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                                                        <div className="w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center">
-                                                            <span className="text-2xl">📊</span>
-                                                        </div>
-                                                        <p className="font-medium">No details available</p>
-                                                        <p className="text-sm">Try adjusting your filters</p>
+                                                <td colSpan={isRegionView ? 6 : 11} className="px-4 py-8 text-center">
+                                                    <div className="flex flex-col items-center gap-1.5 text-muted-foreground">
+                                                        <span className="text-xl">📊</span>
+                                                        <p className="text-xs font-medium">No details available</p>
+                                                        <p className="text-xs text-muted-foreground/70">Try adjusting your filters</p>
                                                     </div>
                                                 </td>
                                             </tr>

@@ -47,6 +47,12 @@ interface MilestoneRow {
   existingPdf?: string;                 // Added PDF path
 }
 
+interface FundHeadRow {
+  key: number;
+  fund_head_id: string;
+  sanction_amount: string;
+}
+
 interface Contractor {
   id: number;
   name: string;
@@ -84,9 +90,10 @@ interface ProjectFormProps {
   contractors: Contractor[];
   companies: Array<{ id: number; name: string }>;
   hasApprovals?: boolean;
+  fundHeads: Array<{ id: number; name: string }>;
 }
 
-export default function ProjectForm({ project, projectTypes, contractors: initialContractors, companies: propsCompanies, hasApprovals }: ProjectFormProps) {
+export default function ProjectForm({ project, projectTypes, contractors: initialContractors, companies: propsCompanies, hasApprovals, fundHeads }: ProjectFormProps) {
   const isEdit = !!project?.id;
 
   const [name, setName] = useState(project?.name || '');
@@ -94,7 +101,14 @@ export default function ProjectForm({ project, projectTypes, contractors: initia
   const [actualCost, setActualCost] = useState(project?.actual_cost?.toString() || '');
   const [approvalStatus, setApprovalStatus] = useState(project?.approval_status || '');
   const [status, setStatus] = useState(project?.status || '');
-  const [isPlanned, setIsPlanned] = useState(project?.status === 'planned');
+  // 'initiate' | 'planned' | 'completed' | ''
+  const deriveMode = () => {
+    if (project?.status === 'planned') return 'planned';
+    if (project?.status === 'completed') return 'completed';
+    if (project?.status === 'waiting') return 'initiate';
+    return '';
+  };
+  const [projectStatusMode, setProjectStatusMode] = useState<'initiate' | 'planned' | 'completed' | ''>(deriveMode);
 
   const [finalComments, setFinalComments] = useState(project?.final_comments || '');
   const [projectTypeId, setProjectTypeId] = useState((project?.project_type_id || '').toString());
@@ -153,6 +167,17 @@ export default function ProjectForm({ project, projectTypes, contractors: initia
     id: parseInt(id),
     name,
   }));
+
+  // Fund head rows for "completed" project creation
+  const [fundHeadRows, setFundHeadRows] = useState<FundHeadRow[]>([{ key: Date.now(), fund_head_id: '', sanction_amount: '' }]);
+
+  const addFundHeadRow = () => setFundHeadRows(prev => [...prev, { key: Date.now(), fund_head_id: '', sanction_amount: '' }]);
+  const removeFundHeadRow = (key: number) => setFundHeadRows(prev => prev.filter(r => r.key !== key));
+  const updateFundHeadRow = (key: number, field: keyof FundHeadRow, value: string) =>
+    setFundHeadRows(prev => prev.map(r => r.key === key ? { ...r, [field]: value } : r));
+
+  const usedFundHeadIds = new Set(fundHeadRows.map(r => r.fund_head_id).filter(Boolean));
+  const fundHeadTotal = fundHeadRows.reduce((sum, r) => sum + (parseFloat(r.sanction_amount) || 0), 0);
 
   const addMilestone = () => {
     setMilestones(prev => [...prev, {
@@ -335,15 +360,33 @@ export default function ProjectForm({ project, projectTypes, contractors: initia
       fd.append('structural_plan', structuralPlan);
     }
 
-    // Send status based on planned checkbox
-    if (isPlanned) {
-      fd.append('status', 'planned');
-    } else if (isEdit && project?.status === 'planned') {
+    // Send status/approval_status based on projectStatusMode dropdown
+    if (projectStatusMode === 'initiate') {
       fd.append('status', 'waiting');
+      fd.append('approval_status', 'inprogress');
+    } else if (projectStatusMode === 'planned') {
+      fd.append('status', 'planned');
+      fd.append('approval_status', 'waiting');
+    } else if (projectStatusMode === 'completed') {
+      fd.append('status', 'completed');
+      fd.append('approval_status', 'approved');
+    } else if (isEdit && project?.status === 'planned') {
+      // fallback: if no mode chosen on edit and was planned, keep planned
+      fd.append('status', 'planned');
     }
 
     if (isEdit) {
       fd.append('_method', 'PUT');
+    }
+
+    // Append fund_heads for completed projects
+    if (projectStatusMode === 'completed') {
+      fundHeadRows
+        .filter(r => r.fund_head_id && r.sanction_amount)
+        .forEach((r, index) => {
+          fd.append(`fund_heads[${index}][fund_head_id]`, r.fund_head_id);
+          fd.append(`fund_heads[${index}][sanction_amount]`, r.sanction_amount);
+        });
     }
 
     milestones.forEach((m, index) => {
@@ -408,6 +451,20 @@ export default function ProjectForm({ project, projectTypes, contractors: initia
                   <Input type="number" disabled={isEdit} value={estimatedCost} onChange={e => setEstimatedCost(e.target.value)} required />
                 </div>
 
+                {projectStatusMode === 'completed' && (
+                  <div className="space-y-1">
+                    <Label>Actual Cost <span className="text-red-500">*</span></Label>
+                    <Input
+                      type="number"
+                      min={0}
+                      placeholder="Enter actual cost"
+                      value={actualCost}
+                      onChange={e => setActualCost(e.target.value)}
+                      required
+                    />
+                  </div>
+                )}
+
                 <div className="space-y-1">
                   <Label>Project Type <span className="text-red-500">*</span></Label>
                   <Select value={projectTypeId} onValueChange={setProjectTypeId}>
@@ -430,6 +487,26 @@ export default function ProjectForm({ project, projectTypes, contractors: initia
                       <SelectItem value="High">High</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+                <div className="space-y-1">
+                  <Label>Contractor</Label>
+                  <div className="flex gap-2">
+                    <div className="flex-1">
+                      <Select value={contractorId} onValueChange={setContractorId}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select contractor" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {contractors.map(c => (
+                            <SelectItem key={c.id} value={c.id.toString()}>{c.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <Button type="button" variant="outline" size="icon" onClick={() => setIsContractorModalOpen(true)} title="Add New Contractor">
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
                 <div className="space-y-1 md:col-span-2">
                   <Label>Description</Label>
@@ -504,48 +581,117 @@ export default function ProjectForm({ project, projectTypes, contractors: initia
                     <p className="text-sm text-green-600">New Plan selected: {structuralPlan.name}</p>
                   )}
                 </div>
-                <div className="space-y-1">
-                  <Label>Contractor</Label>
-                  <div className="flex gap-2">
-                    <div className="flex-1">
-                      <Select value={contractorId} onValueChange={setContractorId}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select contractor" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {contractors.map(c => (
-                            <SelectItem key={c.id} value={c.id.toString()}>{c.name}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <Button type="button" variant="outline" size="icon" onClick={() => setIsContractorModalOpen(true)} title="Add New Contractor">
-                      <Plus className="h-4 w-4" />
-                    </Button>
+
+                {/* Project Status Dropdown */}
+                {(!isEdit || project?.status === 'planned' || project?.status === 'completed' || (project?.status === 'waiting' && !project?.fund_head_id && !hasApprovals)) && (
+                  <div className="space-y-1 md:col-span-2">
+                    <Label>Project Status <span className="text-red-500">*</span></Label>
+                    <Select value={projectStatusMode} onValueChange={(val) => setProjectStatusMode(val as 'initiate' | 'planned' | 'completed')}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select project status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="initiate">Initiate</SelectItem>
+                        <SelectItem value="planned">Planned</SelectItem>
+                        <SelectItem value="completed">Completed</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">
+                      {projectStatusMode === 'initiate' && 'Status → Waiting | Approval → In Progress'}
+                      {projectStatusMode === 'planned' && 'Status → Planned | Approval → Waiting'}
+                      {projectStatusMode === 'completed' && 'Status → Completed | Approval → Approved'}
+                    </p>
                   </div>
-                </div>
-                {/* Planned Checkbox - show on create always, on edit if planned, or if waiting with no fund head and no approvals */}
-                {(!isEdit || project?.status === 'planned' || (project?.status === 'waiting' && !project?.fund_head_id && !hasApprovals)) && (
-                  <div className="flex items-center space-x-2 md:col-span-2">
-                    <Checkbox
-                      id="planned"
-                      checked={isPlanned}
-                      onCheckedChange={(checked) => setIsPlanned(!!checked)}
+                )}
+
+                {/* Final Comments — required when Completed */}
+                {projectStatusMode === 'completed' && (
+                  <div className="space-y-1 md:col-span-2">
+                    <Label>Final Comments <span className="text-red-500">*</span></Label>
+                    <Textarea
+                      value={finalComments}
+                      onChange={e => setFinalComments(e.target.value)}
+                      placeholder="Enter final comments for the completed project..."
+                      rows={3}
+                      required
                     />
-                    <Label htmlFor="planned" className="cursor-pointer text-sm font-medium">
-                      Planned
-                    </Label>
-                    <span className="text-xs text-muted-foreground">
-                      {isEdit
-                        ? project?.status === 'planned'
-                          ? '(Uncheck to change status to Waiting)'
-                          : '(Check to change status to Planned)'
-                        : '(Check to save as Planned instead of Waiting)'}
-                    </span>
                   </div>
                 )}
 
               </div>
+
+              {/* Fund Heads — only shown when status is Completed */}
+              {projectStatusMode === 'completed' && (
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-lg font-semibold">Fund Heads</h3>
+                    <Button type="button" onClick={addFundHeadRow} size="sm" variant="outline">
+                      <Plus className="w-4 h-4 mr-2" /> Add Fund Head
+                    </Button>
+                  </div>
+
+                  <div className="rounded-lg border bg-muted/30 divide-y">
+                    {/* Header row */}
+                    <div className="grid grid-cols-[1fr_10rem_2.5rem] gap-3 px-4 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                      <span>Fund Head</span>
+                      <span>Sanction Amount</span>
+                      <span />
+                    </div>
+
+                    {fundHeadRows.map((row) => (
+                      <div key={row.key} className="grid grid-cols-[1fr_10rem_2.5rem] items-center gap-3 px-4 py-2">
+                        <Select
+                          value={row.fund_head_id}
+                          onValueChange={(val) => updateFundHeadRow(row.key, 'fund_head_id', val)}
+                        >
+                          <SelectTrigger className="h-9 text-sm">
+                            <SelectValue placeholder="Select fund head" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {fundHeads.map(fh => (
+                              <SelectItem
+                                key={fh.id}
+                                value={fh.id.toString()}
+                                disabled={usedFundHeadIds.has(fh.id.toString()) && row.fund_head_id !== fh.id.toString()}
+                              >
+                                {fh.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+
+                        <Input
+                          type="number"
+                          min={0}
+                          step={1000}
+                          placeholder="Amount"
+                          className="h-9 text-sm"
+                          value={row.sanction_amount}
+                          onChange={(e) => updateFundHeadRow(row.key, 'sanction_amount', e.target.value)}
+                        />
+
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-destructive hover:text-destructive"
+                          disabled={fundHeadRows.length === 1}
+                          onClick={() => removeFundHeadRow(row.key)}
+                          title="Remove"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+
+                  {fundHeadTotal > 0 && (
+                    <p className="text-sm text-right font-medium text-muted-foreground">
+                      Grand Total: <span className="text-foreground font-bold">Rs. {fundHeadTotal.toLocaleString()}</span>
+                    </p>
+                  )}
+                </div>
+              )}
 
               {/* Milestones */}
               <div>
@@ -593,7 +739,8 @@ export default function ProjectForm({ project, projectTypes, contractors: initia
                             />
                           </div>
 
-                          {isEdit && (
+                          {/* Status / completed-date fields: shown on edit always, OR on create when projectStatusMode === 'completed' */}
+                          {(isEdit || projectStatusMode === 'completed') && (
                             <>
                               <div className="space-y-1">
                                 <Label>Status</Label>
@@ -620,7 +767,8 @@ export default function ProjectForm({ project, projectTypes, contractors: initia
                               )}
                             </>
                           )}
-                          {isEdit && (
+                          {/* Proof image / PDF fields: shown on edit always, OR on create when projectStatusMode === 'completed' */}
+                          {(isEdit || projectStatusMode === 'completed') && (
                             <>
                               {(m.status !== 'completed' || !m.existingPdf) && (
                                 <div className="space-y-1">

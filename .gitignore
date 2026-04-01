@@ -15,6 +15,9 @@
 node_modules.zip
 /public/hot
 /public/assets
+/public/approvals
+/public/milestones
+/public/images copy
 /storage/*.key
 /storage/pail
 /vendor

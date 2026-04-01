@@ -1175,13 +1175,30 @@ $regions = Institute::select('region_id as id', 'name')->where('type', 'Regional
 
             $stages = \App\Models\ApprovalStage::whereIn('id', $allStageIds)->get()->keyBy('id');
 
-            return $collection->transform(function ($project) use ($stages) {
+            // Batch-load the latest ProjectApproval status for every (project_id, first_stage_id) pair
+            $projectIds = $collection->pluck('id')->all();
+            $approvalStatuses = \App\Models\ProjectApproval::whereIn('project_id', $projectIds)
+                ->whereIn('stage_id', $allStageIds)
+                ->orderBy('id', 'desc')
+                ->get()
+                ->groupBy(fn($a) => $a->project_id . '_' . $a->stage_id)
+                ->map(fn($group) => $group->first()->status); // latest row per (project, stage)
+
+            return $collection->transform(function ($project) use ($stages, $approvalStatuses) {
                 $ids     = is_array($project->current_stage_id) ? $project->current_stage_id : [];
                 $intIds  = array_map('intval', $ids);
 
                 // First stage → current_stage relation (for level/stage_name checks)
                 $firstId = !empty($intIds) ? $intIds[0] : null;
-                $project->setRelation('currentStage', $firstId ? ($stages[$firstId] ?? null) : null);
+                $currentStage = $firstId ? ($stages[$firstId] ?? null) : null;
+
+                // Attach the ProjectApproval status to the stage object
+                if ($currentStage && $firstId) {
+                    $key = $project->id . '_' . $firstId;
+                    $currentStage->status = $approvalStatuses[$key] ?? null;
+                }
+
+                $project->setRelation('currentStage', $currentStage);
 
                 // Merge users_can_approve from ALL current stages into one flat unique array
                 $mergedUsers = [];
@@ -1710,18 +1727,45 @@ $balances=[];
         }
 
         return Inertia::render('Reports/Funds', [
-            'institutes'    => $institutes,
-            'regions'       => $regions,
-            'fundheads'     => $fundheads,
-            'funds'         => $funds,
-            'balances'      => $balances,
-            'filters'       => [
+            'institutes'     => $institutes,
+            'regions'        => $regions,
+            'fundheads'      => $fundheads,
+            'funds'          => $funds,
+            'balances'       => $balances,
+            'bankStatements' => $this->getBankStatementsSummary(),
+            'filters'        => [
                 'institute_id'  => '',
                 'region_id'     => '',
                 'fund_head_id'  => $request->get('fund_head_id', ''),
             ],
         ]);
     }
+
+    /**
+     * Build a map of institute_id → { count, last_image, last_date }
+     */
+    private function getBankStatementsSummary(): array
+    {
+        $rows = \App\Models\BankStatement::select(
+                'institute_id',
+                \Illuminate\Support\Facades\DB::raw('COUNT(*) as total'),
+                \Illuminate\Support\Facades\DB::raw('MAX(created_at) as last_date'),
+                \Illuminate\Support\Facades\DB::raw('SUBSTRING_INDEX(GROUP_CONCAT(image ORDER BY created_at DESC), ",", 1) as last_image')
+            )
+            ->groupBy('institute_id')
+            ->get();
+
+        $map = [];
+        foreach ($rows as $row) {
+            $map[$row->institute_id] = [
+                'total'      => (int) $row->total,
+                'last_image' => $row->last_image,
+                'last_date'  => $row->last_date,
+            ];
+        }
+        return $map;
+    }
+
 public function getFunds(Request $request)
 {
     $hrInstituteId = session('inst_id');
@@ -1739,10 +1783,12 @@ public function getFunds(Request $request)
     }
 
     return response()->json([
-        'funds' => $funds,
-        'balances' => $balances,
+        'funds'          => $funds,
+        'balances'       => $balances,
+        'bankStatements' => $this->getBankStatementsSummary(),
     ]);
 }
+
 
 private function handleRegionalOffice($request, $regionid, $fundheads, &$balances, &$funds)
 {
