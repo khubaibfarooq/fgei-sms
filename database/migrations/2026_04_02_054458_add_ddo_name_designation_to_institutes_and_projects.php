@@ -1,0 +1,38 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::table('institutes', function (Blueprint $table) {
+            $table->string('ddo_name')->nullable()->after('ddo');
+            $table->string('ddo_designation')->nullable()->after('ddo_name');
+        });
+
+        Schema::table('projects', function (Blueprint $table) {
+            $table->string('ddo_name')->nullable()->after('ddo');
+            $table->string('ddo_designation')->nullable()->after('ddo_name');
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::table('institutes', function (Blueprint $table) {
+            $table->dropColumn(['ddo_name', 'ddo_designation']);
+        });
+
+        Schema::table('projects', function (Blueprint $table) {
+            $table->dropColumn(['ddo_name', 'ddo_designation']);
+        });
+    }
+};

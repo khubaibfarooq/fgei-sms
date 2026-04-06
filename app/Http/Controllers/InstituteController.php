@@ -85,6 +85,8 @@ try {
             'video' => 'nullable|file',
             'img_layout' => 'nullable|file',
             'img_3d' => 'nullable|file',
+            'ddo_name' => 'nullable|string|max:255',
+            'ddo_designation' => 'nullable|string|max:255',
         ]);
  $resultImageName = null;
             if ($request->hasFile('img_layout')) {
@@ -183,6 +185,8 @@ $data['type'] = $type;
             'video' => 'nullable|file',
             'img_layout' => 'nullable|file',
             'img_3d' => 'nullable|file',
+            'ddo_name' => 'nullable|string|max:255',
+            'ddo_designation' => 'nullable|string|max:255',
         ]);
 
         $resultImageName = null;

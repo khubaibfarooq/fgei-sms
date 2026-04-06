@@ -36,6 +36,8 @@ interface Project {
     approval_status: string;
     priority: string;
     completion_per?: number;
+    ddo_name?: string | null;
+    ddo_designation?: string | null;
     institute: {
         name: string;
     };
@@ -407,6 +409,16 @@ export default function ProjectDetails({ project, canEditMilestones, fundHeadsLi
                                 <p className="font-medium capitalize">{project.priority || '-'}</p>
                             </div>
 
+                            {/* DDO Info */}
+                            {(project.ddo_name || project.ddo_designation) && (
+                                <div className="sm:col-span-2 lg:col-span-1">
+                                    <p className="text-[10px] md:text-xs text-muted-foreground uppercase tracking-wide">DDO</p>
+                                    <p className="font-medium text-[11px] leading-tight">{project.ddo_name || '-'}</p>
+                                    {project.ddo_designation && (
+                                        <p className="text-[10px] text-muted-foreground leading-tight">{project.ddo_designation}</p>
+                                    )}
+                                </div>
+                            )}
                             {/* Fund Heads */}
                             <div className="sm:col-span-2 lg:col-span-1">
                                 <p className="text-[10px] md:text-xs text-muted-foreground uppercase tracking-wide">Fund Head(s)</p>

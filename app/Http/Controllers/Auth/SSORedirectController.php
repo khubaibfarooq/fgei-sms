@@ -127,6 +127,23 @@ class SSORedirectController extends Controller
             // Small delay to ensure session is written (especially for file/database drivers)
             usleep(100000); // 100ms delay
     
+            //shool or college
+                    $category = $data['Category'] ?? null;
+                    if($category == 'school' || $category == 'college'){
+                $institution_id = $data['institution_id'] ?? null;
+                $institute = Institute::where('hr_id', $institution_id)->first();
+                       $headUserId = $data['headUserId'] ?? null; 
+              if(!empty($institute) && !empty($headUserId) && $institute->ddo!=$headUserId){
+                   $headName = $data['headName'] ?? null;
+                     $head_user_designation = $data['head_user_designation'] ?? null;
+                     $institute->update([
+                        'ddo' => $headUserId,
+                        'ddo_name' => $headName,
+                        'ddo_designation' => $head_user_designation,
+                     ]);
+
+              }
+                    }
             return redirect()->intended('/dashboard');
     
         } catch (ExpiredException $e) {

@@ -121,6 +121,9 @@ public function store(Request $request)
             ->toArray();
     }
 
+    // Copy DDO info from the institute
+    $institute = Institute::find(session('sms_inst_id'));
+
     $project = Project::create([
         'name'             => $request->name,
         'estimated_cost'   => $request->estimated_cost,
@@ -136,6 +139,9 @@ public function store(Request $request)
         'approval_status'  => $request->approval_status ?? 'waiting',
         'contractor_id'    => $request->contractor_id,
         'updated_by'       => auth()->id(),
+        'ddo'       => $institute->ddo,
+        'ddo_name'         => $institute?->ddo_name,
+        'ddo_designation'  => $institute?->ddo_designation,
     ]);
 
     if ($request->hasFile("pdf")) {

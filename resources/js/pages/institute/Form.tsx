@@ -30,7 +30,8 @@ interface InstituteFormProps {
     address: string | null;
     phone: string | null;
     email: string | null;
-
+    ddo_name: string | null;
+    ddo_designation: string | null;
   };
 
 }
@@ -61,7 +62,7 @@ export default function InstituteForm({ institute }: InstituteFormProps) {
     gender: institute?.gender || '',
     address: institute?.address || '',
     phone: institute?.phone || '',
-    email: institute?.email || ''
+    email: institute?.email || '',
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -128,7 +129,18 @@ export default function InstituteForm({ institute }: InstituteFormProps) {
             <CardTitle className="text-2xl font-bold text-center">
               {data.name}
             </CardTitle>
-
+            {(institute?.ddo_name || institute?.ddo_designation) && (
+              <div className="text-center mt-1 space-y-0.5">
+                {institute.ddo_name && (
+                  <p className="text-sm font-medium text-muted-foreground">
+                    DDO: <span className="text-foreground">{institute.ddo_name}</span>
+                  </p>
+                )}
+                {institute.ddo_designation && (
+                  <p className="text-xs text-muted-foreground">{institute.ddo_designation}</p>
+                )}
+              </div>
+            )}
           </CardHeader>
 
           <Separator />
@@ -180,6 +192,7 @@ export default function InstituteForm({ institute }: InstituteFormProps) {
                   )}
                 </div>
               </div>
+
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* Layout image view */}

@@ -31,6 +31,8 @@ class Project extends Model
         'contractor_id',
         'updated_by',
         'ddo',
+        'ddo_name',
+        'ddo_designation',
     ];
 
     /**

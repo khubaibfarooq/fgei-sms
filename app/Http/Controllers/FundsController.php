@@ -207,22 +207,38 @@ class FundsController extends Controller
     public function store(Request $request)
     {
         try {
-            $data = $request->validate([
-                'amount'        => 'required|numeric',
-                'fund_head_id'  => 'required|numeric',
-                'added_date'    => 'required|date_format:Y-m-d',
-                'status'        => 'required|string',
-                'description'   => 'nullable|string',
-                'type'          => 'required|string|in:in,out',
+            $request->validate([
+                'transaction_type'        => 'required|string|in:in,out',
+                'added_date'              => 'required|date_format:Y-m-d',
+                'status'                  => 'required|string',
+                'heads'                   => 'required|array|min:1',
+                'heads.*.fund_head_id'    => 'required|numeric|exists:fund_heads,id',
+                'heads.*.amount'          => 'required|numeric|min:0.01',
+                'heads.*.description'     => 'nullable|string',
             ]);
 
-            $data['added_by']     = auth()->id();
-            $data['institute_id'] = session('sms_inst_id');
-            $data['added_date']   = Carbon::parse($data['added_date'])->format('Y-m-d');
+            $addedBy     = auth()->id();
+            $instituteId = session('sms_inst_id');
+            $date        = Carbon::parse($request->added_date)->format('Y-m-d');
+            $type        = $request->transaction_type;
+            $status      = $request->status;
 
-            Fund::create($data);
+            DB::transaction(function () use ($request, $addedBy, $instituteId, $date, $type, $status) {
+                foreach ($request->heads as $head) {
+                    Fund::create([
+                        'fund_head_id'  => $head['fund_head_id'],
+                        'amount'        => $head['amount'],
+                        'description'   => $head['description'] ?? null,
+                        'type'          => $type,
+                        'added_date'    => $date,
+                        'status'        => $status,
+                        'added_by'      => $addedBy,
+                        'institute_id'  => $instituteId,
+                    ]);
+                }
+            });
 
-            return redirect()->back()->with('success', 'Fund saved successfully.');
+            return redirect()->route('funds.index')->with('success', 'Fund transaction(s) saved successfully.');
         } catch (\Illuminate\Validation\ValidationException $e) {
             return back()->withErrors($e->validator->errors())->withInput();
         } catch (\Exception $e) {
@@ -253,7 +269,7 @@ class FundsController extends Controller
     public function update(Request $request, Fund $fund)
     {
         try {
-            if (!auth()->user()->can('fund-add')) {
+            if (!auth()->user()->can('fund-edit')) {
                 abort(403);
             }
 

@@ -80,78 +80,66 @@ class FundHeldController extends Controller
 public function store(Request $request)
 {
     try {
-        $data = $request->validate([
-            'balance' => 'required|numeric',
-            'fund_head_id' => 'required|numeric',
-             'description' => 'required|string',
-             'transaction_type' => 'required|string',
+        $request->validate([
+            'transaction_type'     => 'required|string|in:in,out',
+            'heads'                => 'required|array|min:1',
+            'heads.*.fund_head_id' => 'required|numeric|exists:fund_heads,id',
+            'heads.*.amount'       => 'required|numeric|min:0.01',
+            'heads.*.description'  => 'nullable|string',
         ]);
-$balance=$data['balance'];
-        // Add authenticated user ID and institute_id from session
-        $data['added_by'] = auth()->id();
-        $data['institute_id'] = session('sms_inst_id');
 
-        // Find existing FundHeld record
-        $fundHeld = FundHeld::where('fund_head_id', $data['fund_head_id'])
-            ->where('institute_id', $data['institute_id'])
-            ->first();
+        $addedBy     = auth()->id();
+        $instituteId = session('sms_inst_id');
+        $date        = \Carbon\Carbon::now()->format('Y-m-d');
+        $type        = $request->transaction_type;
+        $status      = 'Approved';
 
-        if ($fundHeld) {
-            // Update existing FundHeld record
-            if($data['transaction_type']=='in'){
-                $data['balance'] = $fundHeld->balance + $data['balance'];
-            }else{
-                $data['balance'] = $fundHeld->balance - $data['balance'];
+        DB::transaction(function () use ($request, $addedBy, $instituteId, $date, $type, $status) {
+            foreach ($request->heads as $head) {
+                // Find existing FundHeld record
+                $fundHeld = FundHeld::where('fund_head_id', $head['fund_head_id'])
+                    ->where('institute_id', $instituteId)
+                    ->first();
+
+                if ($fundHeld) {
+                    if ($type == 'in') {
+                        $newBalance = $fundHeld->balance + $head['amount'];
+                    } else {
+                        $newBalance = $fundHeld->balance - $head['amount'];
+                    }
+                    $fundHeld->update(['balance' => $newBalance]);
+                } else {
+                    $newBalance = $type == 'in' ? $head['amount'] : -$head['amount'];
+                    FundHeld::create([
+                        'fund_head_id' => $head['fund_head_id'],
+                        'institute_id' => $instituteId,
+                        'balance'      => $newBalance,
+                        'added_by'     => $addedBy,
+                    ]);
+                }
+
+                // Create Transaction record in 'funds' table
+                Fund::create([
+                    'fund_head_id'  => $head['fund_head_id'],
+                    'institute_id'  => $instituteId,
+                    'amount'        => $head['amount'],
+                    'added_by'      => $addedBy,
+                    'added_date'    => $date,
+                    'status'        => $status,
+                    'type'          => $type,
+                    'description'   => $head['description'] ?? null,
+                    'trans_type'    => 'funds',
+                    'approve_by'    => $status == 'Approved' ? $addedBy : null,
+                    'approved_date' => $status == 'Approved' ? now() : null,
+                ]);
             }
-            $fundHeld->update($data);
-            
-            Fund::Create(
-                [
-                    'fund_head_id' => $data['fund_head_id'],
-                    'institute_id' => $data['institute_id'],
-               
-                    'amount' => $balance,
-                    'added_by' => $data['added_by'],
-                    'added_date' => now(), // or use your specific date field
-                    'status' => 'Approved', // set appropriate status
-                    'type' => $data['transaction_type'], // set appropriate type
-                    'description' => $data['description'],
-                    'trans_type' => 'funds',
-                    'approve_by' => auth()->id(),
-                    'approved_date' => now(),
-                ]
-            );
-            
-            $message = 'Fund updated successfully.';
-        } else {
-            // Create new FundHeld record
-            $fundHeld = FundHeld::create($data);
-            
-           Fund::Create(
-                [
-                    'fund_head_id' => $data['fund_head_id'],
-                    'institute_id' => $data['institute_id'],
-                
-                    'amount' => $balance,
-                    'added_by' => $data['added_by'],
-                    'added_date' => now(), // or use your specific date field
-                    'status' => 'Approved', // set appropriate status
-                    'type' => $data['transaction_type'], // set appropriate type
-                    'description' => $data['description']// optional description
-                ]
-            );
-            
-            
-            $message = 'Fund saved successfully.';
-        }
+        });
 
-        return redirect()->back()->with('success', $message);
+        return redirect()->route('funds.index')->with('success', 'Fund transaction(s) saved successfully.');
 
     } catch (\Illuminate\Validation\ValidationException $e) {
-        // Return validation errors to the frontend
         return back()->withErrors($e->validator->errors())->withInput();
     } catch (\Exception $e) {
-        // Handle any unexpected errors
         return back()->with('error', 'An error occurred while processing the fund: ' . $e->getMessage());
     }
 }
@@ -169,20 +157,17 @@ $balance=$data['balance'];
     {
         try {
             // Check if user has permission to update funds
-            if (!auth()->user()->can('fund-add')) {
+            if (!auth()->user()->can('fund-edit')) {
                 abort(403, 'Unauthorized action.');
             }
 
             // Validate request data
             $validatedData = $request->validate([
-                'balance' => 'required|numeric',
-                'fund_head_id' => 'required|numeric',
-          
+                'amount' => 'required|numeric',
             ]);
-//dd($validatedData,$fund);
-            // Add the authenticated user's ID to the data
+
             // Update the fund
-            $fund->update($validatedData);
+            $fund->update(['balance' => $validatedData['amount']]);
 
             // Return success response
           return redirect()->route('funds.index')->with('success',  'Fund updated successfully.');
