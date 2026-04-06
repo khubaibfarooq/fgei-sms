@@ -99,6 +99,8 @@ public function store(Request $request)
         'contractor_id'    => 'nullable|exists:contractor,id',
 
         'final_comments'   => 'required_if:status,completed|nullable|string',
+        'commence_date'    => 'nullable|date',
+        'est_completion_date' => 'nullable|date',
 
         'milestones.*.name'           => 'required_with:milestones.*.days|string|max:255',
         'milestones.*.description'    => 'nullable|string',
@@ -142,6 +144,8 @@ public function store(Request $request)
         'ddo'       => $institute->ddo,
         'ddo_name'         => $institute?->ddo_name,
         'ddo_designation'  => $institute?->ddo_designation,
+        'commence_date'    => $request->commence_date,
+        'est_completion_date' => $request->est_completion_date,
     ]);
 
     if ($request->hasFile("pdf")) {
@@ -292,6 +296,8 @@ public function update(Request $request, Project $project)
         'structural_plan'  => 'nullable|file|max:10240',
         'contractor_id'    => 'nullable|exists:contractor,id',
         'final_comments'   => 'required_if:status,completed|nullable|string',
+        'commence_date'    => 'nullable|date',
+        'est_completion_date' => 'nullable|date',
 
         'milestones.*.id'             => 'nullable|integer|exists:milestones,id,project_id,' . $project->id,
         'milestones.*.name'           => 'required_with:milestones.*.days|string|max:255',
@@ -349,6 +355,8 @@ public function update(Request $request, Project $project)
         'institute_id'     => session('sms_inst_id'),
         'contractor_id'    => $request->contractor_id,
         'updated_by'       => auth()->id(),
+        'commence_date'    => $request->commence_date,
+        'est_completion_date' => $request->est_completion_date,
     ];
 
     // Allow planned -> waiting transition

@@ -74,6 +74,8 @@ interface ProjectFormProps {
     approval_status: string | null;
     fund_head_id: number | null;
     contractor_id: number | null;
+    commence_date?: string | null;
+    est_completion_date?: string | null;
     milestones?: Array<{
       id: number;
       name: string;
@@ -120,6 +122,11 @@ export default function ProjectForm({ project, projectTypes, contractors: initia
   const [contractorId, setContractorId] = useState(project?.contractor_id?.toString() || '');
   const [structuralPlan, setStructuralPlan] = useState<File | null>(null);
   const [existingPlan, setExistingPlan] = useState(project?.structural_plan || null);
+
+  const [commenceDate, setCommenceDate] = useState(project?.commence_date || '');
+  const [estCompletionDate, setEstCompletionDate] = useState(project?.est_completion_date || '');
+  const showDateFields = projectStatusMode === 'completed' || (isEdit && (!project?.commence_date || !project?.est_completion_date));
+
 
   // Quick Add Contractor State
   const [contractors, setContractors] = useState<Contractor[]>(initialContractors);
@@ -359,6 +366,12 @@ export default function ProjectForm({ project, projectTypes, contractors: initia
     if (structuralPlan) {
       fd.append('structural_plan', structuralPlan);
     }
+    if (showDateFields && commenceDate) {
+      fd.append('commence_date', commenceDate);
+    }
+    if (showDateFields && estCompletionDate) {
+      fd.append('est_completion_date', estCompletionDate);
+    }
 
     // Send status/approval_status based on projectStatusMode dropdown
     if (projectStatusMode === 'initiate') {
@@ -508,6 +521,28 @@ export default function ProjectForm({ project, projectTypes, contractors: initia
                     </Button>
                   </div>
                 </div>
+
+                {showDateFields && (
+                  <>
+                    <div className="space-y-1">
+                      <Label>Commence Date</Label>
+                      <Input
+                        type="date"
+                        value={commenceDate}
+                        onChange={e => setCommenceDate(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label>Est. Completion Date</Label>
+                      <Input
+                        type="date"
+                        value={estCompletionDate}
+                        onChange={e => setEstCompletionDate(e.target.value)}
+                      />
+                    </div>
+                  </>
+                )}
+
                 <div className="space-y-1 md:col-span-2">
                   <Label>Description</Label>
                   <div className="bg-white rounded-md">

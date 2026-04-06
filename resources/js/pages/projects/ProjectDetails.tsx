@@ -38,6 +38,8 @@ interface Project {
     completion_per?: number;
     ddo_name?: string | null;
     ddo_designation?: string | null;
+    commence_date?: string | null;
+    est_completion_date?: string | null;
     institute: {
         name: string;
     };
@@ -488,8 +490,24 @@ export default function ProjectDetails({ project, canEditMilestones, fundHeadsLi
                             {/* Completion Date */}
                             {completionDate && (
                                 <div className="sm:col-span-2 lg:col-span-1">
-                                    <p className="text-[10px] md:text-xs text-muted-foreground uppercase tracking-wide">Completed On</p>
+                                    <p className="text-[10px] md:text-xs text-muted-foreground uppercase tracking-wide">Approved Completed</p>
                                     <p className="font-medium">{new Date(completionDate).toLocaleDateString()}</p>
+                                </div>
+                            )}
+
+                            {/* Commence Date */}
+                            {project.commence_date && (
+                                <div className="sm:col-span-2 lg:col-span-1">
+                                    <p className="text-[10px] md:text-xs text-muted-foreground uppercase tracking-wide">Commenced On</p>
+                                    <p className="font-medium">{new Date(project.commence_date).toLocaleDateString()}</p>
+                                </div>
+                            )}
+
+                            {/* Est Completion Date */}
+                            {project.est_completion_date && (
+                                <div className="sm:col-span-2 lg:col-span-1">
+                                    <p className="text-[10px] md:text-xs text-muted-foreground uppercase tracking-wide">Est. Completed</p>
+                                    <p className="font-medium">{new Date(project.est_completion_date).toLocaleDateString()}</p>
                                 </div>
                             )}
 

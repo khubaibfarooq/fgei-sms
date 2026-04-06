@@ -33,6 +33,8 @@ class Project extends Model
         'ddo',
         'ddo_name',
         'ddo_designation',
+        'commence_date',
+        'est_completion_date',
     ];
 
     /**
