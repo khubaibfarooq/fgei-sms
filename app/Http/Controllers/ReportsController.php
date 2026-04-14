@@ -1023,10 +1023,10 @@ $regions = Institute::select('region_id as id', 'name')->where('type', 'Regional
             'fundHeads'     => $fundHeads,
             'projects'      => $projects,
             'filters'       => [
-                'search'          => '',
-                'institute_id'    => '',
-                'region_id'       => '',
-                'project_type_id' => '',
+                'search'          => $request->search ?? '',
+                'institute_id'    => $request->institute_id ?? '',
+                'region_id'       => $request->region_id ?? '',
+                'project_type_id' => $request->project_type_id ?? '',
                 'status'          => $request->status ?? '',
             ],
         ]);
@@ -2516,17 +2516,28 @@ if($type=="Regional Office"){
         $firstShift = $institute->shifts->first();
         $buildingTypeId = $firstShift ? $firstShift->building_type_id : null;
         
+        // Count missing images
+        $missingInstituteImages = (empty($institute->img_layout) ? 1 : 0) + (empty($institute->img_3d) ? 1 : 0);
+        $blocksMissingImg = $institute->blocks->filter(fn($b) => empty($b->img))->count();
+        $allRooms = $institute->blocks->flatMap(fn($b) => $b->rooms);
+        $roomsMissingImg = $allRooms->filter(fn($r) => empty($r->img))->count();
+        $totalRooms = $allRooms->count();
+
         $criteria = [];
 
         if ($buildingTypeId != null) {
             if ($buildingTypeId == 1) { // Owned
                 
                 // Institute Profile
+                $profileMsg = 'Profile Completed';
+                if ($missingInstituteImages > 0) {
+                    $profileMsg .= ' (' . $missingInstituteImages . ' missing image(s))';
+                }
                 $criteria[] = [
                     'name' => 'Complete Institute Profile',
                     'weight' => 20,
                     'completed' => true, 
-                    'message' => 'Profile Completed'
+                    'message' => $profileMsg
                 ];
                 $percentage += 20;
 
@@ -2542,21 +2553,29 @@ if($type=="Regional Office"){
 
                 // Blocks
                 $blocksCompleted = $blocksCount > 0;
+                $blocksMsg = $blocksCompleted ? 'Blocks Added' : 'No Blocks Information';
+                if ($blocksCompleted && $blocksMissingImg > 0) {
+                    $blocksMsg .= ' (' . $blocksMissingImg . ' of ' . $blocksCount . ' blocks missing images)';
+                }
                 $criteria[] = [
                     'name' => 'Add Blocks Information',
                     'weight' => 10,
                     'completed' => $blocksCompleted,
-                    'message' => $blocksCompleted ? 'Blocks Added' : 'No Blocks Information'
+                    'message' => $blocksMsg
                 ];
                 if ($blocksCompleted) $percentage += 10;
 
                 // Rooms
                 $roomsCompleted = $roomsCount > 0;
+                $roomsMsg = $roomsCompleted ? 'Rooms Added' : 'No Rooms Information';
+                if ($roomsCompleted && $roomsMissingImg > 0) {
+                    $roomsMsg .= ' (' . $roomsMissingImg . ' of ' . $totalRooms . ' rooms missing images)';
+                }
                 $criteria[] = [
                     'name' => 'Add Rooms to Blocks',
                     'weight' => 10,
                     'completed' => $roomsCompleted,
-                    'message' => $roomsCompleted ? 'Rooms Added' : 'No Rooms Information'
+                    'message' => $roomsMsg
                 ];
                 if ($roomsCompleted) $percentage += 10;
 
@@ -2593,11 +2612,15 @@ if($type=="Regional Office"){
             } else { // Rented / Other
                 
                 // Institute Profile
+                $rentedProfileMsg = 'Profile Completed';
+                if ($missingInstituteImages > 0) {
+                    $rentedProfileMsg .= ' (' . $missingInstituteImages . ' missing image(s))';
+                }
                 $criteria[] = [
                     'name' => 'Complete Institute Profile',
                     'weight' => 40,
                     'completed' => true,
-                    'message' => 'Profile Completed'
+                    'message' => $rentedProfileMsg
                 ];
                 $percentage += 40;
 

@@ -76,6 +76,7 @@ interface Institute {
 }
 
 interface Project {
+  id: number;
   initiated: string;
   completed: string;
   inprogress: string;
@@ -1178,16 +1179,34 @@ export default function InstitutionalReportIndex({ institute: initialInstitute =
                         </tr>
                       </thead>
                       <tbody>
-                        {projects.map((p) => (
-                          <tr className="hover:bg-green-50 dark:hover:bg-green-900/30">
+                        {projects.map((p) => {
+                          const projectLink = (status: string) => {
+                            const params = new URLSearchParams({
+                              region_id: region || '',
+                              institute_id: institute || '',
+                              project_type_id: p.id?.toString() || '',
+                              status: status,
+                            });
+                            return `/reports/projects?${params.toString()}`;
+                          };
+                          return (
+                          <tr key={p.id} className="hover:bg-green-50 dark:hover:bg-green-900/30">
                             <td className="border px-2 py-1 text-xs text-gray-900 dark:text-gray-100">{p.name}</td>
-                            <td className="border px-2 py-1 text-xs text-green-700 font-semibold dark:text-green-400">{p.initiated}</td>
-                            <td className="border px-2 py-1 text-xs text-green-700 font-semibold dark:text-green-400">{p.completed}</td>
-                            <td className="border px-2 py-1 text-xs text-blue-700 font-semibold dark:text-blue-400">{p.inprogress}</td>
-                            <td className="border px-2 py-1 text-xs text-green-700 font-semibold dark:text-green-400">{p.planned}</td>
+                            <td className="border px-2 py-1 text-xs text-green-700 font-semibold dark:text-green-400">
+                              <a href={projectLink('waiting')} className="text-blue-600 hover:underline" target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}>{p.initiated}</a>
+                            </td>
+                            <td className="border px-2 py-1 text-xs text-green-700 font-semibold dark:text-green-400">
+                              <a href={projectLink('completed')} className="text-blue-600 hover:underline" target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}>{p.completed}</a>
+                            </td>
+                            <td className="border px-2 py-1 text-xs text-blue-700 font-semibold dark:text-blue-400">
+                              <a href={projectLink('inprogress')} className="text-blue-600 hover:underline" target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}>{p.inprogress}</a>
+                            </td>
+                            <td className="border px-2 py-1 text-xs text-green-700 font-semibold dark:text-green-400">
+                              <a href={projectLink('planned')} className="text-blue-600 hover:underline" target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}>{p.planned}</a>
+                            </td>
 
-                          </tr>
-                        ))}
+                          </tr>);
+                        })}
                       </tbody>
                     </table>
                   </div>

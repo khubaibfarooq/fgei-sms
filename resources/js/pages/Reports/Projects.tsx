@@ -206,6 +206,34 @@ export default function Projects({ projects: initialProjects, institutes, region
         }
     }, [projects]);
 
+    // Auto-apply filters on mount when navigated with query params
+    useEffect(() => {
+        const hasFilters = filters.institute_id || filters.region_id || filters.project_type_id || filters.status;
+        if (hasFilters) {
+            // Fetch institutes for the region if region_id is present
+            if (filters.region_id) {
+                fetchInstitutes(filters.region_id);
+            }
+            // Auto-fetch projects with the pre-filled filters
+            const params = new URLSearchParams({
+                search: filters.search || '',
+                institute_id: filters.institute_id || '',
+                region_id: filters.region_id || '',
+                project_type_id: filters.project_type_id || '',
+                status: filters.status || '',
+            });
+
+            fetch(`/reports/projects/getprojects?${params.toString()}`)
+                .then((res) => res.json())
+                .then((data) => {
+                    setProjects(data);
+                })
+                .catch((err) => {
+                    console.error('Auto-fetch error:', err);
+                    toast.error('Failed to load projects');
+                });
+        }
+    }, []); // Run once on mount
 
 
     const [region, setRegion] = useState(filters.region_id || '');

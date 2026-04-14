@@ -688,7 +688,13 @@ export default function Completion({
                                                         )}
                                                     </td>
                                                     <td className={`px-4 py-3 ${criterion.completed ? 'text-green-600' : 'text-red-600'}`}>
-                                                        {criterion.message}
+                                                        {(() => {
+                                                          const match = criterion.message.match(/^(.*?)(\(.*missing image.*\))$/);
+                                                          if (match) {
+                                                            return <>{match[1]}<span className="text-red-600 font-semibold">{match[2]}</span></>;
+                                                          }
+                                                          return criterion.message;
+                                                        })()}
                                                     </td>
                                                 </tr>
                                             ))}
