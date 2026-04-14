@@ -188,6 +188,11 @@ $projects = ProjectType::whereHas('projects', function($query) use ($request) {
         $query->where('institute_id', $request->institute_id);
     })
     ->withCount([
+         'projects as initiated' => function($query) use ($request) {
+            $query->where('institute_id', $request->institute_id)
+                  ->where('status', 'waiting')
+                  ->where('approval_status', 'waiting');
+        },
         'projects as completed' => function($query) use ($request) {
             $query->where('institute_id', $request->institute_id)
                   ->where('status', 'completed');
@@ -422,13 +427,13 @@ $regions = Institute::select('region_id as id', 'name')->where('type', 'Regional
         'regions'=>$regions,
         'filters' => [
             'search' => '',
-            'institute_id' =>'',
-            'block_id' =>  '',
-            'room_id' =>'',
-            'asset_category_id' =>'',
-            'asset_id' =>'',
-            'region_id' =>'',
-            'details'=>''
+            'institute_id' =>$request->institute_id??'',
+            'block_id' =>  $request->block_id??'',
+            'room_id' =>$request->room_id??'',
+            'asset_category_id' =>$request->asset_category_id??'',
+            'asset_id' =>$request->asset_id??'',
+            'region_id' =>$request->region_id??'',
+            'details'=>$request->details??''
         ],
     ]);
 }

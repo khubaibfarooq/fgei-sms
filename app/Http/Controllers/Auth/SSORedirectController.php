@@ -129,7 +129,7 @@ class SSORedirectController extends Controller
     
             //shool or college
                     $category = $data['Category'] ?? null;
-                    if($category == 'school' || $category == 'college'){
+                    if($category == 'School' || $category == 'College'){
                 $institution_id = $data['institution_id'] ?? null;
                 $institute = Institute::where('hr_id', $institution_id)->first();
                        $headUserId = $data['headUserId'] ?? null; 

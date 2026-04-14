@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Save, ArrowLeft, Plus, Trash2, Keyboard, TrendingUp, TrendingDown } from 'lucide-react';
+import { AmountInput } from '@/components/ui/amount-input';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
@@ -255,13 +256,12 @@ export default function FundForm({ fund, fundHeads }: FundFormProps) {
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="edit_amount">Amount</Label>
-                    <Input
+                    <AmountInput
                       id="edit_amount"
-                      type="number"
+                      value={data.amount}
+                      onChange={(v) => setData('amount', Number(v))}
                       min={0}
                       step="0.01"
-                      value={data.amount}
-                      onChange={(e) => setData('amount', Number(e.target.value))}
                     />
                   </div>
                 </div>
@@ -330,20 +330,19 @@ export default function FundForm({ fund, fundHeads }: FundFormProps) {
                             </td>
 
                             <td className="px-3 py-2">
-                              <Input
-                                type="number"
-                                min={0}
-                                step="0.01"
+                              <AmountInput
                                 value={row.amount === '' ? '' : row.amount}
-                                onChange={(e) =>
+                                onChange={(v) =>
                                   updateRow(
                                     idx,
                                     'amount',
-                                    e.target.value === '' ? '' : Number(e.target.value),
+                                    v === '' ? '' : Number(v),
                                   )
                                 }
                                 placeholder="0.00"
-                                className="h-8 text-sm"
+                                min={0}
+                                step="0.01"
+                                inputClassName="h-8 text-sm"
                               />
                             </td>
 

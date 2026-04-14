@@ -49,9 +49,10 @@ $permissions = [
         if(!auth()->user()->can('block-add')){
             abort(403);
         }
-                $blockTypes = BlockType::pluck('name', 'id')->toArray();
+        $blockTypes = BlockType::pluck('name', 'id')->toArray();
+        $roomTypes = \App\Models\RoomType::pluck('name', 'id')->toArray();
 
-        return Inertia::render('blocks/Form', ['block' => null,'blockTypes'=>$blockTypes]);
+        return Inertia::render('blocks/Form', ['block' => null, 'blockTypes' => $blockTypes, 'roomTypes' => $roomTypes]);
     }
 
     public function store(Request $request)
@@ -63,6 +64,11 @@ $permissions = [
             'area' => 'required|numeric',
            'block_type_id' => 'required|exists:block_types,id',
            'establish_date' => 'nullable|date',
+           'rooms' => 'nullable|array',
+           'rooms.*.name' => 'required_with:rooms|string|max:255',
+           'rooms.*.area' => 'required_with:rooms|numeric',
+           'rooms.*.room_type_id' => 'required_with:rooms|exists:room_types,id',
+           'rooms.*.img' => 'nullable|file',
         ]);
         $data['institute_id'] = session('sms_inst_id');
         $resultImageName = null;
@@ -83,7 +89,38 @@ $permissions = [
         } else {
             unset($data['img']);
         }
-        Block::Create($data);
+
+        $roomsData = $data['rooms'] ?? [];
+        unset($data['rooms']);
+
+        $block = Block::create($data);
+
+        if (!empty($roomsData)) {
+            foreach ($roomsData as $index => $roomData) {
+                $roomImageName = null;
+                if ($request->hasFile("rooms.{$index}.img")) {
+                    $roomImage = $request->file("rooms.{$index}.img");
+                    $roomImageName = time() . '-' . uniqid() . '.' . $roomImage->getClientOriginalExtension();
+                    
+                    $destinationPath = public_path('assets/room_img');
+                    if (!file_exists($destinationPath)) {
+                        mkdir($destinationPath, 0755, true);
+                    }
+
+                    (new ImageManager(new Driver()))->read($roomImage->getPathname())
+                        ->scale(width: 1280)
+                        ->save($destinationPath . '/' . $roomImageName, quality: 60);
+
+                    $roomData['img'] = 'room_img/' . $roomImageName;
+                } else {
+                    unset($roomData['img']);
+                }
+
+                $roomData['institute_id'] = session('sms_inst_id');
+                $roomData['block_id'] = $block->id;
+                \App\Models\Room::create($roomData);
+            }
+        }
 
         return redirect()->back()->with('success', 'Block saved successfully.');
     }
@@ -92,8 +129,12 @@ $permissions = [
         abort(403, 'You do not have permission to edit a block.');
     }
      $blockTypes = BlockType::pluck('name', 'id')->toArray();
-        return Inertia::render('blocks/Form', ['block' => $block,
-    'blockTypes'=>$blockTypes]);
+     $roomTypes = \App\Models\RoomType::pluck('name', 'id')->toArray();
+        return Inertia::render('blocks/Form', [
+            'block' => $block,
+            'blockTypes' => $blockTypes,
+            'roomTypes' => $roomTypes
+        ]);
     }
     public function update(Request $request, Block $block)
     {

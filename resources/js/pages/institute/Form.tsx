@@ -15,6 +15,7 @@ import {
   SelectItem,
 } from '@/components/ui/select';
 import { BreadcrumbItem } from '@/types';
+import { ImagePreview } from '@/components/ui/image-preview';
 
 interface InstituteFormProps {
   institute?: {
@@ -199,9 +200,9 @@ export default function InstituteForm({ institute }: InstituteFormProps) {
                 <div className="space-y-2">
                   <Label>Current Layout Image</Label>
                   {institute?.img_layout ? (
-                    <img
-                      src={`/assets/${institute.img_layout}`}
-                      alt="Layout"
+                    <ImagePreview
+                      dataImg={`${institute.img_layout}`}
+
                       className="w-full h-48 object-cover rounded"
                     />
                   ) : (
@@ -222,9 +223,8 @@ export default function InstituteForm({ institute }: InstituteFormProps) {
                 <div className="space-y-2">
                   <Label>Current Front View Image</Label>
                   {institute?.img_3d ? (
-                    <img
-                      src={`/assets/${institute.img_3d}`}
-                      alt="3D View"
+                    <ImagePreview
+                      dataImg={`${institute.img_3d}`}
                       className="w-full h-48 object-cover rounded"
                     />
                   ) : (

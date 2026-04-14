@@ -638,7 +638,7 @@ export default function Projects({ projects: initialProjects, institutes, region
                                         { label: 'Planned', value: 'planned', count: statusCounts.planned, icon: CalendarClock, bg: 'bg-blue-50 dark:bg-blue-950', text: 'text-blue-700 dark:text-blue-300', iconColor: 'text-blue-500' },
                                         { label: 'In Progress', value: 'inprogress', count: statusCounts.inprogress, icon: Clock, bg: 'bg-yellow-50 dark:bg-yellow-950', text: 'text-yellow-700 dark:text-yellow-300', iconColor: 'text-yellow-500' },
                                         { label: 'Completed', value: 'completed', count: statusCounts.completed, icon: CheckCircle2, bg: 'bg-green-50 dark:bg-green-950', text: 'text-green-700 dark:text-green-300', iconColor: 'text-green-500' },
-                                        { label: 'Waiting', value: 'waiting', count: statusCounts.waiting, icon: Hourglass, bg: 'bg-orange-50 dark:bg-orange-950', text: 'text-orange-700 dark:text-orange-300', iconColor: 'text-orange-500' },
+                                        { label: 'Initiated', value: 'waiting', count: statusCounts.waiting, icon: Hourglass, bg: 'bg-orange-50 dark:bg-orange-950', text: 'text-orange-700 dark:text-orange-300', iconColor: 'text-orange-500' },
                                         { label: 'Rejected', value: 'rejected', count: statusCounts.rejected, icon: XCircle, bg: 'bg-red-50 dark:bg-red-950', text: 'text-red-700 dark:text-red-300', iconColor: 'text-red-500' },
                                     ].map((item) => (
                                         <div

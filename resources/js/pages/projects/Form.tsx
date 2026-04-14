@@ -9,6 +9,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Save, ArrowLeft, Plus, Trash2 } from 'lucide-react';
+import { AmountInput } from '@/components/ui/amount-input';
 import {
   Select,
   SelectTrigger,
@@ -461,18 +462,23 @@ export default function ProjectForm({ project, projectTypes, contractors: initia
                 </div>
                 <div className="space-y-1">
                   <Label>Estimated Cost <span className="text-red-500">*</span></Label>
-                  <Input type="number" disabled={isEdit} value={estimatedCost} onChange={e => setEstimatedCost(e.target.value)} required />
+                  <AmountInput
+                    value={estimatedCost}
+                    onChange={(v) => setEstimatedCost(String(v))}
+                    disabled={isEdit}
+                    required
+                    placeholder="Enter estimated cost"
+                  />
                 </div>
 
                 {projectStatusMode === 'completed' && (
                   <div className="space-y-1">
                     <Label>Actual Cost <span className="text-red-500">*</span></Label>
-                    <Input
-                      type="number"
+                    <AmountInput
+                      value={actualCost}
+                      onChange={(v) => setActualCost(String(v))}
                       min={0}
                       placeholder="Enter actual cost"
-                      value={actualCost}
-                      onChange={e => setActualCost(e.target.value)}
                       required
                     />
                   </div>
@@ -695,14 +701,12 @@ export default function ProjectForm({ project, projectTypes, contractors: initia
                           </SelectContent>
                         </Select>
 
-                        <Input
-                          type="number"
-                          min={0}
-                          step={1000}
-                          placeholder="Amount"
-                          className="h-9 text-sm"
+                        <AmountInput
                           value={row.sanction_amount}
-                          onChange={(e) => updateFundHeadRow(row.key, 'sanction_amount', e.target.value)}
+                          onChange={(v) => updateFundHeadRow(row.key, 'sanction_amount', String(v))}
+                          min={0}
+                          placeholder="Amount"
+                          inputClassName="h-9 text-sm"
                         />
 
                         <Button

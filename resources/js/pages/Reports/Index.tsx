@@ -71,10 +71,12 @@ interface Institute {
   img_3d: string;
   created_at: string;
   updated_at: string;
+  ddo_name: string;
+  ddo_designation: string;
 }
 
 interface Project {
-
+  initiated: string;
   completed: string;
   inprogress: string;
   planned: string;
@@ -165,7 +167,7 @@ export default function InstitutionalReportIndex({ institute: initialInstitute =
   const [search, setSearch] = useState(initialFilters.search || '');
   const [institute, setInstitute] = useState(initialFilters.institute_id || '');
   const [fetchedinstitute, setFetchedInstitute] = useState<Institute | null>(initialInstitute);
-  console.log("fetchedinstitute", fetchedinstitute);
+  //console.log("fetchedinstitute", fetchedinstitute);
   const [region, setRegion] = useState(initialFilters.region_id || '');
   const [institutes, setInstitutes] = useState<Item[]>(initialInstitutes);
   const [regions, setRegions] = useState<Item[]>(initialRegions);
@@ -768,11 +770,13 @@ export default function InstitutionalReportIndex({ institute: initialInstitute =
           {/* Summary Section */}
           {fetchedinstitute && (
             <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-x-4 gap-y-2 bg-muted/20 p-2 rounded-md border text-xs md:text-sm mb-2">
-              {/* Est Date */}
+              {/* DDO Name */}
               <div>
-                <p className="text-[10px] md:text-xs text-muted-foreground uppercase tracking-wide">Est. Date</p>
-                <p className="font-medium">{fetchedinstitute.established_date || 'N/A'}</p>
+                <p className="text-[10px] md:text-xs text-muted-foreground uppercase tracking-wide">DDO</p>
+                <p className="font-medium">{fetchedinstitute.ddo_name || '-'}</p>
+                <p className="text-muted-foreground">{fetchedinstitute.ddo_designation || '-'}</p>
               </div>
+
               {/* Total Area */}
               <div>
                 <p className="text-[10px] md:text-xs text-muted-foreground uppercase tracking-wide">Total Area</p>
@@ -1052,7 +1056,17 @@ export default function InstitutionalReportIndex({ institute: initialInstitute =
 
                             <td className="border px-2 py-1 text-xs text-green-700 font-bold dark:text-gray-100">{asset.total_qty}</td>
 
-                            <td className="border px-2 py-1 text-xs text-gray-900 dark:text-gray-100">{asset.locations_count}</td>
+                            <td className="border px-2 py-1 text-xs text-gray-900 dark:text-gray-100">
+                              <a
+                                href={`/reports/assets?institute_id=${fetchedinstitute?.id}&asset_id=${asset.id}&region_id=${region}`}
+                                className="text-blue-600 hover:underline"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                {asset.locations_count}
+                              </a>
+                            </td>
                           </tr>
                         ))}
                       </tbody>
@@ -1134,7 +1148,8 @@ export default function InstitutionalReportIndex({ institute: initialInstitute =
                 <h3 className="text-base font-semibold text-green-800 dark:text-green-300">Institute Projects ({projects.length})</h3>
                 <p className="text-[10px] md:text-xs text-green-600/80 dark:text-green-400/80 mt-0.5">
                   {projects.length > 0
-                    ? `✅ ${projects.reduce((s, p) => s + (parseInt(p.completed) || 0), 0)} completed · 🔄 ${projects.reduce((s, p) => s + (parseInt(p.inprogress) || 0), 0)} in-progress · 📋 ${projects.reduce((s, p) => s + (parseInt(p.planned) || 0), 0)} planned`
+                    ? `⏳ ${projects.reduce((s, p) => s + (parseInt(p.initiated) || 0), 0)} initiated · 
+                    ✅ ${projects.reduce((s, p) => s + (parseInt(p.completed) || 0), 0)} completed · 🔄 ${projects.reduce((s, p) => s + (parseInt(p.inprogress) || 0), 0)} in-progress · 📋 ${projects.reduce((s, p) => s + (parseInt(p.planned) || 0), 0)} planned`
                     : 'No data'}
                 </p>
               </div>
@@ -1155,6 +1170,7 @@ export default function InstitutionalReportIndex({ institute: initialInstitute =
                       <thead>
                         <tr className="bg-green-600 dark:bg-green-800">
                           <th className="border px-2 py-1 text-left text-xs font-medium text-white dark:text-gray-200">Project Type</th>
+                          <th className="border px-2 py-1 text-left text-xs font-medium text-white dark:text-gray-200">Initiated</th>
                           <th className="border px-2 py-1 text-left text-xs font-medium text-white dark:text-gray-200">Completed</th>
                           <th className="border px-2 py-1 text-left text-xs font-medium text-white dark:text-gray-200">In Progress</th>
                           <th className="border px-2 py-1 text-left text-xs font-medium text-white dark:text-gray-200">Planned</th>
@@ -1165,6 +1181,7 @@ export default function InstitutionalReportIndex({ institute: initialInstitute =
                         {projects.map((p) => (
                           <tr className="hover:bg-green-50 dark:hover:bg-green-900/30">
                             <td className="border px-2 py-1 text-xs text-gray-900 dark:text-gray-100">{p.name}</td>
+                            <td className="border px-2 py-1 text-xs text-green-700 font-semibold dark:text-green-400">{p.initiated}</td>
                             <td className="border px-2 py-1 text-xs text-green-700 font-semibold dark:text-green-400">{p.completed}</td>
                             <td className="border px-2 py-1 text-xs text-blue-700 font-semibold dark:text-blue-400">{p.inprogress}</td>
                             <td className="border px-2 py-1 text-xs text-green-700 font-semibold dark:text-green-400">{p.planned}</td>
@@ -1271,7 +1288,15 @@ export default function InstitutionalReportIndex({ institute: initialInstitute =
                         {funds.map((f) => (
                           <tr key={f.id} className="hover:bg-green-50 dark:hover:bg-green-900/30">
                             <td className="border px-2 py-1 text-xs text-gray-900 dark:text-gray-100">{f.fund_head?.name}</td>
-                            <td className="border px-2 py-1 text-xs text-green-700 dark:text-green-400 font-bold">{formatBalance(f.balance)}</td>
+                            <td className="border px-2 py-1 text-xs text-green-700 dark:text-green-400 font-bold" >    <a
+                              href={`/reports/fundstrans?institute_id=${fetchedinstitute?.id}&fund_head_id=${f.fund_head.id}&region_id=${region}`}
+                              className="text-blue-600 hover:underline"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              {formatBalance(f.balance)}
+                            </a></td>
                           </tr>
                         ))}
                         <tr className="bg-green-50 dark:bg-green-900/20">

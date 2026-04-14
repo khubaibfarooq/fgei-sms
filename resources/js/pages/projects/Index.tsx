@@ -35,6 +35,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import ApprovalModal from './ApprovalModal';
 import { ImagePreview } from '@/components/ui/image-preview2';
+import { AmountInput } from '@/components/ui/amount-input';
 
 
 interface Project {
@@ -1259,15 +1260,15 @@ export default function ProjectIndex({ projects: initialProjects, filters, permi
                 <Label htmlFor="actual_cost" className="text-right">
                   Cost
                 </Label>
-                <Input
-                  id="actual_cost"
-                  type="number"
-                  step="0.01"
-                  className="col-span-3"
-                  value={actualCostForm.actual_cost}
-                  onChange={(e) => setActualCostForm({ actual_cost: e.target.value })}
-                  required
-                />
+                <div className="col-span-3">
+                  <AmountInput
+                    id="actual_cost"
+                    value={actualCostForm.actual_cost}
+                    onChange={(v) => setActualCostForm({ actual_cost: String(v) })}
+                    step="0.01"
+                    required
+                  />
+                </div>
               </div>
             </div>
             <DialogFooter>
@@ -1326,16 +1327,15 @@ export default function ProjectIndex({ projects: initialProjects, filters, permi
               <Label htmlFor="payment_amount" className="text-right">
                 Amount
               </Label>
-              <Input
-                id="payment_amount"
-                type="number"
-                step="0.01"
-                max={remainingAmount}
-                placeholder={`Max: ${remainingAmount.toLocaleString()}`}
-                className="col-span-3"
-                value={paymentForm.amount}
-                onChange={(e) => setPaymentForm({ ...paymentForm, amount: e.target.value })}
-              />
+              <div className="col-span-3">
+                <AmountInput
+                  id="payment_amount"
+                  value={paymentForm.amount}
+                  onChange={(v) => setPaymentForm({ ...paymentForm, amount: String(v) })}
+                  step="0.01"
+                  placeholder={`Max: ${remainingAmount.toLocaleString()}`}
+                />
+              </div>
             </div>
             {parseFloat(paymentForm.amount) > remainingAmount && (
               <div className="text-red-500 text-sm text-center">
