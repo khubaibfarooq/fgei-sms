@@ -632,7 +632,7 @@ export default function ProjectIndex({ projects: initialProjects, filters, permi
                           <td className="border p-2 text-xs md:text-sm text-gray-900 dark:text-gray-100">
                             <div className="flex items-center justify-center gap-1">
                               {project.actual_cost || ''}
-                              {project.current_stage?.can_change_cost && (
+                              {(project.current_stage?.can_change_cost && !project.actual_cost) && (
                                 <Button
                                   variant="ghost"
                                   size="icon"

@@ -153,10 +153,11 @@ class ProjectApprovalController extends Controller
                             $project->update([
                                 'approval_status' => 'approved',
                                 'status'          => 'inprogress',
+                                'actual_cost'     => null,
                             ]);
                         }
 
-                       
+
                      } 
                      else {
                         // No further stages for any fund head → project fully approved
