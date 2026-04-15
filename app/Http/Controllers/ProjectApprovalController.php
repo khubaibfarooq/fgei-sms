@@ -8,9 +8,13 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use App\Models\Project;
 use App\Models\ProjectApproval;
+use App\Models\ProjectEffect;
 use App\Models\Fund;
 use App\Models\FundHead;
 use App\Models\Institute;
+use App\Models\Block;
+use App\Models\Room;
+use App\Models\InstituteAsset;
 
 class ProjectApprovalController extends Controller
 {
@@ -37,160 +41,190 @@ class ProjectApprovalController extends Controller
             return response()->json(['message' => 'Project is not in an approval stage.'], 400);
         }
 
-        DB::transaction(function () use ($request, $project, $currentStage) {
-            $approval = ProjectApproval::where('project_id', $project->id)
-                ->where('stage_id', $currentStage->id)
-                ->orderBy('created_at', 'desc')
-                ->first();
+        $errorRedirect = null;
 
-            $pdfPath = null;
-            if ($request->hasFile('pdf')) {
-                $file    = $request->file('pdf');
-                $pdfName = time() . '-' . uniqid() . '.' . $file->getClientOriginalExtension();
-                $file->move(public_path('approvals'), $pdfName);
-                $pdfPath = 'approvals/' . $pdfName;
-            }
+        try {
+            DB::transaction(function () use ($request, $project, $currentStage, &$errorRedirect) {
+                $approval = ProjectApproval::where('project_id', $project->id)
+                    ->where('stage_id', $currentStage->id)
+                    ->orderBy('created_at', 'desc')
+                    ->first();
 
-            $imgPath = null;
-            if ($request->hasFile('img')) {
-                $file    = $request->file('img');
-                $imgName = time() . '-' . uniqid() . '.' . $file->getClientOriginalExtension();
-                $file->move(public_path('approvals/images'), $imgName);
-                $imgPath = 'approvals/images/' . $imgName;
-            }
+                $pdfPath = null;
+                if ($request->hasFile('pdf')) {
+                    $file    = $request->file('pdf');
+                    $pdfName = time() . '-' . uniqid() . '.' . $file->getClientOriginalExtension();
+                    $file->move(public_path('approvals'), $pdfName);
+                    $pdfPath = 'approvals/' . $pdfName;
+                }
 
-            if ($approval) {
-                $approval->update([
-                    'approver_id' => auth()->id(),
-                    'status'      => $request->status,
-                    'comments'    => $request->comments,
-                    'pdf'         => $pdfPath ?? $approval->pdf,
-                    'img'         => $imgPath ?? $approval->img,
-                    'action_date' => now(),
-                ]);
-            } else {
-                ProjectApproval::create([
-                    'project_id'  => $project->id,
-                    'stage_id'    => $currentStage->id,
-                    'approver_id' => auth()->id(),
-                    'status'      => $request->status,
-                    'comments'    => $request->comments,
-                    'pdf'         => $pdfPath,
-                    'img'         => $imgPath,
-                    'action_date' => now(),
-                ]);
-            }
-            $pendingcount = ProjectApproval::where('project_id', $project->id)->where('status', 'pending')->count();
+                $imgPath = null;
+                if ($request->hasFile('img')) {
+                    $file    = $request->file('img');
+                    $imgName = time() . '-' . uniqid() . '.' . $file->getClientOriginalExtension();
+                    $file->move(public_path('approvals/images'), $imgName);
+                    $imgPath = 'approvals/images/' . $imgName;
+                }
 
-            if ($request->status === 'approved' && $pendingcount ==0) {
-                if ($currentStage->is_last) {
-                    $project->update([
-                        'final_comments' => $request->comments,
-                        'status'         => 'completed',
+                if ($approval) {
+                    $approval->update([
+                        'approver_id' => auth()->id(),
+                        'status'      => $request->status,
+                        'comments'    => $request->comments,
+                        'pdf'         => $pdfPath ?? $approval->pdf,
+                        'img'         => $imgPath ?? $approval->img,
+                        'action_date' => now(),
                     ]);
                 } else {
-                    // Collect next stages for ALL fund heads in the JSON
-                    // $fundHeadJson    = $project->fund_head_id ?? [];
-                    // $fundHeadIds     = array_keys($fundHeadJson);
-  $ids = $project->getRawOriginal('current_stage_id')
-            ? json_decode($project->getRawOriginal('current_stage_id'), true)
-            : [];
-            $fundHeadIds = ApprovalStage::whereIn('id', $ids)->pluck('fund_head_id')->filter()->unique()->values();
-                    // Map:` stage_name => first matching ApprovalStage (shared if same name)
-                    $nextStagesByName = [];
-   
-   if(count($ids)==1 && count($fundHeadIds)==0 ){
-    $fundHeadIds = [$currentStage->fund_head_id];
-   }
-   //dd($fundHeadIds);
-                    foreach ($fundHeadIds as $headId) {
-                        $nextStage = ApprovalStage::where('stage_order', '>', $currentStage->stage_order)
-                            ->where('fund_head_id', (int) $headId)
-                            ->orderBy('stage_order')
-                            ->first();
-    
-                        if ($nextStage) {
-                            $stageName = $nextStage->stage_name;
-                            // Same name → keep the first one (shared stage)
-                            if (!isset($nextStagesByName[$stageName])) {
-                                $nextStagesByName[$stageName] = $nextStage;
+                    ProjectApproval::create([
+                        'project_id'  => $project->id,
+                        'stage_id'    => $currentStage->id,
+                        'approver_id' => auth()->id(),
+                        'status'      => $request->status,
+                        'comments'    => $request->comments,
+                        'pdf'         => $pdfPath,
+                        'img'         => $imgPath,
+                        'action_date' => now(),
+                    ]);
+                }
+                $pendingcount = ProjectApproval::where('project_id', $project->id)->where('status', 'pending')->count();
+
+                if ($request->status === 'approved' && $pendingcount ==0) {
+                    if ($currentStage->is_last) {
+                        // Completion guards — milestones + payments must all be done
+                        $completionErrors = $this->canCompleteProject($project);
+                        if (!empty($completionErrors)) {
+                            // Store error and abort — project stays in current state
+                            $errorRedirect = redirect()->back()->with('error', "Cannot complete project:\n• " . implode("\n• ", $completionErrors));
+                            throw new \Exception('COMPLETION_ERROR');
+                        }
+
+                        $project->update([
+                            'final_comments' => $request->comments,
+                            'status'         => 'completed',
+                        ]);
+
+                        // Apply all pending effects
+                        $this->applyProjectEffects($project);
+                    } else {
+                        // Collect next stages for ALL fund heads in the JSON
+                        // $fundHeadJson    = $project->fund_head_id ?? [];
+                        // $fundHeadIds     = array_keys($fundHeadJson);
+      $ids = $project->getRawOriginal('current_stage_id')
+                ? json_decode($project->getRawOriginal('current_stage_id'), true)
+                : [];
+                $fundHeadIds = ApprovalStage::whereIn('id', $ids)->pluck('fund_head_id')->filter()->unique()->values();
+                        // Map:` stage_name => first matching ApprovalStage (shared if same name)
+                        $nextStagesByName = [];
+       
+       if(count($ids)==1 && count($fundHeadIds)==0 ){
+        $fundHeadIds = [$currentStage->fund_head_id];
+       }
+       //dd($fundHeadIds);
+                        foreach ($fundHeadIds as $headId) {
+                            $nextStage = ApprovalStage::where('stage_order', '>', $currentStage->stage_order)
+                                ->where('fund_head_id', (int) $headId)
+                                ->orderBy('stage_order')
+                                ->first();
+        
+                            if ($nextStage) {
+                                $stageName = $nextStage->stage_name;
+                                // Same name → keep the first one (shared stage)
+                                if (!isset($nextStagesByName[$stageName])) {
+                                    $nextStagesByName[$stageName] = $nextStage;
+                                }
                             }
                         }
-                    }
 
-                    // Special rule: "Execution of approved work" is only created
-                    // when ALL fund heads share it as their next stage.
-                    // If even one fund head has a different next stage, exclude it.
-                    $executionStageName = 'Execution of approved work';
-                    if (isset($nextStagesByName[$executionStageName]) && count($nextStagesByName) > 1 &&!isset($nextStagesByName["Regional Dev Committee"]) ) {
-                        // Not all fund heads point to this stage exclusively → remove it
-                        unset($nextStagesByName[$executionStageName]);
-                    }else if(isset($nextStagesByName["Regional Dev Committee"]) && count($nextStagesByName) > 1 ) {
-                        // Not all fund heads point to this stage exclusively → remove it
-                        unset($nextStagesByName["Regional Dev Committee"]);
-                    }
-        // dd($nextStagesByName,count($nextStagesByName)  );
-                    if (!empty($nextStagesByName)) {
-                        // Save ALL next stage IDs as JSON array
-                        $nextStageIds = array_values(
-                            array_map(fn($s) => $s->id, array_values($nextStagesByName))
-                        );
-             // dd($nextStageIds  );
-                        $project->update(['current_stage_id' => $nextStageIds]);
- // Create a pending approval row for each unique next stage
-                        foreach ($nextStagesByName as $nextStage) {
-                            ProjectApproval::create([
-                                'project_id'  => $project->id,
-                                'stage_id'    => $nextStage->id,
-                                'status'      => 'pending',
-                                'approver_id' => null,
-                                'comments'    => null,
-                            ]);
-                        }  
-                        $pendingcount = ProjectApproval::where('project_id', $project->id)->where('status', 'pending')->count();
-                
-                        if ($currentStage->change_to_in_progress && $pendingcount ==1 ) {
+                        // Special rule: "Execution of approved work" is only created
+                        // when ALL fund heads share it as their next stage.
+                        // If even one fund head has a different next stage, exclude it.
+                        $executionStageName = 'Execution of approved work';
+                        if (isset($nextStagesByName[$executionStageName]) && count($nextStagesByName) > 1 &&!isset($nextStagesByName["Regional Dev Committee"]) ) {
+                            // Not all fund heads point to this stage exclusively → remove it
+                            unset($nextStagesByName[$executionStageName]);
+                        }else if(isset($nextStagesByName["Regional Dev Committee"]) && count($nextStagesByName) > 1 ) {
+                            // Not all fund heads point to this stage exclusively → remove it
+                            unset($nextStagesByName["Regional Dev Committee"]);
+                        }
+            // dd($nextStagesByName,count($nextStagesByName)  );
+                        if (!empty($nextStagesByName)) {
+                            // Save ALL next stage IDs as JSON array
+                            $nextStageIds = array_values(
+                                array_map(fn($s) => $s->id, array_values($nextStagesByName))
+                            );
+                 // dd($nextStageIds  );
+                            $project->update(['current_stage_id' => $nextStageIds]);
+     // Create a pending approval row for each unique next stage
+                            foreach ($nextStagesByName as $nextStage) {
+                                ProjectApproval::create([
+                                    'project_id'  => $project->id,
+                                    'stage_id'    => $nextStage->id,
+                                    'status'      => 'pending',
+                                    'approver_id' => null,
+                                    'comments'    => null,
+                                ]);
+                            }  
+                            $pendingcount = ProjectApproval::where('project_id', $project->id)->where('status', 'pending')->count();
+                    
+                            if ($currentStage->change_to_in_progress && $pendingcount ==1 ) {
+                                $project->update([
+                                    'approval_status' => 'approved',
+                                    'status'          => 'inprogress',
+                                    'actual_cost'     => null,
+                                ]);
+                            }
+
+
+                         } 
+                         else {
+                            // No further stages for any fund head → project fully approved
+                            // Completion guards — milestones + payments must all be done
+                            $completionErrors = $this->canCompleteProject($project);
+                            if (!empty($completionErrors)) {
+                                $errorRedirect = redirect()->back()->with('error', 'Project cannot be completed: ' . implode('; ', $completionErrors));
+                                throw new \Exception('COMPLETION_ERROR');
+                            }
+
                             $project->update([
                                 'approval_status' => 'approved',
-                                'status'          => 'inprogress',
-                                'actual_cost'     => null,
+                                'status'          => 'completed',
+                            ]);
+
+                            // Apply all pending effects
+                            $this->applyProjectEffects($project);
+                        }
+                    }
+                } else if($request->status === 'rejected') {
+                    $project->update(['approval_status' => 'rejected']);
+
+                    // If a revert stage was selected, re-create it as pending
+                    if ($request->filled('revert_to_stage_id')) {
+                        $revertStage = ApprovalStage::find((int) $request->revert_to_stage_id);
+                        if ($revertStage) {
+                            ProjectApproval::create([
+                                'project_id'  => $project->id,
+                                'stage_id'    => $revertStage->id,
+                                'status'      => 'pending',
+                                'approver_id' => null,
+                                'comments'    => 'Stage reverted after rejection.',
+                                'action_date' => null,
+                            ]);
+                            $project->update([
+                                'current_stage_id' => [$revertStage->id],
+                                'approval_status'  => 'inprogress',
+                                'status'           => 'waiting',
                             ]);
                         }
-
-
-                     } 
-                     else {
-                        // No further stages for any fund head → project fully approved
-                        $project->update([
-                            'approval_status' => 'approved',
-                            'status'          => 'completed',
-                        ]);
                     }
                 }
-            } else if($request->status === 'rejected') {
-                $project->update(['approval_status' => 'rejected']);
-
-                // If a revert stage was selected, re-create it as pending
-                if ($request->filled('revert_to_stage_id')) {
-                    $revertStage = ApprovalStage::find((int) $request->revert_to_stage_id);
-                    if ($revertStage) {
-                        ProjectApproval::create([
-                            'project_id'  => $project->id,
-                            'stage_id'    => $revertStage->id,
-                            'status'      => 'pending',
-                            'approver_id' => null,
-                            'comments'    => 'Stage reverted after rejection.',
-                            'action_date' => null,
-                        ]);
-                        $project->update([
-                            'current_stage_id' => [$revertStage->id],
-                            'approval_status'  => 'inprogress',
-                            'status'           => 'waiting',
-                        ]);
-                    }
-                }
+            });
+        } catch (\Exception $e) {
+            if ($e->getMessage() === 'COMPLETION_ERROR' && $errorRedirect) {
+                return $errorRedirect;
             }
-        });
+            throw $e;
+        }
 
         return redirect()->back()->with('success', 'Approval processed successfully.');
     }
@@ -435,6 +469,9 @@ class ProjectApprovalController extends Controller
         }
 
         $fundHeadJson = $project->fund_head_id ?? [];
+        if (!is_array($fundHeadJson)) {
+            $fundHeadJson = [(string) $fundHeadJson => 0];
+        }
         $fundHeadIds  = array_keys($fundHeadJson);
 
         // Find first stage for each fund head, group by stage_name
@@ -482,6 +519,141 @@ class ProjectApprovalController extends Controller
                 $project->update(['actual_cost' => $request->actual_cost]);
             });
             return redirect()->back()->with('success', 'Actual cost updated successfully.');
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // Private helpers
+    // -------------------------------------------------------------------------
+
+    /**
+     * Check if a project is ready to be completed.
+     * Returns an array of human-readable error strings (empty = all good).
+     */
+    private function canCompleteProject(Project $project): array
+    {
+        $errors = [];
+
+        // 1. All milestones must be completed
+        $pendingMilestones = $project->milestones()
+            ->where('status', '!=', 'completed')
+            ->get();
+
+        if ($pendingMilestones->isNotEmpty()) {
+            $names = $pendingMilestones->pluck('name')->implode(', ');
+            $count = $pendingMilestones->count();
+            $errors[] = "{$count} milestone(s) not completed: {$names}";
+        }
+
+        // 2. All payments (Funds) for this project must be Approved
+        $pendingPayments = Fund::where('trans_type', 'project')
+            ->where('tid', $project->id)
+            ->where('status', '!=', 'Approved')
+            ->get();
+
+        if ($pendingPayments->isNotEmpty()) {
+            $count = $pendingPayments->count();
+            $total = number_format($pendingPayments->sum('amount'), 2);
+            $errors[] = "{$count} payment(s) not approved (total Rs. {$total})";
+        }
+
+        // 3. Approved payments must equal actual cost
+        $approvedPaymentsTotal = Fund::where('trans_type', 'project')
+            ->where('tid', $project->id)
+            ->where('status', 'Approved')
+            ->sum('amount');
+
+        $actualCost = $project->actual_cost ?? 0;
+
+        if (round((float)$approvedPaymentsTotal, 2) !== round((float)$actualCost, 2)) {
+            $errors[] = "Total approved payments (Rs. " . number_format($approvedPaymentsTotal, 2) . ") must be equal to the actual cost (Rs. " . number_format($actualCost, 2) . ")";
+        }
+
+        return $errors;
+    }
+
+    /**
+     * Execute all unapplied ProjectEffect rows for the given project.
+     * Creates Block/Room/Asset records as defined in each effect's `effect_data`.
+     */
+    private function applyProjectEffects(Project $project): void
+    {
+        $instituteId = $project->institute_id;
+
+        foreach ($project->effects()->where('applied', false)->get() as $effect) {
+            $data = $effect->effect_data;
+
+            switch ($effect->effect_type) {
+
+                case 'block':
+                    $block = Block::create([
+                        'name'           => $data['name'],
+                        'area'           => $data['area'] ?? null,
+                        'institute_id'   => $instituteId,
+                        'block_type_id'  => $data['block_type_id'],
+                        'establish_date' => now()->toDateString(),
+                    ]);
+                    foreach ($data['rooms'] ?? [] as $roomData) {
+                        $room = Room::create([
+                            'name'         => $roomData['name'],
+                            'area'         => $roomData['area'] ?? null,
+                            'room_type_id' => $roomData['room_type_id'],
+                            'block_id'     => $block->id,
+                        ]);
+
+                        foreach ($roomData['assets'] ?? [] as $asset) {
+                            InstituteAsset::create([
+                                'institute_id' => $instituteId,
+                                'asset_id'     => $asset['asset_id'],
+                                'current_qty'  => (int)($asset['qty'] ?? 1),
+                                'room_id'      => $room->id,
+                                'details'      => $asset['details'] ?? 'Added via project completion',
+                                'added_by'     => auth()->id(),
+                                'added_date'   => now()->toDateString(),
+                            ]);
+                        }
+                    }
+                    break;
+
+                case 'room':
+                    Room::create([
+                        'name'         => $data['name'],
+                        'area'         => $data['area'] ?? null,
+                        'room_type_id' => $data['room_type_id'],
+                        'block_id'     => $data['block_id'],
+                    ]);
+                    break;
+
+                case 'asset':
+                    $existing = InstituteAsset::where('asset_id', $data['asset_id'])
+                        ->where('room_id', $data['room_id'] ?? null)
+                        ->where('institute_id', $instituteId)
+                        ->first();
+
+                    if ($existing) {
+                        // Add to existing asset quantity
+                        $existing->update([
+                            'current_qty' => $existing->current_qty + (int)($data['qty'] ?? 1),
+                        ]);
+                    } else {
+                        InstituteAsset::create([
+                            'institute_id' => $instituteId,
+                            'asset_id'     => $data['asset_id'],
+                            'current_qty'  => (int)($data['qty'] ?? 1),
+                            'room_id'      => $data['room_id'] ?? null,
+                            'details'      => $data['details'] ?? 'Added via project completion',
+                            'added_by'     => auth()->id(),
+                            'added_date'   => now()->toDateString(),
+                        ]);
+                    }
+                    break;
+            }
+
+            $effect->update([
+                'applied'    => true,
+                'applied_at' => now(),
+                'applied_by' => auth()->id(),
+            ]);
         }
     }
 }

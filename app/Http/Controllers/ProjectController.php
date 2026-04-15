@@ -15,6 +15,12 @@ use App\Models\Institute;
 use App\Models\Contractor;
 use App\Models\Company;
 use App\Models\ProjectImage;
+use App\Models\ProjectEffect;
+use App\Models\BlockType;
+use App\Models\RoomType;
+use App\Models\Asset;
+use App\Models\Block;
+use App\Models\Room;
 use Illuminate\Support\Str;
 
 class ProjectController extends Controller
@@ -72,13 +78,21 @@ class ProjectController extends Controller
         $projectTypes = ProjectType::pluck('name', 'id')->toArray();
         $contractors = Contractor::all();
         $companies = Company::all();
+        $inst_id = session('sms_inst_id');
 
         return Inertia::render('projects/Form', [
-            'project'      => null,
-            'projectTypes' => $projectTypes,
-            'contractors'  => $contractors,
-            'companies'    => $companies,
-            'fundHeads'    => FundHead::select('id', 'name')->get(),
+            'project'        => null,
+            'projectTypes'   => $projectTypes,
+            'contractors'    => $contractors,
+            'companies'      => $companies,
+            'fundHeads'      => FundHead::select('id', 'name')->get(),
+            // Effects lookup data
+            'blockTypes'     => BlockType::pluck('name', 'id')->toArray(),
+            'roomTypes'      => RoomType::pluck('name', 'id')->toArray(),
+            'allAssets'      => Asset::select('id', 'name')->orderBy('name')->get(),
+            'existingBlocks' => Block::where('institute_id', $inst_id)->select('id', 'name')->get(),
+            'existingRooms'  => Room::whereHas('block', fn($q) => $q->where('institute_id', $inst_id))
+                                    ->with('block:id,name')->select('id', 'name', 'block_id')->get(),
         ]);
     }
 public function store(Request $request)
@@ -197,6 +211,22 @@ public function store(Request $request)
         }
     }
 
+    // Save effects
+    if ($request->has('effects')) {
+        foreach ($request->input('effects', []) as $effectData) {
+            $effectType = $effectData['effect_type'] ?? null;
+            if (!$effectType) continue;
+
+            $rawData = $effectData['effect_data'] ?? '{}';
+            $decodedData = is_string($rawData) ? json_decode($rawData, true) : $rawData;
+
+            $project->effects()->create([
+                'effect_type' => $effectType,
+                'effect_data' => $decodedData ?? [],
+            ]);
+        }
+    }
+
     return redirect()->route('projects.index')
         ->with('success', 'Project created successfully with milestones!');
 }
@@ -270,15 +300,23 @@ public function store(Request $request)
         $milestones = $project->milestones;
         $contractors = Contractor::all();
         $companies = Company::all();
+        $inst_id = session('sms_inst_id');
 
         return Inertia::render('projects/Form', [
-            'project'      => $project,
-            'projectTypes' => $projectTypes,
-            'contractors'  => $contractors,
-            'companies'    => $companies,
-            'milestones'   => $milestones,
-            'hasApprovals' => $project->approvals()->exists(),
-            'fundHeads'    => FundHead::select('id', 'name')->get(),
+            'project'        => $project->load('effects'),
+            'projectTypes'   => $projectTypes,
+            'contractors'    => $contractors,
+            'companies'      => $companies,
+            'milestones'     => $milestones,
+            'hasApprovals'   => $project->approvals()->exists(),
+            'fundHeads'      => FundHead::select('id', 'name')->get(),
+            // Effects lookup data
+            'blockTypes'     => BlockType::pluck('name', 'id')->toArray(),
+            'roomTypes'      => RoomType::pluck('name', 'id')->toArray(),
+            'allAssets'      => Asset::select('id', 'name')->orderBy('name')->get(),
+            'existingBlocks' => Block::where('institute_id', $inst_id)->select('id', 'name')->get(),
+            'existingRooms'  => Room::whereHas('block', fn($q) => $q->where('institute_id', $inst_id))
+                                    ->with('block:id,name')->select('id', 'name', 'block_id')->get(),
         ]);
     }
   
@@ -454,6 +492,45 @@ public function update(Request $request, Project $project)
             }
             $milestone->delete();
         });
+
+    // Sync effects — only if project is not yet completed
+    if ($project->status !== 'completed' && $request->has('effects')) {
+        $submittedEffectIds = [];
+
+        foreach ($request->input('effects', []) as $effectData) {
+            $effectType = $effectData['effect_type'] ?? null;
+            if (!$effectType) continue;
+
+            $rawData = $effectData['effect_data'] ?? '{}';
+            $decodedData = is_string($rawData) ? json_decode($rawData, true) : $rawData;
+            $effectId = $effectData['id'] ?? null;
+
+            if ($effectId) {
+                // Update existing (only if not yet applied)
+                $existing = $project->effects()->where('id', $effectId)->where('applied', false)->first();
+                if ($existing) {
+                    $existing->update([
+                        'effect_type' => $effectType,
+                        'effect_data' => $decodedData ?? [],
+                    ]);
+                }
+                $submittedEffectIds[] = (int)$effectId;
+            } else {
+                // Create new
+                $newEffect = $project->effects()->create([
+                    'effect_type' => $effectType,
+                    'effect_data' => $decodedData ?? [],
+                ]);
+                $submittedEffectIds[] = $newEffect->id;
+            }
+        }
+
+        // Delete removed unapplied effects
+        $project->effects()
+            ->where('applied', false)
+            ->whereNotIn('id', $submittedEffectIds)
+            ->delete();
+    }
 
     return redirect()->back()->with('success', 'Project and milestones updated successfully!');
 }
@@ -648,6 +725,7 @@ public function projectDetails(Project $project)
             'institute',
             'projecttype',
             'contractor.company',
+            'effects',
         ]);
 
         // Resolve currentStage from JSON array (current_stage_id is now JSON)
@@ -661,6 +739,12 @@ public function projectDetails(Project $project)
             'project'          => $project,
             'fundHeadsList'    => $project->fund_heads_list,
             'canEditMilestones' => $canEditMilestones,
+            'blockTypes'     => BlockType::pluck('name', 'id')->toArray(),
+            'roomTypes'      => RoomType::pluck('name', 'id')->toArray(),
+            'allAssets'      => Asset::select('id', 'name')->orderBy('name')->get(),
+            'existingBlocks' => Block::where('institute_id', $project->institute_id)->select('id', 'name')->get(),
+            'existingRooms'  => Room::whereHas('block', fn($q) => $q->where('institute_id', $project->institute_id))
+                                    ->with('block:id,name')->select('id', 'name', 'block_id')->get(),
         ]);
     }
 

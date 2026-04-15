@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { Save, ArrowLeft, Plus, Trash2 } from 'lucide-react';
+import { Save, ArrowLeft, Plus, Trash2, Building2, DoorOpen, Package, ChevronDown, ChevronUp } from 'lucide-react';
 import { AmountInput } from '@/components/ui/amount-input';
 import {
   Select,
@@ -46,6 +46,45 @@ interface MilestoneRow {
   preview?: string;                     // Data URL preview
   existingImg?: string;
   existingPdf?: string;                 // Added PDF path
+}
+
+// ---- Effects interfaces ----
+interface EffectRoomAsset {
+  key: number;
+  asset_id: string;
+  qty: string;
+  details: string;
+}
+
+interface EffectRoomRow {
+  key: number;
+  name: string;
+  room_type_id: string;
+  area: string;
+  assets?: EffectRoomAsset[];
+}
+
+interface EffectRow {
+  key: number;
+  id?: number;           // DB effect id (for edit)
+  effect_type: 'block' | 'room' | 'asset';
+  collapsed?: boolean;
+  // Block fields
+  block_name?: string;
+  block_type_id?: string;
+  block_area?: string;
+  nested_rooms?: EffectRoomRow[];
+  // Room-in-existing-block fields
+  room_name?: string;
+  room_type_id?: string;
+  room_area?: string;
+  room_block_id?: string;
+  room_assets?: EffectRoomAsset[];
+  // Asset-in-room fields
+  asset_id?: string;
+  asset_qty?: string;
+  asset_room_id?: string;
+  asset_details?: string;
 }
 
 interface FundHeadRow {
@@ -88,15 +127,27 @@ interface ProjectFormProps {
       status?: string;
       completed_date?: string;
     }>;
+    effects?: Array<{
+      id: number;
+      effect_type: string;
+      effect_data: Record<string, any>;
+      applied: boolean;
+    }>;
   };
   projectTypes: Record<string, string>;
   contractors: Contractor[];
   companies: Array<{ id: number; name: string }>;
   hasApprovals?: boolean;
   fundHeads: Array<{ id: number; name: string }>;
+  // Effects lookup data
+  blockTypes: Record<string, string>;
+  roomTypes: Record<string, string>;
+  allAssets: Array<{ id: number; name: string }>;
+  existingBlocks: Array<{ id: number; name: string }>;
+  existingRooms: Array<{ id: number; name: string; block_id: number; block?: { id: number; name: string } }>;
 }
 
-export default function ProjectForm({ project, projectTypes, contractors: initialContractors, companies: propsCompanies, hasApprovals, fundHeads }: ProjectFormProps) {
+export default function ProjectForm({ project, projectTypes, contractors: initialContractors, companies: propsCompanies, hasApprovals, fundHeads, blockTypes, roomTypes, allAssets, existingBlocks, existingRooms }: ProjectFormProps) {
   const isEdit = !!project?.id;
 
   const [name, setName] = useState(project?.name || '');
@@ -209,6 +260,214 @@ export default function ProjectForm({ project, projectTypes, contractors: initia
     setMilestones(prev => prev.map(m =>
       m.key === key ? { ...m, [field]: value } : m
     ));
+  };
+
+  // ---- Effects state ----
+  const blockTypesArray = Object.entries(blockTypes ?? {}).map(([id, name]) => ({ id, name }));
+  const roomTypesArray = Object.entries(roomTypes ?? {}).map(([id, name]) => ({ id, name }));
+
+  const hydrateExistingEffects = (): EffectRow[] => {
+    return (project?.effects ?? []).map((e) => {
+      const d = e.effect_data ?? {};
+      const base: EffectRow = { key: Date.now() + e.id, id: e.id, effect_type: e.effect_type as any };
+      if (e.effect_type === 'block') {
+        return {
+          ...base,
+          block_name: d.name ?? '',
+          block_type_id: d.block_type_id?.toString() ?? '',
+          block_area: d.area?.toString() ?? '',
+          nested_rooms: (d.rooms ?? []).map((r: any, i: number) => ({
+            key: Date.now() + i,
+            name: r.name ?? '',
+            room_type_id: r.room_type_id?.toString() ?? '',
+            area: r.area?.toString() ?? '',
+            assets: (r.assets ?? []).map((a: any, j: number) => ({
+              key: Date.now() + i * 1000 + j,
+              asset_id: a.asset_id?.toString() ?? '',
+              qty: a.qty?.toString() ?? '',
+              details: a.details ?? '',
+            }))
+          })),
+        };
+      }
+      if (e.effect_type === 'room') {
+        return {
+          ...base,
+          room_name: d.name ?? '',
+          room_type_id: d.room_type_id?.toString() ?? '',
+          room_area: d.area?.toString() ?? '',
+          room_block_id: d.block_id?.toString() ?? '',
+          room_assets: (d.assets ?? []).map((a: any, i: number) => ({
+            key: Date.now() + i,
+            asset_id: a.asset_id?.toString() ?? '',
+            qty: a.qty?.toString() ?? '',
+            details: a.details ?? '',
+          })),
+        };
+      }
+      // asset
+      return {
+        ...base,
+        asset_id: d.asset_id?.toString() ?? '',
+        asset_qty: d.qty?.toString() ?? '',
+        asset_room_id: d.room_id?.toString() ?? '',
+        asset_details: d.details ?? '',
+      };
+    });
+  };
+
+  const [effects, setEffects] = useState<EffectRow[]>(hydrateExistingEffects);
+
+  const addEffect = (type: 'block' | 'room' | 'asset') => {
+    const base: EffectRow = { key: Date.now(), effect_type: type };
+    if (type === 'block') {
+      setEffects(prev => [...prev, { ...base, block_name: '', block_type_id: '', block_area: '', nested_rooms: [] }]);
+    } else if (type === 'room') {
+      setEffects(prev => [...prev, { ...base, room_name: '', room_type_id: '', room_area: '', room_block_id: '', room_assets: [] }]);
+    } else {
+      setEffects(prev => [...prev, { ...base, asset_id: '', asset_qty: '', asset_room_id: '', asset_details: '' }]);
+    }
+  };
+
+  const removeEffect = (key: number) => {
+    setEffects(prev => prev.filter(e => e.key !== key));
+    toast.success('Effect removed');
+  };
+
+  const updateEffect = (key: number, patch: Partial<EffectRow>) => {
+    setEffects(prev => prev.map(e => e.key === key ? { ...e, ...patch } : e));
+  };
+
+  const toggleEffectCollapse = (key: number) => {
+    setEffects(prev => prev.map(e => e.key === key ? { ...e, collapsed: !e.collapsed } : e));
+  };
+
+  // Nested room helpers for block effects
+  const addNestedRoom = (effectKey: number) => {
+    setEffects(prev => prev.map(e =>
+      e.key === effectKey
+        ? { ...e, nested_rooms: [...(e.nested_rooms ?? []), { key: Date.now(), name: '', room_type_id: '', area: '', assets: [] }] }
+        : e
+    ));
+  };
+
+  const removeNestedRoom = (effectKey: number, roomKey: number) => {
+    setEffects(prev => prev.map(e =>
+      e.key === effectKey
+        ? { ...e, nested_rooms: (e.nested_rooms ?? []).filter(r => r.key !== roomKey) }
+        : e
+    ));
+  };
+
+  const updateNestedRoom = (effectKey: number, roomKey: number, patch: Partial<EffectRoomRow>) => {
+    setEffects(prev => prev.map(e =>
+      e.key === effectKey
+        ? { ...e, nested_rooms: (e.nested_rooms ?? []).map(r => r.key === roomKey ? { ...r, ...patch } : r) }
+        : e
+    ));
+  };
+
+  const addNestedRoomAsset = (effectKey: number, roomKey: number) => {
+    setEffects(prev => prev.map(e =>
+      e.key === effectKey
+        ? {
+          ...e,
+          nested_rooms: (e.nested_rooms ?? []).map(r =>
+            r.key === roomKey
+              ? { ...r, assets: [...(r.assets ?? []), { key: Date.now(), asset_id: '', qty: '', details: '' }] }
+              : r
+          )
+        }
+        : e
+    ));
+  };
+
+  const removeNestedRoomAsset = (effectKey: number, roomKey: number, assetKey: number) => {
+    setEffects(prev => prev.map(e =>
+      e.key === effectKey
+        ? {
+          ...e,
+          nested_rooms: (e.nested_rooms ?? []).map(r =>
+            r.key === roomKey
+              ? { ...r, assets: (r.assets ?? []).filter(a => a.key !== assetKey) }
+              : r
+          )
+        }
+        : e
+    ));
+  };
+
+  const updateNestedRoomAsset = (effectKey: number, roomKey: number, assetKey: number, patch: Partial<EffectRoomAsset>) => {
+    setEffects(prev => prev.map(e =>
+      e.key === effectKey
+        ? {
+          ...e,
+          nested_rooms: (e.nested_rooms ?? []).map(r =>
+            r.key === roomKey
+              ? {
+                ...r,
+                assets: (r.assets ?? []).map(a =>
+                  a.key === assetKey ? { ...a, ...patch } : a
+                )
+              }
+              : r
+          )
+        }
+        : e
+    ));
+  };
+
+  const addRoomEffectAsset = (effectKey: number) => {
+    setEffects(prev => prev.map(e =>
+      e.key === effectKey
+        ? { ...e, room_assets: [...(e.room_assets ?? []), { key: Date.now(), asset_id: '', qty: '', details: '' }] }
+        : e
+    ));
+  };
+
+  const removeRoomEffectAsset = (effectKey: number, assetKey: number) => {
+    setEffects(prev => prev.map(e =>
+      e.key === effectKey
+        ? { ...e, room_assets: (e.room_assets ?? []).filter(a => a.key !== assetKey) }
+        : e
+    ));
+  };
+
+  const updateRoomEffectAsset = (effectKey: number, assetKey: number, patch: Partial<EffectRoomAsset>) => {
+    setEffects(prev => prev.map(e =>
+      e.key === effectKey
+        ? { ...e, room_assets: (e.room_assets ?? []).map(a => a.key === assetKey ? { ...a, ...patch } : a) }
+        : e
+    ));
+  };
+
+
+  // Serialise one effect into effect_data JSON string
+  const serializeEffect = (e: EffectRow): string => {
+    if (e.effect_type === 'block') {
+      return JSON.stringify({
+        name: e.block_name,
+        block_type_id: e.block_type_id,
+        area: e.block_area,
+        rooms: (e.nested_rooms ?? []).map(r => ({
+          name: r.name,
+          room_type_id: r.room_type_id,
+          area: r.area,
+          assets: (r.assets ?? []).map(a => ({ asset_id: a.asset_id, qty: a.qty, details: a.details }))
+        })),
+      });
+    }
+    if (e.effect_type === 'room') {
+      return JSON.stringify({
+        name: e.room_name,
+        room_type_id: e.room_type_id,
+        area: e.room_area,
+        block_id: e.room_block_id,
+        assets: (e.room_assets ?? []).map(a => ({ asset_id: a.asset_id, qty: a.qty, details: a.details }))
+      });
+    }
+    // asset
+    return JSON.stringify({ asset_id: e.asset_id, qty: e.asset_qty, room_id: e.asset_room_id, details: e.asset_details });
   };
 
   const handleImageChange = (key: number, file: File | null) => {
@@ -416,6 +675,13 @@ export default function ProjectForm({ project, projectTypes, contractors: initia
         if (m.img) fd.append(`milestones[${index}][img]`, m.img);
         if (m.pdf) fd.append(`milestones[${index}][pdf]`, m.pdf);
       }
+    });
+
+    // Append effects
+    effects.forEach((e, index) => {
+      fd.append(`effects[${index}][effect_type]`, e.effect_type);
+      fd.append(`effects[${index}][effect_data]`, serializeEffect(e));
+      if (e.id) fd.append(`effects[${index}][id]`, e.id.toString());
     });
 
     const url = isEdit ? `/projects/${project!.id}` : '/projects';
@@ -627,7 +893,10 @@ export default function ProjectForm({ project, projectTypes, contractors: initia
                 {(!isEdit || project?.status === 'planned' || project?.status === 'completed' || (project?.status === 'waiting' && !project?.fund_head_id && !hasApprovals)) && (
                   <div className="space-y-1 md:col-span-2">
                     <Label>Project Status <span className="text-red-500">*</span></Label>
-                    <Select value={projectStatusMode} onValueChange={(val) => setProjectStatusMode(val as 'initiate' | 'planned' | 'completed')}>
+                    {isEdit && project?.status === 'completed' && (
+                      <p className="text-sm text-green-600">Project is completed</p>
+                    )}
+                    <Select value={projectStatusMode} disabled={isEdit && project?.status === 'completed'} onValueChange={(val) => setProjectStatusMode(val as 'initiate' | 'planned' | 'completed')}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select project status" />
                       </SelectTrigger>
@@ -662,7 +931,7 @@ export default function ProjectForm({ project, projectTypes, contractors: initia
               </div>
 
               {/* Fund Heads — only shown when status is Completed */}
-              {projectStatusMode === 'completed' && (
+              {projectStatusMode === 'completed' && !isEdit && (
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
                     <h3 className="text-lg font-semibold">Fund Heads</h3>
@@ -868,6 +1137,355 @@ export default function ProjectForm({ project, projectTypes, contractors: initia
                   </div>
                 )}
               </div>
+
+              {/* ============================================================
+                  Completion Effects Section
+                  ============================================================ */}
+              {project?.status !== 'completed' && (
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <h3 className="text-lg font-semibold">Completion Effects</h3>
+                      <p className="text-xs text-muted-foreground">These blocks, rooms, or assets will be automatically created when this project is completed.</p>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button type="button" size="sm" variant="outline" onClick={() => addEffect('block')} title="Add new block (with optional rooms)">
+                        <Building2 className="w-3.5 h-3.5 mr-1" /> New Block
+                      </Button>
+                      <Button type="button" size="sm" variant="outline" onClick={() => addEffect('room')} title="Add room in an existing block">
+                        <DoorOpen className="w-3.5 h-3.5 mr-1" /> New Room
+                      </Button>
+                      <Button type="button" size="sm" variant="outline" onClick={() => addEffect('asset')} title="Add assets to an existing room">
+                        <Package className="w-3.5 h-3.5 mr-1" /> New Assets
+                      </Button>
+                    </div>
+                  </div>
+
+                  {effects.length === 0 ? (
+                    <div className="text-center py-5 text-muted-foreground border-2 border-dashed rounded-lg text-sm">
+                      No effects defined. Click "New Block", "New Room", or "New Assets" to add one.
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {effects.map((effect) => (
+                        <Card key={effect.key} className={`border-l-4 ${effect.effect_type === 'block' ? 'border-l-blue-500'
+                          : effect.effect_type === 'room' ? 'border-l-green-500'
+                            : 'border-l-orange-500'
+                          }`}>
+                          {/* Card Header */}
+                          <div className="flex items-center justify-between px-4 py-2 bg-muted/40 rounded-t-lg">
+                            <div className="flex items-center gap-2">
+                              {effect.effect_type === 'block' && <Building2 className="w-4 h-4 text-blue-500" />}
+                              {effect.effect_type === 'room' && <DoorOpen className="w-4 h-4 text-green-500" />}
+                              {effect.effect_type === 'asset' && <Package className="w-4 h-4 text-orange-500" />}
+                              <span className="text-sm font-medium capitalize">
+                                {effect.effect_type === 'block' ? 'New Block (with rooms)'
+                                  : effect.effect_type === 'room' ? 'New Room in Existing Block'
+                                    : 'New Assets in Existing Room'}
+                              </span>
+                              {effect.id && (
+                                <span className="text-xs text-muted-foreground">(saved)</span>
+                              )}
+                            </div>
+                            <div className="flex gap-1">
+                              <Button type="button" variant="ghost" size="icon" className="h-7 w-7"
+                                onClick={() => toggleEffectCollapse(effect.key)}>
+                                {effect.collapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
+                              </Button>
+                              <Button type="button" variant="ghost" size="icon"
+                                className="h-7 w-7 text-destructive hover:text-destructive"
+                                onClick={() => removeEffect(effect.key)}>
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+
+                          {!effect.collapsed && (
+                            <CardContent className="pt-3 pb-3">
+
+                              {/* ---- BLOCK effect ---- */}
+                              {effect.effect_type === 'block' && (
+                                <div className="space-y-3">
+                                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                    <div className="space-y-1">
+                                      <Label>Block Name <span className="text-red-500">*</span></Label>
+                                      <Input
+                                        value={effect.block_name ?? ''}
+                                        onChange={e => updateEffect(effect.key, { block_name: e.target.value })}
+                                        placeholder="e.g. Science Block"
+                                      />
+                                    </div>
+                                    <div className="space-y-1">
+                                      <Label>Block Type <span className="text-red-500">*</span></Label>
+                                      <Select
+                                        value={effect.block_type_id ?? ''}
+                                        onValueChange={v => updateEffect(effect.key, { block_type_id: v })}
+                                      >
+                                        <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
+                                        <SelectContent>
+                                          {blockTypesArray.map(bt => (
+                                            <SelectItem key={bt.id} value={bt.id}>{bt.name}</SelectItem>
+                                          ))}
+                                        </SelectContent>
+                                      </Select>
+                                    </div>
+                                    <div className="space-y-1">
+                                      <Label>Area (sqft)</Label>
+                                      <Input
+                                        type="number"
+                                        value={effect.block_area ?? ''}
+                                        onChange={e => updateEffect(effect.key, { block_area: e.target.value })}
+                                        placeholder="e.g. 5000"
+                                      />
+                                    </div>
+                                  </div>
+
+                                  {/* Nested rooms for this block */}
+                                  <div className="pl-3 border-l-2 border-muted space-y-2">
+                                    <div className="flex justify-between items-center">
+                                      <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Rooms in this block</span>
+                                      <Button type="button" size="sm" variant="ghost"
+                                        className="h-7 text-xs"
+                                        onClick={() => addNestedRoom(effect.key)}>
+                                        <Plus className="w-3 h-3 mr-1" /> Add Room
+                                      </Button>
+                                    </div>
+                                    {(effect.nested_rooms ?? []).length === 0 && (
+                                      <p className="text-xs text-muted-foreground italic">No rooms defined. Block will be created empty.</p>
+                                    )}
+                                    {(effect.nested_rooms ?? []).map((nr) => (
+                                      <div key={nr.key} className="space-y-2 p-2 border rounded-md">
+                                        <div className="grid grid-cols-[1fr_1fr_6rem_2rem] gap-2 items-end">
+                                          <div className="space-y-1">
+                                            <Label className="text-xs">Room Name</Label>
+                                            <Input
+                                              className="h-8 text-sm"
+                                              value={nr.name}
+                                              onChange={e => updateNestedRoom(effect.key, nr.key, { name: e.target.value })}
+                                              placeholder="e.g. Lab 1"
+                                            />
+                                          </div>
+                                          <div className="space-y-1">
+                                            <Label className="text-xs">Room Type</Label>
+                                            <Select
+                                              value={nr.room_type_id}
+                                              onValueChange={v => updateNestedRoom(effect.key, nr.key, { room_type_id: v })}
+                                            >
+                                              <SelectTrigger className="h-8 text-sm"><SelectValue placeholder="Type" /></SelectTrigger>
+                                              <SelectContent>
+                                                {roomTypesArray.map(rt => (
+                                                  <SelectItem key={rt.id} value={rt.id}>{rt.name}</SelectItem>
+                                                ))}
+                                              </SelectContent>
+                                            </Select>
+                                          </div>
+                                          <div className="space-y-1">
+                                            <Label className="text-xs">Area</Label>
+                                            <Input
+                                              className="h-8 text-sm"
+                                              type="number"
+                                              value={nr.area}
+                                              onChange={e => updateNestedRoom(effect.key, nr.key, { area: e.target.value })}
+                                              placeholder="sqft"
+                                            />
+                                          </div>
+                                          <Button type="button" variant="ghost" size="icon"
+                                            className="h-8 w-8 text-destructive hover:text-destructive self-end"
+                                            onClick={() => removeNestedRoom(effect.key, nr.key)}>
+                                            <Trash2 className="h-3.5 w-3.5" />
+                                          </Button>
+                                        </div>
+
+                                        {/* Assets for this room */}
+                                        <div className="pl-3 border-l-[1px] border-dashed border-gray-300 ml-1 space-y-2 pb-1">
+                                          <div className="flex justify-between items-center bg-gray-50/50 p-1 rounded-sm">
+                                            <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Assets in this room</span>
+                                            <Button type="button" size="sm" variant="ghost" className="h-6 text-[10px] px-2" onClick={() => addNestedRoomAsset(effect.key, nr.key)}>
+                                              <Plus className="w-3 h-3 mr-1" /> Add Asset
+                                            </Button>
+                                          </div>
+                                          {(nr.assets ?? []).map((ast) => (
+                                            <div key={ast.key} className="grid grid-cols-[1fr_4rem_1fr_2rem] gap-2 items-end pl-1">
+                                              <div className="space-y-1">
+                                                <Select value={ast.asset_id} onValueChange={v => updateNestedRoomAsset(effect.key, nr.key, ast.key, { asset_id: v })}>
+                                                  <SelectTrigger className="h-7 text-xs"><SelectValue placeholder="Asset" /></SelectTrigger>
+                                                  <SelectContent>
+                                                    {(allAssets ?? []).map(a => (
+                                                      <SelectItem key={a.id} value={a.id.toString()}>{a.name}</SelectItem>
+                                                    ))}
+                                                  </SelectContent>
+                                                </Select>
+                                              </div>
+                                              <div className="space-y-1">
+                                                <Input className="h-7 text-xs" type="number" placeholder="Qty" value={ast.qty} onChange={e => updateNestedRoomAsset(effect.key, nr.key, ast.key, { qty: e.target.value })} />
+                                              </div>
+                                              <div className="space-y-1">
+                                                <Input className="h-7 text-xs" type="text" placeholder="Details" value={ast.details} onChange={e => updateNestedRoomAsset(effect.key, nr.key, ast.key, { details: e.target.value })} />
+                                              </div>
+                                              <Button type="button" variant="ghost" size="icon"
+                                                className="h-7 w-7 text-destructive hover:text-destructive self-end"
+                                                onClick={() => removeNestedRoomAsset(effect.key, nr.key, ast.key)}>
+                                                <Trash2 className="h-3 w-3" />
+                                              </Button>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* ---- ROOM effect (in existing block) ---- */}
+                              {effect.effect_type === 'room' && (
+                                <div className="space-y-3">
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                                    <div className="space-y-1">
+                                      <Label>Room Name <span className="text-red-500">*</span></Label>
+                                      <Input
+                                        value={effect.room_name ?? ''}
+                                        onChange={e => updateEffect(effect.key, { room_name: e.target.value })}
+                                        placeholder="e.g. Computer Lab"
+                                      />
+                                    </div>
+                                    <div className="space-y-1">
+                                      <Label>Room Type <span className="text-red-500">*</span></Label>
+                                      <Select
+                                        value={effect.room_type_id ?? ''}
+                                        onValueChange={v => updateEffect(effect.key, { room_type_id: v })}
+                                      >
+                                        <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
+                                        <SelectContent>
+                                          {roomTypesArray.map(rt => (
+                                            <SelectItem key={rt.id} value={rt.id}>{rt.name}</SelectItem>
+                                          ))}
+                                        </SelectContent>
+                                      </Select>
+                                    </div>
+                                    <div className="space-y-1">
+                                      <Label>Existing Block <span className="text-red-500">*</span></Label>
+                                      <Select
+                                        value={effect.room_block_id ?? ''}
+                                        onValueChange={v => updateEffect(effect.key, { room_block_id: v })}
+                                      >
+                                        <SelectTrigger><SelectValue placeholder="Select block" /></SelectTrigger>
+                                        <SelectContent>
+                                          {existingBlocks.map(b => (
+                                            <SelectItem key={b.id} value={b.id.toString()}>{b.name}</SelectItem>
+                                          ))}
+                                        </SelectContent>
+                                      </Select>
+                                    </div>
+                                    <div className="space-y-1">
+                                      <Label>Area (sqft)</Label>
+                                      <Input
+                                        type="number"
+                                        value={effect.room_area ?? ''}
+                                        onChange={e => updateEffect(effect.key, { room_area: e.target.value })}
+                                        placeholder="e.g. 400"
+                                      />
+                                    </div>
+                                  </div>
+
+                                  {/* Assets for this room */}
+                                  <div className="pl-3 border-l-[1px] border-dashed border-gray-300 ml-1 space-y-2 pb-1">
+                                    <div className="flex justify-between items-center bg-gray-50/50 p-1 rounded-sm">
+                                      <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Assets in this room</span>
+                                      <Button type="button" size="sm" variant="ghost" className="h-6 text-[10px] px-2" onClick={() => addRoomEffectAsset(effect.key)}>
+                                        <Plus className="w-3 h-3 mr-1" /> Add Asset
+                                      </Button>
+                                    </div>
+                                    {(effect.room_assets ?? []).map((ast) => (
+                                      <div key={ast.key} className="grid grid-cols-[1fr_4rem_1fr_2rem] gap-2 items-end pl-1">
+                                        <div className="space-y-1">
+                                          <Select value={ast.asset_id} onValueChange={v => updateRoomEffectAsset(effect.key, ast.key, { asset_id: v })}>
+                                            <SelectTrigger className="h-7 text-xs"><SelectValue placeholder="Asset" /></SelectTrigger>
+                                            <SelectContent>
+                                              {(allAssets ?? []).map(a => (
+                                                <SelectItem key={a.id} value={a.id.toString()}>{a.name}</SelectItem>
+                                              ))}
+                                            </SelectContent>
+                                          </Select>
+                                        </div>
+                                        <div className="space-y-1">
+                                          <Input className="h-7 text-xs" type="number" placeholder="Qty" value={ast.qty} onChange={e => updateRoomEffectAsset(effect.key, ast.key, { qty: e.target.value })} />
+                                        </div>
+                                        <div className="space-y-1">
+                                          <Input className="h-7 text-xs" type="text" placeholder="Details" value={ast.details} onChange={e => updateRoomEffectAsset(effect.key, ast.key, { details: e.target.value })} />
+                                        </div>
+                                        <Button type="button" variant="ghost" size="icon"
+                                          className="h-7 w-7 text-destructive hover:text-destructive self-end"
+                                          onClick={() => removeRoomEffectAsset(effect.key, ast.key)}>
+                                          <Trash2 className="h-3 w-3" />
+                                        </Button>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* ---- ASSET effect (in existing room) ---- */}
+                              {effect.effect_type === 'asset' && (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                                  <div className="space-y-1">
+                                    <Label>Asset <span className="text-red-500">*</span></Label>
+                                    <Select
+                                      value={effect.asset_id ?? ''}
+                                      onValueChange={v => updateEffect(effect.key, { asset_id: v })}
+                                    >
+                                      <SelectTrigger><SelectValue placeholder="Select asset" /></SelectTrigger>
+                                      <SelectContent>
+                                        {(allAssets ?? []).map(a => (
+                                          <SelectItem key={a.id} value={a.id.toString()}>{a.name}</SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+                                  <div className="space-y-1">
+                                    <Label>Quantity <span className="text-red-500">*</span></Label>
+                                    <Input
+                                      type="number"
+                                      min={1}
+                                      value={effect.asset_qty ?? ''}
+                                      onChange={e => updateEffect(effect.key, { asset_qty: e.target.value })}
+                                      placeholder="e.g. 20"
+                                    />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <Label>Existing Room <span className="text-red-500">*</span></Label>
+                                    <Select
+                                      value={effect.asset_room_id ?? ''}
+                                      onValueChange={v => updateEffect(effect.key, { asset_room_id: v })}
+                                    >
+                                      <SelectTrigger><SelectValue placeholder="Select room" /></SelectTrigger>
+                                      <SelectContent>
+                                        {(existingRooms ?? []).map(r => (
+                                          <SelectItem key={r.id} value={r.id.toString()}>
+                                            {r.name} ({r.block?.name ?? 'Block'})
+                                          </SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+                                  <div className="space-y-1">
+                                    <Label>Details</Label>
+                                    <Input
+                                      value={effect.asset_details ?? ''}
+                                      onChange={e => updateEffect(effect.key, { asset_details: e.target.value })}
+                                      placeholder="e.g. New desks"
+                                    />
+                                  </div>
+                                </div>
+                              )}
+
+                            </CardContent>
+                          )}
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
 
               <div className="flex justify-between pt-4 border-t">
                 <Button type="button" variant="secondary" asChild>

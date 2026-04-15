@@ -56,6 +56,12 @@ class Project extends Model
         $data = $this->fund_head_id ?? [];
         if (empty($data)) return [];
 
+        // Guard: old records may have stored a plain integer (legacy format).
+        // Wrap it into a single-entry object: { "id": 0 } so the rest works.
+        if (!is_array($data)) {
+            $data = [(string) $data => 0];
+        }
+
         $ids = array_keys($data);
         $heads = FundHead::whereIn('id', $ids)->pluck('name', 'id');
 
@@ -160,5 +166,10 @@ class Project extends Model
     public function images()
     {
         return $this->hasMany(ProjectImage::class);
+    }
+
+    public function effects()
+    {
+        return $this->hasMany(ProjectEffect::class);
     }
 }
