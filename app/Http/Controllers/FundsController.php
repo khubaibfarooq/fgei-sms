@@ -131,31 +131,30 @@ class FundsController extends Controller
             'total_out' => $allPending->where('type', 'out')->sum('amount'),
         ];
 
-        // Fetch regional fund balances
-
-
-            $balances = FundHeld::query()
-                ->join('fund_heads', 'fund_helds.fund_head_id', '=', 'fund_heads.id')
-                ->join('institutes', 'fund_helds.institute_id', '=', 'institutes.id')
-                ->where('institutes.id', $institute_id)
-                ->where('fund_heads.type', 'regional')
-                ->select([
-                    'fund_heads.id as fund_head_id',
-                    'fund_heads.name as fund_head_name',
-                    DB::raw('SUM(fund_helds.balance) as balance')
-                ])
-                ->groupBy('fund_heads.id', 'fund_heads.name')
-                ->get()
-                ->map(function ($item) {
-                    return [
-                        'fund_head' => [
-                            'id' => $item->fund_head_id,
-                            'name' => $item->fund_head_name,
-                        ],
-                        'balance' => $item->balance,
-                    ];
-                });
-        
+        // Fetch fund head balances and pending amounts
+        $balances = FundHeld::query()
+            ->join('fund_heads', 'fund_helds.fund_head_id', '=', 'fund_heads.id')
+            ->join('institutes', 'fund_helds.institute_id', '=', 'institutes.id')
+            ->where('institutes.id', $institute_id)
+            ->select([
+                'fund_heads.id as fund_head_id',
+                'fund_heads.name as fund_head_name',
+                DB::raw('SUM(fund_helds.balance) as balance')
+            ])
+            ->groupBy('fund_heads.id', 'fund_heads.name')
+            ->get()
+            ->map(function ($item) use ($allPending) {
+                $pendingForHead = $allPending->where('fund_head_id', $item->fund_head_id);
+                return [
+                    'fund_head' => [
+                        'id' => $item->fund_head_id,
+                        'name' => $item->fund_head_name,
+                    ],
+                    'balance' => $item->balance,
+                    'pending_in' => $pendingForHead->where('type', 'in')->sum('amount'),
+                    'pending_out' => $pendingForHead->where('type', 'out')->sum('amount'),
+                ];
+            });
 
         // Paginate results
         $transactions = $query->orderBy('added_date', 'desc')

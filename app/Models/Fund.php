@@ -13,7 +13,7 @@ class Fund extends Model
 {
     use HasFactory,HasRoles;
 
-    protected $fillable = ['fund_head_id', 'amount','institute_id','added_date','status',	'description'	,'type',	'added_by'	,'tid','trans_type','img','approve_by','approved_date'
+    protected $fillable = ['fund_head_id', 'amount','balance','institute_id','added_date','status',	'description'	,'type',	'added_by'	,'tid','trans_type','img','approve_by','approved_date'
 ];
 
     protected $casts = [
@@ -21,6 +21,7 @@ class Fund extends Model
         'approved_date' => 'datetime',
         'added_date' => 'date',
         'amount' => 'decimal:2',
+        'balance' => 'decimal:2',
     ];
 
 

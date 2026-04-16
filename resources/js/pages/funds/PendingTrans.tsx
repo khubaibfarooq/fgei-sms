@@ -155,6 +155,8 @@ interface TransactionDetail {
 interface BalanceItem {
     fund_head: { id: number; name: string };
     balance: number | string;
+    pending_in: number;
+    pending_out: number;
 }
 
 interface Props {
@@ -461,26 +463,46 @@ export default function PendingTrans({ transactions, summary, fundHeads, balance
                             </Card>
                         </div>
 
-                        {/* Regional Fund Head Balances */}
+                        {/* Fund Head Balances & Pending Amounts */}
                         {balances.length > 0 && (
                             <div className="space-y-2">
                                 <h3 className="text-sm font-semibold flex items-center gap-1">
                                     <Building className="h-4 w-4 text-primary" />
-                                    Regional Fund Head Balances
+                                    Fund Head Balances
                                 </h3>
                                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2">
                                     {balances.map((b, i) => (
                                         <div
                                             key={i}
                                             onClick={() => window.open(`/fund-trans/${b.fund_head.id}`, '_blank')}
-                                            className="bg-muted/50 dark:bg-gray-800 p-3 rounded-lg border hover:shadow-md hover:border-primary transition-all cursor-pointer"
+                                            className="bg-muted/50 dark:bg-gray-800 p-3 rounded-lg border hover:shadow-md hover:border-primary transition-all cursor-pointer flex flex-col gap-1.5"
                                         >
-                                            <p className="text-xs font-medium text-muted-foreground truncate">
+                                            <p className="text-xs font-semibold text-muted-foreground truncate" title={b.fund_head.name}>
                                                 {b.fund_head.name}
                                             </p>
-                                            <p className="text-base font-bold text-green-600 dark:text-green-400 mt-1">
-                                                {formatBalance(b.balance)}
-                                            </p>
+                                            <div className="flex justify-between items-end mt-auto">
+                                                <div className="flex flex-col">
+                                                    <span className="text-[10px] text-muted-foreground">Current Balance</span>
+                                                    <span className="text-sm font-bold text-green-600 dark:text-green-400">
+                                                        {formatBalance(b.balance)}
+                                                    </span>
+                                                </div>
+                                                {(b.pending_in > 0 || b.pending_out > 0) && (
+                                                    <div className="flex flex-col items-end text-right">
+                                                        <span className="text-[10px] text-muted-foreground">Pending</span>
+                                                        {b.pending_in > 0 && (
+                                                            <span className="text-[10px] font-medium text-green-500" title={`Pending IN: ${b.pending_in.toLocaleString()}`}>
+                                                                +{formatBalance(b.pending_in)}
+                                                            </span>
+                                                        )}
+                                                        {b.pending_out > 0 && (
+                                                            <span className="text-[10px] font-medium text-red-500" title={`Pending OUT: ${b.pending_out.toLocaleString()}`}>
+                                                                -{formatBalance(b.pending_out)}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
                                     ))}
                                 </div>

@@ -359,7 +359,7 @@ export default function FundsTran({ fundheld, fundtrans, filters }: Props) {
                     <th className="border p-2 text-center font-medium text-white dark:text-gray-200">Type</th>
                     <th className="border p-2 text-right font-medium text-white dark:text-gray-200">Op. Balance</th>
                     <th className="border p-2 text-right font-medium text-white dark:text-gray-200">Amount</th>
-                    <th className="border p-2 text-right font-medium text-white dark:text-gray-200">Cl. Balance</th>
+                    <th className="border p-2 text-right font-medium text-white dark:text-gray-200">Balance</th>
                     <th className="border p-2 text-left font-medium text-white dark:text-gray-200">Admin Info</th>
                     <th className="border p-2 text-center font-medium text-white dark:text-gray-200">Status</th>
                     <th className="border p-2 text-center font-medium text-white dark:text-gray-200">Actions</th>
@@ -391,8 +391,8 @@ export default function FundsTran({ fundheld, fundtrans, filters }: Props) {
                         <td className="border p-1.5 text-center">{getTypeBadge(transaction.type)}</td>
                         <td className="border p-1.5 text-right font-medium text-muted-foreground">
                           {formatAmount(
-                            transaction.type === 'in' 
-                              ? (Number(transaction.balance) || 0) - Number(transaction.amount) 
+                            transaction.type === 'in'
+                              ? (Number(transaction.balance) || 0) - Number(transaction.amount)
                               : (Number(transaction.balance) || 0) + Number(transaction.amount)
                           )}
                         </td>
