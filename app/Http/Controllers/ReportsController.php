@@ -2239,9 +2239,10 @@ public function getFund(Request $request)
         }
 
         // ---- Build transaction query --------------------------------------
-        $query = Fund::with(['institute', 'FundHead', 'user'])
+        $query = Fund::with(['institute', 'FundHead', 'user', 'approver'])
             ->where('institute_id', $hrInstituteId)
-            ->where('fund_head_id', $fundheadid);
+            ->where('fund_head_id', $fundheadid)
+            ->where('status', 'Approved');
   
         // Search
         if ($request->filled('search')) {
@@ -2250,14 +2251,15 @@ public function getFund(Request $request)
 
         // Date range: from / to (ISO date strings from <input type="date">)
         if ($request->filled('from')) {
-            $query->whereDate('added_date', '>=', $request->from);
+            $query->where(DB::raw('COALESCE(approved_date, added_date)'), '>=', $request->from);
         }
         if ($request->filled('to')) {
-            $query->whereDate('added_date', '<=', $request->to);
+            $query->where(DB::raw('COALESCE(approved_date, added_date)'), '<=', $request->to);
         }
 
         // Order + pagination
-        $fundtrans = $query->orderBy('added_date', 'desc')
+        $fundtrans = $query->orderByRaw('COALESCE(approved_date, added_date) DESC')
+            ->orderBy('id', 'DESC')
             ->paginate(10)
             ->withQueryString();
 

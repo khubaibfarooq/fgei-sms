@@ -36,6 +36,7 @@ import axios from 'axios';
 interface FundTransaction {
   id: number;
   amount: number;
+  balance: number;
   type: 'in' | 'out';
   description: string;
   date: string;
@@ -356,7 +357,9 @@ export default function FundsTran({ fundheld, fundtrans, filters }: Props) {
                     <th className="border p-2 text-left font-medium text-white dark:text-gray-200">Date</th>
                     <th className="border p-2 text-left font-medium text-white dark:text-gray-200">Description</th>
                     <th className="border p-2 text-center font-medium text-white dark:text-gray-200">Type</th>
+                    <th className="border p-2 text-right font-medium text-white dark:text-gray-200">Op. Balance</th>
                     <th className="border p-2 text-right font-medium text-white dark:text-gray-200">Amount</th>
+                    <th className="border p-2 text-right font-medium text-white dark:text-gray-200">Cl. Balance</th>
                     <th className="border p-2 text-left font-medium text-white dark:text-gray-200">Admin Info</th>
                     <th className="border p-2 text-center font-medium text-white dark:text-gray-200">Status</th>
                     <th className="border p-2 text-center font-medium text-white dark:text-gray-200">Actions</th>
@@ -365,7 +368,7 @@ export default function FundsTran({ fundheld, fundtrans, filters }: Props) {
                 <tbody>
                   {fundtrans.data.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="border p-6 text-center">
+                      <td colSpan={9} className="border p-6 text-center">
                         <FileText className="h-8 w-8 mx-auto mb-2 opacity-50" />
                         <p className="text-muted-foreground text-xs">No transactions found.</p>
                       </td>
@@ -376,7 +379,7 @@ export default function FundsTran({ fundheld, fundtrans, filters }: Props) {
                         <td className="border p-1.5 whitespace-nowrap">
                           <div className="flex items-center gap-1">
                             <Calendar className="h-3 w-3 text-muted-foreground shrink-0" />
-                            {new Date(transaction.added_date).toLocaleDateString()}
+                            {new Date(transaction.approved_date || transaction.added_date).toLocaleDateString()}
                           </div>
                         </td>
                         <td className="border p-1.5">
@@ -386,11 +389,21 @@ export default function FundsTran({ fundheld, fundtrans, filters }: Props) {
                           </div>
                         </td>
                         <td className="border p-1.5 text-center">{getTypeBadge(transaction.type)}</td>
+                        <td className="border p-1.5 text-right font-medium text-muted-foreground">
+                          {formatAmount(
+                            transaction.type === 'in' 
+                              ? (Number(transaction.balance) || 0) - Number(transaction.amount) 
+                              : (Number(transaction.balance) || 0) + Number(transaction.amount)
+                          )}
+                        </td>
                         <td className="border p-1.5 text-right font-medium">
                           <span className={transaction.type === 'in' ? 'text-green-600' : 'text-red-600'}>
                             {transaction.type === 'in' ? '+' : '-'}
                             {formatAmount(Number(transaction.amount))}
                           </span>
+                        </td>
+                        <td className="border p-1.5 text-right font-medium text-muted-foreground">
+                          {formatAmount(Number(transaction.balance) || 0)}
                         </td>
                         <td className="border p-1.5">
                           <div className="flex flex-col gap-0.5">

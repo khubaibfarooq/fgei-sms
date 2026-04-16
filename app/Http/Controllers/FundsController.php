@@ -55,10 +55,11 @@ class FundsController extends Controller
             return response()->json(['error' => 'Fund held record not found'], 404);
         }
 
-        // ---- Build transaction query --------------------------------------
+        // Build transaction query - only approved
         $query = Fund::with(['institute', 'FundHead', 'user', 'approver'])
             ->where('institute_id', $institute_id)
-            ->where('fund_head_id', $request->id);
+            ->where('fund_head_id', $request->id)
+            ->where('status', 'Approved');
   
         // Search
         if ($request->filled('search')) {
@@ -67,14 +68,16 @@ class FundsController extends Controller
 
         // Date range: from / to (ISO date strings from <input type="date">)
         if ($request->filled('from')) {
-            $query->whereDate('added_date', '>=', $request->from);
+            $query->where(DB::raw('COALESCE(approved_date, added_date)'), '>=', $request->from);
         }
         if ($request->filled('to')) {
-            $query->whereDate('added_date', '<=', $request->to);
+            $query->where(DB::raw('COALESCE(approved_date, added_date)'), '<=', $request->to);
         }
 
         // Order + pagination
-        $fundtrans = $query->orderBy('added_date', 'desc')
+        // sort by approved_date if available, otherwise added_date
+        $fundtrans = $query->orderByRaw('COALESCE(approved_date, added_date) DESC')
+            ->orderBy('id', 'DESC')
             ->paginate(10)
             ->withQueryString();
 
@@ -344,15 +347,21 @@ class FundsController extends Controller
                 ->where('fund_head_id', $fund->fund_head_id)
                 ->first();
 
+            $newBalance = $fundHeld ? $fundHeld->balance : 0;
+
             if ($fundHeld) {
                 if ($fund->type === 'in') {
                     // Increase balance for incoming funds
-                    $fundHeld->increment('balance', $fund->amount);
+                    $newBalance += $fund->amount;
                 } elseif ($fund->type === 'out') {
                     // Decrease balance for outgoing funds
-                    $fundHeld->decrement('balance', $fund->amount);
+                    $newBalance -= $fund->amount;
                 }
+                $fundHeld->update(['balance' => $newBalance]);
             }
+            
+            // Save the effective balance on the transaction
+            $fund->update(['balance' => $newBalance]);
 
             return response()->json([
                 'success' => true,

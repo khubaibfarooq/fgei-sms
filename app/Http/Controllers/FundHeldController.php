@@ -131,6 +131,7 @@ public function store(Request $request)
                     'trans_type'    => 'funds',
                     'approve_by'    => $status == 'Approved' ? $addedBy : null,
                     'approved_date' => $status == 'Approved' ? now() : null,
+                    'balance'       => $newBalance,
                 ]);
             }
         });

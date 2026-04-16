@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { type BreadcrumbItem } from '@/types';
+import { ImagePreview } from '@/components/ui/image-preview2';
 import {
   ArrowLeft,
   Calendar,
@@ -15,6 +16,7 @@ import {
   Eye,
   User,
   Building,
+  Check,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -34,6 +36,7 @@ import { formatDate } from '@/utils/dateFormatter';
 interface FundTransaction {
   id: number;
   amount: number;
+  balance: number;
   type: 'in' | 'out';
   description: string;
   date: string;
@@ -49,6 +52,11 @@ interface FundTransaction {
     id: number;
     name: string;
   };
+  approver?: {
+    id: number;
+    name: string;
+  } | null;
+  approved_date?: string | null;
 }
 
 interface TransactionDetail {
@@ -122,13 +130,12 @@ export default function FundsTran({ fundheld, fundtrans, filters }: Props) {
   const [region, setRegion] = useState(filters.region_id || '');
   console.log(fundtrans);
 
-  // Format currency - show in millions if >= 1M, otherwise in Rs
-  const formatCurrency = (amount: number): string => {
-    if (amount < 1000000) {
-      return `Rs ${amount.toLocaleString()}`;
+// Format amount: show in millions with "Mn" suffix if >= 1 million, otherwise show with locale formatting
+  const formatAmount = (amount: number): string => {
+    if (amount >= 1000000) {
+      return `${(amount / 1000000).toFixed(2)} Mn`;
     }
-    const millions = amount / 1000000;
-    return `${millions.toFixed(2)}M`;
+    return amount.toLocaleString();
   };
   // Modal state
   const [modalOpen, setModalOpen] = useState(false);
@@ -238,7 +245,7 @@ export default function FundsTran({ fundheld, fundtrans, filters }: Props) {
               </div>
               <div className="text-right">
                 <p className="text-2xl font-bold text-green-600">
-                  {formatCurrency(fundheld.balance)}
+                  {formatAmount(fundheld.balance)}
                 </p>
                 <p className="text-sm text-muted-foreground">Current Balance</p>
               </div>
@@ -256,7 +263,7 @@ export default function FundsTran({ fundheld, fundtrans, filters }: Props) {
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Total In</p>
                       <p className="text-2xl font-bold text-green-600">
-                        {formatCurrency(calculateTotalIn())}
+                        {formatAmount(calculateTotalIn())}
                       </p>
                     </div>
                     <Badge variant="default" className="bg-green-100 text-green-800">IN</Badge>
@@ -270,7 +277,7 @@ export default function FundsTran({ fundheld, fundtrans, filters }: Props) {
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Total Out</p>
                       <p className="text-2xl font-bold text-red-600">
-                        {formatCurrency(calculateTotalOut())}
+                        {formatAmount(calculateTotalOut())}
                       </p>
                     </div>
                     <Badge variant="destructive" className="bg-red-100 text-red-800">OUT</Badge>
@@ -320,53 +327,93 @@ export default function FundsTran({ fundheld, fundtrans, filters }: Props) {
             </div>
 
             {/* Table */}
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse">
-                <thead>
+            <div className="overflow-x-auto rounded-md border" style={{ maxHeight: '60vh', overflowY: 'auto' }}>
+              <table className="w-full border-collapse text-xs">
+                <thead className="sticky top-0 z-10">
                   <tr className="bg-primary dark:bg-gray-800">
-                    <th className="border p-3 text-left text-sm font-medium text-white dark:text-gray-200">Date</th>
-                    <th className="border p-3 text-left text-sm font-medium text-white dark:text-gray-200">Description</th>
-                    <th className="border p-3 text-center text-sm font-medium text-white dark:text-gray-200">Type</th>
-                    <th className="border p-3 text-right text-sm font-medium text-white dark:text-gray-200">Amount</th>
-                    <th className="border p-3 text-center text-sm font-medium text-white dark:text-gray-200">Status</th>
-                    <th className="border p-3 text-center text-sm font-medium text-white dark:text-gray-200">Actions</th>
+                    <th className="border p-2 text-left font-medium text-white dark:text-gray-200">Date</th>
+                    <th className="border p-2 text-left font-medium text-white dark:text-gray-200">Description</th>
+                    <th className="border p-2 text-center font-medium text-white dark:text-gray-200">Type</th>
+                    <th className="border p-2 text-right font-medium text-white dark:text-gray-200">Op. Balance</th>
+                    <th className="border p-2 text-right font-medium text-white dark:text-gray-200">Amount</th>
+                    <th className="border p-2 text-right font-medium text-white dark:text-gray-200">Cl. Balance</th>
+                    <th className="border p-2 text-left font-medium text-white dark:text-gray-200">Admin Info</th>
+                    <th className="border p-2 text-center font-medium text-white dark:text-gray-200">Status</th>
+                    <th className="border p-2 text-center font-medium text-white dark:text-gray-200">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {fundtrans.data.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="border p-8 text-center">
-                        <FileText className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                        <p className="text-muted-foreground">No transactions found.</p>
+                      <td colSpan={9} className="border p-6 text-center">
+                        <FileText className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                        <p className="text-muted-foreground text-xs">No transactions found.</p>
                       </td>
                     </tr>
                   ) : (
                     fundtrans.data.map((transaction) => (
                       <tr key={transaction.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                        <td className="border p-3 text-sm">
-                          <div className="flex items-center gap-2">
-                            <Calendar className="h-4 w-4 text-muted-foreground" />
-                            {formatDate(transaction.added_date)}
+                        <td className="border p-1.5 whitespace-nowrap">
+                          <div className="flex items-center gap-1">
+                            <Calendar className="h-3 w-3 text-muted-foreground shrink-0" />
+                            {new Date(transaction.approved_date || transaction.added_date).toLocaleDateString()}
                           </div>
                         </td>
-                        <td className="border p-3 text-sm">{transaction.description}</td>
-                        <td className="border p-3 text-center">{getTypeBadge(transaction.type)}</td>
-                        <td className="border p-3 text-right text-sm font-medium">
+                        <td className="border p-1.5">
+                          <div className="flex flex-row gap-2 items-center">
+                            <ImagePreview dataImg={transaction.img} size="h-12 w-12" />
+                            <span className="font-semibold">{transaction.description}</span>
+                          </div>
+                        </td>
+                        <td className="border p-1.5 text-center">{getTypeBadge(transaction.type)}</td>
+                        <td className="border p-1.5 text-right font-medium text-muted-foreground">
+                          {formatAmount(
+                            transaction.type === 'in' 
+                              ? (Number(transaction.balance) || 0) - Number(transaction.amount) 
+                              : (Number(transaction.balance) || 0) + Number(transaction.amount)
+                          )}
+                        </td>
+                        <td className="border p-1.5 text-right font-medium">
                           <span className={transaction.type === 'in' ? 'text-green-600' : 'text-red-600'}>
                             {transaction.type === 'in' ? '+' : '-'}
-                            {formatCurrency(Number(transaction.amount))}
+                            {formatAmount(Number(transaction.amount))}
                           </span>
                         </td>
-                        <td className="border p-3 text-center">{getStatusBadge(transaction.status)}</td>
-                        <td className="border p-3 text-center">
+                        <td className="border p-1.5 text-right font-medium text-muted-foreground">
+                          {formatAmount(Number(transaction.balance) || 0)}
+                        </td>
+                        <td className="border p-1.5">
+                          <div className="flex flex-col gap-0.5">
+                            <div className="flex items-center gap-1">
+                              <User className="h-3 w-3 text-muted-foreground shrink-0" />
+                              <span className="text-muted-foreground">Added:</span>
+                              <span className="font-medium">{transaction.user.name}</span>
+                            </div>
+                            {transaction.approver && (
+                              <div className="flex items-center gap-1">
+                                <Check className="h-3 w-3 text-green-600 shrink-0" />
+                                <span className="text-muted-foreground">Appr:</span>
+                                <span className="font-medium">{transaction.approver.name}</span>
+                              </div>
+                            )}
+                            {transaction.approved_date && (
+                              <div className="text-[10px] text-muted-foreground ml-4">
+                                {new Date(transaction.approved_date).toLocaleDateString()}
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                        <td className="border p-1.5 text-center">{getStatusBadge(transaction.status)}</td>
+                        <td className="border p-1.5 text-center">
                           {transaction.tid && transaction.trans_type === 'transaction' ? (
                             <Button
                               size="sm"
                               variant="ghost"
                               onClick={() => openDetailModal(transaction)}
                               title="View Details"
+                              className="h-6 w-6 p-0"
                             >
-                              <Eye className="h-4 w-4" />
+                              <Eye className="h-3 w-3" />
                             </Button>
                           ) : (
                             <span className="text-muted-foreground text-xs">—</span>
