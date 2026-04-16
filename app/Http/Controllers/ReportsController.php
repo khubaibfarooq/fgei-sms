@@ -39,7 +39,7 @@ $type=session('type');
  $institutes = [];
  $regions=[];
     $institute="";
-    if($type=='Regional Office'){
+    if($type=='Regional Office' || $type=='Regional Director'){
     // Fetch and filter institutes
    
 
@@ -232,7 +232,7 @@ $projects = ProjectType::whereHas('projects', function($query) use ($request) {
         $institutes = Institute::query();
         
         $regions = [];
-        if($type == 'Regional Office'){
+        if($type == 'Regional Office' || $type == 'Regional Director'){
             // Fetch and filter institutes
             if($request->institute_id && is_numeric($request->institute_id) && $request->institute_id > 0){
             $institutes = Institute::where('region_id', $regionid)
@@ -303,7 +303,7 @@ $projects = ProjectType::whereHas('projects', function($query) use ($request) {
         );
      
         $regions = [];
-        if($type == 'Regional Office'){
+        if($type == 'Regional Office' || $type == 'Regional Director'){
             // Fetch and filter institutes
             $institutes = Institute::where('region_id', $regionid)
                 ->select('id', 'name')
@@ -363,7 +363,7 @@ $type=session('type');
    
     
     $regions=[];
-    if($type=='Regional Office'){
+      if($type=='Regional Office' || $type=='Regional Director'){
     // Fetch and filter institutes
    
 
@@ -700,7 +700,7 @@ $type=session('type');
  
     $institutes = [];
  $regions=[];
-    if($type=='Regional Office'){
+      if($type=='Regional Office' || $type=='Regional Director'){
     // Fetch and filter institutes
    
 
@@ -800,7 +800,7 @@ public function getTransports(Request $request)
 $type=session('type');
  $institutes = Institute::query();
  $regions=[];
-    if($type=='Regional Office'){
+      if($type=='Regional Office' || $type=='Regional Director'){
     // Fetch and filter institutes
     $institutes = Institute::where('region_id', $regionid)
         ->select('id', 'name')
@@ -868,7 +868,7 @@ $regions = Institute::select('region_id as id', 'name')->where('type', 'Regional
 $type=session('type');
  $institutes = Institute::query();
  $regions=[];
-    if($type=='Regional Office'){
+      if($type=='Regional Office' || $type=='Regional Director'){
     // Fetch and filter institutes
     $institutes = Institute::where('region_id', $regionid)
         ->select('id', 'name')
@@ -948,7 +948,7 @@ $regions = Institute::select('region_id as id', 'name')->where('type', 'Regional
         // -----------------------------------------------------------------
         // Regional Office → only its own institutes
         // -----------------------------------------------------------------
-        if ($type === 'Regional Office') {
+        if ($type === 'Regional Office' || $type === 'Regional Director') {
              if($request->status ){
                         $query = Project::query()->with(['institute', 'projecttype']);
             $query->where('status', $request->status)->whereHas('institute', function ($q) use ($regionid) {
@@ -1148,7 +1148,7 @@ $regions = Institute::select('region_id as id', 'name')->where('type', 'Regional
             $query->whereHas('institute', fn($q) => $q->where('region_id', $request->region_id));
         }
         // Regional Office user – restrict to own region automatically
-        elseif ($type === 'Regional Office') {
+        elseif ($type === 'Regional Office' || $type === 'Regional Director') {
             $query->whereHas('institute', fn($q) => $q->where('region_id', $regionid));
         }
 
@@ -1470,7 +1470,7 @@ public function getTransactions(Request $request)
             $query->whereHas('institute', fn($q) => $q->where('region_id', $request->region_id));
         }
         // Regional Office user – restrict to own region automatically
-        elseif ($type === 'Regional Office') {
+        elseif ($type === 'Regional Office' || $type === 'Regional Director') {
             $query->whereHas('institute', fn($q) => $q->where('region_id', $regionid));
         }
 
@@ -1516,7 +1516,7 @@ $balances=[];
         // -----------------------------------------------------------------
         // Regional Office → only its own institutes
         // -----------------------------------------------------------------
-        if ($type === 'Regional Office') {
+        if ($type === 'Regional Office' || $type === 'Regional Director') {
              $institutes = Institute::where('region_id', $regionid)
                 ->select('id', 'name')
                 ->orderByRaw('ISNULL(`order`) ASC, `order` ASC, id DESC')
@@ -1781,7 +1781,7 @@ public function getFunds(Request $request)
     $balances = [];
     $funds = [];
 
-    if ($type === 'Regional Office') {
+    if ($type === 'Regional Office' || $type === 'Regional Director' ) {
         $this->handleRegionalOffice($request, $regionid, $fundheads, $balances, $funds);
     } else {
         $this->handleSuperAdminOrHQ($request, $regionid, $type, $fundheads, $balances, $funds);
@@ -2277,7 +2277,7 @@ public function getFund(Request $request)
     $regions=[];
     $institutes=[];
   $totalinstitutes = 0;
-    if($type=="Regional Office"){
+    if($type=="Regional Office" || $type=="Regional Director"){
   $institutes = Institute::select('id', 'name')
             ->where('region_id', $regionid)
             ->get()
@@ -2328,7 +2328,7 @@ public function getFund(Request $request)
 ;
    $totalinstitutes = 0;
            
-            if($type=="Regional Office"){
+            if($type=="Regional Office" || $type=="Regional Director"){
                 $query->where('region_id', $regionid)->whereIn('type', ['School', 'College']);
 $totalinstitutes = Institute::where('region_id', $regionid)->whereIn('type', ['School', 'College','Regional Office'])->count();
             } // director or dg
@@ -2460,7 +2460,7 @@ if($buildingTypeId!=null){
              })->values();
         }
 $institutesFilter = [];
-if($type=="Regional Office"){
+if($type=="Regional Office" || $type=="Regional Director"){
     $institutesFilter = Institute::whereIn('type', ['School', 'College'])->where('region_id', $regionid)->get();
 }else{
     if ($request->filled('region_id') && is_numeric($request->region_id) && $request->region_id > 0) {

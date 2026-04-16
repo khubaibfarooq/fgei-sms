@@ -212,6 +212,8 @@ class SSORedirectController extends Controller
                 return 'admin';
          case 'sms_tech_approval':
                 return 'sms_tech_approval';
+                 case 'Regional Director':
+                return 'Regional Director';
             default:
                 return 'user';
         }
