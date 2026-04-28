@@ -61,7 +61,7 @@ class Institute extends Model implements HasMedia
 
     public function region()
     {
-        return $this->belongsTo(Institute::class, 'region_id');
+        return $this->belongsTo(Institute::class, 'region_id', 'region_id')->where('type', 'Regional Office');
     }
 
     public function bankStatements()

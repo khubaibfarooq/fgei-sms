@@ -2315,7 +2315,7 @@ public function getFund(Request $request)
     $type = session('type');
         $query = Institute::query()
             ->with([
-              
+                'region',
                 'shifts',
                 'fundHelds',
                 'blocks.rooms',
@@ -2433,7 +2433,7 @@ if($buildingTypeId!=null){
         $details = $institutes;
 
         // If HQ/SuperAdmin and no region selected, show regions in details
-        if ($type !== 'Regional Office' && (!$request->filled('region_id') || $request->region_id == 0)) {
+        if ($type !== 'Regional Office' && $type !== 'Regional Director' && (!$request->filled('region_id') || $request->region_id == 0)) {
              $details = $institutes->groupBy('region_id')->map(function ($group, $regionName) {
                  $first = $group->first();
                  $region = Institute::where('region_id', $first['region_id'])->where('type', "Regional Office")->first();

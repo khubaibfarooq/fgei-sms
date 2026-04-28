@@ -318,6 +318,7 @@ export default function Completion({
             const data = await res.json();
             setSummary(data.summary);
             setDetails(data.details);
+            console.log(data.details);
             setTotalInstitutes(data.totalinstitutes);
             if (data.institutes) setInstitutesList(data.institutes);
         } catch (error) {
@@ -606,15 +607,14 @@ export default function Completion({
                                                             <td className="px-2 py-1.5 text-center text-xs font-semibold text-slate-700 dark:text-slate-300">{item.upgradations || 0}</td>
                                                             <td className="px-2 py-1.5 text-center bg-slate-50/50 dark:bg-slate-800/30">
                                                                 <span
-                                                                    className={`inline-flex items-center justify-center px-2 py-0.5 rounded-full text-xs font-bold cursor-pointer transition-all hover:scale-105 hover:shadow-sm ${
-                                                                        item.percentage === 100
+                                                                    className={`inline-flex items-center justify-center px-2 py-0.5 rounded-full text-xs font-bold cursor-pointer transition-all hover:scale-105 hover:shadow-sm ${item.percentage === 100
                                                                             ? 'bg-gradient-to-r from-emerald-500 to-green-500 text-white'
                                                                             : item.percentage >= 50
                                                                                 ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white'
                                                                                 : item.percentage > 0
                                                                                     ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white'
                                                                                     : 'bg-gradient-to-r from-red-500 to-rose-500 text-white'
-                                                                    }`}
+                                                                        }`}
                                                                     onClick={(e) => { e.stopPropagation(); handleShowDetails(item.id); }}
                                                                     title="Click to see breakdown"
                                                                 >
@@ -689,11 +689,11 @@ export default function Completion({
                                                     </td>
                                                     <td className={`px-4 py-3 ${criterion.completed ? 'text-green-600' : 'text-red-600'}`}>
                                                         {(() => {
-                                                          const match = criterion.message.match(/^(.*?)(\(.*missing image.*\))$/);
-                                                          if (match) {
-                                                            return <>{match[1]}<span className="text-red-600 font-semibold">{match[2]}</span></>;
-                                                          }
-                                                          return criterion.message;
+                                                            const match = criterion.message.match(/^(.*?)(\(.*missing image.*\))$/);
+                                                            if (match) {
+                                                                return <>{match[1]}<span className="text-red-600 font-semibold">{match[2]}</span></>;
+                                                            }
+                                                            return criterion.message;
                                                         })()}
                                                     </td>
                                                 </tr>

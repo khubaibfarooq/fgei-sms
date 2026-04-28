@@ -103,8 +103,8 @@ public function store(Request $request)
         'project_type_id'  => 'required|exists:project_types,id',
         'priority'         => 'nullable|string',
         'description'      => 'nullable|string',
-        'status'           => 'nullable|in:planned,waiting,completed',
-        'fund_heads'       => 'nullable|array',
+        'status'           => 'required|in:planned,waiting,completed',
+        'fund_heads'       => 'required_if:status,completed|nullable|array',
         'fund_heads.*.fund_head_id'  => 'required_with:fund_heads|integer|exists:fund_heads,id',
         'fund_heads.*.sanction_amount' => 'required_with:fund_heads|numeric|min:0.01',
         'actual_cost'      => 'required_if:status,completed|nullable|numeric',
@@ -230,67 +230,7 @@ public function store(Request $request)
     return redirect()->route('projects.index')
         ->with('success', 'Project created successfully with milestones!');
 }
-//     public function store(Request $request)
-// {
-//     $isUpdate = $request->has('id') || $request->isMethod('put');
 
-//     $data = $request->validate([
-//         'name' => 'required|string|max:255',
-//         'cost' => 'required|numeric',
-//         'project_type_id' => 'required|exists:project_types,id',
-//         'status' => 'required|in:planned,inprogress,completed',
-//         'milestones.*.name' => 'required|required|string|max:255',
-//         'milestones.*.description' => 'nullable|string',
-//         'milestones.*.due_date' => 'required|date',
-//         'milestones.*.status' => 'required|in:planned,inprogress,completed',
-//         'milestones.*.completed_date' => 'nullable|date',
-//         'milestones.*.img' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5048',
-//     ]);
-
-//     $data['institute_id'] = session('sms_inst_id');
-
-//     $project = $isUpdate
-//         ? Project::findOrFail($request->id)
-//         : new Project();
-
-//     $project->fill($data);
-//     $project->save();
-
-//     // Handle milestones
-//     if ($request->has('milestones')) {
-//         foreach ($request->file('milestones', []) as $index => $fileItem) {
-//              $resultImageName = null;
-//         if ($request->hasFile('img')) {
-//             $resultImage = $request->file('img');
-//             $resultImageName = time() . '-' . uniqid() . '.' . $resultImage->getClientOriginalExtension();
-//             $resultImage->move('assets/milestones', $resultImageName);
-//             $request['img'] = 'milestones/' . $resultImageName;
-//         } else {
-//             unset($request['img']);
-//         }
-            
-//         }
-
-//      //   $project->milestone()->delete(); // Optional: replace all
-
-//         foreach ($request->input('milestones', []) as $m) {
-//             if (!empty($m['name']) && !empty($m['due_date'])) {
-//                 $project->milestones()->create([
-//                     'name' => $m['name'],
-//                     'description' => $m['description'] ?? null,
-//                     'due_date' => $m['due_date'],
-//                     'status' => $m['status'],
-//                     'completed_date' => $m['completed_date'] ?? null,
-//                     'img' => $m['img'] ?? null,
-//                     'added_by' => auth()->id(),
-//                 ]);
-//             }
-//         }
-//     }
-
-//     return redirect()->route('projects.index')
-//         ->with('success', 'Project saved successfully with milestones.');
-// }
     public function edit(Project $project)
     {
         if (!auth()->user()->can('project-edit')) {
@@ -403,6 +343,12 @@ public function update(Request $request, Project $project)
     }
  if ($request->has('status') && in_array($request->status, ['completed'])) {
         $updateData['completion_per'] = 100;
+           $approval_stages = ProjectApproval::where('project_id', $project->id)->count();
+        if($approval_stages==0){
+        $updateData['status'] = $request->status;
+                $updateData['status'] = $request->status;
+                $updateData['approval_status']=$request->approval_status ?? 'waiting';
+        }
     }
     $project->update($updateData);
 

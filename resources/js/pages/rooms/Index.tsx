@@ -41,6 +41,7 @@ interface Props {
     search: string;
     block: string;
     roomtype: string;
+    orderBy?: string;
   };
   blocks: Record<string, string>;     // pluck('name', 'id') → { "1": "Block A", ... }
   roomtypes: Record<string, string>;  // same format
@@ -59,16 +60,26 @@ export default function RoomIndex({ rooms, filters, blocks, roomtypes, permissio
   const [search, setSearch] = useState(filters.search || '');
   const [selectedBlock, setSelectedBlock] = useState(filters.block || '');
   const [selectedRoomType, setSelectedRoomType] = useState(filters.roomtype || '');
+  const [orderBy, setOrderBy] = useState(filters.orderBy || '');
 
   // Convert pluck objects to array of { id, name }
   const blockOptions = Object.entries(blocks).map(([id, name]) => ({ id, name }));
   const roomTypeOptions = Object.entries(roomtypes).map(([id, name]) => ({ id, name }));
+  
+  const orderOptions = [
+    { id: 'Room Asc', name: 'Room Asc' },
+    { id: 'Room Desc', name: 'Room Desc' },
+    { id: 'Block Asc', name: 'Block Asc' },
+    { id: 'Block Desc', name: 'Block Desc' },
+    { id: 'RoomType Asc', name: 'RoomType Asc' },
+    { id: 'RoomType Desc', name: 'RoomType Desc' },
+  ];
 
   // Unified filter update
   const updateFilters = (newFilters: Partial<typeof filters>) => {
     router.get(
       '/rooms',
-      { search, block: selectedBlock, roomtype: selectedRoomType, ...newFilters },
+      { search, block: selectedBlock, roomtype: selectedRoomType, orderBy, ...newFilters },
       {
         preserveScroll: true,
         preserveState: true,
@@ -93,10 +104,16 @@ export default function RoomIndex({ rooms, filters, blocks, roomtypes, permissio
     updateFilters({ roomtype: value });
   };
 
+  const handleOrderChange = (value: string) => {
+    setOrderBy(value);
+    updateFilters({ orderBy: value });
+  };
+
   const clearFilters = () => {
     setSearch('');
     setSelectedBlock('');
     setSelectedRoomType('');
+    setOrderBy('');
     router.get('/rooms', {}, { preserveScroll: true, preserveState: true, replace: true });
   };
 
@@ -155,13 +172,21 @@ export default function RoomIndex({ rooms, filters, blocks, roomtypes, permissio
                   options={roomTypeOptions}
                   includeAllOption={true}
                 /></div>
-
+              <div className="w-full md:w-auto px-4 py-2  focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <Combobox
+                  entity="Order By"
+                  value={orderBy}
+                  onChange={(value) => handleOrderChange(value)}
+                  options={orderOptions}
+                  includeAllOption={true}
+                />
+              </div>
 
               <Button onClick={handleSearch} variant="outline" className="w-full md:w-auto">
                 Search
               </Button>
 
-              {(search || selectedBlock || selectedRoomType) && (
+              {(search || selectedBlock || selectedRoomType || orderBy) && (
                 <Button onClick={clearFilters} variant="ghost" className="w-full md:w-auto">
                   Clear Filters
                 </Button>

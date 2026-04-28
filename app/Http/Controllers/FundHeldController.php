@@ -48,12 +48,26 @@ class FundHeldController extends Controller
             'can_delete' => auth()->user()->can('fund-delete'),
         ];
 
+        // Fetch data for Transfer modal
+        $fundHeads = FundHead::get(['id', 'name', 'type']);
+        $myInstitute = \App\Models\Institute::find($inst_id);
+        $regionalOffice = null;
+        if ($myInstitute && $myInstitute->region_id) {
+            $regionalOffice = \App\Models\Institute::where('region_id', $myInstitute->region_id)
+                                       ->where('type', 'Regional Office')
+                                       ->first(['id', 'name']);
+        }
+        $ownBalances = FundHeld::with('fundHead')->where('institute_id', $inst_id)->get();
+
         return Inertia::render('funds/Index', [
             'funds'           => $funds,
             'filters'         => ['search' => $request->search ?? ''],
             'permissions'     => $permissions,
             'bankStatements'  => $bankStatements,
             'instituteId'     => $inst_id,
+            'fundHeads'       => $fundHeads,
+            'regionalOffice'  => $regionalOffice,
+            'ownBalances'     => $ownBalances,
         ]);
     }
 
@@ -82,6 +96,7 @@ public function store(Request $request)
     try {
         $request->validate([
             'transaction_type'     => 'required|string|in:in,out',
+            'date'                 => 'required|date',
             'heads'                => 'required|array|min:1',
             'heads.*.fund_head_id' => 'required|numeric|exists:fund_heads,id',
             'heads.*.amount'       => 'required|numeric|min:0.01',
@@ -90,7 +105,7 @@ public function store(Request $request)
 
         $addedBy     = auth()->id();
         $instituteId = session('sms_inst_id');
-        $date        = \Carbon\Carbon::now()->format('Y-m-d');
+           $date        = \Carbon\Carbon::now()->format('Y-m-d');
         $type        = $request->transaction_type;
         $status      = 'Approved';
 
@@ -98,24 +113,50 @@ public function store(Request $request)
             foreach ($request->heads as $head) {
                 // Find existing FundHeld record
                 $fundHeld = FundHeld::where('fund_head_id', $head['fund_head_id'])
-                    ->where('institute_id', $instituteId)
+                    ->where('institute_id', $instituteId)->with('fundHead')
                     ->first();
 
+                // Update overall FundHeld balance
                 if ($fundHeld) {
                     if ($type == 'in') {
-                        $newBalance = $fundHeld->balance + $head['amount'];
+                        $newOverallBalance = $fundHeld->balance + $head['amount'];
                     } else {
-                        $newBalance = $fundHeld->balance - $head['amount'];
+                        if($fundHeld->balance < $head['amount']){
+                            throw new \Exception('Insufficient_balance in '.$fundHeld->fundHead->name);
+                        }
+                        $newOverallBalance = $fundHeld->balance - $head['amount'];
                     }
-                    $fundHeld->update(['balance' => $newBalance]);
+                    $fundHeld->update(['balance' => $newOverallBalance]);
                 } else {
-                    $newBalance = $type == 'in' ? $head['amount'] : -$head['amount'];
+                    if ($type == 'out') {
+                        throw new \Exception('Insufficient_balance');
+                    }
+                    $newOverallBalance = $type == 'in' ? $head['amount'] : -$head['amount'];
                     FundHeld::create([
                         'fund_head_id' => $head['fund_head_id'],
                         'institute_id' => $instituteId,
-                        'balance'      => $newBalance,
+                        'balance'      => $newOverallBalance,
                         'added_by'     => $addedBy,
                     ]);
+                }
+
+                // Calculate balance for this specific transaction
+                $previousTransaction = Fund::where('fund_head_id', $head['fund_head_id'])
+                    ->where('institute_id', $instituteId)
+                    ->where('approved_date', '<=',  $request->date)
+                    ->orderBy('approved_date', 'desc')
+                    ->orderBy('id', 'desc')
+                    ->first();
+
+                $transactionBalance = 0;
+                if ($previousTransaction) {
+                    $transactionBalance = $previousTransaction->balance;
+                }
+                
+                if ($type == 'in') {
+                    $transactionBalance += $head['amount'];
+                } else {
+                    $transactionBalance -= $head['amount'];
                 }
 
                 // Create Transaction record in 'funds' table
@@ -130,9 +171,21 @@ public function store(Request $request)
                     'description'   => $head['description'] ?? null,
                     'trans_type'    => 'funds',
                     'approve_by'    => $status == 'Approved' ? $addedBy : null,
-                    'approved_date' => $status == 'Approved' ? now() : null,
-                    'balance'       => $newBalance,
+                    'approved_date' => $status == 'Approved' ?  $request->date : null,
+                    'balance'       => $transactionBalance,
                 ]);
+
+                // Update balance of subsequent transactions
+                $sign = $type == 'in' ? 1 : -1;
+                $adjustment = $head['amount'] * $sign;
+
+                Fund::where('fund_head_id', $head['fund_head_id'])
+                    ->where('institute_id', $instituteId)
+                    ->where('approved_date', '>', $request->date)
+                       ->where('status', 'Approved')
+                    ->update([
+                        'balance' => DB::raw("balance + ($adjustment)")
+                    ]);
             }
         });
 
@@ -141,6 +194,9 @@ public function store(Request $request)
     } catch (\Illuminate\Validation\ValidationException $e) {
         return back()->withErrors($e->validator->errors())->withInput();
     } catch (\Exception $e) {
+        if ($e->getMessage() === 'Insufficient_balance') {
+            return back()->with('error', 'Insufficient balance.');
+        }
         return back()->with('error', 'An error occurred while processing the fund: ' . $e->getMessage());
     }
 }

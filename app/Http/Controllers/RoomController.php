@@ -33,7 +33,7 @@ class RoomController extends Controller
     
     
     if ($request->search) {
-        $query->where('name', 'like', '%' . $request->search . '%');
+        $query->where('rooms.name', 'like', '%' . $request->search . '%');
     }
     $permissions = [
         'can_add'    => auth()->user()->can('rooms-add'),
@@ -41,10 +41,28 @@ class RoomController extends Controller
         'can_delete' => auth()->user()->can('rooms-delete'),
     ];
     
-     $query->orderBy('created_at', 'desc');
+    if ($request->orderBy) {
+        if ($request->orderBy === 'Room Asc') {
+            $query->orderBy('rooms.name', 'asc');
+        } elseif ($request->orderBy === 'Room Desc') {
+            $query->orderBy('rooms.name', 'desc');
+        } elseif ($request->orderBy === 'Block Asc') {
+             $query->select('rooms.*')->join('blocks', 'rooms.block_id', '=', 'blocks.id')->orderBy('blocks.name', 'asc');
+        } elseif ($request->orderBy === 'Block Desc') {
+             $query->select('rooms.*')->join('blocks', 'rooms.block_id', '=', 'blocks.id')->orderBy('blocks.name', 'desc');
+        } elseif ($request->orderBy === 'RoomType Asc') {
+             $query->select('rooms.*')->join('room_types', 'rooms.room_type_id', '=', 'room_types.id')->orderBy('room_types.name', 'asc');
+        } elseif ($request->orderBy === 'RoomType Desc') {
+             $query->select('rooms.*')->join('room_types', 'rooms.room_type_id', '=', 'room_types.id')->orderBy('room_types.name', 'desc');
+        } else {
+             $query->orderBy('rooms.id', 'asc');
+        }
+    } else {
+        $query->orderBy('rooms.id', 'asc');
+    }
     // Add block filter
     if ($request->block) {
-        $query->where('block_id', $request->block);
+        $query->where('rooms.block_id', $request->block);
     }
      if ($request->roomtype && !empty($request->roomtype) && $request->roomtype!=0) {
    $roomtypeIds = array_filter(explode(',', $request->roomtype));
@@ -61,6 +79,7 @@ $roomtypes=RoomType::pluck('name', 'id');
             'search' => $request->search ?? '',
             'block' => $request->block ?? '',
             'roomtype'=> $request->roomtype ?? '',
+            'orderBy' => $request->orderBy ?? '',
         ],
         'blocks' => $blocks,
         'permissions' => $permissions,

@@ -720,11 +720,23 @@ export default function Funds({
                                     {meta ? (
                                       <div className="flex flex-col items-center gap-0.5">
                                         {meta.last_image && (
-                                          <ImagePreview
-                                            dataImg={meta.last_image}
-                                            className="h-8 w-12 object-cover rounded border cursor-pointer hover:opacity-90"
-
-                                          />
+                                          /\.(jpeg|jpg|gif|png|webp|bmp|svg|jfif)$/i.test(meta.last_image) ? (
+                                            <ImagePreview
+                                              dataImg={meta.last_image}
+                                              className="h-8 w-12 object-cover rounded border cursor-pointer hover:opacity-90"
+                                            />
+                                          ) : (
+                                            <a 
+                                              href={`/${meta.last_image}`} 
+                                              download 
+                                              target="_blank"
+                                              rel="noreferrer"
+                                              className="flex items-center justify-center h-8 w-12 bg-muted rounded border hover:bg-muted/80 transition-colors"
+                                              title="Download Document"
+                                            >
+                                              <FileText className="h-4 w-4 text-muted-foreground" />
+                                            </a>
+                                          )
                                         )}
                                         <span className="text-[10px] text-muted-foreground">
                                           {meta.last_date ? new Date(meta.last_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : ''}

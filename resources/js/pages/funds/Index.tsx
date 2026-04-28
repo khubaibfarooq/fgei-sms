@@ -17,6 +17,7 @@ import {
   ChevronDown,
   ChevronUp,
   Calendar,
+  FileText,
 } from 'lucide-react';
 import {
   AlertDialog,
@@ -77,6 +78,25 @@ interface BankStatementItem {
   uploaded_at: string;
 }
 
+interface FundHeadInfo {
+  id: number;
+  name: string;
+  type: string;
+}
+
+interface OwnBalance {
+  id: number;
+  institute_id: number;
+  fund_head_id: number;
+  balance: number;
+  fund_head: FundHeadInfo;
+}
+
+interface RegionalOffice {
+  id: number;
+  name: string;
+}
+
 interface Props {
   funds: {
     data: Fund[];
@@ -94,6 +114,9 @@ interface Props {
   };
   bankStatements: Record<string, BankStatementItem[]>;
   instituteId: number;
+  fundHeads: FundHeadInfo[];
+  regionalOffice: RegionalOffice | null;
+  ownBalances: OwnBalance[];
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -112,8 +135,18 @@ const formatDate = (isoString: string): string => {
   return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 };
 
-export default function FundIndex({ funds, filters, permissions, bankStatements, instituteId }: Props) {
+export default function FundIndex({ funds, filters, permissions, bankStatements, instituteId, fundHeads = [], regionalOffice = null, ownBalances = [] }: Props) {
   const [search, setSearch] = useState(filters.search || '');
+
+  // Transfer Modal State
+  const [transferOpen, setTransferOpen] = useState(false);
+  const [transferType, setTransferType] = useState<'Own Heads' | 'Region'>('Own Heads');
+  const [fromHeadId, setFromHeadId] = useState<number | ''>('');
+  const [transferImage, setTransferImage] = useState<File | null>(null);
+  const [transferRows, setTransferRows] = useState<{ head_id: number | ''; amount: number | '' }[]>([
+    { head_id: '', amount: '' },
+  ]);
+  const [transferSubmit, setTransferSubmit] = useState(false);
 
   // Bank statements state
   const statements: BankStatementItem[] = bankStatements[instituteId] ?? [];
@@ -177,6 +210,85 @@ export default function FundIndex({ funds, filters, permissions, bankStatements,
     });
   };
 
+  const handleAddTransferRow = () => {
+    setTransferRows([...transferRows, { head_id: '', amount: '' }]);
+  };
+
+  const handleRemoveTransferRow = (index: number) => {
+    if (transferRows.length > 1) {
+      const rows = [...transferRows];
+      rows.splice(index, 1);
+      setTransferRows(rows);
+    }
+  };
+
+  const handleTransferRowChange = (index: number, field: string, value: string | number) => {
+    const rows = [...transferRows];
+    rows[index] = { ...rows[index], [field]: value };
+    setTransferRows(rows);
+  };
+
+  const getFromHeadBalance = () => {
+    if (fromHeadId) {
+      const held = (ownBalances || []).find(b => b.fund_head_id === Number(fromHeadId));
+      return held ? Number(held.balance) : 0;
+    }
+    return 0;
+  };
+
+  const getTotalTransferAmount = () => {
+    return transferRows.reduce((sum, row) => sum + (Number(row.amount) || 0), 0);
+  };
+
+  const submitTransfer = () => {
+    if (!fromHeadId) return toast.error(transferType === 'Region' ? 'Please select a To Head' : 'Please select a From Head');
+    if (getTotalTransferAmount() <= 0) return toast.error('Enter a valid amount');
+
+    if (transferType === 'Own Heads' && getTotalTransferAmount() > getFromHeadBalance()) {
+      return toast.error('Amount exceeds available balance');
+    }
+
+    if (transferType === 'Region') {
+      if (!regionalOffice) return toast.error('No regional office associated with your institute');
+
+      // Validate each row for available balance
+      for (const row of transferRows) {
+        const held = (ownBalances || []).find(b => b.fund_head_id === row.head_id);
+        const bal = held ? Number(held.balance) : 0;
+        if (Number(row.amount) > bal) {
+          return toast.error(`A transfer amount exceeds available balance for one of the From Heads.`);
+        }
+      }
+    }
+
+    // Validate rows
+    const validRows = transferRows.every(r => r.head_id && r.amount && Number(r.amount) > 0);
+    if (!validRows) return toast.error('Please fill all rows correctly');
+
+    setTransferSubmit(true);
+
+    // Inertia requires wrapping data in FormData if transferring a file? Actually router.post can handle it if we pass forms directly or just map elements.
+    router.post('/funds/transfer', {
+      transfer_type: transferType,
+      from_head_id: fromHeadId,
+      rows: transferRows,
+      transfer_image: transferImage
+    }, {
+      onSuccess: () => {
+        toast.success('Funds transferred');
+        setTransferOpen(false);
+        setTransferRows([{ head_id: '', amount: '' }]);
+        setFromHeadId('');
+        setTransferImage(null);
+      },
+      onError: (errors) => {
+        toast.error('Transfer failed. Check inputs.');
+        console.error(errors);
+      },
+      onFinish: () => setTransferSubmit(false)
+    });
+  };
+
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Fund Management" />
@@ -211,11 +323,16 @@ export default function FundIndex({ funds, filters, permissions, bankStatements,
                 {galleryOpen ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
               </Button>
               {permissions.can_add &&
-                <Link href="/funds/create" className="w-full md:w-auto">
-                  <Button className="w-full">
-                    Fund Transaction
+                <>
+                  <Button className="w-full md:w-auto" onClick={() => setTransferOpen(true)}>
+                    Fund Transfer
                   </Button>
-                </Link>
+                  <Link href="/funds/create" className="w-full md:w-auto">
+                    <Button className="w-full md:w-auto">
+                      Fund Transaction
+                    </Button>
+                  </Link>
+                </>
               }
             </div>
           </CardHeader>
@@ -225,12 +342,25 @@ export default function FundIndex({ funds, filters, permissions, bankStatements,
             <div className="mx-4 mb-2 flex items-center gap-2 text-xs text-muted-foreground bg-muted/40 rounded px-3 py-1.5">
               <Calendar className="h-3.5 w-3.5" />
               <span>Last bank statement uploaded on <strong>{formatDate(lastStatement.uploaded_at)}</strong></span>
-              <img
-                src={`/${lastStatement.image}`}
-                alt="Last Statement"
-                className="h-6 w-9 object-cover rounded border cursor-pointer ml-1"
-                onClick={() => setLightboxSrc(`/${lastStatement.image}`)}
-              />
+              {/\.(jpeg|jpg|gif|png|webp|bmp|svg|jfif)$/i.test(lastStatement.image) ? (
+                <img
+                  src={`/${lastStatement.image}`}
+                  alt="Last Statement"
+                  className="h-6 w-9 object-cover rounded border cursor-pointer ml-1"
+                  onClick={() => setLightboxSrc(`/${lastStatement.image}`)}
+                />
+              ) : (
+                <a
+                  href={`/${lastStatement.image}`}
+                  download
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center justify-center h-6 w-9 bg-muted rounded border hover:bg-muted/80 transition-colors ml-1"
+                  title="Download Document"
+                >
+                  <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+                </a>
+              )}
             </div>
           )}
 
@@ -244,13 +374,26 @@ export default function FundIndex({ funds, filters, permissions, bankStatements,
                 <div className="flex flex-wrap gap-2">
                   {statements.map((stmt) => (
                     <div key={stmt.id} className="relative group">
-                      <img
-                        src={`/${stmt.image}`}
-                        alt="Bank Statement"
-                        className="h-20 w-28 object-cover rounded border cursor-pointer hover:opacity-90 transition-opacity"
-                        onClick={() => setLightboxSrc(`/${stmt.image}`)}
-                        title={formatDate(stmt.uploaded_at)}
-                      />
+                      {/\.(jpeg|jpg|gif|png|webp|bmp|svg|jfif)$/i.test(stmt.image) ? (
+                        <img
+                          src={`/${stmt.image}`}
+                          alt="Bank Statement"
+                          className="h-20 w-28 object-cover rounded border cursor-pointer hover:opacity-90 transition-opacity"
+                          onClick={() => setLightboxSrc(`/${stmt.image}`)}
+                          title={formatDate(stmt.uploaded_at)}
+                        />
+                      ) : (
+                        <a
+                          href={`/${stmt.image}`}
+                          download
+                          target="_blank"
+                          rel="noreferrer"
+                          className="flex flex-col items-center justify-center h-20 w-28 bg-muted rounded border hover:bg-muted/80 transition-colors"
+                          title={formatDate(stmt.uploaded_at)}
+                        >
+                          <FileText className="h-8 w-8 text-muted-foreground" />
+                        </a>
+                      )}
                       <span className="absolute bottom-0 left-0 right-0 text-[9px] text-center bg-black/50 text-white rounded-b px-1 py-0.5 truncate">
                         {formatDate(stmt.uploaded_at)}
                       </span>
@@ -307,7 +450,8 @@ export default function FundIndex({ funds, filters, permissions, bankStatements,
                 <thead>
                   <tr className="bg-primary dark:bg-gray-800 text-center text-sm md:text-md lg:text-lg ">
                     <th className="border p-2  font-medium text-white dark:text-gray-200">Fund Head</th>
-                    <th className="border p-2  font-medium text-white dark:text-gray-200">Balance</th>
+                    <th className="border p-2  font-medium text-white dark:text-gray-200">Balance (RS)</th>
+                    <th className="border p-2  font-medium text-white dark:text-gray-200">Balance (Mn)</th>
                     <th className="border p-2  font-medium text-white dark:text-gray-200">Action</th>
                   </tr>
                 </thead>
@@ -323,6 +467,9 @@ export default function FundIndex({ funds, filters, permissions, bankStatements,
                       <tr key={fund.id} className="hover:bg-primary/10 text-sm md:text-md lg:text-lg  dark:hover:bg-gray-700 text-center">
                         <td className="border p-3 font-bold  text-gray-900 dark:text-gray-100">
                           {fund.fund_head.name}
+                        </td>
+                        <td className="border p-3  text-gray-900 dark:text-gray-100">
+                          {fund.balance}
                         </td>
                         <td className="border p-3  text-gray-900 dark:text-gray-100">
                           {formatAmount(fund.balance)}
@@ -381,6 +528,7 @@ export default function FundIndex({ funds, filters, permissions, bankStatements,
                 <tfoot>
                   <tr className="bg-primary dark:bg-gray-800 text-center text-sm md:text-md lg:text-lg ">
                     <th className="border p-2  font-medium text-white dark:text-gray-200">Total</th>
+                    <th className="border p-2  font-medium text-white dark:text-gray-200">{funds.data.reduce((total, fund) => Number(total) + Number(fund.balance), 0)}</th>
                     <th className="border p-2  font-medium text-white dark:text-gray-200">{formatAmount(funds.data.reduce((total, fund) => Number(total) + Number(fund.balance), 0))}</th>
                     <th className="border p-2  font-medium text-white dark:text-gray-200"></th>
                   </tr>
@@ -468,6 +616,160 @@ export default function FundIndex({ funds, filters, permissions, bankStatements,
           </div>
         </div>
       )}
+
+      {/* ── Transfer Modal ── */}
+      <Dialog open={transferOpen} onOpenChange={setTransferOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Fund Transfer</DialogTitle>
+            <DialogDescription>Transfer funds between your own heads or remit to Regional Office.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 mt-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Transfer Type</label>
+              <select
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                value={transferType}
+                onChange={(e) => {
+                  setTransferType(e.target.value as 'Own Heads' | 'Region');
+                  setTransferRows([{ head_id: '', amount: '' }]);
+                  setFromHeadId('');
+                  setTransferImage(null);
+                }}
+              >
+                <option value="Own Heads">Own Heads</option>
+                <option value="Region">Region</option>
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">
+                {transferType === 'Region' ? 'To Head' : 'From Head'}
+              </label>
+              <select
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                value={fromHeadId}
+                onChange={(e) => setFromHeadId(e.target.value ? Number(e.target.value) : '')}
+              >
+                <option value="">{transferType === 'Region' ? 'Select Head to transfer to' : 'Select Head to transfer from'}</option>
+                {transferType === 'Region' ? (
+                  (fundHeads || []).filter(h => h.type === 'regional').map(h => (
+                    <option key={h.id} value={h.id}>{h.name}</option>
+                  ))
+                ) : (
+                  (fundHeads || []).filter(h => h.type === 'institutional' || h.type === 'institute' || !h.type).map(h => {
+                    const held = (ownBalances || []).find(b => b.fund_head_id === h.id);
+                    const bal = held ? Number(held.balance) : 0;
+                    return (
+                      <option key={h.id} value={h.id}>
+                        {h.name} (Balance: {formatAmount(bal)})
+                      </option>
+                    );
+                  })
+                )}
+              </select>
+              {transferType === 'Own Heads' && fromHeadId && (
+                <p className="text-xs text-muted-foreground">
+                  Available Balance: <strong className="text-primary">{formatAmount(getFromHeadBalance())}</strong>
+                </p>
+              )}
+            </div>
+
+            {transferType === 'Region' && (
+              <div className="p-3 bg-muted/40 rounded-md border">
+                <p className="text-sm text-muted-foreground">Regional Office</p>
+                <p className="font-semibold text-lg">{regionalOffice ? regionalOffice.name : 'Unknown Regional Office'}</p>
+              </div>
+            )}
+
+            <Separator />
+
+            <div>
+              <div className="flex justify-between items-center mb-2">
+                <label className="text-sm font-medium">Transfer Details</label>
+                <Button size="sm" variant="outline" onClick={handleAddTransferRow} className="h-8">
+                  <Plus className="h-3.5 w-3.5 mr-1" /> Add Row
+                </Button>
+              </div>
+              <div className="space-y-2">
+                {transferRows.map((row, index) => (
+                  <div key={index} className="flex gap-2 items-center">
+                    <select
+                      className="flex h-10 w-full flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      value={row.head_id}
+                      onChange={(e) => handleTransferRowChange(index, 'head_id', e.target.value ? Number(e.target.value) : '')}
+                    >
+                      <option value="">{transferType === 'Region' ? 'Select From Head' : 'Select To Head'}</option>
+                      {transferType === 'Region' ? (
+                        (fundHeads || []).filter(h => h.type === 'regional').map(h => {
+                          const held = (ownBalances || []).find(b => b.fund_head_id === h.id);
+                          const bal = held ? Number(held.balance) : 0;
+                          return (
+                            <option key={h.id} value={h.id}>
+                              {h.name} (Balance: {formatAmount(bal)})
+                            </option>
+                          );
+                        })
+                      ) : (
+                        (fundHeads || []).map(h => (
+                          <option key={h.id} value={h.id}>{h.name}</option>
+                        ))
+                      )}
+                    </select>
+                    <Input
+                      type="number"
+                      placeholder="Amount"
+                      min="0"
+                      className="w-32"
+                      value={row.amount}
+                      onChange={(e) => handleTransferRowChange(index, 'amount', e.target.value)}
+                    />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleRemoveTransferRow(index)}
+                      disabled={transferRows.length <= 1}
+                      className="text-destructive h-10 w-10 shrink-0"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+              {transferType === 'Own Heads' && fromHeadId && (
+                <div className="mt-3 flex justify-between items-center text-sm">
+                  <span className="font-medium">Total Transfer Amount:</span>
+                  <span className={`font-bold ${getTotalTransferAmount() > getFromHeadBalance() ? 'text-destructive' : 'text-primary'}`}>
+                    {formatAmount(getTotalTransferAmount())}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Attachment (Optional)</label>
+              <Input
+                type="file"
+                accept="image/*,application/pdf"
+                onChange={(e) => {
+                  if (e.target.files && e.target.files[0]) {
+                    setTransferImage(e.target.files[0]);
+                  } else {
+                    setTransferImage(null);
+                  }
+                }}
+              />
+            </div>
+
+            <div className="flex justify-end gap-2 pt-4">
+              <Button variant="outline" onClick={() => setTransferOpen(false)}>Cancel</Button>
+              <Button onClick={submitTransfer} disabled={transferSubmit}>
+                {transferSubmit ? 'Processing...' : 'Save Transfer'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 }

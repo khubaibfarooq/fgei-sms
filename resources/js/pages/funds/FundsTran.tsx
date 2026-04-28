@@ -359,7 +359,7 @@ export default function FundsTran({ fundheld, fundtrans, filters }: Props) {
                     <th className="border p-2 text-center font-medium text-white dark:text-gray-200">Type</th>
                     <th className="border p-2 text-right font-medium text-white dark:text-gray-200">Op. Balance</th>
                     <th className="border p-2 text-right font-medium text-white dark:text-gray-200">Amount</th>
-                    <th className="border p-2 text-right font-medium text-white dark:text-gray-200">Balance</th>
+                    <th className="border p-2 text-right font-medium text-white dark:text-gray-200"> Cl. Balance</th>
                     <th className="border p-2 text-left font-medium text-white dark:text-gray-200">Admin Info</th>
                     <th className="border p-2 text-center font-medium text-white dark:text-gray-200">Status</th>
                     <th className="border p-2 text-center font-medium text-white dark:text-gray-200">Actions</th>
@@ -384,7 +384,13 @@ export default function FundsTran({ fundheld, fundtrans, filters }: Props) {
                         </td>
                         <td className="border p-1.5">
                           <div className="flex flex-row gap-2 items-center">
-                            <ImagePreview dataImg={transaction.img} size="h-12 w-12" />
+                            {transaction.img && transaction.img.toLowerCase().endsWith('.pdf') ? (
+                              <a href={`/${transaction.img}`} target="_blank" rel="noreferrer" title="View PDF Document" className="shrink-0 flex items-center justify-center h-12 w-12 bg-muted rounded-md border text-red-500 hover:bg-muted/80">
+                                <FileText className="h-6 w-6" />
+                              </a>
+                            ) : (
+                              <ImagePreview dataImg={transaction.img} size="h-12 w-12" />
+                            )}
                             <span className="font-semibold">{transaction.description}</span>
                           </div>
                         </td>

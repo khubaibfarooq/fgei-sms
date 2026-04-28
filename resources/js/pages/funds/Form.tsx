@@ -57,6 +57,7 @@ export default function FundForm({ fund, fundHeads }: FundFormProps) {
   /* ------------------------------------------------------------------ */
   const { data, setData, processing } = useForm({
     transaction_type: fund?.transaction_type ?? '',
+    date: fund?.added_date ?? new Date().toISOString().split('T')[0],
     // edit-only fields
     amount: fund?.balance ?? 0,
     fund_head_id: fund?.fund_head_id ?? 0,
@@ -137,6 +138,7 @@ export default function FundForm({ fund, fundHeads }: FundFormProps) {
       '/funds',
       {
         transaction_type: data.transaction_type,
+        date: data.date,
         heads: validHeads,
       },
       { onFinish: () => setSubmitting(false) },
@@ -238,6 +240,20 @@ export default function FundForm({ fund, fundHeads }: FundFormProps) {
                       {data.transaction_type === 'in' ? 'Income' : 'Expense'}
                     </span>
                   )}
+                </div>
+
+                {/* Date */}
+                <div className="space-y-1.5">
+                  <Label htmlFor="date" className="text-sm font-semibold">
+                    Transaction Date <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    type="date"
+                    id="date"
+                    required
+                    value={data.date}
+                    onChange={(e) => setData('date', e.target.value)}
+                  />
                 </div>
               </div>
               )}

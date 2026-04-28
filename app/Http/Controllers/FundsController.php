@@ -36,11 +36,184 @@ class FundsController extends Controller
             'can_delete' => auth()->user()->can('fund-delete'),
         ];
 
+        // Fetch data for Transfer modal
+        $fundHeads = FundHead::get(['id', 'name', 'type']);
+        $myInstitute = Institute::find($inst_id);
+        $regionalOffice = null;
+        if ($myInstitute && $myInstitute->region_id) {
+            $regionalOffice = Institute::where('region_id', $myInstitute->region_id)
+                                       ->where('type', 'Regional Office')
+                                       ->first(['id', 'name']);
+        }
+        
+        $ownBalances = FundHeld::with('fundHead')->where('institute_id', $inst_id)->get();
+
         return Inertia::render('funds/Index', [
             'funds'       => $funds,
             'filters'     => ['search' => $request->search ?? ''],
             'permissions' => $permissions,
+            'fundHeads'   => $fundHeads,
+            'regionalOffice' => $regionalOffice,
+            'ownBalances' => $ownBalances,
         ]);
+    }
+
+    public function transfer(Request $request)
+    {
+        try {
+            if (!auth()->user()->can('fund-add')) {
+                abort(403);
+            }
+
+            $validated = $request->validate([
+                'transfer_type' => 'required|in:Own Heads,Region',
+                'from_head_id'  => 'required',
+                'rows'          => 'required|array|min:1',
+                'rows.*.head_id'=> 'required|numeric',
+                'rows.*.amount' => 'required|numeric|min:0.01',
+                'transfer_image'=> 'nullable|file|max:10240',
+            ]);
+
+            $inst_id = session('sms_inst_id');
+            $userId  = auth()->id();
+            $date    = now()->format('Y-m-d');
+
+            $imagePath = null;
+            if ($request->hasFile('transfer_image')) {
+                $file = $request->file('transfer_image');
+                $fileName = time() . '-' . uniqid() . '.' . $file->getClientOriginalExtension();
+                $dir = public_path('assets/funds');
+                if (!file_exists($dir)) {
+                    mkdir($dir, 0755, true);
+                }
+                $file->move($dir, $fileName);
+                $imagePath = 'assets/funds/' . $fileName;
+            }
+
+            DB::transaction(function () use ($request, $inst_id, $userId, $date, $imagePath) {
+                if ($request->transfer_type === 'Own Heads') {
+                    foreach ($request->rows as $row) {
+                        // OUT transaction from selected head
+                        $outFund = Fund::create([
+                            'fund_head_id' => $request->from_head_id,
+                            'description'  => 'Transfer to ' . FundHead::find($row['head_id'])->name,
+                            'amount'       => $row['amount'],
+                            'type'         => 'out',
+                            'added_date'   => $date,
+                            'status'       => 'Approved',
+                            'approved_date'=> now(),
+                            'approve_by'   => $userId,
+                            'added_by'     => $userId,
+                            'institute_id' => $inst_id,
+                            'tid'          => $inst_id,
+                            'trans_type'   => 'transfer',
+                            'img'          => $imagePath,
+                        ]);
+
+                        // IN transaction to row head
+                        $inFund = Fund::create([
+                            'fund_head_id' => $row['head_id'],
+                            'description'  => 'Transfer from ' . FundHead::find($request->from_head_id)->name,
+                            'amount'       => $row['amount'],
+                            'type'         => 'in',
+                            'added_date'   => $date,
+                            'status'       => 'Approved',
+                            'approved_date'=> now(),
+                            'approve_by'   => $userId,
+                            'added_by'     => $userId,
+                            'institute_id' => $inst_id,
+                            'tid'          => $inst_id,
+                            'trans_type'   => 'transfer',
+                            'img'          => $imagePath,
+                        ]);
+
+                        // Update balances
+                        $this->updateFundBalance($inst_id, $request->from_head_id, -$row['amount'], $outFund);
+                        $this->updateFundBalance($inst_id, $row['head_id'], $row['amount'], $inFund);
+                    }
+                } elseif ($request->transfer_type === 'Region') {
+                    $myInstitute = Institute::find($inst_id);
+                    $regionalOffice = Institute::where('region_id', $myInstitute->region_id)
+                                               ->where('type', 'Regional Office')
+                                               ->first();
+                                               
+                    if (!$regionalOffice) {
+                        throw new \Exception('Regional Office not found for this institute.');
+                    }
+                    
+                    foreach ($request->rows as $row) {
+                        // OUT transaction for login institute
+                        $outFund = Fund::create([
+                            'fund_head_id' => $row['head_id'], // Pulls from row's institutional head
+                            'description'  => 'Transfer to Regional ' . FundHead::find($request->from_head_id)->name,
+                            'amount'       => $row['amount'],
+                            'type'         => 'out',
+                            'added_date'   => $date,
+                            'status'       => 'Approved',
+                            'approved_date'=> now(),
+                            'approve_by'   => $userId,
+                            'added_by'     => $userId,
+                            'institute_id' => $inst_id,
+                            'tid'          => $regionalOffice->id,
+                            'trans_type'   => 'transfer',
+                            'img'          => $imagePath,
+                        ]);
+
+                        // IN transaction for regional office
+                        $inFund = Fund::create([
+                            'fund_head_id' => $request->from_head_id, // Receives into selected regional head
+                            'description'  => 'Transfer from ' . FundHead::find($row['head_id'])->name,
+                            'amount'       => $row['amount'],
+                            'type'         => 'in',
+                            'added_date'   => $date,
+                            'status'       => 'Approved',
+                            'approved_date'=> now(),
+                            'approve_by'   => $userId,
+                            'added_by'     => $userId,
+                            'institute_id' => $regionalOffice->id,
+                            'tid'          => $inst_id,
+                            'trans_type'   => 'transfer',
+                            'img'          => $imagePath,
+                        ]);
+
+                        // Update balances
+                        $this->updateFundBalance($inst_id, $row['head_id'], -$row['amount'], $outFund);
+                        $this->updateFundBalance($regionalOffice->id, $request->from_head_id, $row['amount'], $inFund);
+                    }
+                }
+            });
+
+            return redirect()->back()->with('success', 'Funds transferred successfully.');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return back()->withErrors($e->validator->errors())->withInput();
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error: ' . $e->getMessage());
+        }
+    }
+
+    private function updateFundBalance($instituteId, $fundHeadId, $amountChange, $fundTrans = null)
+    {
+        $fundHeld = FundHeld::firstWhere([
+            'institute_id' => $instituteId,
+            'fund_head_id' => $fundHeadId
+        ]);
+
+        if ($fundHeld) {
+            $fundHeld->increment('balance', $amountChange);
+            $newBalance = $fundHeld->fresh()->balance;
+        } else {
+            $fundHeld = FundHeld::create([
+                'institute_id' => $instituteId,
+                'fund_head_id' => $fundHeadId,
+                'balance'      => $amountChange,
+                'added_by'     => auth()->id(),
+            ]);
+            $newBalance = $amountChange;
+        }
+        
+        if ($fundTrans) {
+            $fundTrans->update(['balance' => $newBalance]);
+        }
     }
 
     // --------------------------------------------------------------------- //
