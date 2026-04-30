@@ -1014,7 +1014,7 @@ $regions = Institute::select('region_id as id', 'name')->where('type', 'Regional
         // -----------------------------------------------------------------
         // Fund Heads (always available)
         // -----------------------------------------------------------------
-        $fundHeads = FundHead::select('id', 'name')->where('type', 'regional')->get();
+        $fundHeads = FundHead::select('id', 'name')->get();
 
         return Inertia::render('Reports/Projects', [
             'institutes'    => $institutes,
@@ -1498,7 +1498,7 @@ public function getTransactions(Request $request)
 }
 public function Funds(Request $request)
     {
-        $fundheads = FundHead::select('id', 'name')->get();
+        $fundheads = FundHead::select('id', 'name', 'parent_id')->get();
         $hrInstituteId = session('inst_id');
         $regionid      = session('region_id');
         $type          = session('type');
@@ -1777,7 +1777,7 @@ public function getFunds(Request $request)
     $regionid = session('region_id');
     $type = session('type');
 
-    $fundheads = FundHead::select('id', 'name')->get();
+    $fundheads = FundHead::select('id', 'name', 'parent_id')->get();
     $balances = [];
     $funds = [];
 
@@ -1802,8 +1802,7 @@ private function handleRegionalOffice($request, $regionid, $fundheads, &$balance
     if ($this->isFundHeadFiltered($request)) {
         $fundhead = $request->fund_head_id;
         $balances = $this->getBalancesForSingleFundHead($fundhead, $regionid);
-     $funds = $this->buildFundsForInstitutes($institutes, $fundheads, $regionid);
-
+        $funds = $this->buildFundsForInstitutes($institutes, $fundheads, $regionid);
     } else {
         $fundHeadBalances = $this->getFundHeadBalancesByRegion($regionid);
         $balances = $this->mapFundHeadBalances($fundheads, $fundHeadBalances);
@@ -1928,8 +1927,15 @@ private function isRegionFiltered($request)
 
 private function getBalancesForSingleFundHead($fundhead, $regionid)
 {
+    // Include the selected head + its children
+    $childIds = FundHead::where('parent_id', $fundhead)->pluck('id')->toArray();
+    $allIds = array_merge([(int)$fundhead], $childIds);
+
+    // For name lookup
+    $allFundHeads = FundHead::whereIn('id', $allIds)->get()->keyBy('id');
+
     $fundHeadBalances = FundHeld::query()
-        ->where('fund_head_id', $fundhead)
+        ->whereIn('fund_helds.fund_head_id', $allIds)
         ->join('fund_heads', 'fund_helds.fund_head_id', '=', 'fund_heads.id')
         ->join('institutes', 'fund_helds.institute_id', '=', 'institutes.id')
         ->where('institutes.region_id', $regionid)
@@ -1942,17 +1948,16 @@ private function getBalancesForSingleFundHead($fundhead, $regionid)
         ->get()
         ->keyBy('id');
 
-    $balanceData = $fundHeadBalances->get($fundhead);
-
-    return collect([
-        [
+    return $allFundHeads->map(function ($fh) use ($fundHeadBalances) {
+        $balanceData = $fundHeadBalances->get($fh->id);
+        return [
             'fund_head' => [
-                'id' => $fundhead,
-                'name' => $balanceData->name ?? 'N/A',
+                'id'   => (int) $fh->id,
+                'name' => $fh->name,
             ],
-            'balance' => $balanceData->balance ?? 0,
-        ]
-    ])->values();
+            'balance' => $balanceData ? (float) $balanceData->balance : 0,
+        ];
+    })->values();
 }
 
 private function getFundHeadBalancesByRegion($regionid)
@@ -1973,14 +1978,24 @@ private function getFundHeadBalancesByRegion($regionid)
 
 private function mapFundHeadBalances($fundheads, $fundHeadBalances)
 {
-    return $fundheads->map(function ($fundHead) use ($fundHeadBalances) {
+    return $fundheads->map(function ($fundHead) use ($fundHeadBalances, $fundheads) {
         $balance = $fundHeadBalances->get($fundHead->id);
+        $ownBalance = $balance ? (float) $balance->balance : 0;
+
+        // Aggregate children's balances into the parent total
+        $childTotal = $fundheads
+            ->where('parent_id', $fundHead->id)
+            ->reduce(function ($carry, $child) use ($fundHeadBalances) {
+                $childBalance = $fundHeadBalances->get($child->id);
+                return $carry + ($childBalance ? (float) $childBalance->balance : 0);
+            }, 0);
+
         return [
             'fund_head' => [
-                'id' => $fundHead->id,
+                'id'   => $fundHead->id,
                 'name' => $fundHead->name,
             ],
-            'balance' => $balance ? $balance->balance : 0,
+            'balance' => $ownBalance + $childTotal,
         ];
     })->values();
 }
@@ -1998,7 +2013,6 @@ private function buildFundsForInstitutes($institutes, $fundheads, $regionid)
             DB::raw('SUM(fund_helds.balance) as balance')
         ])
         ->groupBy('fund_helds.institute_id', 'fund_helds.fund_head_id', 'fund_heads.name')
-        ->orderByRaw('ISNULL(`institutes.order`) ASC, `institutes.order` ASC, institutes.id DESC')
         ->get();
 
     return $institutes->map(function ($institute) use ($fundheads, $fundBalancesByInstitute) {

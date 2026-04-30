@@ -1311,7 +1311,7 @@ export default function Projects({ projects: initialProjects, institutes, region
                                                                         </p>
                                                                     )}    {milestone.pdf && (
                                                                         <a
-                                                                            href={`/assets/${milestone.pdf}`}
+                                                                            href={`/${milestone.pdf}`}
                                                                             target="_blank"
                                                                             rel="noopener noreferrer"
                                                                             onClick={(e) => e.stopPropagation()}
@@ -1656,11 +1656,11 @@ export default function Projects({ projects: initialProjects, institutes, region
                         <div className="py-4">
                             {selectedDescriptionProject?.description ? (
                                 <div
-                                    className="bg-muted/30 p-4 rounded-lg border text-sm leading-relaxed prose prose-sm max-w-none"
-                                    dangerouslySetInnerHTML={{ __html: selectedDescriptionProject.description }}
+                                    className="bg-muted/10 p-4 rounded-lg border text-sm leading-relaxed prose prose-sm dark:prose-invert max-w-none w-full break-words"
+                                    dangerouslySetInnerHTML={{ __html: selectedDescriptionProject.description.replace(/&nbsp;/g, ' ') }}
                                 />
                             ) : (
-                                <div className="bg-muted/30 p-4 rounded-lg border text-sm leading-relaxed">
+                                <div className="bg-muted/10 p-4 rounded-lg border text-sm leading-relaxed">
                                     No description available.
                                 </div>
                             )}

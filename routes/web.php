@@ -51,6 +51,7 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\ContractorController;
 use App\Http\Controllers\BankStatementController;
+use App\Http\Controllers\Api\ApiFundController;
 
 Route::get('/', function () {
     return Inertia::render('welcome');
@@ -275,6 +276,10 @@ Route::post('/institutes/{institute}/bank-statements', [BankStatementController:
 Route::delete('/bank-statements/{bankStatement}', [BankStatementController::class, 'destroy'])->name('bank-statements.destroy');
 
 });
+
+// External API Routes
+Route::post('/api/funds/transaction-in', [ApiFundController::class, 'storeInTransaction'])->name('api.funds.transaction-in');
+Route::post('/api/funds/transfer-region', [ApiFundController::class, 'transferToRegion'])->name('api.funds.transfer-region');
 
 require __DIR__ . '/settings.php';
 require __DIR__ . '/auth.php';

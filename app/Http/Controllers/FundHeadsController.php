@@ -25,8 +25,7 @@ class FundHeadsController extends Controller
 
     public function create()
     {
-         $fundHeads = FundHead::whereNull('parent_id')
-        ->select('id', 'name')
+         $fundHeads = FundHead::select('id', 'name')
         ->get();
         return Inertia::render('fundheads/Form', ['fundHead' => null,
     'fundHeads'=>$fundHeads]);
@@ -37,9 +36,9 @@ class FundHeadsController extends Controller
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'parent_id'=>'nullable|numeric',
-            'type'=>'required|in:public,institutional,regional,dte',
+            'type'=>'required|in:govt,uni,dte,regional,institutional',
         ]);
-
+//dd($data);
         FundHead::Create($data);
 
         return redirect()->back()->with('success', 'Fund Head saved successfully.');
@@ -57,7 +56,7 @@ class FundHeadsController extends Controller
     {
         $data = $request->validate(['name' => 'required|string|max:255',
          'parent_id'=>'nullable|numeric',
-        'type'=>'required|in:public,institutional,regional,dte',]);  
+        'type'=>'required|in:govt,uni,dte,regional,institutional',]);  
         $FundHead->update($data);     
         return redirect()->back()->with('success', 'Fund Head updated successfully.');
     }

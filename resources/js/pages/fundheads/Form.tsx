@@ -35,7 +35,7 @@ export default function FundHeadForm({ fundHead, fundHeads }: FundHeadFormProps)
   }>({
     name: fundHead?.name || '',
     parent_id: fundHead?.parent_id || '',
-    type: fundHead?.type || 'public',
+    type: fundHead?.type || 'institutional',
   });
   const fundHeadsArray = React.useMemo(() => {
     if (!fundHeads) return [];
@@ -124,13 +124,16 @@ export default function FundHeadForm({ fundHead, fundHeads }: FundHeadFormProps)
                 <select
                   id="type"
                   value={data.type}
-                  onChange={(e) => setData('type', e.target.value as 'public' | 'institutional' | 'regional')}
+                  onChange={(e) => setData('type', e.target.value as 'govt' | 'uni' | 'institutional' | 'regional' | 'dte')}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md"
                 >
-                  <option value="public">Public</option>
-                  <option value="institutional">Institutional</option>
+                  <option value="govt">Govt</option>
+                  <option value="uni">University</option>
                   <option value="regional">Regional</option>
                   <option value="dte">Dte</option>
+                  <option value="institutional">Institutional</option>
+
+
 
                 </select>
               </div>

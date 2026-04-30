@@ -22,7 +22,7 @@ const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Funds', href: '/reports/funds' },
 ];
 
-interface Item { id: number; name: string; }
+interface Item { id: number; name: string; parent_id?: number | null; }
 interface FundItem {
   institute_id: number;
   region_id: number;
@@ -100,6 +100,50 @@ export default function Funds({
     return balances.reduce((sum, b) => sum + toNumber(b.balance), 0);
   }, [balances]);
 
+  const isRegionView = funds.length > 0 && !funds[0].institute_name;
+
+  const columnsToShow = useMemo(() => {
+    if (fundHead && fundHead !== '0') {
+      if (!isRegionView) {
+        // Institute view + fund head selected: show the selected head AND all its children
+        const selectedId = parseInt(fundHead);
+        const children = fundheads.filter(fh => fh.parent_id === selectedId);
+        const parent = fundheads.find(fh => fh.id === selectedId);
+        return parent ? [parent, ...children] : children;
+      } else {
+        // Region view + fund head selected: show only the selected head (already aggregated)
+        return fundheads.filter(fh => fh.id.toString() === fundHead);
+      }
+    } else if (isRegionView) {
+      // Region view (no filter): Only show parent heads
+      return fundheads.filter(fh => !fh.parent_id);
+    }
+    // Institute view (no filter): Show all fund heads
+    return fundheads;
+  }, [isRegionView, fundheads, fundHead]);
+
+  const getFundHeadBalance = (row: FundItem, fh: Item) => {
+    let balance = toNumber(row.fund_heads[fh.name] || 0);
+    // In region view, we aggregate the parent head balance with its sub-heads
+    if (isRegionView) {
+      const subHeads = fundheads.filter(sub => sub.parent_id === fh.id);
+      subHeads.forEach(sub => {
+        balance += toNumber(row.fund_heads[sub.name] || 0);
+      });
+    }
+    return balance;
+  };
+
+  const balancesToShow = useMemo(() => {
+    return columnsToShow.map(fh => {
+      const balanceItem = balances.find(b => Number(b.fund_head?.id) === Number(fh.id));
+      return {
+        fund_head: { id: fh.id, name: fh.name },
+        balance: toNumber(balanceItem?.balance || 0),
+      };
+    });
+  }, [columnsToShow, balances]);
+
   const fetchInstitutes = async (regionId: string) => {
     if (!regionId || regionId === '0') {
       setFilteredInstitutes([]);
@@ -146,13 +190,15 @@ export default function Funds({
     const ws = workbook.addWorksheet('Funds');
     ws.columns = [
       { header: 'Institute', key: 'institute', width: 50 },
-      ...fundheads.map(fh => ({ header: fh.name, key: fh.name, width: 18 })),
+      ...columnsToShow.map(fh => ({ header: fh.name, key: fh.name, width: 18 })),
       { header: 'Total', key: 'total', width: 20 },
     ];
 
     funds.forEach(row => {
       const rowData: any = { institute: row.institute_name ?? (row.region_name.split(' ').pop() || row.region_name) };
-      fundheads.forEach(fh => rowData[fh.name] = toNumber(row.fund_heads[fh.name]));
+      columnsToShow.forEach(fh => {
+        rowData[fh.name] = getFundHeadBalance(row, fh);
+      });
       rowData.total = toNumber(row.total_balance);
       ws.addRow(rowData);
     });
@@ -164,10 +210,10 @@ export default function Funds({
   const exportToPDF = () => {
     const doc = new jsPDF('l', 'mm', 'a4');
     doc.text('Institute Wise Fund Balances', 14, 15);
-    const headers = ['Institute', ...fundheads.map(fh => fh.name), 'Total'];
+    const headers = ['Institute', ...columnsToShow.map(fh => fh.name), 'Total'];
     const rows = funds.map(row => [
       row.institute_name ?? (row.region_name.split(' ').pop() || row.region_name),
-      ...fundheads.map(fh => toNumber(row.fund_heads[fh.name]).toFixed(2)),
+      ...columnsToShow.map(fh => getFundHeadBalance(row, fh).toFixed(2)),
       toNumber(row.total_balance).toFixed(2),
     ]);
     autoTable(doc, { head: [headers], body: rows, startY: 25 });
@@ -361,333 +407,305 @@ export default function Funds({
 
   return (
     <>
-    <AppLayout breadcrumbs={breadcrumbs}>
-      <Head title="Funds Report" />
+      <AppLayout breadcrumbs={breadcrumbs}>
+        <Head title="Funds Report" />
 
-      <div className="p-2 sm:p-3 w-full overflow-x-hidden space-y-3">
-        <Card className="shadow-md">
-          <CardHeader className="py-1.5 px-4">
-            <div className="flex flex-wrap items-center gap-2">
-              {/* Title */}
-              <div className="shrink-0 mr-2">
-                <CardTitle className="text-sm font-bold leading-none">Funds Report</CardTitle>
-                <p className="text-[10px] text-muted-foreground mt-0.5">Fund balances by institute / fund head</p>
-              </div>
+        <div className="p-2 sm:p-3 w-full overflow-x-hidden space-y-3">
+          <Card className="shadow-md">
+            <CardHeader className="py-1.5 px-4">
+              <div className="flex flex-wrap items-center gap-2">
+                {/* Title */}
+                <div className="shrink-0 mr-2">
+                  <CardTitle className="text-sm font-bold leading-none">Funds Report</CardTitle>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">Fund balances by institute / fund head</p>
+                </div>
 
-              {/* Filters inline */}
-              {regions.length > 0 && (
-                <div className="w-32">
+                {/* Filters inline */}
+                {regions.length > 0 && (
+                  <div className="w-32">
+                    <Combobox
+                      entity="region"
+                      value={region}
+                      onChange={handleRegionChange}
+                      options={regions.map(r => ({ id: r.id.toString(), name: r.name.split(' ').pop() || r.name }))}
+                      includeAllOption={true}
+                      placeholder="Region"
+                    />
+                  </div>
+                )}
+                <div className="w-36">
                   <Combobox
-                    entity="region"
-                    value={region}
-                    onChange={handleRegionChange}
-                    options={regions.map(r => ({ id: r.id.toString(), name: r.name.split(' ').pop() || r.name }))}
+                    entity="institute"
+                    value={institute}
+                    onChange={setInstitute}
+                    options={filteredInstitutes.map(i => ({ id: i.id.toString(), name: i.name }))}
                     includeAllOption={true}
-                    placeholder="Region"
+                    placeholder="Institute"
                   />
                 </div>
-              )}
-              <div className="w-36">
-                <Combobox
-                  entity="institute"
-                  value={institute}
-                  onChange={setInstitute}
-                  options={filteredInstitutes.map(i => ({ id: i.id.toString(), name: i.name }))}
-                  includeAllOption={true}
-                  placeholder="Institute"
-                />
+                <Select value={fundHead} onValueChange={setFundHead}>
+                  <SelectTrigger className="h-7 text-xs w-32"><SelectValue placeholder="Fund Head" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0">All Fund Heads</SelectItem>
+                    {fundheads.map(f => (
+                      <SelectItem key={f.id} value={f.id.toString()}>{f.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button onClick={() => applyFilters()} className="h-7 text-xs px-3">Apply</Button>
+                <Button
+                  variant="outline"
+                  onClick={() => { setRegion(''); setInstitute(''); setFundHead(''); applyFilters('/reports/funds'); }}
+                  className="h-7 text-xs px-3"
+                >Reset</Button>
+
+                {/* Export — pushed to right */}
+                <div className="flex gap-1 ml-auto">
+                  <Button onClick={exportToPDF} variant="outline" size="sm" className="h-7 text-xs px-2">PDF</Button>
+                  <Button onClick={exportToExcel} variant="outline" size="sm" className="h-7 text-xs px-2">Excel</Button>
+                </div>
               </div>
-              <Select value={fundHead} onValueChange={setFundHead}>
-                <SelectTrigger className="h-7 text-xs w-32"><SelectValue placeholder="Fund Head" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="0">All Fund Heads</SelectItem>
-                  {fundheads.map(f => (
-                    <SelectItem key={f.id} value={f.id.toString()}>{f.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Button onClick={() => applyFilters()} className="h-7 text-xs px-3">Apply</Button>
-              <Button
-                variant="outline"
-                onClick={() => { setRegion(''); setInstitute(''); setFundHead(''); applyFilters('/reports/funds'); }}
-                className="h-7 text-xs px-3"
-              >Reset</Button>
+            </CardHeader>
 
-              {/* Export — pushed to right */}
-              <div className="flex gap-1 ml-auto">
-                <Button onClick={exportToPDF} variant="outline" size="sm" className="h-7 text-xs px-2">PDF</Button>
-                <Button onClick={exportToExcel} variant="outline" size="sm" className="h-7 text-xs px-2">Excel</Button>
-              </div>
-            </div>
-          </CardHeader>
+            <Separator />
 
-          <Separator />
-
-          {/* Region Selection for PDF Report */}
-          {regions.length > 0 && (
-            <>
-              <CardContent className="pt-2 pb-2 px-4">
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-xs font-semibold flex items-center gap-1 text-muted-foreground">
-                      <FileText className="h-3 w-3" />
-                      Regional Fund Report
-                      {region && region !== '0' && (
-                        <span className="font-normal">
-                          — {regions.find(r => r.id.toString() === region)?.name.split(' ').pop()}
-                        </span>
-                      )}
-                    </h3>
-                    <div className="flex items-center gap-2">
-                      {(!region || region === '0') && (
-                        <label className="flex items-center gap-1 cursor-pointer">
-                          <Checkbox
-                            checked={selectedRegions.length === regions.length && regions.length > 0}
-                            onCheckedChange={toggleAllRegions}
-                          />
-                          <span className="text-xs">All</span>
-                        </label>
-                      )}
-                      <Button
-                        onClick={() => {
-                          if (region && region !== '0') generatePDFReport([parseInt(region)]);
-                          else generatePDFReport();
-                        }}
-                        disabled={((!region || region === '0') && selectedRegions.length === 0) || isGeneratingPDF}
-                        size="sm"
-                        className="h-7 text-xs gap-1"
-                      >
+            {/* Region Selection for PDF Report */}
+            {regions.length > 0 && (
+              <>
+                <CardContent className="pt-2 pb-2 px-4">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-xs font-semibold flex items-center gap-1 text-muted-foreground">
                         <FileText className="h-3 w-3" />
-                        {isGeneratingPDF ? 'Generating...' : 'Create Report'}
-                      </Button>
-                    </div>
-                  </div>
-                  {(!region || region === '0') && (
-                    <>
-                      <div className="flex flex-wrap gap-1.5">
-                        {regions.map(r => {
-                          const shortName = r.name.split(' ').pop() || r.name;
-                          return (
-                            <label
-                              key={r.id}
-                              className={`flex items-center gap-1 px-2 py-1 rounded border cursor-pointer text-xs transition-all ${selectedRegions.includes(r.id)
-                                ? 'bg-primary/10 border-primary text-primary'
-                                : 'hover:bg-muted/50 border-border'
-                                }`}
-                            >
-                              <Checkbox
-                                checked={selectedRegions.includes(r.id)}
-                                onCheckedChange={() => toggleRegionSelection(r.id)}
-                              />
-                              {shortName}
-                            </label>
-                          );
-                        })}
+                        Regional Fund Report
+                        {region && region !== '0' && (
+                          <span className="font-normal">
+                            — {regions.find(r => r.id.toString() === region)?.name.split(' ').pop()}
+                          </span>
+                        )}
+                      </h3>
+                      <div className="flex items-center gap-2">
+                        {(!region || region === '0') && (
+                          <label className="flex items-center gap-1 cursor-pointer">
+                            <Checkbox
+                              checked={selectedRegions.length === regions.length && regions.length > 0}
+                              onCheckedChange={toggleAllRegions}
+                            />
+                            <span className="text-xs">All</span>
+                          </label>
+                        )}
+                        <Button
+                          onClick={() => {
+                            if (region && region !== '0') generatePDFReport([parseInt(region)]);
+                            else generatePDFReport();
+                          }}
+                          disabled={((!region || region === '0') && selectedRegions.length === 0) || isGeneratingPDF}
+                          size="sm"
+                          className="h-7 text-xs gap-1"
+                        >
+                          <FileText className="h-3 w-3" />
+                          {isGeneratingPDF ? 'Generating...' : 'Create Report'}
+                        </Button>
                       </div>
-                      {selectedRegions.length > 0 && (
-                        <p className="text-xs text-muted-foreground">{selectedRegions.length} region(s) selected</p>
-                      )}
-                    </>
-                  )}
+                    </div>
+                    {(!region || region === '0') && (
+                      <>
+                        <div className="flex flex-wrap gap-1.5">
+                          {regions.map(r => {
+                            const shortName = r.name.split(' ').pop() || r.name;
+                            return (
+                              <label
+                                key={r.id}
+                                className={`flex items-center gap-1 px-2 py-1 rounded border cursor-pointer text-xs transition-all ${selectedRegions.includes(r.id)
+                                  ? 'bg-primary/10 border-primary text-primary'
+                                  : 'hover:bg-muted/50 border-border'
+                                  }`}
+                              >
+                                <Checkbox
+                                  checked={selectedRegions.includes(r.id)}
+                                  onCheckedChange={() => toggleRegionSelection(r.id)}
+                                />
+                                {shortName}
+                              </label>
+                            );
+                          })}
+                        </div>
+                        {selectedRegions.length > 0 && (
+                          <p className="text-xs text-muted-foreground">{selectedRegions.length} region(s) selected</p>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </CardContent>
+                <Separator />
+              </>
+            )}
+
+
+            {/* Total Balance Summary */}
+            <CardContent className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-900 py-2 px-4">
+              <div className="flex items-center justify-between gap-2 cursor-pointer" onClick={() => {
+                setFundHead('');
+                const params = new URLSearchParams({
+                  institute_id: institute || '',
+                  region_id: region || '',
+                  fund_head_id: '',
+                });
+                applyFilters(`/reports/funds/getfunds?${params.toString()}`);
+              }}>
+                <div>
+                  <p className="text-xs text-muted-foreground">Total Balance</p>
+                  <p className="text-xl font-bold text-primary">{formatCurrency(totalBalance)}</p>
                 </div>
-              </CardContent>
-              <Separator />
-            </>
-          )}
-
-
-          {/* Total Balance Summary */}
-          <CardContent className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-900 py-2 px-4">
-            <div className="flex items-center justify-between gap-2 cursor-pointer" onClick={() => {
-              setFundHead('');
-              const params = new URLSearchParams({
-                institute_id: institute || '',
-                region_id: region || '',
-                fund_head_id: '',
-              });
-              applyFilters(`/reports/funds/getfunds?${params.toString()}`);
-            }}>
-              <div>
-                <p className="text-xs text-muted-foreground">Total Balance</p>
-                <p className="text-xl font-bold text-primary">{formatCurrency(totalBalance)}</p>
-              </div>
-              <div className="text-right">
-                <p className="text-xs text-muted-foreground">Fund Heads</p>
-                <p className="text-xl font-bold text-muted-foreground">{balances.length}</p>
-              </div>
-            </div>
-          </CardContent>
-
-          <Separator />
-
-          {/* Fund Head Mini Cards */}
-          {balances.length > 0 && (
-            <>
-              <CardContent className="pt-2 pb-2 px-4">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-xs font-semibold text-muted-foreground">Fund Head Balances</h3>
-                  <Button
-                    onClick={() => {
-                      setFundHead('');
-                      const params = new URLSearchParams({
-                        institute_id: institute || '',
-                        region_id: region || '',
-                        fund_head_id: '',
-                      });
-                      applyFilters(`/reports/funds/getfunds?${params.toString()}`);
-                    }}
-                    variant="outline"
-                    size="sm"
-                    className="h-6 text-xs px-2"
-                  >
-                    Show All
-                  </Button>
+                <div className="text-right">
+                  <p className="text-xs text-muted-foreground">Fund Heads</p>
+                  <p className="text-xl font-bold text-muted-foreground">{balancesToShow.length}</p>
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  {balances.map((b, i) => (
-                    <div
-                      key={i}
+              </div>
+            </CardContent>
+
+            <Separator />
+
+            {/* Fund Head Mini Cards */}
+            {balancesToShow.length > 0 && (
+              <>
+                <CardContent className="pt-2 pb-2 px-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-xs font-semibold text-muted-foreground">Fund Head Balances</h3>
+                    <Button
                       onClick={() => {
-                        const fundHeadId = b.fund_head?.id?.toString() || '';
-                        setFundHead(fundHeadId);
+                        setFundHead('');
                         const params = new URLSearchParams({
                           institute_id: institute || '',
                           region_id: region || '',
-                          fund_head_id: fundHeadId,
+                          fund_head_id: '',
                         });
                         applyFilters(`/reports/funds/getfunds?${params.toString()}`);
                       }}
-                      className="bg-muted/50 dark:bg-gray-800 px-3 py-1.5 rounded border hover:shadow-sm transition-shadow cursor-pointer min-w-[100px]"
+                      variant="outline"
+                      size="sm"
+                      className="h-6 text-xs px-2"
                     >
-                      <p className="text-[10px] font-medium text-muted-foreground truncate">
-                        {b.fund_head?.name && b.fund_head.name !== 'N/A' ? b.fund_head.name : fundheads.find(fh => fh.id.toString() === fundHead)?.name}
-                      </p>
-                      <p className="text-sm font-bold text-green-600 dark:text-green-400">
-                        {formatCurrency(b.balance)}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-              <Separator />
-            </>
-          )}
-
-          {/* Institute Wise Table - Responsive & Scrollable */}
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-
-              <div className="max-w-full">
-                {funds[0].institute_name && regions.length > 0 ? (
-                  <Button
-                    onClick={() => {
-                      setFundHead('');
-                      setRegion('');
-                      const params = new URLSearchParams({
-                        institute_id: institute || '',
-                        region_id: '',
-                        fund_head_id: '',
-                      });
-                      applyFilters(`/reports/funds/getfunds?${params.toString()}`);
-                    }}
-                    variant="outline"
-                    size="sm"
-
-                  >
-                    Show All
-                  </Button>) : ('')}
-                {funds.length === 0 ? (
-                  <div className="text-center py-16 text-muted-foreground ">
-                    No institute data found. Try adjusting filters.
+                      Show All
+                    </Button>
                   </div>
-                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {balancesToShow.map((b, i) => (
+                      <div
+                        key={i}
+                        onClick={() => {
+                          const fundHeadId = b.fund_head?.id?.toString() || '';
+                          setFundHead(fundHeadId);
+                          const params = new URLSearchParams({
+                            institute_id: institute || '',
+                            region_id: region || '',
+                            fund_head_id: fundHeadId,
+                          });
+                          applyFilters(`/reports/funds/getfunds?${params.toString()}`);
+                        }}
+                        className="bg-muted/50 dark:bg-gray-800 px-3 py-1.5 rounded border hover:shadow-sm transition-shadow cursor-pointer min-w-[100px]"
+                      >
+                        <p className="text-[10px] font-medium text-muted-foreground truncate">
+                          {b.fund_head?.name && b.fund_head.name !== 'N/A' ? b.fund_head.name : fundheads.find(fh => fh.id.toString() === fundHead)?.name}
+                        </p>
+                        <p className="text-sm font-bold text-green-600 dark:text-green-400">
+                          {formatCurrency(b.balance)}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+                <Separator />
+              </>
+            )}
 
-                  <div className="overflow-x-auto">
-                    <table className="w-full border-collapse text-xs">
-                      <thead>
-                        <tr className="bg-primary text-white">
-                          <th className="sticky left-0 z-20 bg-primary px-3 py-2 text-left font-semibold text-xs">
-                            {funds[0].institute_name ? 'Institute' : 'Region'}
-                          </th>
-                          {fundHead && fundHead !== '0' ? (
-                            <th className="px-3 py-2 text-center font-medium whitespace-nowrap">
-                              {fundheads.find(fh => fh.id.toString() === fundHead)?.name}
+            {/* Institute Wise Table - Responsive & Scrollable */}
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+
+                <div className="max-w-full">
+                  {funds[0].institute_name && regions.length > 0 ? (
+                    <Button
+                      onClick={() => {
+                        setFundHead('');
+                        setRegion('');
+                        const params = new URLSearchParams({
+                          institute_id: institute || '',
+                          region_id: '',
+                          fund_head_id: '',
+                        });
+                        applyFilters(`/reports/funds/getfunds?${params.toString()}`);
+                      }}
+                      variant="outline"
+                      size="sm"
+
+                    >
+                      Show All
+                    </Button>) : ('')}
+                  {funds.length === 0 ? (
+                    <div className="text-center py-16 text-muted-foreground ">
+                      No institute data found. Try adjusting filters.
+                    </div>
+                  ) : (
+
+                    <div className="overflow-x-auto">
+                      <table className="w-full border-collapse text-xs">
+                        <thead>
+                          <tr className="bg-primary text-white">
+                            <th className="sticky left-0 z-20 bg-primary px-3 py-2 text-left font-semibold text-xs">
+                              {funds[0].institute_name ? 'Institute' : 'Region'}
                             </th>
-                          ) : (
-                            fundheads.map(fh => (
+                            {columnsToShow.map(fh => (
                               <th key={fh.id} className="px-3 py-2 text-center font-medium whitespace-nowrap">
                                 {fh.name}
                               </th>
-                            ))
-                          )}
-                          {(fundHead == '0' || fundHead == '') && (
-                            <th className="sticky right-0 z-20 bg-primary px-3 py-2 text-right font-bold">Total</th>
-                          )}
-                          {showBankStmtCol && (
-                            <th className="px-3 py-2 text-center font-medium whitespace-nowrap">Bank Statements</th>
-                          )}
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                        {funds.map(row => {
-                          const isRegionRow = !row.institute_name && row.region_name;
-                          return (
-                            <tr
-                              key={row.institute_id ?? row.region_id}
-                              className={`hover:bg-muted/50 ${isRegionRow ? 'cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20' : ''}`}
-                              onClick={() => {
-                                if (isRegionRow && row.region_id) {
-                                  const regionId = row.region_id.toString();
-                                  setRegion(regionId);
-                                  fetchInstitutes(regionId);
-                                  setInstitute('');
-                                  const params = new URLSearchParams({
-                                    institute_id: institute || '',
-                                    region_id: regionId,
-                                    fund_head_id: fundHead || '',
-                                  });
-                                  applyFilters(`/reports/funds/getfunds?${params.toString()}`);
-                                }
-                              }}
-                            >
-                              <td className="sticky left-0 z-10 bg-background text-wrap px-3 py-1.5 font-medium text-xs border-r">
-                                <div className="flex items-center gap-1">
-                                  {row.institute_name || (
-                                    <>
-                                      {/* Optional visual indicator that this is a clickable region */}
-                                      <span className="text-blue-600 dark:text-blue-400 font-semibold text-xs sm:text-sm">
-                                        {row.region_name.split(' ').pop() || row.region_name}
-                                      </span>
+                            ))}
+                            {(!fundHead || fundHead === '0') && (
+                              <th className="sticky right-0 z-20 bg-primary px-3 py-2 text-right font-bold">Total</th>
+                            )}
+                            {showBankStmtCol && (
+                              <th className="px-3 py-2 text-center font-medium whitespace-nowrap">Bank Statements</th>
+                            )}
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                          {funds.map(row => {
+                            const isRegionRow = !row.institute_name && row.region_name;
+                            return (
+                              <tr
+                                key={row.institute_id ?? row.region_id}
+                                className={`hover:bg-muted/50 ${isRegionRow ? 'cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20' : ''}`}
+                                onClick={() => {
+                                  if (isRegionRow && row.region_id) {
+                                    const regionId = row.region_id.toString();
+                                    setRegion(regionId);
+                                    fetchInstitutes(regionId);
+                                    setInstitute('');
+                                    const params = new URLSearchParams({
+                                      institute_id: institute || '',
+                                      region_id: regionId,
+                                      fund_head_id: fundHead || '',
+                                    });
+                                    applyFilters(`/reports/funds/getfunds?${params.toString()}`);
+                                  }
+                                }}
+                              >
+                                <td className="sticky left-0 z-10 bg-background text-wrap px-3 py-1.5 font-medium text-xs border-r">
+                                  <div className="flex items-center gap-1">
+                                    {row.institute_name || (
+                                      <>
+                                        {/* Optional visual indicator that this is a clickable region */}
+                                        <span className="text-blue-600 dark:text-blue-400 font-semibold text-xs sm:text-sm">
+                                          {row.region_name.split(' ').pop() || row.region_name}
+                                        </span>
 
-                                    </>
-                                  )}
-                                </div>
-                              </td>
-
-                              {fundHead && fundHead !== '0' ? (
-                                <td className="px-2 py-1.5 text-right font-medium text-xs tabular-nums whitespace-nowrap">
-                                  {(() => {
-                                    const selectedFundHead = fundheads.find(fh => fh.id.toString() === fundHead);
-                                    const amount = row.fund_heads[selectedFundHead?.name || ''] || 0;
-                                    if (!isRegionRow) {
-                                      return (
-                                        <a
-                                          href={`/reports/fundstrans?institute_id=${row.institute_id}&fund_head_id=${selectedFundHead?.id}&region_id=${region}`}
-                                          className="text-blue-600 hover:underline"
-                                          target="_blank"
-                                          rel="noopener noreferrer"
-                                          onClick={(e) => e.stopPropagation()}
-                                        >
-                                          {formatCurrency(amount)}
-                                        </a>
-                                      );
-                                    }
-                                    return formatCurrency(amount);
-                                  })()}
+                                      </>
+                                    )}
+                                  </div>
                                 </td>
-                              ) : (
+
                                 <>
-                                  {fundheads.map(fh => (
+                                  {columnsToShow.map(fh => (
                                     <td key={fh.id} className="px-2 py-1.5 text-right font-medium text-xs tabular-nums whitespace-nowrap">
                                       {!isRegionRow ? (
                                         <a
@@ -697,123 +715,112 @@ export default function Funds({
                                           rel="noopener noreferrer"
                                           onClick={(e) => e.stopPropagation()}
                                         >
-                                          {formatCurrency(row.fund_heads[fh.name])}
+                                          {formatCurrency(getFundHeadBalance(row, fh))}
                                         </a>
                                       ) : (
-                                        formatCurrency(row.fund_heads[fh.name])
+                                        formatCurrency(getFundHeadBalance(row, fh))
                                       )}
                                     </td>
                                   ))}
                                 </>
-                              )}
-                              {(fundHead == '0' || fundHead == '') && (
-                                <td className="sticky right-0 z-10 bg-green-50 dark:bg-green-900/30 px-2 py-1.5 text-xs text-right font-bold text-green-700 dark:text-green-400 tabular-nums border-l whitespace-nowrap">
-                                  {formatCurrency(row.total_balance)}
-                                </td>
-                              )}
-                              {/* Bank Statements cell — only for institute rows */}
-                              {showBankStmtCol && (() => {
-                                const instId = row.institute_id?.toString();
-                                const meta = instId ? bankStatements[instId] : undefined;
-                                return (
-                                  <td className="px-2 py-1.5 text-center text-xs">
-                                    {meta ? (
-                                      <div className="flex flex-col items-center gap-0.5">
-                                        {meta.last_image && (
-                                          /\.(jpeg|jpg|gif|png|webp|bmp|svg|jfif)$/i.test(meta.last_image) ? (
-                                            <ImagePreview
-                                              dataImg={meta.last_image}
-                                              className="h-8 w-12 object-cover rounded border cursor-pointer hover:opacity-90"
-                                            />
-                                          ) : (
-                                            <a 
-                                              href={`/${meta.last_image}`} 
-                                              download 
-                                              target="_blank"
-                                              rel="noreferrer"
-                                              className="flex items-center justify-center h-8 w-12 bg-muted rounded border hover:bg-muted/80 transition-colors"
-                                              title="Download Document"
-                                            >
-                                              <FileText className="h-4 w-4 text-muted-foreground" />
-                                            </a>
-                                          )
-                                        )}
-                                        <span className="text-[10px] text-muted-foreground">
-                                          {meta.last_date ? new Date(meta.last_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : ''}
-                                        </span>
-                                        <span className="text-[10px] font-semibold text-primary flex items-center gap-0.5">
-                                          <Images className="h-2.5 w-2.5" />{meta.total}
-                                        </span>
-                                      </div>
-                                    ) : (
-                                      <span className="text-muted-foreground">—</span>
-                                    )}
+                                {(!fundHead || fundHead === '0') && (
+                                  <td className="sticky right-0 z-10 bg-green-50 dark:bg-green-900/30 px-2 py-1.5 text-xs text-right font-bold text-green-700 dark:text-green-400 tabular-nums border-l whitespace-nowrap">
+                                    {formatCurrency(row.total_balance)}
                                   </td>
-                                );
-                              })()}
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                      <tfoot>
-                        <tr className="bg-gray-100 dark:bg-gray-800 font-bold">
-                          <td className="sticky left-0 z-10 bg-gray-100 dark:bg-gray-800 px-3 py-2 text-xs">Grand Total</td>
-                          {fundHead && fundHead !== '0' ? (
-                            <td className="px-2 py-2 text-right font-mono text-xs tabular-nums">
-                              {(() => {
-                                const selectedFundHead = fundheads.find(fh => fh.id.toString() === fundHead);
-                                const sum = funds.reduce((acc, row) => acc + toNumber(row.fund_heads[selectedFundHead?.name || ''] || 0), 0);
-                                return formatCurrency(sum);
-                              })()}
-                            </td>
-                          ) : (
-                            fundheads.map(fh => {
-                              const sum = funds.reduce((acc, row) => acc + toNumber(row.fund_heads[fh.name]), 0);
+                                )}
+                                {/* Bank Statements cell — only for institute rows */}
+                                {showBankStmtCol && (() => {
+                                  const instId = row.institute_id?.toString();
+                                  const meta = instId ? bankStatements[instId] : undefined;
+                                  return (
+                                    <td className="px-2 py-1.5 text-center text-xs">
+                                      {meta ? (
+                                        <div className="flex flex-col items-center gap-0.5">
+                                          {meta.last_image && (
+                                            /\.(jpeg|jpg|gif|png|webp|bmp|svg|jfif)$/i.test(meta.last_image) ? (
+                                              <ImagePreview
+                                                dataImg={meta.last_image}
+                                                className="h-8 w-12 object-cover rounded border cursor-pointer hover:opacity-90"
+                                              />
+                                            ) : (
+                                              <a
+                                                href={`/${meta.last_image}`}
+                                                download
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="flex items-center justify-center h-8 w-12 bg-muted rounded border hover:bg-muted/80 transition-colors"
+                                                title="Download Document"
+                                              >
+                                                <FileText className="h-4 w-4 text-muted-foreground" />
+                                              </a>
+                                            )
+                                          )}
+                                          <span className="text-[10px] text-muted-foreground">
+                                            {meta.last_date ? new Date(meta.last_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : ''}
+                                          </span>
+                                          <span className="text-[10px] font-semibold text-primary flex items-center gap-0.5">
+                                            <Images className="h-2.5 w-2.5" />{meta.total}
+                                          </span>
+                                        </div>
+                                      ) : (
+                                        <span className="text-muted-foreground">—</span>
+                                      )}
+                                    </td>
+                                  );
+                                })()}
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                        <tfoot>
+                          <tr className="bg-gray-100 dark:bg-gray-800 font-bold">
+                            <td className="sticky left-0 z-10 bg-gray-100 dark:bg-gray-800 px-3 py-2 text-xs">Grand Total</td>
+                            {columnsToShow.map(fh => {
+                              const sum = funds.reduce((acc, row) => acc + getFundHeadBalance(row, fh), 0);
                               return (
                                 <td key={fh.id} className="px-2 py-2 text-right font-mono text-xs tabular-nums">
                                   {formatCurrency(sum)}
                                 </td>
                               );
-                            })
-                          )}
-                          {(fundHead == '0' || fundHead == '') && (
-                            <td className="sticky right-0 z-10 bg-emerald-100 dark:bg-emerald-900/50 px-3 py-2 text-right font-bold text-emerald-700 dark:text-emerald-400 font-mono tabular-nums border-l text-xs">
-                              {formatCurrency(totalBalance)}
-                            </td>
-                          )}
-                          {showBankStmtCol && (
-                            <td className="px-2 py-2 text-center text-xs text-muted-foreground">
-                              {Object.values(bankStatements).reduce((s, m) => s + m.total, 0)} total
-                            </td>
-                          )}
-                        </tr>
-                      </tfoot>
-                    </table>
-                  </div>
-                )}
+                            })}
+                            {(!fundHead || fundHead === '0') && (
+                              <td className="sticky right-0 z-10 bg-emerald-100 dark:bg-emerald-900/50 px-3 py-2 text-right font-bold text-emerald-700 dark:text-emerald-400 font-mono tabular-nums border-l text-xs">
+                                {formatCurrency(totalBalance)}
+                              </td>
+                            )}
+                            {showBankStmtCol && (
+                              <td className="px-2 py-2 text-center text-xs text-muted-foreground">
+                                {Object.values(bankStatements).reduce((s, m) => s + m.total, 0)} total
+                              </td>
+                            )}
+                          </tr>
+                        </tfoot>
+                      </table>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    </AppLayout>
-
-    {lightboxSrc && (
-      <div
-        className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center"
-        onClick={() => setLightboxSrc(null)}
-      >
-        <div className="relative max-w-3xl w-full p-4" onClick={(e) => e.stopPropagation()}>
-          <button
-            className="absolute top-2 right-2 bg-black/60 text-white rounded-full p-1"
-            onClick={() => setLightboxSrc(null)}
-          >
-            <X className="h-5 w-5" />
-          </button>
-          <img src={lightboxSrc} alt="Bank Statement" className="w-full rounded-lg max-h-[80vh] object-contain" />
+            </CardContent>
+          </Card>
         </div>
-      </div>
-    )}
+      </AppLayout>
+
+      {lightboxSrc && (
+        <div
+          className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center"
+          onClick={() => setLightboxSrc(null)}
+        >
+          <div className="relative max-w-3xl w-full p-4" onClick={(e) => e.stopPropagation()}>
+            <button
+              className="absolute top-2 right-2 bg-black/60 text-white rounded-full p-1"
+              onClick={() => setLightboxSrc(null)}
+            >
+              <X className="h-5 w-5" />
+            </button>
+            <img src={lightboxSrc} alt="Bank Statement" className="w-full rounded-lg max-h-[80vh] object-contain" />
+          </div>
+        </div>
+      )}
     </>
   );
 }

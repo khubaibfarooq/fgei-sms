@@ -290,11 +290,11 @@ class ProjectApprovalController extends Controller
             }
             $project->update(['fund_head_id' => $existing]);
 
-            // --- 1.5. Add the submitted amounts to estimated_cost ---
-            $addedTotal = array_sum(array_column($request->fund_heads, 'sanction_amount'));
-            if ($addedTotal > 0) {
-                $project->increment('estimated_cost', $addedTotal);
-            }
+            // // --- 1.5. Add the submitted amounts to estimated_cost ---
+            // $addedTotal = array_sum(array_column($request->fund_heads, 'sanction_amount'));
+            // if ($addedTotal > 0) {
+            //     $project->increment('estimated_cost', $addedTotal);
+            // }
 
             // --- 2. For each fund head, find its first approval stage ---
             $newFundHeadIds = array_column($request->fund_heads, 'fund_head_id');

@@ -6,6 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { type BreadcrumbItem } from '@/types';
+import Combobox from '@/components/ui/combobox';
+
 import {
   Plus,
   Edit,
@@ -627,47 +629,42 @@ export default function FundIndex({ funds, filters, permissions, bankStatements,
           <div className="space-y-4 mt-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">Transfer Type</label>
-              <select
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              <Combobox
+                entity="Transfer Type"
+                placeholder="Select Transfer Type"
                 value={transferType}
-                onChange={(e) => {
-                  setTransferType(e.target.value as 'Own Heads' | 'Region');
+                onChange={(val) => {
+                  setTransferType(val as 'Own Heads' | 'Region');
                   setTransferRows([{ head_id: '', amount: '' }]);
                   setFromHeadId('');
                   setTransferImage(null);
                 }}
-              >
-                <option value="Own Heads">Own Heads</option>
-                <option value="Region">Region</option>
-              </select>
+                options={[
+                  { id: 'Own Heads', name: 'Own Heads' },
+                  { id: 'Region', name: 'Region' }
+                ]}
+              />
             </div>
 
             <div className="space-y-2">
               <label className="text-sm font-medium">
                 {transferType === 'Region' ? 'To Head' : 'From Head'}
               </label>
-              <select
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                value={fromHeadId}
-                onChange={(e) => setFromHeadId(e.target.value ? Number(e.target.value) : '')}
-              >
-                <option value="">{transferType === 'Region' ? 'Select Head to transfer to' : 'Select Head to transfer from'}</option>
-                {transferType === 'Region' ? (
-                  (fundHeads || []).filter(h => h.type === 'regional').map(h => (
-                    <option key={h.id} value={h.id}>{h.name}</option>
-                  ))
+              <Combobox
+                entity="Head"
+                placeholder={transferType === 'Region' ? 'Select Head to transfer to' : 'Select Head to transfer from'}
+                value={fromHeadId ? String(fromHeadId) : ''}
+                onChange={(val) => setFromHeadId(val ? Number(val) : '')}
+                options={transferType === 'Region' ? (
+                  (fundHeads || []).filter(h => h.type === 'regional').map(h => ({ id: String(h.id), name: h.name }))
                 ) : (
                   (fundHeads || []).filter(h => h.type === 'institutional' || h.type === 'institute' || !h.type).map(h => {
                     const held = (ownBalances || []).find(b => b.fund_head_id === h.id);
                     const bal = held ? Number(held.balance) : 0;
-                    return (
-                      <option key={h.id} value={h.id}>
-                        {h.name} (Balance: {formatAmount(bal)})
-                      </option>
-                    );
+                    return { id: String(h.id), name: `${h.name} (Balance: ${formatAmount(bal)})` };
                   })
                 )}
-              </select>
+              />
               {transferType === 'Own Heads' && fromHeadId && (
                 <p className="text-xs text-muted-foreground">
                   Available Balance: <strong className="text-primary">{formatAmount(getFromHeadBalance())}</strong>
@@ -694,28 +691,23 @@ export default function FundIndex({ funds, filters, permissions, bankStatements,
               <div className="space-y-2">
                 {transferRows.map((row, index) => (
                   <div key={index} className="flex gap-2 items-center">
-                    <select
-                      className="flex h-10 w-full flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                      value={row.head_id}
-                      onChange={(e) => handleTransferRowChange(index, 'head_id', e.target.value ? Number(e.target.value) : '')}
-                    >
-                      <option value="">{transferType === 'Region' ? 'Select From Head' : 'Select To Head'}</option>
-                      {transferType === 'Region' ? (
-                        (fundHeads || []).filter(h => h.type === 'regional').map(h => {
-                          const held = (ownBalances || []).find(b => b.fund_head_id === h.id);
-                          const bal = held ? Number(held.balance) : 0;
-                          return (
-                            <option key={h.id} value={h.id}>
-                              {h.name} (Balance: {formatAmount(bal)})
-                            </option>
-                          );
-                        })
-                      ) : (
-                        (fundHeads || []).map(h => (
-                          <option key={h.id} value={h.id}>{h.name}</option>
-                        ))
-                      )}
-                    </select>
+                    <div className="flex-1">
+                      <Combobox
+                        entity="Head"
+                        placeholder={transferType === 'Region' ? 'Select From Head' : 'Select To Head'}
+                        value={row.head_id ? String(row.head_id) : ''}
+                        onChange={(val) => handleTransferRowChange(index, 'head_id', val ? Number(val) : '')}
+                        options={transferType === 'Region' ? (
+                          (fundHeads || []).filter(h => h.type === 'regional').map(h => {
+                            const held = (ownBalances || []).find(b => b.fund_head_id === h.id);
+                            const bal = held ? Number(held.balance) : 0;
+                            return { id: String(h.id), name: `${h.name} (Balance: ${formatAmount(bal)})` };
+                          })
+                        ) : (
+                          (fundHeads || []).map(h => ({ id: String(h.id), name: h.name }))
+                        )}
+                      />
+                    </div>
                     <Input
                       type="number"
                       placeholder="Amount"

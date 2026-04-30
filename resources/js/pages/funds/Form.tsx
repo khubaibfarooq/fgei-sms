@@ -18,6 +18,7 @@ import {
   SelectItem,
 } from '@/components/ui/select';
 import { BreadcrumbItem } from '@/types';
+import Combobox from '@/components/ui/combobox';
 
 interface FundHead {
   id: number;
@@ -275,7 +276,7 @@ export default function FundForm({ fund, fundHeads }: FundFormProps) {
                     <AmountInput
                       id="edit_amount"
                       value={data.amount}
-                      onChange={(v) => setData('amount', Number(v))}
+                      onChange={(v) => setData('amount', Math.abs(Number(v)))}
                       min={0}
                       step="0.01"
                     />
@@ -328,21 +329,14 @@ export default function FundForm({ fund, fundHeads }: FundFormProps) {
                             </td>
 
                             <td className="px-3 py-2">
-                              <Select
+                              <Combobox
+                                entity="Head"
+                                placeholder="Select head…"
                                 value={row.fund_head_id ? row.fund_head_id.toString() : ''}
-                                onValueChange={(v) => updateRow(idx, 'fund_head_id', parseInt(v))}
-                              >
-                                <SelectTrigger className="h-8 text-sm">
-                                  <SelectValue placeholder="Select head…" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {fundHeadsArray.map((h) => (
-                                    <SelectItem key={h.id} value={h.id.toString()}>
-                                      {h.name}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
+                                onChange={(val) => updateRow(idx, 'fund_head_id', val ? parseInt(val) : '')}
+                                options={fundHeadsArray.map(h => ({ id: h.id.toString(), name: h.name }))}
+                                className="h-8 text-sm"
+                              />
                             </td>
 
                             <td className="px-3 py-2">
@@ -352,7 +346,7 @@ export default function FundForm({ fund, fundHeads }: FundFormProps) {
                                   updateRow(
                                     idx,
                                     'amount',
-                                    v === '' ? '' : Number(v),
+                                    v === '' ? '' : Math.abs(Number(v)),
                                   )
                                 }
                                 placeholder="0.00"

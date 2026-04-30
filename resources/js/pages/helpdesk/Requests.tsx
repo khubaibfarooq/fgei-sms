@@ -376,7 +376,7 @@ export default function HelpDeskIndex({ helpDesk, filters, institutes, auth }: P
 
                     {/* ChatBox Integration */}
                     <div className="bg-muted/30 rounded-2xl p-4 lg:p-1 border border-primary/5 min-h-[400px]">
-                      <ChatBox helpDeskId={selectedHelpDesk.id} status={selectedHelpDesk.status} />
+                      <ChatBox key={selectedHelpDesk.id} helpDeskId={selectedHelpDesk.id} status={selectedHelpDesk.status} />
                     </div>
                   </div>
                 </div>

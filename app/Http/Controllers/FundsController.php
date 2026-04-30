@@ -93,8 +93,11 @@ class FundsController extends Controller
             DB::transaction(function () use ($request, $inst_id, $userId, $date, $imagePath) {
                 if ($request->transfer_type === 'Own Heads') {
                     foreach ($request->rows as $row) {
+                        $outBalance = $this->updateAndGetFundBalance($inst_id, $request->from_head_id, -$row['amount']);
+                        $inBalance = $this->updateAndGetFundBalance($inst_id, $row['head_id'], $row['amount']);
+
                         // OUT transaction from selected head
-                        $outFund = Fund::create([
+                        Fund::create([
                             'fund_head_id' => $request->from_head_id,
                             'description'  => 'Transfer to ' . FundHead::find($row['head_id'])->name,
                             'amount'       => $row['amount'],
@@ -108,10 +111,11 @@ class FundsController extends Controller
                             'tid'          => $inst_id,
                             'trans_type'   => 'transfer',
                             'img'          => $imagePath,
+                            'balance'      => $outBalance,
                         ]);
 
                         // IN transaction to row head
-                        $inFund = Fund::create([
+                        Fund::create([
                             'fund_head_id' => $row['head_id'],
                             'description'  => 'Transfer from ' . FundHead::find($request->from_head_id)->name,
                             'amount'       => $row['amount'],
@@ -125,11 +129,8 @@ class FundsController extends Controller
                             'tid'          => $inst_id,
                             'trans_type'   => 'transfer',
                             'img'          => $imagePath,
+                            'balance'      => $inBalance,
                         ]);
-
-                        // Update balances
-                        $this->updateFundBalance($inst_id, $request->from_head_id, -$row['amount'], $outFund);
-                        $this->updateFundBalance($inst_id, $row['head_id'], $row['amount'], $inFund);
                     }
                 } elseif ($request->transfer_type === 'Region') {
                     $myInstitute = Institute::find($inst_id);
@@ -142,8 +143,11 @@ class FundsController extends Controller
                     }
                     
                     foreach ($request->rows as $row) {
+                        $outBalance = $this->updateAndGetFundBalance($inst_id, $row['head_id'], -$row['amount']);
+                        $inBalance = $this->updateAndGetFundBalance($regionalOffice->id, $request->from_head_id, $row['amount']);
+
                         // OUT transaction for login institute
-                        $outFund = Fund::create([
+                        Fund::create([
                             'fund_head_id' => $row['head_id'], // Pulls from row's institutional head
                             'description'  => 'Transfer to Regional ' . FundHead::find($request->from_head_id)->name,
                             'amount'       => $row['amount'],
@@ -157,10 +161,11 @@ class FundsController extends Controller
                             'tid'          => $regionalOffice->id,
                             'trans_type'   => 'transfer',
                             'img'          => $imagePath,
+                            'balance'      => $outBalance,
                         ]);
 
                         // IN transaction for regional office
-                        $inFund = Fund::create([
+                        Fund::create([
                             'fund_head_id' => $request->from_head_id, // Receives into selected regional head
                             'description'  => 'Transfer from ' . FundHead::find($row['head_id'])->name,
                             'amount'       => $row['amount'],
@@ -174,11 +179,8 @@ class FundsController extends Controller
                             'tid'          => $inst_id,
                             'trans_type'   => 'transfer',
                             'img'          => $imagePath,
+                            'balance'      => $inBalance,
                         ]);
-
-                        // Update balances
-                        $this->updateFundBalance($inst_id, $row['head_id'], -$row['amount'], $outFund);
-                        $this->updateFundBalance($regionalOffice->id, $request->from_head_id, $row['amount'], $inFund);
                     }
                 }
             });
@@ -191,7 +193,7 @@ class FundsController extends Controller
         }
     }
 
-    private function updateFundBalance($instituteId, $fundHeadId, $amountChange, $fundTrans = null)
+    private function updateAndGetFundBalance($instituteId, $fundHeadId, $amountChange)
     {
         $fundHeld = FundHeld::firstWhere([
             'institute_id' => $instituteId,
@@ -199,20 +201,17 @@ class FundsController extends Controller
         ]);
 
         if ($fundHeld) {
-            $fundHeld->increment('balance', $amountChange);
-            $newBalance = $fundHeld->fresh()->balance;
+            $newBalance = $fundHeld->balance + $amountChange;
+            $fundHeld->update(['balance' => $newBalance]);
+            return $newBalance;
         } else {
-            $fundHeld = FundHeld::create([
+            FundHeld::create([
                 'institute_id' => $instituteId,
                 'fund_head_id' => $fundHeadId,
                 'balance'      => $amountChange,
                 'added_by'     => auth()->id(),
             ]);
-            $newBalance = $amountChange;
-        }
-        
-        if ($fundTrans) {
-            $fundTrans->update(['balance' => $newBalance]);
+            return $amountChange;
         }
     }
 

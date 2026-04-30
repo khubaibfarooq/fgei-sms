@@ -722,7 +722,7 @@ export default function ProjectDetails({ project, canEditMilestones, fundHeadsLi
                                                                 )}
                                                                 {milestone.pdf && (
                                                                     <a
-                                                                        href={`/assets/${milestone.pdf}`}
+                                                                        href={`/${milestone.pdf}`}
                                                                         target="_blank"
                                                                         rel="noopener noreferrer"
                                                                         onClick={(e) => e.stopPropagation()}
@@ -914,20 +914,19 @@ export default function ProjectDetails({ project, canEditMilestones, fundHeadsLi
                                             {project.effects.map((effect) => {
                                                 const d = effect.effect_data;
                                                 return (
-                                                    <Card key={effect.id} className={`border-l-4 overflow-hidden ${
-                                                        effect.effect_type === 'block' ? 'border-l-blue-500'
-                                                        : effect.effect_type === 'room' ? 'border-l-green-500'
-                                                        : 'border-l-orange-500'
-                                                    }`}>
+                                                    <Card key={effect.id} className={`border-l-4 overflow-hidden ${effect.effect_type === 'block' ? 'border-l-blue-500'
+                                                            : effect.effect_type === 'room' ? 'border-l-green-500'
+                                                                : 'border-l-orange-500'
+                                                        }`}>
                                                         <CardHeader className="p-2 py-1.5 border-b bg-muted/10 flex flex-row items-center justify-between space-y-0">
                                                             <div className="flex items-center gap-2">
                                                                 {effect.effect_type === 'block' && <Building2 className="w-4 h-4 text-blue-500" />}
-                                                                {effect.effect_type === 'room'  && <DoorOpen  className="w-4 h-4 text-green-500" />}
-                                                                {effect.effect_type === 'asset' && <Package   className="w-4 h-4 text-orange-500" />}
+                                                                {effect.effect_type === 'room' && <DoorOpen className="w-4 h-4 text-green-500" />}
+                                                                {effect.effect_type === 'asset' && <Package className="w-4 h-4 text-orange-500" />}
                                                                 <span className="text-sm font-semibold">
                                                                     {effect.effect_type === 'block' ? (d.name || 'New Block')
-                                                                     : effect.effect_type === 'room' ? (d.name || 'New Room')
-                                                                     : `×${d.qty ?? 1} asset(s)`}
+                                                                        : effect.effect_type === 'room' ? (d.name || 'New Room')
+                                                                            : `×${d.qty ?? 1} asset(s)`}
                                                                 </span>
                                                                 <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 capitalize">
                                                                     {effect.effect_type}
@@ -935,11 +934,10 @@ export default function ProjectDetails({ project, canEditMilestones, fundHeadsLi
                                                             </div>
                                                             <Badge
                                                                 variant="outline"
-                                                                className={`text-[10px] px-1.5 py-0 h-5 ${
-                                                                    effect.applied
+                                                                className={`text-[10px] px-1.5 py-0 h-5 ${effect.applied
                                                                         ? 'border-green-500 text-green-600 bg-green-50'
                                                                         : 'border-yellow-500 text-yellow-600 bg-yellow-50'
-                                                                }`}
+                                                                    }`}
                                                             >
                                                                 {effect.applied ? '✅ Applied' : '⏳ Pending'}
                                                             </Badge>
